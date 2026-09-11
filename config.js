@@ -17,7 +17,7 @@
  * Thứ tự ưu tiên nếu điền nhiều hơn 1: Google Sheets > Supabase > localStorage.
  */
 window.DGA_CONFIG = {
-  GSHEET_WEBAPP_URL:"https://script.google.com/macros/s/AKfycbwnfiWCKZ6aGp1Pf_hG_EfOVMyWOYbiuUT0VDI8z90Iqt_hCF0HYhkPVBP_pBg84V8w/exec",
+  GSHEET_WEBAPP_URL:"https://script.google.com/macros/s/AKfycbx5tqUPqL2Hu6Fh9fDjdA_vPsHUbwwNHYnzFTnZsfxVrCAZGXFXTGTtv2WUeSPyuQJ4/exec",
   SUPABASE_URL: "",
   SUPABASE_ANON_KEY: "",
   GOOGLE_CLIENT_ID: "162684736346-spsmoiqgk6sp3k5d8l24h85p1mcd5cja.apps.googleusercontent.com",
