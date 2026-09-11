@@ -1,0 +1,454 @@
+/**
+ * Code.gs — biến 1 Google Sheet thành "database" cho web app đánh giá DGA.
+ *
+ * CÁCH DÙNG (xem chi tiết trong README.md, mục "Dùng Google Sheets thay Supabase"):
+ *  1. Tạo 1 Google Sheet mới (trống) tại sheets.google.com.
+ *  2. Vào Tiện ích mở rộng (Extensions) > Apps Script.
+ *  3. Xóa hết code mẫu trong Code.gs, dán TOÀN BỘ nội dung file này vào.
+ *  4. Bấm biểu tượng đĩa mềm (Lưu dự án).
+ *  5. Bấm Deploy (Triển khai) > New deployment (Triển khai mới):
+ *     - Select type (chọn loại): Web app
+ *     - Execute as (thực thi với quyền của): Me (tài khoản của bạn)
+ *     - Who has access (ai được truy cập): Anyone (Bất kỳ ai) — bắt buộc, để web app
+ *       gọi được mà không cần đăng nhập Google
+ *     - Bấm Deploy, cấp quyền khi được hỏi (Authorize access)
+ *  6. Copy "Web app URL" (dạng https://script.google.com/macros/s/AKfycb.../exec)
+ *     dán vào GSHEET_WEBAPP_URL trong file config.js của web app.
+ *
+ * Script này TỰ TẠO các sheet (measurements, manufacturer_standards, stations,
+ * users, sessions) kèm tiêu đề cột trong chính Google Sheet bạn vừa tạo — không
+ * cần tạo tay.
+ *
+ * ĐĂNG NHẬP / PHÂN QUYỀN (thêm ở bản này):
+ *  - Mọi người dùng phải Đăng ký (email + mật khẩu) rồi Đăng nhập mới xem được
+ *    dữ liệu. Mật khẩu được băm (SHA-256 + salt ngẫu nhiên riêng từng user)
+ *    trước khi lưu vào sheet "users" — KHÔNG lưu mật khẩu gốc.
+ *  - Email trong hằng số ADMIN_EMAIL bên dưới sẽ TỰ ĐỘNG được cấp quyền "admin"
+ *    ngay khi đăng ký (chỉ áp dụng đúng email đó). Mọi email khác mặc định là
+ *    "user" (chỉ xem) — Admin có thể nâng quyền cho người khác sau trong tab
+ *    "Quản trị" của web app.
+ *  - Đăng nhập thành công trả về 1 "token" phiên (lưu 30 ngày). Token này bắt
+ *    buộc phải gửi kèm mọi request đọc/ghi dữ liệu sau đó — thao tác GHI
+ *    (thêm/sửa/xóa) chỉ chấp nhận khi token thuộc về user có role "admin".
+ *
+ * LƯU Ý BẢO MẬT: vì "Who has access" phải để "Anyone" để web app gọi được từ
+ * trình duyệt, ai có URL này về lý thuyết vẫn gọi được API thô (giống cơ chế
+ * "anon key" của Supabase) — nhưng giờ mọi thao tác ĐỌC/GHI đều bị chặn ở phía
+ * server (hàm này) nếu không có token hợp lệ / không đủ quyền, nên không thể
+ * bỏ qua màn hình đăng nhập để đọc/ghi dữ liệu được nữa. Mật khẩu vẫn nên đủ
+ * mạnh vì đây không phải hạ tầng bảo mật cấp doanh nghiệp như Supabase Auth.
+ */
+
+const SHEET_MEASUREMENTS = "measurements";
+const SHEET_STANDARDS = "manufacturer_standards";
+const SHEET_STATIONS = "stations";
+
+const MEASUREMENT_HEADERS = [
+  "id", "tram", "thiet_bi", "equipment_type", "mba_subtype", "manufacturer",
+  "pha", "lan_do", "sample_date", "h2", "ch4", "c2h6", "c2h4", "c2h2", "co", "co2",
+  "ghi_chu", "created_at",
+];
+
+// QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —
+// getOrCreateSheet() bên dưới chỉ tự nâng cấp HÀNG TIÊU ĐỀ (đổi tên cột theo vị trí
+// cột), KHÔNG dịch chuyển dữ liệu các dòng đã có; chèn giữa sẽ làm toàn bộ dữ liệu
+// từ cột đó trở đi bị lệch/sai nghĩa ở các dòng đã lưu trước đó trên Google Sheet.
+const STANDARD_HEADERS = [
+  "id", "manufacturer", "equipment_type", "source",
+  "h2", "ch4", "c2h6", "c2h4", "c2h2", "co", "co2",
+  // Ngưỡng LOẠI BỎ (condemning limit) — nghiêm trọng hơn ngưỡng tuyệt đối ở trên, không
+  // bắt buộc điền đủ 7 khí. QĐ1901/IEC60599 không quy định mức này.
+  "loaibo_h2", "loaibo_ch4", "loaibo_c2h6", "loaibo_c2h4", "loaibo_c2h2", "loaibo_co", "loaibo_co2",
+  "rate_h2_lo", "rate_h2_hi", "rate_ch4_lo", "rate_ch4_hi",
+  "rate_c2h6_lo", "rate_c2h6_hi", "rate_c2h4_lo", "rate_c2h4_hi",
+  "rate_c2h2_lo", "rate_c2h2_hi", "rate_co_lo", "rate_co_hi",
+  "rate_co2_lo", "rate_co2_hi",
+  // Tiêu chuẩn DẦU (chỉ dùng khi standard_type = "dau") — 1 bản ghi ứng với 1 tổ hợp
+  // cấp điện áp + trạng thái dầu cụ thể, giống cấu trúc Bảng 54/55/58 QĐ1901.
+  "oil_voltage_class", "oil_state", "oil_moisture_ppm", "oil_tgd_90c_percent", "oil_bdv_kv",
+  // "standard_type": "khi" (khí hòa tan — record cũ trước khi có cột này, hoặc để
+  // trống, cũng được coi là "khi") hoặc "dau" (dầu cách điện). Thêm ở CUỐI (xem lưu ý trên).
+  "standard_type",
+  "created_at",
+];
+
+// Danh mục Trạm (MaTram/TenTram) — dùng để gợi ý/tìm kiếm ở ô "Trạm".
+const STATION_HEADERS = ["id", "ma_tram", "ten_tram", "created_at"];
+
+// Thí nghiệm dầu MBA — Độ ẩm (Điều 50/Bảng 58), tgδ ở 90°C (Điều 47/Bảng 55),
+// điện áp chọc thủng (Điều 46/Bảng 54). Chỉ áp dụng MBA/Kháng dầu theo QĐ1901.
+const SHEET_OILTESTS = "oil_tests";
+const OILTEST_HEADERS = [
+  "id", "tram", "thiet_bi", "voltage_class", "oil_state", "has_membrane_n2",
+  "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu",
+  // "manufacturer": thêm ở CUỐI, trước created_at (xem lưu ý ở STANDARD_HEADERS).
+  "manufacturer", "created_at",
+];
+
+// Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49. Sheet TÁCH RIÊNG
+// khỏi oil_tests (dầu thùng dầu chính) vì cấu trúc dữ liệu khác nhau (thêm điểm lấy
+// mẫu + pha) — đây là sheet MỚI hoàn toàn nên không có rủi ro lệch cột như đã gặp ở
+// STANDARD_HEADERS/OILTEST_HEADERS trước đây (xem ghi chú cảnh báo ở STANDARD_HEADERS).
+const SHEET_OLTC_OILTESTS = "oltc_oil_tests";
+const OLTC_OILTEST_HEADERS = [
+  "id", "tram", "thiet_bi",
+  // "oltc_sample_point": "trungtinh" (điểm cuối trung tính, 3 pha chung 1 mẫu) hoặc
+  // "pharieng" (một pha / điểm không trung tính, mỗi pha A/B/C 1 mẫu riêng).
+  "oltc_sample_point",
+  // "phase": "A"/"B"/"C" khi oltc_sample_point="pharieng", để trống khi "trungtinh".
+  "phase",
+  "voltage_class", "oil_state", "has_membrane_n2",
+  "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu",
+  "manufacturer", "created_at",
+];
+
+// Tài khoản người dùng — mật khẩu KHÔNG lưu gốc, chỉ lưu password_hash (SHA-256
+// của salt+mật khẩu) và password_salt (chuỗi ngẫu nhiên riêng từng user). Tài khoản
+// đăng nhập bằng Google (auth_provider = "google") không có password_hash/salt.
+const SHEET_USERS = "users";
+const USER_HEADERS = [
+  "id", "email", "password_hash", "password_salt", "role", "created_at", "last_login",
+  // "auth_provider": thêm ở CUỐI (xem lưu ý ở STANDARD_HEADERS) — "password" (mặc định,
+  // record cũ/để trống cũng hiểu là "password") hoặc "google".
+  "auth_provider",
+];
+
+// Phiên đăng nhập — mỗi lần Đăng nhập/Đăng ký thành công tạo 1 dòng token mới.
+const SHEET_SESSIONS = "sessions";
+const SESSION_HEADERS = ["token", "email", "created_at", "expires_at"];
+
+// Email này TỰ ĐỘNG được cấp quyền "admin" ngay khi đăng ký (dù đăng ký bằng mật khẩu
+// hay bằng Google) — đổi thành email Admin thật của bạn nếu khác. Mọi email khác mặc
+// định là "user" (chỉ xem).
+const ADMIN_EMAIL = "quantrong77@gmail.com";
+
+// OAuth 2.0 Client ID cho "Đăng nhập bằng Google" (Google Identity Services) — tạo tại
+// https://console.cloud.google.com/apis/credentials (loại "OAuth client ID" > "Web
+// application"). Để TRỐNG ("") thì nút "Đăng nhập bằng Google" sẽ tự ẩn ở giao diện,
+// mọi thứ khác hoạt động bình thường như trước (chỉ đăng nhập email/mật khẩu).
+const GOOGLE_CLIENT_ID = "";
+
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // phiên đăng nhập hết hạn sau 30 ngày
+
+function doGet(e) {
+  try {
+    const action = e.parameter.action;
+    const token = e.parameter.token;
+
+    if (action === "me") return jsonOut(actionMe(token));
+
+    // Các action ĐỌC dữ liệu: chỉ cần đã đăng nhập (bất kỳ role nào).
+    if (action === "listMeasurements") { requireSession(token); return jsonOut(listRows(SHEET_MEASUREMENTS, MEASUREMENT_HEADERS)); }
+    if (action === "listStandards") { requireSession(token); return jsonOut(listRows(SHEET_STANDARDS, STANDARD_HEADERS)); }
+    if (action === "listStations") { requireSession(token); return jsonOut(listRows(SHEET_STATIONS, STATION_HEADERS)); }
+    if (action === "listOilTests") { requireSession(token); return jsonOut(listRows(SHEET_OILTESTS, OILTEST_HEADERS)); }
+    if (action === "listOltcOilTests") { requireSession(token); return jsonOut(listRows(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS)); }
+    // Danh sách user: chỉ Admin xem được (dùng cho tab "Quản trị").
+    if (action === "listUsers") { requireAdmin(token); return jsonOut(listPublicUsers()); }
+
+    return jsonOut({ error: "unknown action: " + action });
+  } catch (err) {
+    return jsonOut({ error: String((err && err.message) || err) });
+  }
+}
+
+function doPost(e) {
+  try {
+    const body = JSON.parse(e.postData.contents);
+    const action = body.action;
+    const token = body.token;
+    let result;
+
+    // Đăng ký/đăng nhập/đăng xuất: không cần token sẵn có.
+    if (action === "register") result = actionRegister(body);
+    else if (action === "login") result = actionLogin(body);
+    else if (action === "googleLogin") result = actionGoogleLogin(body);
+    else if (action === "logout") result = actionLogout(body);
+    // Mọi action GHI dữ liệu dưới đây bắt buộc token hợp lệ VÀ role = "admin".
+    else if (action === "addMeasurement") { requireAdmin(token); result = upsertRow(SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, body.record); }
+    else if (action === "deleteMeasurement") { requireAdmin(token); result = deleteRow(SHEET_MEASUREMENTS, body.id); }
+    else if (action === "saveStandard") { requireAdmin(token); result = upsertRow(SHEET_STANDARDS, STANDARD_HEADERS, body.record); }
+    else if (action === "deleteStandard") { requireAdmin(token); result = deleteRow(SHEET_STANDARDS, body.id); }
+    else if (action === "saveStation") { requireAdmin(token); result = upsertRow(SHEET_STATIONS, STATION_HEADERS, body.record); }
+    else if (action === "deleteStation") { requireAdmin(token); result = deleteRow(SHEET_STATIONS, body.id); }
+    else if (action === "addOilTest") { requireAdmin(token); result = upsertRow(SHEET_OILTESTS, OILTEST_HEADERS, body.record); }
+    else if (action === "deleteOilTest") { requireAdmin(token); result = deleteRow(SHEET_OILTESTS, body.id); }
+    else if (action === "addOltcOilTest") { requireAdmin(token); result = upsertRow(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, body.record); }
+    else if (action === "deleteOltcOilTest") { requireAdmin(token); result = deleteRow(SHEET_OLTC_OILTESTS, body.id); }
+    else if (action === "setUserRole") { requireAdmin(token); result = actionSetUserRole(body); }
+    else if (action === "deleteUser") { requireAdmin(token); result = actionDeleteUser(body); }
+    else result = { error: "unknown action: " + action };
+    return jsonOut(result);
+  } catch (err) {
+    return jsonOut({ error: String((err && err.message) || err) });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Đăng ký / đăng nhập / phiên đăng nhập / phân quyền
+// ---------------------------------------------------------------------------
+
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+/** Chuỗi hex ngẫu nhiên (dùng làm salt và token) — không cần bảo mật cấp mật mã. */
+function randomHex(byteLen) {
+  let out = "";
+  for (let i = 0; i < byteLen; i++) {
+    out += ("0" + Math.floor(Math.random() * 256).toString(16)).slice(-2);
+  }
+  return out;
+}
+
+function hashPassword(password, salt) {
+  const digestBytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + "|" + password);
+  return digestBytes.map((b) => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
+}
+
+function findUserByEmail(email) {
+  const norm = normalizeEmail(email);
+  return listRows(SHEET_USERS, USER_HEADERS).find((u) => normalizeEmail(u.email) === norm) || null;
+}
+
+function listPublicUsers() {
+  return listRows(SHEET_USERS, USER_HEADERS).map((u) => ({
+    email: u.email, role: u.role, created_at: u.created_at, last_login: u.last_login,
+  }));
+}
+
+function actionRegister(body) {
+  const email = normalizeEmail(body.email);
+  const password = String(body.password || "");
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Email không hợp lệ." };
+  if (password.length < 6) return { error: "Mật khẩu phải có ít nhất 6 ký tự." };
+  if (findUserByEmail(email)) return { error: "Email này đã được đăng ký." };
+
+  const salt = randomHex(16);
+  const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
+  const record = {
+    id: "u_" + Utilities.getUuid(),
+    email: email,
+    password_hash: hashPassword(password, salt),
+    password_salt: salt,
+    role: role,
+    created_at: new Date().toISOString(),
+    last_login: new Date().toISOString(),
+  };
+  upsertRow(SHEET_USERS, USER_HEADERS, record);
+  return createSession(email, role);
+}
+
+function actionLogin(body) {
+  const email = normalizeEmail(body.email);
+  const password = String(body.password || "");
+  const user = findUserByEmail(email);
+  if (!user || hashPassword(password, user.password_salt) !== user.password_hash) {
+    return { error: "Email hoặc mật khẩu không đúng." };
+  }
+  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { last_login: new Date().toISOString() }));
+  return createSession(email, user.role);
+}
+
+/**
+ * Đăng nhập/Đăng ký bằng Google — nhận 1 ID token (JWT) do thư viện Google Identity
+ * Services (GIS) ở trình duyệt trả về sau khi người dùng chọn tài khoản Google và
+ * đồng ý. Xác thực token bằng chính endpoint "tokeninfo" của Google (không cần thư
+ * viện giải mã JWT/kiểm tra chữ ký riêng — Apps Script gọi thẳng qua UrlFetchApp).
+ * Nếu email đăng nhập lần đầu qua Google, TỰ ĐỘNG tạo tài khoản (không cần mật khẩu,
+ * password_hash/salt để trống) — coi như "đăng ký" luôn, không cần bước riêng.
+ */
+function actionGoogleLogin(body) {
+  const idToken = String(body.idToken || "");
+  if (!idToken) return { error: "Thiếu Google ID token." };
+  if (!GOOGLE_CLIENT_ID) {
+    return { error: "Server chưa cấu hình GOOGLE_CLIENT_ID — Admin cần điền hằng số này ở đầu Code.gs rồi Deploy lại." };
+  }
+
+  let payload;
+  try {
+    const res = UrlFetchApp.fetch(
+      "https://oauth2.googleapis.com/tokeninfo?id_token=" + encodeURIComponent(idToken),
+      { muteHttpExceptions: true }
+    );
+    if (res.getResponseCode() !== 200) {
+      return { error: "Xác thực Google thất bại (token không hợp lệ hoặc đã hết hạn) — vui lòng thử đăng nhập lại." };
+    }
+    payload = JSON.parse(res.getContentText());
+  } catch (err) {
+    return { error: "Không gọi được máy chủ xác thực Google: " + String((err && err.message) || err) };
+  }
+
+  if (payload.aud !== GOOGLE_CLIENT_ID) {
+    return { error: "Token Google không khớp với ứng dụng này (sai Client ID)." };
+  }
+  if (payload.email_verified !== "true" && payload.email_verified !== true) {
+    return { error: "Email Google chưa được xác minh." };
+  }
+
+  const email = normalizeEmail(payload.email);
+  if (!email) return { error: "Không lấy được email từ tài khoản Google." };
+
+  const now = new Date().toISOString();
+  let user = findUserByEmail(email);
+  if (!user) {
+    const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
+    user = {
+      id: "u_" + Utilities.getUuid(),
+      email: email,
+      password_hash: "",
+      password_salt: "",
+      role: role,
+      created_at: now,
+      last_login: now,
+      auth_provider: "google",
+    };
+    upsertRow(SHEET_USERS, USER_HEADERS, user);
+  } else {
+    upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, {
+      last_login: now,
+      auth_provider: user.auth_provider || "google",
+    }));
+  }
+  return createSession(email, user.role);
+}
+
+function actionLogout(body) {
+  if (body && body.token) deleteRow(SHEET_SESSIONS, body.token);
+  return { ok: true };
+}
+
+function createSession(email, role) {
+  const token = randomHex(24);
+  const now = new Date();
+  const expires = new Date(now.getTime() + SESSION_TTL_MS);
+  const sh = getOrCreateSheet(SHEET_SESSIONS, SESSION_HEADERS);
+  sh.appendRow([token, email, now.toISOString(), expires.toISOString()]);
+  return { token: token, email: email, role: role };
+}
+
+/** Ném lỗi nếu token thiếu/không hợp lệ/hết hạn; trả về bản ghi user nếu hợp lệ. */
+function requireSession(token) {
+  if (!token) throw new Error("Chưa đăng nhập.");
+  const session = listRows(SHEET_SESSIONS, SESSION_HEADERS).find((s) => String(s.token) === String(token));
+  if (!session) throw new Error("Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại.");
+  if (new Date(session.expires_at) < new Date()) throw new Error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
+  const user = findUserByEmail(session.email);
+  if (!user) throw new Error("Tài khoản không tồn tại.");
+  return user;
+}
+
+function requireAdmin(token) {
+  const user = requireSession(token);
+  if (user.role !== "admin") throw new Error("Chỉ Admin mới được thực hiện thao tác này.");
+  return user;
+}
+
+function actionMe(token) {
+  const user = requireSession(token);
+  return { email: user.email, role: user.role };
+}
+
+function actionSetUserRole(body) {
+  const email = normalizeEmail(body.email);
+  const role = body.role === "admin" ? "admin" : "user";
+  const user = findUserByEmail(email);
+  if (!user) return { error: "Không tìm thấy user." };
+  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { role: role }));
+  return { email: email, role: role };
+}
+
+function actionDeleteUser(body) {
+  const email = normalizeEmail(body.email);
+  const user = findUserByEmail(email);
+  if (!user) return { error: "Không tìm thấy user." };
+  return deleteRow(SHEET_USERS, user.id);
+}
+
+function jsonOut(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+}
+
+function getOrCreateSheet(name, headers) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.appendRow(headers);
+    sh.setFrozenRows(1);
+    return sh;
+  }
+  // Tự nâng cấp hàng tiêu đề nếu code đã thêm cột mới (vd: loaibo_*) sau khi sheet này
+  // đã tồn tại từ trước — chỉ ghi lại hàng tiêu đề, KHÔNG đụng đến dữ liệu các dòng dưới.
+  const existingHeaders = sh.getLastColumn() > 0 ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0] : [];
+  const needsUpdate = headers.some((h, i) => existingHeaders[i] !== h);
+  if (needsUpdate) {
+    sh.getRange(1, 1, 1, headers.length).setValues([headers]);
+  }
+  return sh;
+}
+
+function listRows(sheetName, headers) {
+  const sh = getOrCreateSheet(sheetName, headers);
+  const lastRow = sh.getLastRow();
+  if (lastRow < 2) return [];
+  const values = sh.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  return values
+    .filter((row) => row[0] !== "" && row[0] !== null) // bỏ dòng trống (id rỗng)
+    .map((row) => rowToObject(headers, row));
+}
+
+function rowToObject(headers, row) {
+  const obj = {};
+  headers.forEach((h, i) => {
+    obj[h] = row[i] === "" ? null : row[i];
+  });
+  return obj;
+}
+
+function findRowIndexById(sh, id) {
+  const lastRow = sh.getLastRow();
+  if (lastRow < 2) return -1;
+  const ids = sh.getRange(2, 1, lastRow - 1, 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(id)) return i + 2; // +2: header row + 1-index
+  }
+  return -1;
+}
+
+/** Thêm mới nếu id chưa tồn tại, cập nhật (ghi đè cả dòng) nếu đã tồn tại. */
+function upsertRow(sheetName, headers, record) {
+  if (!record || !record.id) return { error: "missing record.id" };
+  const sh = getOrCreateSheet(sheetName, headers);
+  const rowValues = headers.map((h) => {
+    const v = record[h];
+    return v === undefined || v === null ? "" : v;
+  });
+  const existingRowIdx = findRowIndexById(sh, record.id);
+  if (existingRowIdx > 0) {
+    sh.getRange(existingRowIdx, 1, 1, headers.length).setValues([rowValues]);
+  } else {
+    sh.appendRow(rowValues);
+  }
+  return record;
+}
+
+function headersForSheet(sheetName) {
+  if (sheetName === SHEET_MEASUREMENTS) return MEASUREMENT_HEADERS;
+  if (sheetName === SHEET_STATIONS) return STATION_HEADERS;
+  if (sheetName === SHEET_USERS) return USER_HEADERS;
+  if (sheetName === SHEET_SESSIONS) return SESSION_HEADERS;
+  if (sheetName === SHEET_OILTESTS) return OILTEST_HEADERS;
+  if (sheetName === SHEET_OLTC_OILTESTS) return OLTC_OILTEST_HEADERS;
+  return STANDARD_HEADERS;
+}
+
+/** id có thể là cột "id" (measurements/standards/stations/users) hoặc cột "token"
+ *  (sessions) — findRowIndexById luôn so khớp theo CỘT ĐẦU TIÊN của sheet đó. */
+function deleteRow(sheetName, id) {
+  const headers = headersForSheet(sheetName);
+  const sh = getOrCreateSheet(sheetName, headers);
+  const idx = findRowIndexById(sh, id);
+  if (idx > 0) sh.deleteRow(idx);
+  return { deleted: idx > 0, id: id };
+}

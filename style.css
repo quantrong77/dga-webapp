@@ -1,0 +1,490 @@
+:root {
+  --blue-900: #1f4e78;
+  --blue-700: #2e75b6;
+  --blue-100: #eaf2fa;
+  --gray-50: #f7f8fa;
+  --gray-100: #eef0f3;
+  --gray-300: #d6dae0;
+  --gray-600: #5b6472;
+  --gray-900: #1c222b;
+  --ok: #1a7f37;
+  --ok-bg: #e6f4ea;
+  --bad: #c1121f;
+  --bad-bg: #fdecec;
+  --warn: #b45309;
+  --warn-bg: #fef3e2;
+  --radius: 10px;
+  font-size: 15px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+header.app-header {
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  color: #fff;
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+header.app-header h1 {
+  font-size: 19px;
+  margin: 0 0 2px 0;
+}
+
+header.app-header p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge.local { background: #fff3cd; color: #7a5b00; }
+.badge.user-badge { background: rgba(255, 255, 255, 0.18); color: #fff; }
+
+/* ===================== Màn hình đăng nhập / đăng ký ===================== */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.auth-overlay.hidden { display: none; }
+.auth-card {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.auth-card h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: var(--blue-900);
+}
+.auth-card .note { margin-top: 0; margin-bottom: 16px; }
+.auth-card .field { margin-bottom: 12px; }
+.auth-error {
+  color: var(--bad);
+  background: var(--bad-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+.auth-error.hidden { display: none; }
+.auth-switch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+.auth-switch a { color: var(--blue-700); font-weight: 600; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.google-signin-wrap { margin-bottom: 14px; }
+.google-signin-wrap #googleSignInBtn { display: flex; justify-content: center; }
+.auth-divider {
+  display: flex;
+  align-items: center;
+  color: var(--gray-600);
+  font-size: 12px;
+  margin: 14px 0;
+}
+.auth-divider::before, .auth-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--gray-300);
+}
+.auth-divider span { padding: 0 10px; }
+
+/* Overlay xoay/loading khi đang đăng nhập/đăng ký/xác thực Google — phủ kín .auth-card */
+.auth-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 5;
+}
+.auth-loading.hidden { display: none; }
+.auth-loading p { margin: 0; font-size: 13px; color: var(--blue-900); font-weight: 600; }
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--blue-100);
+  border-top-color: var(--blue-700);
+  animation: dga-spin 0.8s linear infinite;
+}
+@keyframes dga-spin { to { transform: rotate(360deg); } }
+
+/* Thông báo "toast" góc trên bên phải (vd: "Đăng nhập thành công!") */
+.toast-container {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(90vw, 340px);
+}
+.toast {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+  font-weight: 600;
+  border-left: 4px solid var(--ok);
+  color: var(--ok);
+  animation: dga-toast-in 0.25s ease-out;
+}
+.toast.error { border-left-color: var(--bad); color: var(--bad); }
+.toast.fade-out { animation: dga-toast-out 0.3s ease-in forwards; }
+@keyframes dga-toast-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes dga-toast-out { to { opacity: 0; transform: translateX(24px); } }
+
+.role-select { font-size: 12px; padding: 4px 6px; }
+.badge.supabase { background: #d7f5df; color: #10692f; }
+
+nav.tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 24px 0;
+  background: #fff;
+  border-bottom: 1px solid var(--gray-300);
+}
+
+nav.tabs button {
+  border: none;
+  background: transparent;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+}
+nav.tabs button.active {
+  color: var(--blue-900);
+  border-bottom-color: var(--blue-700);
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+.panel h2 {
+  font-size: 16px;
+  color: var(--blue-900);
+  margin: 0 0 14px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 18px;
+}
+.grid.gases { grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 800px) {
+  .grid, .grid.gases { grid-template-columns: repeat(2, 1fr); }
+}
+
+label.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+input, select, textarea {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--gray-900);
+}
+input:focus, select:focus, textarea:focus {
+  outline: 2px solid var(--blue-700);
+  outline-offset: -1px;
+}
+
+/* Combo box tự viết (thay cho <datalist> gốc — hỗ trợ tìm kiếm bỏ dấu, danh sách
+   đầy đủ có thể cuộn, và 1 nút mũi tên để xổ toàn bộ danh sách) — dùng cho ô Trạm
+   và ô Nhà sản xuất. */
+.combo-wrap {
+  position: relative;
+  display: flex;
+}
+.combo-wrap input {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.combo-toggle {
+  flex: 0 0 auto;
+  width: 34px;
+  border: 1px solid var(--gray-300);
+  border-left: none;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  cursor: pointer;
+  font-size: 11px;
+}
+.combo-toggle:hover { background: var(--gray-300); }
+.combo-list {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  z-index: 30;
+}
+.combo-list.hidden { display: none; }
+.combo-item {
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--gray-900);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.combo-item:hover, .combo-item.active { background: var(--blue-100); }
+.combo-empty {
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn.primary { background: var(--blue-700); color: #fff; }
+.btn.primary:hover { background: var(--blue-900); }
+.btn.ghost { background: transparent; color: var(--blue-700); border: 1px solid var(--blue-700); }
+.btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--bad); padding: 5px 10px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gray-100);
+  text-align: left;
+}
+th {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+tbody tr:hover { background: var(--blue-100); }
+
+.pill {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.pill.ok { background: var(--ok-bg); color: var(--ok); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); }
+.pill.muted { background: var(--gray-100); color: var(--gray-600); }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 800px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+
+.stat-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.stat-card .label { font-size: 12px; color: var(--gray-600); font-weight: 600; }
+.stat-card .value { font-size: 22px; font-weight: 800; color: var(--blue-900); margin-top: 4px; }
+
+.rec-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rec-list li {
+  padding: 10px 14px;
+  background: var(--blue-100);
+  border-left: 4px solid var(--blue-700);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+}
+
+.note {
+  font-size: 12.5px;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.hidden { display: none !important; }
+
+.condemn-banner {
+  background: var(--bad-bg);
+  border: 2px solid var(--bad);
+  color: var(--bad);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.duval-wrap {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.duval-tri-line { stroke: var(--gray-300); stroke-width: 0.4; fill: none; }
+.duval-grid-line { stroke: var(--gray-100); stroke-width: 0.25; fill: none; }
+.duval-zone-line { stroke: var(--blue-700); stroke-width: 0.5; fill: none; stroke-dasharray: 1.5,1; }
+.duval-label { font-size: 4px; fill: var(--gray-600); }
+.duval-point { fill: var(--bad); stroke: #fff; stroke-width: 0.6; }
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-900);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 18px 0 8px;
+}
+
+footer.app-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray-600);
+  padding: 20px;
+}
+
+/* ===================== Tab "Xu hướng" — đồ thị xu hướng theo thời gian ===================== */
+.trend-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.trend-checks label.chk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: 999px;
+  padding: 5px 12px 5px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.trend-checks label.chk:has(input:checked) {
+  background: var(--blue-100);
+  border-color: var(--blue-700);
+  color: var(--blue-900);
+}
+.trend-checks input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+.trend-chart-wrap {
+  position: relative;
+  height: 420px;
+  margin-top: 8px;
+}
+@media (max-width: 800px) {
+  .trend-chart-wrap { height: 320px; }
+}

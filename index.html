@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Công cụ đánh giá DGA dầu cách điện — QĐ1901/EVNNPT</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Tải đồng bộ (không async/defer)
+       giống supabase-js ở trên, nên chắc chắn tải xong (hoặc chắc chắn thất bại) trước
+       khi app.js chạy — app.js kiểm tra typeof Chart === "undefined" trước khi dùng, nên
+       nếu mất mạng/CDN lỗi, chỉ phần đồ thị bị ẩn, các phần khác của trang không ảnh hưởng. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <!-- Google Identity Services — cho nút "Đăng nhập bằng Google". Nếu GOOGLE_CLIENT_ID
+       trong config.js để trống, hoặc script này tải không được (mất mạng...), nút
+       Google sẽ tự ẩn — không ảnh hưởng đến đăng nhập email/mật khẩu như trước.
+       LƯU Ý: script này tải bất đồng bộ (async) — không đảm bảo tải xong trước khi
+       app.js chạy initGoogleSignIn() lần đầu, nên app.js còn đăng ký hàm toàn cục
+       window.onGoogleLibraryLoad — Google tự gọi hàm này khi thư viện sẵn sàng,
+       bất kể thứ tự tải, để không bị lỡ mất việc hiện nút. -->
+  <script src="https://accounts.google.com/gsi/client" async></script>
+</head>
+<body>
+  <!-- ===================== MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ ===================== -->
+  <!-- Chỉ hiện khi Auth.enabled (chế độ Google Sheets) VÀ chưa xác thực được phiên
+       đăng nhập đã lưu. Ẩn hẳn (display:none qua .hidden) ở chế độ Supabase/local. -->
+  <div id="authOverlay" class="auth-overlay hidden">
+    <div class="auth-card" id="authCard">
+      <div id="authLoadingOverlay" class="auth-loading hidden">
+        <div class="spinner"></div>
+        <p id="authLoadingText">Đang xử lý...</p>
+      </div>
+
+      <h2>Công cụ đánh giá DGA dầu cách điện</h2>
+      <p class="note">Đăng nhập để xem dữ liệu. Chỉ tài khoản Admin mới thêm/sửa/xóa được.</p>
+
+      <!-- Chỉ hiện khi config.js có GOOGLE_CLIENT_ID VÀ thư viện Google Identity Services
+           tải thành công (xem initGoogleSignIn() trong app.js) — mặc định ẩn. -->
+      <div id="googleSignInWrap" class="google-signin-wrap hidden">
+        <div id="googleSignInBtn"></div>
+        <div class="auth-divider"><span>hoặc</span></div>
+      </div>
+
+      <div id="authLoginForm">
+        <label class="field">Email
+          <input id="auth_login_email" type="email" placeholder="ten@gmail.com" autocomplete="username" />
+        </label>
+        <label class="field">Mật khẩu
+          <input id="auth_login_password" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </label>
+        <button id="btnAuthLogin" class="btn primary" style="width:100%; margin-top:6px;">Đăng nhập</button>
+        <p class="auth-error hidden" id="authLoginError"></p>
+        <p class="auth-switch">Chưa có tài khoản? <a href="#" id="linkShowRegister">Đăng ký</a></p>
+      </div>
+
+      <div id="authRegisterForm" class="hidden">
+        <label class="field">Email
+          <input id="auth_register_email" type="email" placeholder="ten@gmail.com" autocomplete="username" />
+        </label>
+        <label class="field">Mật khẩu (tối thiểu 6 ký tự)
+          <input id="auth_register_password" type="password" placeholder="••••••••" autocomplete="new-password" />
+        </label>
+        <button id="btnAuthRegister" class="btn primary" style="width:100%; margin-top:6px;">Đăng ký</button>
+        <p class="auth-error hidden" id="authRegisterError"></p>
+        <p class="auth-switch">Đã có tài khoản? <a href="#" id="linkShowLogin">Đăng nhập</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
+  <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+  <header class="app-header">
+    <div>
+      <h1>Công cụ đánh giá DGA dầu cách điện</h1>
+      <p>QĐ1901/EVNNPT (Điều 10 – TI, Điều 54 – MBA) + IEC 60599:1999 Annex A (TU, Sứ xuyên, và tiêu chuẩn chặt hơn cho MBA) ·
+        Bảng 66 (Ba tỷ số khí) &amp; Tam giác Duval (Annex B) · có thể cấu hình tiêu chuẩn riêng theo nhà sản xuất</p>
+    </div>
+    <div class="header-right">
+      <span id="userBadge" class="badge user-badge hidden"></span>
+      <button id="btnLogout" class="btn ghost hidden" style="padding:6px 12px; font-size:12px;">Đăng xuất</button>
+      <span id="storageBadge" class="badge local">Đang tải...</span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="nhap">Nhập &amp; Phân tích</button>
+    <button class="tab-btn" data-tab="dau">Dầu cách điện (MBA)</button>
+    <button class="tab-btn" data-tab="lichsu">Lịch sử đo</button>
+    <button class="tab-btn" data-tab="xuhuong">Xu hướng</button>
+    <button class="tab-btn" data-tab="tieuchuan">Tiêu chuẩn</button>
+    <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri">Quản trị</button>
+  </nav>
+
+  <main>
+    <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
+    <section id="tab-nhap" class="tab-panel">
+      <div class="panel">
+        <h2>1. Thông tin lần đo</h2>
+        <div class="grid">
+          <label class="field">Trạm
+            <div class="combo-wrap">
+              <input id="f_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+              <button type="button" id="f_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="f_tram_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Thiết bị (tên/mã)
+            <div class="combo-wrap">
+              <input id="f_thietbi" type="text" placeholder="VD: TI174 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+              <button type="button" id="f_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+              <div id="f_thietbi_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Loại thiết bị
+            <select id="f_loai">
+              <option>TI (biến dòng điện)</option>
+              <option>TU (biến điện áp)</option>
+              <option>MBA/Kháng dầu</option>
+              <option>Sứ xuyên (Bushing)</option>
+              <option>Khác</option>
+            </select>
+          </label>
+          <label class="field" id="f_mbasubtype_wrap">Phân loại CPC (chỉ MBA/Kháng dầu)
+            <select id="f_mbasubtype">
+              <option>Không có CPC (hoặc CPC không thông dầu/khí với thùng chính)</option>
+              <option>CPC có thông dầu/khí với thùng chính</option>
+            </select>
+          </label>
+          <label class="field">Nhà sản xuất (tùy chọn)
+            <select id="f_nsx">
+              <option value="">— Không có / dùng tiêu chuẩn chặt hơn QĐ1901/IEC60599 —</option>
+            </select>
+          </label>
+          <label class="field">Pha
+            <select id="f_pha">
+              <option>A</option><option>B</option><option>C</option>
+            </select>
+          </label>
+          <label class="field">Lần đo
+            <input id="f_landocount" type="number" min="1" value="1" />
+          </label>
+          <label class="field">Ngày lấy mẫu
+            <input id="f_ngay" type="date" />
+          </label>
+          <label class="field">Ghi chú
+            <input id="f_ghichu" type="text" placeholder="(không bắt buộc)" />
+          </label>
+        </div>
+
+        <div class="section-title">Hàm lượng khí hòa tan (ppm)</div>
+        <div class="grid gases">
+          <label class="field">H2 <input id="g_H2" type="number" step="0.01" /></label>
+          <label class="field">CH4 <input id="g_CH4" type="number" step="0.01" /></label>
+          <label class="field">C2H6 <input id="g_C2H6" type="number" step="0.01" /></label>
+          <label class="field">C2H4 <input id="g_C2H4" type="number" step="0.01" /></label>
+          <label class="field">C2H2 <input id="g_C2H2" type="number" step="0.01" /></label>
+          <label class="field">CO <input id="g_CO" type="number" step="0.01" /></label>
+          <label class="field">CO2 <input id="g_CO2" type="number" step="0.01" /></label>
+        </div>
+
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <button class="btn primary" id="btnAnalyze">Phân tích &amp; Lưu</button>
+          <button class="btn ghost" id="btnClearForm">Xóa form</button>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="resultsPanel">
+        <h2>2. Kết quả đánh giá</h2>
+
+        <p class="note hidden" id="viewOnlyNote" style="color:var(--warn); font-weight:600;">Chế độ chỉ xem (User) — kết quả này KHÔNG được lưu vào lịch sử. Chỉ Admin mới lưu được.</p>
+        <div id="condemnBanner" class="condemn-banner hidden"></div>
+
+        <div class="stat-row">
+          <div class="stat-card"><div class="label">Tổng khí cháy (TCG)</div><div class="value" id="r_tcg">—</div></div>
+          <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="r_overall">—</div></div>
+          <div class="stat-card"><div class="label">Mã chẩn đoán (Bảng 66)</div><div class="value" id="r_diag" style="font-size:15px;">—</div></div>
+          <div class="stat-card"><div class="label">Mã chẩn đoán (Tam giác Duval)</div><div class="value" id="r_duval" style="font-size:15px;">—</div></div>
+        </div>
+        <div class="stat-row" style="grid-template-columns: 1fr;">
+          <div class="stat-card"><div class="label">Tiêu chuẩn áp dụng</div><div class="value" id="r_standard" style="font-size:13px; font-weight:600;">—</div></div>
+        </div>
+
+        <div class="section-title">Đánh giá giá trị tuyệt đối từng khí</div>
+        <table>
+          <thead><tr><th>Khí</th><th>Giá trị (ppm)</th><th>Ngưỡng áp dụng (ppm)</th><th>Ngưỡng loại bỏ (NSX)</th><th>Đánh giá</th></tr></thead>
+          <tbody id="r_gasTable"></tbody>
+        </table>
+
+        <div class="section-title">Ba tỷ số khí cơ bản (Bảng 66, Điều 54 QĐ1901 = Table 2, IEC 60599:1999)</div>
+        <table>
+          <thead><tr><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th><th>Ngưỡng PD (CH4/H2)</th><th>Điều kiện áp dụng</th></tr></thead>
+          <tbody><tr>
+            <td id="r_ratio1">—</td><td id="r_ratio2">—</td><td id="r_ratio3">—</td><td id="r_pdthreshold">—</td><td id="r_applicability">—</td>
+          </tr></tbody>
+        </table>
+
+        <div class="section-title">Tam giác Duval 1 (Annex B, Figure B.3, IEC 60599:1999)</div>
+        <div class="duval-wrap">
+          <svg id="duvalSvg" viewBox="-8 -8 116 102" style="width:280px; height:auto; flex:0 0 auto;"></svg>
+          <div style="flex:1; min-width:220px;">
+            <table>
+              <thead><tr><th>%CH4</th><th>%C2H4</th><th>%C2H2</th><th>Vùng</th></tr></thead>
+              <tbody><tr>
+                <td id="r_pctch4">—</td><td id="r_pctc2h4">—</td><td id="r_pctc2h2">—</td><td id="r_duvalzone">—</td>
+              </tr></tbody>
+            </table>
+            <p class="note">Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
+              điện/tăng nhiệt mà chính hình vẽ gốc IEC 60599:1999 Annex B cũng không phân định rạch ròi — nên đối
+              chiếu thêm Bảng 66 và dữ liệu vận hành trước khi kết luận.</p>
+          </div>
+        </div>
+
+        <div id="rateSection" class="hidden">
+          <div class="section-title">Tốc độ tăng hàm lượng khí so với lần đo trước (ppm/năm, Bảng 65)</div>
+          <p class="note" id="rateNote"></p>
+          <table>
+            <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
+            <tbody id="r_rateTable"></tbody>
+          </table>
+        </div>
+
+        <div class="section-title">Khuyến cáo</div>
+        <ul class="rec-list" id="r_recs"></ul>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: LỊCH SỬ ĐO ===================== -->
+    <section id="tab-lichsu" class="tab-panel hidden">
+      <div class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0;">Nhật ký các lần đo đã lưu</h2>
+          <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
+        </div>
+        <table>
+          <thead><tr>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
+            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th></th>
+          </tr></thead>
+          <tbody id="historyTable"></tbody>
+        </table>
+        <p class="note" id="historyEmpty">Chưa có lần đo nào được lưu.</p>
+      </div>
+
+      <div class="panel">
+        <h2>So sánh tốc độ gia tăng khí giữa 2 lần đo</h2>
+        <p class="note">Chọn 1 thiết bị (Trạm + Thiết bị + Pha) đã có từ 2 lần đo trở lên, rồi chọn 2 mốc thời gian
+          bất kỳ để so sánh — không bắt buộc phải là 2 lần liền kề. Tốc độ tự động đối chiếu Bảng 65 QĐ1901 (Điều 54,
+          tương ứng mục 8.4 IEC 60599:1999), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
+        <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+          <label class="field">Thiết bị
+            <select id="cmp_device"><option value="">— Chọn thiết bị —</option></select>
+          </label>
+          <label class="field">Lần đo thứ nhất
+            <select id="cmp_before"></select>
+          </label>
+          <label class="field">Lần đo thứ hai
+            <select id="cmp_after"></select>
+          </label>
+        </div>
+        <div style="margin-top:14px;">
+          <button class="btn primary" id="btnCompareRate">Tính tốc độ gia tăng</button>
+        </div>
+        <p class="note hidden" id="cmpEmpty">Chưa có thiết bị nào đủ 2 lần đo trở lên để so sánh.</p>
+        <div id="cmpResultWrap" class="hidden" style="margin-top:18px;">
+          <p class="note" id="cmpNote"></p>
+          <table>
+            <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
+            <tbody id="cmpTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: XU HƯỚNG (ĐỒ THỊ THEO THỜI GIAN) ===================== -->
+    <section id="tab-xuhuong" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Xu hướng theo thời gian</h2>
+        <p class="note">Chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA chính, dầu OLTC) và vẽ
+          đồ thị xu hướng cho các thông số bạn chọn — biểu đồ luôn thể hiện toàn bộ lịch sử của thiết bị đó.</p>
+        <label class="field" style="max-width:420px;">Thiết bị
+          <select id="tr_device"><option value="">— Chọn thiết bị —</option></select>
+        </label>
+        <p class="note hidden" id="trEmpty">Chưa có dữ liệu nào được lưu (khí hòa tan / dầu MBA / dầu OLTC) để vẽ xu hướng.</p>
+      </div>
+
+      <div class="panel hidden" id="trContentWrap">
+        <div id="trPhaseWrap" class="hidden" style="margin-bottom:18px;">
+          <p class="section-title" style="margin-top:0;">Lọc theo pha</p>
+          <p class="note" style="margin:0 0 8px;">Thiết bị này có dữ liệu từ nhiều pha — tick các pha muốn so sánh, mỗi
+            pha sẽ vẽ thành 1 đường riêng trên đồ thị để đối chiếu với nhau.</p>
+          <div class="trend-checks" id="trPhaseChecks"></div>
+        </div>
+
+        <h2>Chọn thông số cần vẽ</h2>
+        <div id="trParamsGasWrap" class="hidden">
+          <p class="section-title" style="margin-top:0;">Khí hòa tan (ppm)</p>
+          <div class="trend-checks" id="trParamsGas"></div>
+        </div>
+        <div id="trParamsOilWrap" class="hidden">
+          <p class="section-title">Dầu MBA chính</p>
+          <div class="trend-checks" id="trParamsOil"></div>
+        </div>
+        <div id="trParamsOltcWrap" class="hidden">
+          <p class="section-title">Dầu OLTC</p>
+          <div class="trend-checks" id="trParamsOltc"></div>
+        </div>
+
+        <div class="trend-chart-wrap">
+          <canvas id="trendChart"></canvas>
+        </div>
+        <p class="note hidden" id="trChartEmpty" style="margin-top:10px;">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
+          thiết bị có nhiều pha, cũng cần tick ít nhất 1 pha ở mục "Lọc theo pha".</p>
+        <p class="note hidden" id="trChartNoLib" style="margin-top:10px;">Không tải được thư viện vẽ đồ thị (Chart.js) — có
+          thể do mất mạng khi tải trang. Kiểm tra kết nối rồi tải lại trang; các bảng lịch sử bên dưới vẫn xem được bình thường.</p>
+      </div>
+
+      <div class="panel hidden" id="trHistGasWrap">
+        <h2>Lịch sử đo khí hòa tan</h2>
+        <table>
+          <thead><tr>
+            <th>Ngày</th><th>Pha</th><th>Lần</th>
+            <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th>
+          </tr></thead>
+          <tbody id="trHistGasTable"></tbody>
+        </table>
+      </div>
+
+      <div class="panel hidden" id="trHistOilWrap">
+        <h2>Lịch sử thí nghiệm dầu MBA chính</h2>
+        <table>
+          <thead><tr>
+            <th>Ngày</th><th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>Điện áp chọc thủng (kV)</th>
+          </tr></thead>
+          <tbody id="trHistOilTable"></tbody>
+        </table>
+      </div>
+
+      <div class="panel hidden" id="trHistOltcWrap">
+        <h2>Lịch sử thí nghiệm dầu OLTC</h2>
+        <table>
+          <thead><tr>
+            <th>Ngày</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Trạng thái dầu</th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>Điện áp chọc thủng (kV)</th>
+          </tr></thead>
+          <tbody id="trHistOltcTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: TIÊU CHUẨN NHÀ SẢN XUẤT ===================== -->
+    <section id="tab-tieuchuan" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Tiêu chuẩn theo nhà sản xuất</h2>
+        <p class="note">Chọn loại tiêu chuẩn cần cấu hình bên dưới: <strong>Khí hòa tan (DGA)</strong> — dùng ngưỡng
+          của nhà sản xuất thay cho QĐ1901/IEC60599 khi đánh giá giá trị tuyệt đối từng khí; hoặc <strong>Dầu cách
+          điện</strong> — dùng ngưỡng của nhà sản xuất thay cho Bảng 54/55/58 QĐ1901 (theo cấp điện áp + trạng thái
+          dầu) khi đánh giá Độ ẩm/tgδ/Điện áp chọc thủng ở tab "Dầu cách điện (MBA)". Thiết bị/thí nghiệm không chọn
+          nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định.</p>
+        <p class="note hidden" id="editingStandardNote" style="color:var(--warn); font-weight:600;">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
+
+        <div class="grid" style="margin-top:10px;">
+          <label class="field">Loại tiêu chuẩn
+            <select id="s_standard_type">
+              <option value="khi">Khí hòa tan (DGA)</option>
+              <option value="dau">Dầu cách điện (Độ ẩm / tgδ / Điện áp chọc thủng)</option>
+            </select>
+          </label>
+          <label class="field">Tên nhà sản xuất
+            <div class="combo-wrap">
+              <input id="s_manufacturer" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập nhà sản xuất mới" autocomplete="off" />
+              <button type="button" id="s_manufacturer_toggle" class="combo-toggle" aria-label="Hiện danh sách nhà sản xuất">▼</button>
+              <div id="s_manufacturer_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field" id="s_equipmenttype_wrap">Áp dụng cho loại thiết bị
+            <select id="s_equipmenttype">
+              <option>TI (biến dòng điện)</option>
+              <option>TU (biến điện áp)</option>
+              <option>MBA/Kháng dầu</option>
+              <option>Sứ xuyên (Bushing)</option>
+            </select>
+          </label>
+          <label class="field">Nguồn tài liệu (tùy chọn)
+            <input id="s_source" type="text" placeholder="VD: Quy trình TN-BD IOSK v2" />
+          </label>
+        </div>
+
+        <div id="stdGasFields">
+          <div class="section-title">Ngưỡng tuyệt đối từng khí (ppm)</div>
+          <div class="grid gases">
+            <label class="field">H2 <input id="s_H2" type="number" step="0.01" /></label>
+            <label class="field">CH4 <input id="s_CH4" type="number" step="0.01" /></label>
+            <label class="field">C2H6 <input id="s_C2H6" type="number" step="0.01" /></label>
+            <label class="field">C2H4 <input id="s_C2H4" type="number" step="0.01" /></label>
+            <label class="field">C2H2 <input id="s_C2H2" type="number" step="0.01" /></label>
+            <label class="field">CO <input id="s_CO" type="number" step="0.01" /></label>
+            <label class="field">CO2 <input id="s_CO2" type="number" step="0.01" /></label>
+          </div>
+          <p class="note">Bỏ trống khoảng tốc độ sinh khí nếu muốn dùng Bảng 65 QĐ1901 làm mặc định (khuyến nghị).</p>
+
+          <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — cảnh báo nghiêm trọng nếu vượt)</div>
+          <p class="note">Ngưỡng riêng, nghiêm trọng hơn "ngưỡng tuyệt đối" ở trên — QĐ1901/IEC không quy định mức
+            này, chỉ áp dụng khi chính nhà sản xuất/đơn vị bạn tự đặt ra. Không cần điền đủ 7 khí — để trống khí nào
+            thì khí đó không bị kiểm tra ngưỡng loại bỏ (thường chỉ cần đặt cho H2, C2H2).</p>
+          <div class="grid gases">
+            <label class="field">H2 <input id="s_loaibo_H2" type="number" step="0.01" /></label>
+            <label class="field">CH4 <input id="s_loaibo_CH4" type="number" step="0.01" /></label>
+            <label class="field">C2H6 <input id="s_loaibo_C2H6" type="number" step="0.01" /></label>
+            <label class="field">C2H4 <input id="s_loaibo_C2H4" type="number" step="0.01" /></label>
+            <label class="field">C2H2 <input id="s_loaibo_C2H2" type="number" step="0.01" /></label>
+            <label class="field">CO <input id="s_loaibo_CO" type="number" step="0.01" /></label>
+            <label class="field">CO2 <input id="s_loaibo_CO2" type="number" step="0.01" /></label>
+          </div>
+        </div>
+
+        <div id="stdOilFields" class="hidden">
+          <p class="note">Chỉ áp dụng cho MBA/Kháng dầu. Mỗi tiêu chuẩn ứng với 1 cấp điện áp + 1 trạng thái dầu cụ
+            thể (giống cấu trúc Bảng 54/55/58 QĐ1901) — có thể thêm nhiều tiêu chuẩn cho cùng 1 nhà sản xuất nếu cần
+            phân biệt theo cấp điện áp/trạng thái dầu. Bỏ trống hạng mục nào thì hạng mục đó vẫn dùng QĐ1901 mặc
+            định, chỉ các hạng mục có nhập số mới bị nhà sản xuất ghi đè.</p>
+          <div class="grid">
+            <label class="field">Cấp điện áp MBA
+              <select id="s_oil_voltage_class"></select>
+            </label>
+            <label class="field">Trạng thái dầu
+              <select id="s_oil_state">
+                <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
+                <option value="inservice">Dầu vận hành</option>
+              </select>
+            </label>
+          </div>
+          <div class="section-title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
+          <div class="grid gases">
+            <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" step="0.1" /></label>
+            <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" step="0.01" /></label>
+            <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" step="0.1" /></label>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:10px;">
+          <button class="btn primary" id="btnSaveStandard">Lưu tiêu chuẩn</button>
+          <button class="btn ghost hidden" id="btnCancelEditStandard">Hủy</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Danh sách tiêu chuẩn đã cấu hình</h2>
+        <table>
+          <thead><tr><th>Nhà sản xuất</th><th>Loại</th><th>Áp dụng</th><th>Ngưỡng</th><th>Nguồn</th><th></th></tr></thead>
+          <tbody id="standardsTable"></tbody>
+        </table>
+        <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: DẦU CÁCH ĐIỆN (MBA/Kháng dầu) ===================== -->
+    <section id="tab-dau" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
+        <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
+          thủng dầu (kV) — theo Bảng 58/55/54, Điều 50/47/46 QĐ1901, phân theo cấp điện áp MBA. Chỉ áp dụng cho
+          MBA/Kháng dầu — QĐ1901 không có bảng riêng cho dầu TI/TU (theo quy định nhà sản xuất). IEC 60599:1999
+          không tự quy định giới hạn cho 3 hạng mục này (thuộc phạm vi IEC 60422) nên công cụ chỉ đối chiếu theo
+          đúng bảng số liệu của QĐ1901.</p>
+
+        <div class="grid">
+          <label class="field">Trạm
+            <div class="combo-wrap">
+              <input id="o_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+              <button type="button" id="o_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="o_tram_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Thiết bị (tên/mã)
+            <div class="combo-wrap">
+              <input id="o_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+              <button type="button" id="o_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+              <div id="o_thietbi_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Cấp điện áp MBA
+            <select id="o_voltage_class"></select>
+          </label>
+          <label class="field">Trạng thái dầu
+            <select id="o_oilstate">
+              <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
+              <option value="inservice">Dầu vận hành</option>
+            </select>
+          </label>
+          <label class="field">Nhà sản xuất (tùy chọn)
+            <select id="o_nsx">
+              <option value="">— Không có / dùng QĐ1901 —</option>
+            </select>
+          </label>
+          <label class="field hidden" id="o_membrane_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
+            <input id="o_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
+            <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV)</span>
+          </label>
+          <label class="field">Ngày lấy mẫu
+            <input id="o_ngay" type="date" />
+          </label>
+          <label class="field">Ghi chú
+            <input id="o_ghichu" type="text" placeholder="(không bắt buộc)" />
+          </label>
+        </div>
+
+        <div class="section-title">Kết quả thí nghiệm</div>
+        <div class="grid gases">
+          <label class="field">Độ ẩm dầu (ppm) <input id="o_moisture" type="number" step="0.1" /></label>
+          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="o_tgd90" type="number" step="0.01" /></label>
+          <label class="field">Điện áp chọc thủng (kV) <input id="o_bdv" type="number" step="0.1" /></label>
+        </div>
+
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <button class="btn primary" id="btnAnalyzeOil">Đánh giá &amp; Lưu</button>
+          <button class="btn ghost" id="btnClearOilForm">Xóa form</button>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="oilResultsPanel">
+        <h2>Kết quả đánh giá dầu cách điện</h2>
+        <p class="note hidden" id="oilViewOnlyNote" style="color:var(--warn); font-weight:600;">Chế độ chỉ xem (User) — kết quả này KHÔNG được lưu vào lịch sử. Chỉ Admin mới lưu được.</p>
+        <div class="stat-row" style="grid-template-columns: 1fr;">
+          <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
+        </div>
+        <table>
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
+          <tbody id="o_resultTable"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2>Lịch sử thí nghiệm dầu đã lưu</h2>
+        <table>
+          <thead><tr>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th></th>
+          </tr></thead>
+          <tbody id="oilHistoryTable"></tbody>
+        </table>
+        <p class="note" id="oilHistoryEmpty">Chưa có thí nghiệm dầu nào được lưu.</p>
+      </div>
+
+      <!-- ============== DẦU KHOANG ĐIỀU ÁP DƯỚI TẢI (OLTC) — Điều 37/Bảng 49 ============== -->
+      <div class="panel">
+        <h2>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
+        <p class="note">Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
+          (đánh giá Độ ẩm + Điện áp chọc thủng; QĐ1901 không quy định ngưỡng tgδ cho dầu OLTC lúc vận hành, chỉ
+          ghi nhận để theo dõi xu hướng). Khi dầu OLTC <strong>mới lắp</strong>, Điều 37 quy định áp dụng CHUNG
+          tiêu chuẩn với dầu chính MBA (Bảng 54/55/58, có cả tgδ) — công cụ tự chuyển sang tiêu chuẩn đó khi bạn
+          chọn "Dầu mới". Dầu OLTC có thể lấy mẫu ở <strong>điểm cuối trung tính</strong> (3 pha dùng chung 1
+          khoang/1 mẫu, ngưỡng cố định không theo cấp điện áp) hoặc <strong>một pha / điểm không trung tính</strong>
+          (mỗi pha A/B/C có khoang/mẫu riêng, ngưỡng theo cấp điện áp MBA). QĐ1901 Bảng 49 không có số liệu riêng
+          cho cấp điện áp 35kV–110kV ở kiểu lấy mẫu pha riêng — công cụ sẽ báo "Không có ngưỡng" thay vì tự suy
+          diễn số liệu.</p>
+
+        <div class="grid">
+          <label class="field">Trạm
+            <div class="combo-wrap">
+              <input id="ot_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+              <button type="button" id="ot_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="ot_tram_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Thiết bị (tên/mã)
+            <div class="combo-wrap">
+              <input id="ot_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+              <button type="button" id="ot_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+              <div id="ot_thietbi_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Điểm lấy mẫu OLTC
+            <select id="ot_samplepoint"></select>
+          </label>
+          <label class="field" id="ot_phase_wrap">Pha
+            <select id="ot_phase">
+              <option value="A">Pha A</option>
+              <option value="B">Pha B</option>
+              <option value="C">Pha C</option>
+            </select>
+          </label>
+          <label class="field">Cấp điện áp MBA
+            <select id="ot_voltage_class"></select>
+          </label>
+          <label class="field">Trạng thái dầu
+            <select id="ot_oilstate">
+              <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
+              <option value="inservice">Dầu vận hành</option>
+            </select>
+          </label>
+          <label class="field">Nhà sản xuất (tùy chọn — chỉ áp dụng khi Dầu mới)
+            <select id="ot_nsx">
+              <option value="">— Không có / dùng QĐ1901 —</option>
+            </select>
+          </label>
+          <label class="field hidden" id="ot_membrane_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
+            <input id="ot_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
+            <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV, khi Dầu mới)</span>
+          </label>
+          <label class="field">Ngày lấy mẫu
+            <input id="ot_ngay" type="date" />
+          </label>
+          <label class="field">Ghi chú
+            <input id="ot_ghichu" type="text" placeholder="(không bắt buộc)" />
+          </label>
+        </div>
+
+        <div class="section-title">Kết quả thí nghiệm</div>
+        <div class="grid gases">
+          <label class="field">Độ ẩm dầu OLTC (ppm) <input id="ot_moisture" type="number" step="0.1" /></label>
+          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="ot_tgd90" type="number" step="0.01" /></label>
+          <label class="field">Điện áp chọc thủng (kV) <input id="ot_bdv" type="number" step="0.1" /></label>
+        </div>
+
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <button class="btn primary" id="btnAnalyzeOltcOil">Đánh giá &amp; Lưu</button>
+          <button class="btn ghost" id="btnClearOltcOilForm">Xóa form</button>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="oltcOilResultsPanel">
+        <h2>Kết quả đánh giá dầu OLTC</h2>
+        <p class="note hidden" id="oltcOilViewOnlyNote" style="color:var(--warn); font-weight:600;">Chế độ chỉ xem (User) — kết quả này KHÔNG được lưu vào lịch sử. Chỉ Admin mới lưu được.</p>
+        <div class="stat-row" style="grid-template-columns: 1fr;">
+          <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
+        </div>
+        <table>
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
+          <tbody id="ot_resultTable"></tbody>
+        </table>
+      </div>
+
+      <div class="panel">
+        <h2>Lịch sử thí nghiệm dầu OLTC đã lưu</h2>
+        <table>
+          <thead><tr>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
+            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th></th>
+          </tr></thead>
+          <tbody id="oltcOilHistoryTable"></tbody>
+        </table>
+        <p class="note" id="oltcOilHistoryEmpty">Chưa có thí nghiệm dầu OLTC nào được lưu.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: QUẢN TRỊ (chỉ Admin thấy) ===================== -->
+    <section id="tab-quantri" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Quản lý người dùng</h2>
+        <p class="note">Chỉ Admin xem được tab này. Admin có toàn quyền thêm/sửa/xóa dữ liệu; người dùng thường (User)
+          chỉ xem được, không lưu/sửa/xóa được.</p>
+        <table>
+          <thead><tr><th>Email</th><th>Vai trò</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
+          <tbody id="usersTable"></tbody>
+        </table>
+        <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    Công cụ hỗ trợ tham khảo — không thay thế nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.
+    Dữ liệu: <span id="footerStorageInfo">—</span>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="dga-logic.js"></script>
+  <script src="storage.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
