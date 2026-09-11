@@ -651,8 +651,10 @@
     <section id="tab-quantri" class="tab-panel hidden">
       <div class="panel">
         <h2>Quản lý người dùng</h2>
-        <p class="note">Chỉ Admin xem được tab này. Admin có toàn quyền thêm/sửa/xóa dữ liệu; người dùng thường (User)
-          chỉ xem được, không lưu/sửa/xóa được.</p>
+        <p class="note">Chỉ Admin xem được tab này. Admin có toàn quyền thêm/sửa/xóa mọi dữ liệu (Đo khí, Dầu MBA,
+          Dầu OLTC, Tiêu chuẩn, Trạm...). Người dùng thường (User) tự nhập và lưu được Đo khí/Dầu MBA/Dầu OLTC, và
+          sửa lại được các bản ghi do chính mình đã nhập — nhưng không sửa được bản ghi của người khác, không xóa
+          được bản ghi nào, và không thêm/sửa được Tiêu chuẩn/Trạm (các mục đó vẫn chỉ Admin mới thao tác được).</p>
         <table>
           <thead><tr><th>Email</th><th>Vai trò</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
           <tbody id="usersTable"></tbody>

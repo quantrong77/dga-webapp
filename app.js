@@ -274,7 +274,7 @@
   // ---------------------------------------------------------------------
   async function initApp() {
     if (Auth.enabled && Auth.current) {
-      const roleLabel = Auth.current.role === "admin" ? "Admin" : "User (chỉ xem)";
+      const roleLabel = Auth.current.role === "admin" ? "Admin" : "User";
       $("userBadge").textContent = `${Auth.current.email} — ${roleLabel}`;
       $("userBadge").classList.remove("hidden");
       $("btnLogout").classList.remove("hidden");
@@ -1061,7 +1061,7 @@
         const roleCell = tr.children[1];
         const sel = document.createElement("select");
         sel.className = "role-select";
-        sel.innerHTML = `<option value="user">User (chỉ xem)</option><option value="admin">Admin</option>`;
+        sel.innerHTML = `<option value="user">User</option><option value="admin">Admin</option>`;
         sel.value = u.role === "admin" ? "admin" : "user";
         // Không cho tự hạ quyền chính mình để tránh tự khóa mình khỏi tab Quản trị.
         sel.disabled = isSelf;

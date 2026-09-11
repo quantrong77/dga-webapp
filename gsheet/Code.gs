@@ -137,14 +137,14 @@ const SESSION_HEADERS = ["token", "email", "created_at", "expires_at"];
 
 // Email này TỰ ĐỘNG được cấp quyền "admin" ngay khi đăng ký (dù đăng ký bằng mật khẩu
 // hay bằng Google) — đổi thành email Admin thật của bạn nếu khác. Mọi email khác mặc
-// định là "user" (chỉ xem).
+// định là "user" (tự nhập/sửa được bản ghi của chính mình — xem prepareOwnedRecord()).
 const ADMIN_EMAIL = "quantrong77@gmail.com";
 
 // OAuth 2.0 Client ID cho "Đăng nhập bằng Google" (Google Identity Services) — tạo tại
 // https://console.cloud.google.com/apis/credentials (loại "OAuth client ID" > "Web
 // application"). Để TRỐNG ("") thì nút "Đăng nhập bằng Google" sẽ tự ẩn ở giao diện,
 // mọi thứ khác hoạt động bình thường như trước (chỉ đăng nhập email/mật khẩu).
-const GOOGLE_CLIENT_ID = "162684736346-spsmoiqgk6sp3k5d8l24h85p1mcd5cja.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // phiên đăng nhập hết hạn sau 30 ngày
 
