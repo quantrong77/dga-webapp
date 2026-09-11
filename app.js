@@ -300,6 +300,8 @@
     setupTabs();
     setupHandbookLightbox();
     setupMindmap();
+    setupSampleMethods();
+    setupSamplingLightbox();
     $("f_ngay").value = new Date().toISOString().slice(0, 10);
     $("o_ngay").value = new Date().toISOString().slice(0, 10);
     $("ot_ngay").value = new Date().toISOString().slice(0, 10);
@@ -632,6 +634,62 @@
         allNodes().forEach((d) => (d.open = false));
       });
     }
+  }
+
+  /** 7 phương pháp lấy mẫu (Điều 8, tab "Quy trình lấy mẫu") — cùng cơ chế "Mở tất
+   *  cả"/"Thu gọn tất cả" như setupMindmap(), áp dụng cho khối accordion riêng này. */
+  function setupSampleMethods() {
+    const root = $("sampleMethodsRoot");
+    const btnExpand = $("btnSampleExpandAll");
+    const btnCollapse = $("btnSampleCollapseAll");
+    if (!root) return;
+    const allNodes = () => root.querySelectorAll("details.mm-node");
+    if (btnExpand) {
+      btnExpand.addEventListener("click", () => {
+        allNodes().forEach((d) => (d.open = true));
+      });
+    }
+    if (btnCollapse) {
+      btnCollapse.addEventListener("click", () => {
+        allNodes().forEach((d) => (d.open = false));
+      });
+    }
+  }
+
+  /** Lightbox phóng to ảnh hướng dẫn (tab "Quy trình lấy mẫu") — dùng chung 1 lightbox
+   *  cho mọi ảnh (5 sơ đồ Hình 2-5 + thư viện ảnh thực tế): mỗi nút ".qt-img-btn" khai
+   *  báo ảnh gốc/chú thích qua data-full/data-caption, bấm vào sẽ nạp động lên lightbox. */
+  function setupSamplingLightbox() {
+    const lightbox = $("qtLightbox");
+    const closeBtn = $("btnCloseQtLightbox");
+    const imgEl = $("qtLightboxImg");
+    const captionEl = $("qtLightboxCaption");
+    if (!lightbox || !closeBtn || !imgEl) return;
+    const open = (btn) => {
+      const full = btn.getAttribute("data-full");
+      const caption = btn.getAttribute("data-caption") || "";
+      if (!full) return;
+      imgEl.src = full;
+      imgEl.alt = caption;
+      captionEl.textContent = caption;
+      captionEl.classList.toggle("hidden", !caption);
+      lightbox.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    };
+    const close = () => {
+      lightbox.classList.add("hidden");
+      document.body.style.overflow = "";
+    };
+    document.querySelectorAll(".qt-img-btn").forEach((btn) => {
+      btn.addEventListener("click", () => open(btn));
+    });
+    closeBtn.addEventListener("click", close);
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !lightbox.classList.contains("hidden")) close();
+    });
   }
 
   // _editingMeasurementId: id của lần đo đang SỬA (null = đang nhập MỚI). Cùng cơ chế

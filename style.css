@@ -297,6 +297,11 @@ header.app-header p {
 .role-select { font-size: 12px; padding: 4px 6px; }
 .badge.supabase { background: #d7f5df; color: #10692f; }
 
+/* Cố định thanh tab ở đầu trang khi cuộn xuống nội dung dài (header phía trên
+   vẫn cuộn đi bình thường) — để người dùng luôn chuyển tab được mà không phải
+   cuộn ngược lên đầu. z-index: 40 — thấp hơn danh sách gợi ý combobox không cần
+   (30 < 40 là đúng ý, gợi ý vẫn hiện dưới tab khi cần), và thấp hơn toast/overlay/
+   lightbox (100–300) để các lớp đó luôn nổi trên cùng. */
 nav.tabs {
   display: flex;
   gap: 4px;
@@ -304,6 +309,10 @@ nav.tabs {
   background: #fff;
   border-bottom: 1px solid var(--gray-300);
   overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
 }
 
 nav.tabs button {
@@ -1002,6 +1011,141 @@ footer.app-footer {
 
 @media (max-width: 560px) {
   .mm-leaves, .mm-sub { padding-left: 22px; }
+}
+
+/* ===== Tab "Quy trình lấy mẫu" — Điều 8 dùng lại khung .mm-node/.mm-branches ở trên,
+   chỉ thêm phần nội dung bên trong (.sm-*) và thư viện ảnh (.sm-gallery) ===== */
+.sm-body {
+  padding: 4px 18px 16px 33px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sm-body > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gray-900);
+}
+
+.sm-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  counter-reset: sm-step;
+}
+.sm-steps li {
+  position: relative;
+  padding-left: 32px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gray-900);
+  counter-increment: sm-step;
+}
+.sm-steps li::before {
+  content: counter(sm-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.sm-steps li strong { color: var(--mm-accent); }
+
+.sm-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--gray-700);
+  background: var(--mm-accent-bg);
+  border-left: 3px solid var(--mm-accent);
+  padding: 9px 12px;
+  border-radius: 6px;
+}
+
+.sm-figure {
+  align-self: flex-start;
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+}
+.sm-figure figcaption {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 6px;
+  text-align: center;
+}
+
+.qt-img-btn {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: zoom-in;
+  background: #fff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.qt-img-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+.qt-img-btn img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.35s ease;
+}
+.qt-img-btn:hover img { transform: scale(1.02); }
+
+.mm-node[open] > .sm-body { animation: dga-fade-up 0.25s ease; }
+
+.sm-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.sm-gallery figure { margin: 0; }
+.sm-gallery .qt-img-btn img { height: 130px; object-fit: cover; }
+.sm-gallery figcaption {
+  font-size: 12px;
+  color: var(--gray-700);
+  margin-top: 6px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+#qtLightbox .lightbox-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  text-align: center;
+  color: #fff;
+  font-size: 12.5px;
+  padding: 0 46px;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .sm-body { padding-left: 22px; }
+  .sm-figure { max-width: 100%; }
 }
 
 /* ===== Tab "Giới thiệu" (About) ===== */
