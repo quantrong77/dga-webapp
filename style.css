@@ -26,6 +26,11 @@
 
 * { box-sizing: border-box; }
 
+/* Lưới an toàn chống tràn ngang trên màn hình hẹp: ảnh/svg không tự vượt quá
+   bề rộng khối chứa (trừ khi cố ý ghi đè max-width lớn hơn ở nơi khác — CSS
+   sau trong file vẫn được ưu tiên nếu specificity cao hơn). */
+img, svg { max-width: 100%; }
+
 /* Luôn chừa sẵn chỗ cho thanh cuộn dọc (kể cả khi tab hiện tại không cần cuộn) —
    nếu không, mỗi lần chuyển tab mà nội dung ngắn/dài khác nhau, thanh cuộn sẽ tự
    ẩn/hiện, làm bề rộng khả dụng thay đổi vài pixel, khiến khối header (do có
@@ -136,7 +141,10 @@ header.app-header p {
 
 @media (max-width: 800px) {
   header.app-header {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), không phải "1fr" trơn — nếu không, cột đơn này sẽ bị ép
+       rộng ra bằng nội dung dài nhất bên trong (badge email người dùng), gây
+       tràn ngang toàn trang trên điện thoại ("grid blowout"). */
+    grid-template-columns: minmax(0, 1fr);
     justify-items: center;
     text-align: center;
   }
@@ -144,15 +152,23 @@ header.app-header p {
   header.app-header .header-center,
   .header-right {
     justify-self: center;
+    max-width: 100%;
   }
 }
 
 .badge {
+  display: inline-block;
+  vertical-align: middle;
   font-size: 12px;
   padding: 5px 12px;
   border-radius: 999px;
   font-weight: 600;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Chặn badge (nhất là badge email người dùng, có thể rất dài) tự nới rộng
+     quá khổ màn hình hẹp — hiện "…" thay vì tràn ngang trang. */
+  max-width: min(100%, 320px);
   box-shadow: var(--shadow-sm);
 }
 .badge.local { background: #fff3cd; color: #7a5b00; }
@@ -365,14 +381,21 @@ main {
 .tab-icon { width: 16px; height: 16px; margin-right: 6px; }
 .status-icon { width: 16px; height: 16px; margin-right: 5px; }
 
+/* minmax(0, 1fr) (thay vì 1fr trơn) ở TẤT CẢ grid-template-columns trong file này —
+   nếu không, các ô input/select bên trong (có độ rộng nội dung tối thiểu riêng) sẽ
+   ép cột "1fr" rộng hơn phần chia đều thực tế, làm tràn ngang toàn trang trên màn
+   hình hẹp (điện thoại) dù đã responsive theo số cột. */
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px 18px;
 }
-.grid.gases { grid-template-columns: repeat(4, 1fr); }
+.grid.gases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 800px) {
-  .grid, .grid.gases { grid-template-columns: repeat(2, 1fr); }
+  .grid, .grid.gases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .grid, .grid.gases { grid-template-columns: minmax(0, 1fr); }
 }
 
 label.field {
@@ -479,6 +502,14 @@ input:focus, select:focus, textarea:focus {
 .btn.danger:hover { background: var(--bad-bg); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; filter: none !important; }
 
+/* Bọc mỗi bảng trong 1 khung cuộn ngang riêng — nếu không, trên màn hình hẹp
+   (điện thoại) bảng nhiều cột sẽ đẩy tràn ngang toàn bộ trang thay vì chỉ cuộn
+   trong phạm vi bảng. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -516,11 +547,12 @@ tbody tr:hover { background: var(--blue-100); }
 
 .stat-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 16px;
 }
-@media (max-width: 800px) { .stat-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 800px) { .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .stat-row { grid-template-columns: minmax(0, 1fr); } }
 
 .stat-card {
   background: var(--gray-50);
@@ -611,11 +643,11 @@ tbody tr:hover { background: var(--blue-100); }
 
 .status-legend {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   margin: 4px 0 18px;
 }
-@media (max-width: 800px) { .status-legend { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .status-legend { grid-template-columns: minmax(0, 1fr); } }
 .status-legend-card {
   border-radius: var(--radius);
   border: 2px solid;

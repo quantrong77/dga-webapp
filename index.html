@@ -224,34 +224,34 @@
           <div class="stat-card"><div class="label">Mã chẩn đoán (Bảng 66)</div><div class="value" id="r_diag" style="font-size:15px;">—</div></div>
           <div class="stat-card"><div class="label">Mã chẩn đoán (Tam giác Duval)</div><div class="value" id="r_duval" style="font-size:15px;">—</div></div>
         </div>
-        <div class="stat-row" style="grid-template-columns: 1fr;">
+        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Tiêu chuẩn áp dụng</div><div class="value" id="r_standard" style="font-size:13px; font-weight:600;">—</div></div>
         </div>
 
         <div class="section-title">Đánh giá giá trị tuyệt đối từng khí</div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Khí</th><th>Giá trị (ppm)</th><th>Ngưỡng áp dụng (ppm)</th><th>Ngưỡng loại bỏ (NSX)</th><th>Đánh giá</th></tr></thead>
           <tbody id="r_gasTable"></tbody>
-        </table>
+        </table></div>
 
         <div class="section-title">Ba tỷ số khí cơ bản (Bảng 66, Điều 54 QĐ1901 = Table 2, IEC 60599:1999)</div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th><th>Ngưỡng PD (CH4/H2)</th><th>Điều kiện áp dụng</th></tr></thead>
           <tbody><tr>
             <td id="r_ratio1">—</td><td id="r_ratio2">—</td><td id="r_ratio3">—</td><td id="r_pdthreshold">—</td><td id="r_applicability">—</td>
           </tr></tbody>
-        </table>
+        </table></div>
 
         <div class="section-title">Tam giác Duval 1 (Annex B, Figure B.3, IEC 60599:1999)</div>
         <div class="duval-wrap">
-          <svg id="duvalSvg" viewBox="-8 -8 116 102" style="width:280px; height:auto; flex:0 0 auto;"></svg>
+          <svg id="duvalSvg" viewBox="-8 -8 116 102" style="width:280px; max-width:100%; height:auto; flex:0 0 auto;"></svg>
           <div style="flex:1; min-width:220px;">
-            <table>
+            <div class="table-scroll"><table>
               <thead><tr><th>%CH4</th><th>%C2H4</th><th>%C2H2</th><th>Vùng</th></tr></thead>
               <tbody><tr>
                 <td id="r_pctch4">—</td><td id="r_pctc2h4">—</td><td id="r_pctc2h2">—</td><td id="r_duvalzone">—</td>
               </tr></tbody>
-            </table>
+            </table></div>
             <p class="note">Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
               điện/tăng nhiệt mà chính hình vẽ gốc IEC 60599:1999 Annex B cũng không phân định rạch ròi — nên đối
               chiếu thêm Bảng 66 và dữ liệu vận hành trước khi kết luận.</p>
@@ -261,10 +261,10 @@
         <div id="rateSection" class="hidden">
           <div class="section-title">Tốc độ tăng hàm lượng khí so với lần đo trước (ppm/năm, Bảng 65)</div>
           <p class="note" id="rateNote"></p>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
             <tbody id="r_rateTable"></tbody>
-          </table>
+          </table></div>
         </div>
 
         <div class="section-title">Khuyến cáo</div>
@@ -279,13 +279,13 @@
           <h2 style="margin:0;">Nhật ký các lần đo đã lưu</h2>
           <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
         </div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
             <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th></th>
           </tr></thead>
           <tbody id="historyTable"></tbody>
-        </table>
+        </table></div>
         <p class="note" id="historyEmpty">Chưa có lần đo nào được lưu.</p>
       </div>
 
@@ -294,7 +294,7 @@
         <p class="note">Chọn 1 thiết bị (Trạm + Thiết bị + Pha) đã có từ 2 lần đo trở lên, rồi chọn 2 mốc thời gian
           bất kỳ để so sánh — không bắt buộc phải là 2 lần liền kề. Tốc độ tự động đối chiếu Bảng 65 QĐ1901 (Điều 54,
           tương ứng mục 8.4 IEC 60599:1999), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
-        <div class="grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="grid">
           <label class="field">Thiết bị
             <select id="cmp_device"><option value="">— Chọn thiết bị —</option></select>
           </label>
@@ -311,10 +311,10 @@
         <p class="note hidden" id="cmpEmpty">Chưa có thiết bị nào đủ 2 lần đo trở lên để so sánh.</p>
         <div id="cmpResultWrap" class="hidden" style="margin-top:18px;">
           <p class="note" id="cmpNote"></p>
-          <table>
+          <div class="table-scroll"><table>
             <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
             <tbody id="cmpTable"></tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </section>
@@ -364,34 +364,34 @@
 
       <div class="panel hidden" id="trHistGasWrap">
         <h2>Lịch sử đo khí hòa tan</h2>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Pha</th><th>Lần</th>
             <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th>
           </tr></thead>
           <tbody id="trHistGasTable"></tbody>
-        </table>
+        </table></div>
       </div>
 
       <div class="panel hidden" id="trHistOilWrap">
         <h2>Lịch sử thí nghiệm dầu MBA chính</h2>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>Điện áp chọc thủng (kV)</th>
           </tr></thead>
           <tbody id="trHistOilTable"></tbody>
-        </table>
+        </table></div>
       </div>
 
       <div class="panel hidden" id="trHistOltcWrap">
         <h2>Lịch sử thí nghiệm dầu OLTC</h2>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Trạng thái dầu</th>
             <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>Điện áp chọc thủng (kV)</th>
           </tr></thead>
           <tbody id="trHistOltcTable"></tbody>
-        </table>
+        </table></div>
       </div>
     </section>
 
@@ -493,10 +493,10 @@
 
       <div class="panel">
         <h2>Danh sách tiêu chuẩn đã cấu hình</h2>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Nhà sản xuất</th><th>Loại</th><th>Áp dụng</th><th>Ngưỡng</th><th>Nguồn</th><th></th></tr></thead>
           <tbody id="standardsTable"></tbody>
-        </table>
+        </table></div>
         <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
       </div>
     </section>
@@ -814,24 +814,24 @@
 
       <div class="panel hidden" id="oilResultsPanel">
         <h2>Kết quả đánh giá dầu cách điện</h2>
-        <div class="stat-row" style="grid-template-columns: 1fr;">
+        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
         </div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
           <tbody id="o_resultTable"></tbody>
-        </table>
+        </table></div>
       </div>
 
       <div class="panel">
         <h2>Lịch sử thí nghiệm dầu đã lưu</h2>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
             <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th></th>
           </tr></thead>
           <tbody id="oilHistoryTable"></tbody>
-        </table>
+        </table></div>
         <p class="note" id="oilHistoryEmpty">Chưa có thí nghiệm dầu nào được lưu.</p>
       </div>
 
@@ -916,24 +916,24 @@
 
       <div class="panel hidden" id="oltcOilResultsPanel">
         <h2>Kết quả đánh giá dầu OLTC</h2>
-        <div class="stat-row" style="grid-template-columns: 1fr;">
+        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
         </div>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
           <tbody id="ot_resultTable"></tbody>
-        </table>
+        </table></div>
       </div>
 
       <div class="panel">
         <h2>Lịch sử thí nghiệm dầu OLTC đã lưu</h2>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
             <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th></th>
           </tr></thead>
           <tbody id="oltcOilHistoryTable"></tbody>
-        </table>
+        </table></div>
         <p class="note" id="oltcOilHistoryEmpty">Chưa có thí nghiệm dầu OLTC nào được lưu.</p>
       </div>
     </section>
@@ -983,10 +983,10 @@
           Dầu OLTC, Tiêu chuẩn, Trạm...). Người dùng thường (User) tự nhập và lưu được Đo khí/Dầu MBA/Dầu OLTC, và
           sửa lại được các bản ghi do chính mình đã nhập — nhưng không sửa được bản ghi của người khác, không xóa
           được bản ghi nào, và không thêm/sửa được Tiêu chuẩn/Trạm (các mục đó vẫn chỉ Admin mới thao tác được).</p>
-        <table>
+        <div class="table-scroll"><table>
           <thead><tr><th>Email</th><th>Vai trò</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
           <tbody id="usersTable"></tbody>
-        </table>
+        </table></div>
         <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
       </div>
     </section>
