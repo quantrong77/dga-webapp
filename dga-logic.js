@@ -772,6 +772,92 @@ function evaluateOilTest({ voltageClass, oilState, hasMembraneN2, moisture, tgd9
   return { rows, overall };
 }
 
+// ---------------------------------------------------------------------------
+// 8bis) Trạng thái tổng thể — số hóa lưu đồ đánh giá DGA (Hình 1, mục 6, IEC
+//    60599:1999) thành 1 thuật toán 3 mức duy nhất, hiển thị nổi bật ở đầu kết quả
+//    phân tích và giải thích chi tiết ở tab "Quy trình đánh giá":
+//      - "normal" (Bình thường): tất cả khí dưới giá trị điển hình VÀ tốc độ tăng khí
+//        bình thường — nhánh phải của lưu đồ gốc ("Report as typical DGA/healthy
+//        equipment").
+//      - "alert" (Cảnh báo — ALERT condition): có khí vượt giá trị điển hình hoặc tốc
+//        độ tăng bất thường, nhưng CHƯA vượt ngưỡng tuyệt đối/loại bỏ và loại sự cố
+//        (nếu xác định được) chưa đổi khác so với lần đo liền trước.
+//      - "alarm" (Báo động — ALARM condition): vượt ngưỡng tuyệt đối (Không đạt
+//        QĐ1901/IEC hoặc tiêu chuẩn nhà sản xuất), HOẶC vượt ngưỡng loại bỏ nhà sản
+//        xuất, HOẶC loại sự cố theo Bảng 66 đổi khác so với lần đo liền trước — đúng
+//        nhánh "Gas concentration above alarm values... or change in fault type" của
+//        lưu đồ gốc.
+//    CHỈ mang tính hỗ trợ tự động; KHÔNG thay thế nguyên tắc đánh giá tổng thể tại
+//    Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/giá trị xuất xưởng/hướng dẫn
+//    nhà sản xuất/diễn biến vận hành thực tế — những yếu tố phần mềm không có đủ dữ
+//    liệu để tự động hóa).
+// ---------------------------------------------------------------------------
+
+function diagnosisIsConclusive(diagnosis) {
+  return !!diagnosis && diagnosis !== "Không xác định (ngoài Bảng 66/hỗn hợp khiếm khuyết)";
+}
+
+/**
+ * @param {object} p
+ * @param {boolean} p.overallOk kết quả overallVerdict() === "Đạt"
+ * @param {number} p.exceedCount kết quả countExceedTypical()
+ * @param {string} p.diagnosis kết quả diagnoseRatios() của lần đo hiện tại
+ * @param {string|null} p.priorDiagnosis kết quả diagnoseRatios() của lần đo liền trước (nếu có)
+ * @param {Array|null} p.rateRows kết quả computeRateOfChange() (nếu có lần đo trước)
+ * @param {Array} p.condemningRows kết quả evaluateCondemning()
+ * @returns {{level:"normal"|"alert"|"alarm", label:string, reasons:string[], action:string}}
+ */
+function computeOverallStatus({ overallOk, exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows }) {
+  const condemnExceeded = condemningExceededRows(condemningRows);
+  const rateWarnings = (rateRows || []).filter((r) => r.verdict && r.verdict.startsWith("⚠"));
+  const faultTypeChanged =
+    diagnosisIsConclusive(diagnosis) && diagnosisIsConclusive(priorDiagnosis) && diagnosis !== priorDiagnosis;
+
+  const alarmReasons = [];
+  if (condemnExceeded.length > 0) {
+    alarmReasons.push(
+      `Vượt ngưỡng LOẠI BỎ do nhà sản xuất quy định ở ${condemnExceeded.length} khí (${condemnExceeded.map((r) => r.gas).join(", ")}).`
+    );
+  }
+  if (!overallOk) {
+    alarmReasons.push('Có khí vượt ngưỡng tuyệt đối đang áp dụng ("Không đạt") — xem bảng "Đánh giá giá trị tuyệt đối từng khí".');
+  }
+  if (faultTypeChanged) {
+    alarmReasons.push(`Loại sự cố theo Bảng 66 đổi khác so với lần đo liền trước: "${priorDiagnosis}" → "${diagnosis}".`);
+  }
+  if (alarmReasons.length > 0) {
+    return {
+      level: "alarm",
+      label: "BÁO ĐỘNG (ALARM)",
+      reasons: alarmReasons,
+      action: "Hành động ngay: lấy mẫu bổ sung xác nhận, kiểm tra hiện trường, cân nhắc giám sát trực tuyến/sửa chữa, và báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
+    };
+  }
+
+  const alertReasons = [];
+  if (exceedCount > 0) {
+    alertReasons.push(`Có ${exceedCount} khí vượt giá trị điển hình (Bảng 64 QĐ1901/Điều 54, hoặc Annex A IEC 60599:1999 theo loại thiết bị).`);
+  }
+  if (rateWarnings.length > 0) {
+    alertReasons.push(`Tốc độ tăng khí vượt khoảng điển hình Bảng 65 ở ${rateWarnings.length} khí (${rateWarnings.map((r) => r.gas).join(", ")}).`);
+  }
+  if (alertReasons.length > 0) {
+    return {
+      level: "alert",
+      label: "CẢNH BÁO (ALERT)",
+      reasons: alertReasons,
+      action: "Tăng tần suất lấy mẫu, cân nhắc giám sát trực tuyến; đối chiếu mã chẩn đoán Bảng 66/Tam giác Duval để theo dõi sát diễn biến.",
+    };
+  }
+
+  return {
+    level: "normal",
+    label: "BÌNH THƯỜNG",
+    reasons: ["Tất cả khí dưới giá trị điển hình; tốc độ tăng khí (nếu có lần đo trước để so sánh) trong khoảng bình thường."],
+    action: "Tiếp tục giám sát định kỳ theo chu kỳ quy định (Điều 3, 7 QĐ1901).",
+  };
+}
+
 // Export cho cả trình duyệt (global) lẫn Node (module.exports, dùng để test)
 const DGA = {
   GASES, EQUIPMENT_TYPES, MBA_SUBTYPES, INSTRUMENT_SUBTYPES,
@@ -782,7 +868,7 @@ const DGA = {
   evaluateCondemning, condemningExceededRows,
   countExceedTypical, computeRatios, diagnoseRatios, ratioApplicability, computeRateOfChange,
   normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
-  buildRecommendations,
+  buildRecommendations, computeOverallStatus,
   OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
   OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest,
 };

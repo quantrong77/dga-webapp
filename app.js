@@ -284,13 +284,13 @@
     const badge = $("storageBadge");
     const footerInfo = $("footerStorageInfo");
     if (Storage.mode === "gsheet") {
-      badge.textContent = "Đã kết nối database (Google Sheets)";
+      badge.textContent = "Đã kết nối database";
       badge.className = "badge supabase";
-      footerInfo.textContent = "lưu trên Google Sheets (dùng chung nhiều máy)";
+      footerInfo.textContent = "lưu trên database dùng chung (nhiều máy cùng truy cập)";
     } else if (Storage.mode === "supabase") {
-      badge.textContent = "Đã kết nối database (Supabase)";
+      badge.textContent = "Đã kết nối database";
       badge.className = "badge supabase";
-      footerInfo.textContent = "lưu trên Supabase (dùng chung nhiều máy)";
+      footerInfo.textContent = "lưu trên database dùng chung (nhiều máy cùng truy cập)";
     } else {
       badge.textContent = "Chế độ thử nghiệm (chỉ lưu trên trình duyệt này)";
       badge.className = "badge local";
@@ -298,6 +298,8 @@
     }
 
     setupTabs();
+    setupHandbookLightbox();
+    setupMindmap();
     $("f_ngay").value = new Date().toISOString().slice(0, 10);
     $("o_ngay").value = new Date().toISOString().slice(0, 10);
     $("ot_ngay").value = new Date().toISOString().slice(0, 10);
@@ -586,6 +588,52 @@
     });
   }
 
+  /** Lightbox phóng to ảnh "Cẩm nang tham khảo nhanh" (tab "Quy trình đánh giá") —
+   *  bấm ảnh thu nhỏ để mở, bấm nút đóng/ra ngoài ảnh/phím Esc để đóng. */
+  function setupHandbookLightbox() {
+    const thumb = $("btnOpenHandbook");
+    const lightbox = $("handbookLightbox");
+    const closeBtn = $("btnCloseHandbook");
+    if (!thumb || !lightbox || !closeBtn) return;
+    const open = () => {
+      lightbox.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    };
+    const close = () => {
+      lightbox.classList.add("hidden");
+      document.body.style.overflow = "";
+    };
+    thumb.addEventListener("click", open);
+    closeBtn.addEventListener("click", close);
+    lightbox.addEventListener("click", (e) => {
+      if (e.target === lightbox) close();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !lightbox.classList.contains("hidden")) close();
+    });
+  }
+
+  /** Sơ đồ tư duy diễn giải DGA (tab "Quy trình đánh giá") — các nhánh dùng thẻ
+   *  <details>/<summary> gốc nên tự có hành vi bấm-để-mở/đóng, không cần JS.
+   *  Hàm này chỉ nối 2 nút tiện ích "Mở tất cả" / "Thu gọn tất cả". */
+  function setupMindmap() {
+    const root = $("mindmapRoot");
+    const btnExpand = $("btnMindmapExpandAll");
+    const btnCollapse = $("btnMindmapCollapseAll");
+    if (!root) return;
+    const allNodes = () => root.querySelectorAll("details.mm-node");
+    if (btnExpand) {
+      btnExpand.addEventListener("click", () => {
+        allNodes().forEach((d) => (d.open = true));
+      });
+    }
+    if (btnCollapse) {
+      btnCollapse.addEventListener("click", () => {
+        allNodes().forEach((d) => (d.open = false));
+      });
+    }
+  }
+
   // _editingMeasurementId: id của lần đo đang SỬA (null = đang nhập MỚI). Cùng cơ chế
   // với _editingStandardId (xem onEditStandard/resetStandardForm bên dưới).
   let _editingMeasurementId = null;
@@ -605,7 +653,7 @@
     $("btnAnalyze").textContent = "Phân tích & Lưu";
   }
 
-  /** Nạp 1 lần đo đã lưu lên form "Nhập & Phân tích" để sửa — bấm "Cập nhật & Lưu" sẽ
+  /** Nạp 1 lần đo đã lưu lên form tab "DGA" để sửa — bấm "Cập nhật & Lưu" sẽ
    *  ghi đè đúng bản ghi này (giữ nguyên id), thay vì tạo thêm 1 bản ghi mới. Chỉ gọi
    *  được khi canEditRecord(rec) đã xác nhận (nút "Sửa" chỉ hiện khi đủ quyền) — server
    *  (Code.gs) vẫn kiểm tra lại quyền này, đây chỉ là gợi ý hiển thị phía client. */
@@ -1165,15 +1213,25 @@
       .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
 
     let rateRows = null;
+    let priorDiagnosis = null;
     if (prior) {
       const deltaDays = Math.round((new Date(measurement.sample_date) - new Date(prior.sample_date)) / 86400000);
       rateRows = DGA.computeRateOfChange(prior, gases, deltaDays, standard.rate, measurement.equipment_type);
+      // Chẩn đoán Bảng 66 của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
+      // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()).
+      priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(prior), standard.pdThreshold);
     }
 
     // 5) Khuyến cáo tổng hợp
     const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows });
 
-    renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows });
+    // 5bis) Trạng thái tổng thể (Bình thường/Cảnh báo/Báo động) — số hóa lưu đồ Hình 1
+    //    IEC 60599:1999; xem giải thích đầy đủ ở tab "Quy trình đánh giá".
+    const overallStatus = DGA.computeOverallStatus({
+      overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
+    });
+
+    renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus });
 
     // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
     //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -1212,8 +1270,19 @@
     return `<span class="pill bad">Không đạt</span>`;
   }
 
-  function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows }) {
+  function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus }) {
     $("resultsPanel").classList.remove("hidden");
+
+    if (overallStatus) {
+      const STATUS_ICON = { normal: "check-circle", alert: "alert-triangle", alarm: "alert-octagon" };
+      $("overallStatusBanner").className = "status-banner status-" + overallStatus.level;
+      $("statusBadgeText").innerHTML =
+        `<svg class="status-icon" aria-hidden="true"><use href="#icon-${STATUS_ICON[overallStatus.level] || "check-circle"}"></use></svg>` +
+        escapeHtml(overallStatus.label);
+      $("statusReasonsList").innerHTML = overallStatus.reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("");
+      $("statusActionText").textContent = overallStatus.action;
+    }
+
     $("r_tcg").textContent = tcg.toFixed(1) + " ppm";
     $("r_overall").innerHTML = overall === "Đạt" ? `<span class="pill ok">Đạt</span>` : `<span class="pill bad">Không đạt</span>`;
     $("r_diag").textContent = diagnosis;

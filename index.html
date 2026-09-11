@@ -3,7 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Công cụ đánh giá DGA dầu cách điện — QĐ1901/EVNNPT</title>
+  <title>Đánh giá Dầu cách điện — QĐ1901/EVNNPT</title>
+  <!-- Icon ứng dụng (DGAOil): bình tam giác dầu cam + máy biến áp + biểu đồ xu hướng -->
+  <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="image/apple-touch-icon.png" />
+  <!-- Be Vietnam Pro — font Google Fonts hỗ trợ tốt dấu tiếng Việt, dùng cho toàn bộ giao diện -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Tải đồng bộ (không async/defer)
@@ -21,6 +29,31 @@
   <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
+  <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
+       ẩn, tham chiếu bằng <use href="#icon-..."> để không lặp lại mã SVG nhiều nơi. -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+    <defs>
+      <symbol id="icon-flask" viewBox="0 0 24 24"><path d="M9 2h6M10 2v6.2L4.6 17a2 2 0 0 0 1.7 3h11.4a2 2 0 0 0 1.7-3L14 8.2V2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.3 14h9.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-droplet" viewBox="0 0 24 24"><path d="M12 2.5S5 10.3 5 15a7 7 0 0 0 14 0c0-4.7-7-12.5-7-12.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-history" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 9v4l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 2h6M12 2v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-trend" viewBox="0 0 24 24"><path d="M3 16l5.5-6 4 4L21 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6h6v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-ruler" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 7v4M11 7v4M15 7v4M19 7v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-flow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="18" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 8.3V11a3 3 0 0 0 3 3h0.3M18 8.3V11a3 3 0 0 0-3 3h-0.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2.5l7.5 3.2v5.6c0 5-3.2 8.6-7.5 10.2-4.3-1.6-7.5-5.2-7.5-10.2V5.7L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.3l2.6 2.6L16.2 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M12 3.2l9.5 16.6H2.5L12 3.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9.5v4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4.5c2.5-1.2 5.5-1.2 8 0v15c-2.5-1.2-5.5-1.2-8 0v-15zM20 4.5c-2.5-1.2-5.5-1.2-8 0v15c2.5-1.2 5.5-1.2 8 0v-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.3 15.3L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 8v5M8 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-sitemap" viewBox="0 0 24 24"><circle cx="4.5" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="19" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.8 12H10M10 12V5h3.7M10 12h3.7M10 12v7h3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-4 4-6 7.5-6s6.3 2 7.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-phone" viewBox="0 0 24 24"><path d="M5 4.5h3.2l1.4 4-2 1.6a12 12 0 0 0 5.3 5.3l1.6-2 4 1.4V18c0 1-1 1.8-2 1.6-6-1-11-6-12-12C4 6.5 4.5 5 5 4.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 6.5l8 6.5 8-6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    </defs>
+  </svg>
+
   <!-- ===================== MÀN HÌNH ĐĂNG NHẬP / ĐĂNG KÝ ===================== -->
   <!-- Chỉ hiện khi Auth.enabled (chế độ Google Sheets) VÀ chưa xác thực được phiên
        đăng nhập đã lưu. Ẩn hẳn (display:none qua .hidden) ở chế độ Supabase/local. -->
@@ -31,8 +64,8 @@
         <p id="authLoadingText">Đang xử lý...</p>
       </div>
 
-      <h2>Công cụ đánh giá DGA dầu cách điện</h2>
-      <p class="note">Đăng nhập để xem dữ liệu. Chỉ tài khoản Admin mới thêm/sửa/xóa được.</p>
+      <h2>Đánh giá Dầu cách điện</h2>
+      <p class="note">Đăng nhập để xem và nhập dữ liệu. Xóa dữ liệu chỉ dành cho Admin.</p>
 
       <!-- Chỉ hiện khi config.js có GOOGLE_CLIENT_ID VÀ thư viện Google Identity Services
            tải thành công (xem initGoogleSignIn() trong app.js) — mặc định ẩn. -->
@@ -71,25 +104,32 @@
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
   <header class="app-header">
-    <div>
-      <h1>Công cụ đánh giá DGA dầu cách điện</h1>
+    <div class="header-left">
+      <span id="storageBadge" class="badge local">Đang tải...</span>
+    </div>
+    <div class="header-center">
+      <div class="app-title-row">
+        <img src="image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
+        <h1>Đánh giá Dầu cách điện</h1>
+      </div>
       <p>QĐ1901/EVNNPT (Điều 10 – TI, Điều 54 – MBA) + IEC 60599:1999 Annex A (TU, Sứ xuyên, và tiêu chuẩn chặt hơn cho MBA) ·
         Bảng 66 (Ba tỷ số khí) &amp; Tam giác Duval (Annex B) · có thể cấu hình tiêu chuẩn riêng theo nhà sản xuất</p>
     </div>
     <div class="header-right">
       <span id="userBadge" class="badge user-badge hidden"></span>
       <button id="btnLogout" class="btn ghost hidden" style="padding:6px 12px; font-size:12px;">Đăng xuất</button>
-      <span id="storageBadge" class="badge local">Đang tải...</span>
     </div>
   </header>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="nhap">Nhập &amp; Phân tích</button>
-    <button class="tab-btn" data-tab="dau">Dầu cách điện (MBA)</button>
-    <button class="tab-btn" data-tab="lichsu">Lịch sử đo</button>
-    <button class="tab-btn" data-tab="xuhuong">Xu hướng</button>
-    <button class="tab-btn" data-tab="tieuchuan">Tiêu chuẩn</button>
-    <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri">Quản trị</button>
+    <button class="tab-btn active" data-tab="nhap"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>DGA</button>
+    <button class="tab-btn" data-tab="dau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Dầu cách điện</button>
+    <button class="tab-btn" data-tab="lichsu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</button>
+    <button class="tab-btn" data-tab="xuhuong"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng</button>
+    <button class="tab-btn" data-tab="tieuchuan"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg>Tiêu chuẩn</button>
+    <button class="tab-btn" data-tab="quytrinh"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg>Quy trình đánh giá</button>
+    <button class="tab-btn" data-tab="about"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg>Giới thiệu</button>
+    <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg>Quản trị</button>
   </nav>
 
   <main>
@@ -169,6 +209,12 @@
 
       <div class="panel hidden" id="resultsPanel">
         <h2>2. Kết quả đánh giá</h2>
+
+        <div id="overallStatusBanner" class="status-banner status-normal">
+          <div class="status-badge" id="statusBadgeText">—</div>
+          <ul class="status-reasons" id="statusReasonsList"></ul>
+          <p class="status-action" id="statusActionText"></p>
+        </div>
 
         <div id="condemnBanner" class="condemn-banner hidden"></div>
 
@@ -356,7 +402,7 @@
         <p class="note">Chọn loại tiêu chuẩn cần cấu hình bên dưới: <strong>Khí hòa tan (DGA)</strong> — dùng ngưỡng
           của nhà sản xuất thay cho QĐ1901/IEC60599 khi đánh giá giá trị tuyệt đối từng khí; hoặc <strong>Dầu cách
           điện</strong> — dùng ngưỡng của nhà sản xuất thay cho Bảng 54/55/58 QĐ1901 (theo cấp điện áp + trạng thái
-          dầu) khi đánh giá Độ ẩm/tgδ/Điện áp chọc thủng ở tab "Dầu cách điện (MBA)". Thiết bị/thí nghiệm không chọn
+          dầu) khi đánh giá Độ ẩm/tgδ/Điện áp chọc thủng ở tab "Dầu cách điện". Thiết bị/thí nghiệm không chọn
           nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định.</p>
         <p class="note hidden" id="editingStandardNote" style="color:var(--warn); font-weight:600;">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
 
@@ -452,6 +498,251 @@
           <tbody id="standardsTable"></tbody>
         </table>
         <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: QUY TRÌNH ĐÁNH GIÁ ===================== -->
+    <section id="tab-quytrinh" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Quy trình nghiệp vụ đánh giá DGA</h2>
+        <p class="note">Chuyển thể từ lưu đồ đánh giá kết quả DGA (Hình 1 — Flow chart, mục 6, IEC 60599:1999) kết
+          hợp nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/QĐ-EVNNPT. Đây chính là thuật toán mà công cụ này áp
+          dụng để tính khối "Trạng thái tổng thể" hiển thị đầu mục 2 "Kết quả đánh giá" ở tab "DGA" cho mỗi lần đo.
+          Thuật toán CHỈ mang tính hỗ trợ tự động — KHÔNG thay thế đánh giá tổng thể của kỹ sư có thẩm quyền theo
+          Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/giá trị xuất xưởng/hướng dẫn nhà sản xuất/diễn biến vận
+          hành thực tế — những yếu tố phần mềm không có đủ dữ liệu để tự động hóa).</p>
+      </div>
+
+      <div class="panel">
+        <h2>Các bước xử lý</h2>
+        <div class="process-flow">
+          <div class="process-step">
+            <div class="step-num">1</div>
+            <h3>Nhập &amp; lưu kết quả đo</h3>
+            <p>Nhập nồng độ 7 khí hòa tan (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) cho 1 lần đo tại 1 Trạm/Thiết bị/Pha
+              cụ thể.</p>
+            <p class="maps-to">Thực hiện ở: <strong>Tab "DGA"</strong>, mục "1. Thông tin lần đo".</p>
+          </div>
+          <div class="process-step">
+            <div class="step-num">2</div>
+            <h3>So sánh với giá trị điển hình &amp; lần đo liền trước</h3>
+            <p>Hệ thống tự đối chiếu từng khí với "giá trị điển hình" theo đúng loại thiết bị (Bảng 64 QĐ1901/Điều
+              54, hoặc Annex A IEC 60599:1999), đồng thời tự tìm lần đo gần nhất liền trước (cùng Trạm + Thiết bị +
+              Pha) để tính tốc độ tăng khí (ppm/năm) và đối chiếu Bảng 65 QĐ1901.</p>
+            <p class="maps-to">Thực hiện tự động khi bấm <strong>"Phân tích &amp; Lưu"</strong>; xem lại các lần đo
+              trước ở <strong>Tab "Lịch sử đo"</strong>.</p>
+          </div>
+          <div class="process-step branch">
+            <div class="step-num">3</div>
+            <h3>Rẽ nhánh: có bất thường hay không?</h3>
+            <p><strong>Tất cả khí dưới giá trị điển hình và tốc độ tăng bình thường</strong> → kết luận thiết bị
+              đang ở trạng thái điển hình, chuyển thẳng tới Bước 6 (Bình thường) — không bắt buộc tính tỷ số khí.</p>
+            <p><strong>Có ít nhất 1 khí vượt giá trị điển hình, hoặc tốc độ tăng bất thường</strong> → bắt buộc tính
+              tỷ số khí ở Bước 4 (Điều 54 QĐ1901/mục 6.1(c) IEC 60599).</p>
+          </div>
+          <div class="process-step">
+            <div class="step-num">4</div>
+            <h3>Tính tỷ số khí &amp; tra mã loại sự cố</h3>
+            <p>Tính 3 tỷ số cơ bản (C2H2/C2H4, CH4/H2, C2H4/C2H6), tra mã loại sự cố theo Bảng 66 QĐ1901/Table 2
+              IEC 60599 (PD, D1, D2, T1, T2, T3); đối chiếu độc lập bằng Tam giác Duval 1 (Annex B) để tăng độ tin
+              cậy chẩn đoán.</p>
+            <p class="maps-to">Hiển thị ở mục "Ba tỷ số khí cơ bản" và "Tam giác Duval 1" trong kết quả phân tích.</p>
+          </div>
+          <div class="process-step">
+            <div class="step-num">5</div>
+            <h3>So với ngưỡng tuyệt đối (Đạt/Không đạt) &amp; ngưỡng loại bỏ</h3>
+            <p>Đối chiếu từng khí với ngưỡng tuyệt đối chính thức (QĐ1901 Bảng 12/64, hoặc tiêu chuẩn nhà sản xuất
+              nếu có cấu hình ở tab "Tiêu chuẩn") — đây chính là "giá trị báo động" (alarm values) của lưu đồ gốc
+              IEC 60599. Nếu nhà sản xuất có cấu hình thêm "ngưỡng loại bỏ" (condemning limit), đây là mức nghiêm
+              trọng hơn "Không đạt" thông thường.</p>
+          </div>
+          <div class="process-step branch">
+            <div class="step-num">6</div>
+            <h3>Rẽ nhánh: xác định mức độ báo động</h3>
+            <p>Ứng dụng tổng hợp toàn bộ kết quả ở các bước trên thành 1 trạng thái tổng thể duy nhất, hiển thị
+              ngay đầu mục "Kết quả đánh giá":</p>
+          </div>
+        </div>
+
+        <div class="status-legend">
+          <div class="status-legend-card normal">
+            <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-check-circle"></use></svg>BÌNH THƯỜNG</div>
+            <p>Tất cả khí dưới giá trị điển hình, tốc độ tăng khí bình thường.</p>
+            <p class="action">→ Tiếp tục giám sát định kỳ theo chu kỳ quy định (Điều 3, 7 QĐ1901).</p>
+          </div>
+          <div class="status-legend-card alert">
+            <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>CẢNH BÁO (ALERT)</div>
+            <p>Có khí vượt giá trị điển hình hoặc tốc độ tăng bất thường, nhưng CHƯA vượt ngưỡng tuyệt đối/loại bỏ,
+              và loại sự cố (nếu xác định được) chưa đổi khác so với lần đo trước.</p>
+            <p class="action">→ Tăng tần suất lấy mẫu, cân nhắc giám sát trực tuyến.</p>
+          </div>
+          <div class="status-legend-card alarm">
+            <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>BÁO ĐỘNG (ALARM)</div>
+            <p>Có khí vượt ngưỡng tuyệt đối ("Không đạt") hoặc vượt ngưỡng loại bỏ nhà sản xuất, hoặc loại sự cố
+              (Bảng 66) thay đổi so với lần đo liền trước.</p>
+            <p class="action">→ Hành động ngay: kiểm tra hiện trường, cân nhắc giám sát trực tuyến/sửa chữa, báo cáo
+              cấp có thẩm quyền (Điều 6 QĐ1901).</p>
+          </div>
+        </div>
+
+        <div class="process-flow" style="margin-top:4px;">
+          <div class="process-step">
+            <div class="step-num">7</div>
+            <h3>Lưu dữ liệu &amp; theo dõi xu hướng</h3>
+            <p>Mọi kết quả đều được lưu vào lịch sử kèm vết người nhập/sửa, làm dữ liệu nền cho lần đo kế tiếp (quay
+              lại Bước 2) và cho việc theo dõi diễn biến nhiều lần đo theo thời gian.</p>
+            <p class="maps-to">Lưu trữ ở <strong>Tab "Lịch sử đo"</strong>; xem diễn biến ở
+              <strong>Tab "Xu hướng"</strong>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-sitemap"></use></svg>Sơ đồ tư duy diễn giải DGA (IEC 60599)</h2>
+        <p class="note">Toàn bộ nội dung diễn giải DGA theo IEC 60599, hệ thống theo dạng sơ đồ tư duy — bấm vào từng
+          nhánh để mở/đóng nội dung chi tiết bên trong.</p>
+        <div class="mindmap" id="mindmapRoot">
+          <div class="mm-root"><svg class="icon-svg" aria-hidden="true"><use href="#icon-flow"></use></svg>Cẩm nang diễn giải DGA theo IEC 60599</div>
+          <div class="mindmap-controls">
+            <button type="button" class="btn ghost" id="btnMindmapExpandAll">Mở tất cả</button>
+            <button type="button" class="btn ghost" id="btnMindmapCollapseAll">Thu gọn tất cả</button>
+          </div>
+          <div class="mm-branches">
+            <details class="mm-node">
+              <summary>Phạm vi áp dụng<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>Thiết bị chứa dầu cách điện khoáng</li>
+                <li>Cách điện giấy/bìa cellulose</li>
+                <li>Chẩn đoán tình trạng vận hành</li>
+              </ul>
+            </details>
+
+            <details class="mm-node">
+              <summary>Định nghĩa<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>Sự cố (điện và nhiệt)</li>
+                <li>Sự kiện &amp; hư hỏng</li>
+                <li>Phóng điện cục bộ (PD)</li>
+                <li>Phóng điện năng lượng thấp/cao</li>
+                <li>Lỗi nhiệt (T1, T2, T3)</li>
+              </ul>
+            </details>
+
+            <details class="mm-node">
+              <summary>Cơ chế sinh khí<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <div class="mm-sub">
+                <details class="mm-node mm-node-sm">
+                  <summary>Phân hủy dầu<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Đứt liên kết hydrocarbon</li>
+                    <li>Tái tổ hợp khí (H2, CH4, C2H6, C2H4, C2H2)</li>
+                    <li>Sáp X và hạt carbon</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Phân hủy cellulose (giấy cách điện)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Hình thành CO và CO2</li>
+                    <li>Nước và hợp chất furan</li>
+                    <li>Than hóa khi trên 300°C</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Nguồn khí không do sự cố<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Phản ứng hóa học thép/nước</li>
+                    <li>Sơn và nhựa bên trong</li>
+                    <li>Tiếp xúc ánh sáng</li>
+                  </ul>
+                </details>
+              </div>
+            </details>
+
+            <details class="mm-node">
+              <summary>Xác định loại sự cố<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <div class="mm-sub">
+                <details class="mm-node mm-node-sm">
+                  <summary>Phương pháp tỷ số khí cơ bản<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Tỷ số C2H2/C2H4</li>
+                    <li>Tỷ số CH4/H2</li>
+                    <li>Tỷ số C2H4/C2H6</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Chỉ số phụ trợ<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>CO2/CO (mức liên quan giấy cách điện)</li>
+                    <li>O2/N2 (mức tiêu hao oxy)</li>
+                    <li>C2H2/H2 (nhiễm dầu từ OLTC)</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Công cụ đồ họa<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Tam giác Duval</li>
+                    <li>Hộp tỷ số khí 3 chiều</li>
+                  </ul>
+                </details>
+              </div>
+            </details>
+
+            <details class="mm-node">
+              <summary>Phân tích theo mức vận hành<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>Giá trị nồng độ điển hình (chuẩn 90%)</li>
+                <li>Tốc độ tăng khí (quy tắc 10%/tháng)</li>
+                <li>Giá trị báo động &amp; rủi ro nghiêm trọng</li>
+                <li>Độ chính xác &amp; giới hạn phát hiện (S)</li>
+              </ul>
+            </details>
+
+            <details class="mm-node">
+              <summary>Ghi chú theo từng loại thiết bị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>Máy biến áp lực</li>
+                <li>Máy biến áp đo lường (TI, TU)</li>
+                <li>Sứ xuyên</li>
+                <li>Cáp ngầm cách điện dầu</li>
+                <li>Thiết bị đóng cắt (OLTC)</li>
+              </ul>
+            </details>
+
+            <details class="mm-node">
+              <summary>Quy trình khuyến nghị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>Loại bỏ giá trị DGA bất thường/không nhất quán</li>
+                <li>Tính tốc độ tăng khí</li>
+                <li>So với giá trị điển hình</li>
+                <li>Áp dụng bảng tỷ số &amp; đồ thị</li>
+                <li>Xác định giấy cách điện có liên quan không</li>
+                <li>Đánh giá điều kiện Cảnh báo &amp; Báo động</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-book"></use></svg>Cẩm nang tham khảo nhanh</h2>
+        <p class="note">Áp phích tổng hợp trực quan các bước an toàn lấy mẫu, ngưỡng khí, phương pháp tỷ số khí và
+          Tam giác Duval theo IEC 60599 — tiện tra cứu nhanh khi ở hiện trường. <strong>Lưu ý:</strong> đây là bản
+          tóm tắt trực quan mang tính tham khảo nhanh; số liệu ngưỡng CHÍNH THỨC mà công cụ này dùng để tính toán
+          vẫn là bảng theo ĐÚNG loại thiết bị (TI/TU/MBA/Sứ xuyên) ở Điều 10/54 QĐ1901 và Annex A IEC 60599 như mô
+          tả ở Bước 2 và Bước 5 trên — không phải bảng gộp chung trong áp phích này.</p>
+        <button type="button" class="handbook-thumb" id="btnOpenHandbook" aria-label="Phóng to cẩm nang chẩn đoán DGA">
+          <img src="image/cam-nang-dga-thumb.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599" loading="lazy" />
+          <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+        </button>
+      </div>
+
+      <div class="panel">
+        <h2>Căn cứ</h2>
+        <p class="note">IEC 60599:1999, Hình 1 (Flow chart, mục 6) và mục 5.3/6.1(c)/8.4 — QĐ1901/QĐ-EVNNPT Điều 3
+          (nguyên tắc đánh giá tổng thể), Điều 54 (Bảng 63-66, phân tích khí hòa tan dầu MBA), Điều 10 (Bảng 12,
+          TI). Thuật toán "Trạng thái tổng thể" ở trên do công cụ này tự xây dựng để số hóa lưu đồ gốc — không phải
+          một bảng/điều khoản trích dẫn trực tiếp từ QĐ1901; luôn đối chiếu lại với đánh giá của kỹ sư có thẩm quyền
+          trước khi kết luận chính thức.</p>
       </div>
     </section>
 
@@ -648,6 +939,43 @@
     </section>
 
     <!-- ===================== TAB: QUẢN TRỊ (chỉ Admin thấy) ===================== -->
+    <!-- ===================== TAB: GIỚI THIỆU (ABOUT) ===================== -->
+    <section id="tab-about" class="tab-panel hidden">
+      <div class="panel about-panel">
+        <div class="about-hero">
+          <div class="about-logo">
+            <img src="image/app-icon-192.webp" alt="Icon ứng dụng DGAOil" width="52" height="52" />
+          </div>
+          <div>
+            <h2>DGAOil</h2>
+            <p class="note">Công cụ hỗ trợ đánh giá phân tích khí hòa tan (DGA) và dầu cách điện trong thiết bị điện,
+              tham chiếu QĐ1901/QĐ-EVNNPT và IEC 60599:1999 — dùng để tra cứu, đối chiếu nhanh, không thay thế
+              nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.</p>
+          </div>
+        </div>
+        <div class="about-contact">
+          <h3>Liên hệ</h3>
+          <ul class="about-contact-list">
+            <li>
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-user"></use></svg>
+              <span class="about-label">Phát triển</span>
+              <span class="about-value">Hoàng Trọng</span>
+            </li>
+            <li>
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-phone"></use></svg>
+              <span class="about-label">Điện thoại</span>
+              <a class="about-value" href="tel:+84909813284">0909 813 284</a>
+            </li>
+            <li>
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-mail"></use></svg>
+              <span class="about-label">Email</span>
+              <a class="about-value" href="mailto:quantrong77@gmail.com">quantrong77@gmail.com</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
     <section id="tab-quantri" class="tab-panel hidden">
       <div class="panel">
         <h2>Quản lý người dùng</h2>
@@ -668,6 +996,12 @@
     Công cụ hỗ trợ tham khảo — không thay thế nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.
     Dữ liệu: <span id="footerStorageInfo">—</span>
   </footer>
+
+  <!-- Lightbox phóng to cẩm nang chẩn đoán DGA (tab "Quy trình đánh giá") -->
+  <div id="handbookLightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Cẩm nang chẩn đoán DGA (phóng to)">
+    <button type="button" class="lightbox-close" id="btnCloseHandbook" aria-label="Đóng">✕</button>
+    <img src="image/cam-nang-dga.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599 (phóng to)" />
+  </div>
 
   <script src="config.js"></script>
   <script src="dga-logic.js"></script>
