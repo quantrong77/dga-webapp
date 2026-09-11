@@ -159,16 +159,17 @@
           <label class="field">CO2 <input id="g_CO2" type="number" step="0.01" /></label>
         </div>
 
+        <p class="note hidden" id="editingMeasurementNote" style="color:var(--warn); font-weight:600;">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
         <div style="margin-top:18px; display:flex; gap:10px;">
           <button class="btn primary" id="btnAnalyze">Phân tích &amp; Lưu</button>
           <button class="btn ghost" id="btnClearForm">Xóa form</button>
+          <button class="btn ghost hidden" id="btnCancelEditMeasurement">Hủy sửa</button>
         </div>
       </div>
 
       <div class="panel hidden" id="resultsPanel">
         <h2>2. Kết quả đánh giá</h2>
 
-        <p class="note hidden" id="viewOnlyNote" style="color:var(--warn); font-weight:600;">Chế độ chỉ xem (User) — kết quả này KHÔNG được lưu vào lịch sử. Chỉ Admin mới lưu được.</p>
         <div id="condemnBanner" class="condemn-banner hidden"></div>
 
         <div class="stat-row">
@@ -235,7 +236,7 @@
         <table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
-            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th></th>
+            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th></th>
           </tr></thead>
           <tbody id="historyTable"></tbody>
         </table>
@@ -512,15 +513,16 @@
           <label class="field">Điện áp chọc thủng (kV) <input id="o_bdv" type="number" step="0.1" /></label>
         </div>
 
+        <p class="note hidden" id="editingOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
         <div style="margin-top:18px; display:flex; gap:10px;">
           <button class="btn primary" id="btnAnalyzeOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearOilForm">Xóa form</button>
+          <button class="btn ghost hidden" id="btnCancelEditOilTest">Hủy sửa</button>
         </div>
       </div>
 
       <div class="panel hidden" id="oilResultsPanel">
         <h2>Kết quả đánh giá dầu cách điện</h2>
-        <p class="note hidden" id="oilViewOnlyNote" style="color:var(--warn); font-weight:600;">Chế độ chỉ xem (User) — kết quả này KHÔNG được lưu vào lịch sử. Chỉ Admin mới lưu được.</p>
         <div class="stat-row" style="grid-template-columns: 1fr;">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
         </div>
@@ -535,7 +537,7 @@
         <table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th></th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th></th>
           </tr></thead>
           <tbody id="oilHistoryTable"></tbody>
         </table>
@@ -613,15 +615,16 @@
           <label class="field">Điện áp chọc thủng (kV) <input id="ot_bdv" type="number" step="0.1" /></label>
         </div>
 
+        <p class="note hidden" id="editingOltcOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
         <div style="margin-top:18px; display:flex; gap:10px;">
           <button class="btn primary" id="btnAnalyzeOltcOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearOltcOilForm">Xóa form</button>
+          <button class="btn ghost hidden" id="btnCancelEditOltcOilTest">Hủy sửa</button>
         </div>
       </div>
 
       <div class="panel hidden" id="oltcOilResultsPanel">
         <h2>Kết quả đánh giá dầu OLTC</h2>
-        <p class="note hidden" id="oltcOilViewOnlyNote" style="color:var(--warn); font-weight:600;">Chế độ chỉ xem (User) — kết quả này KHÔNG được lưu vào lịch sử. Chỉ Admin mới lưu được.</p>
         <div class="stat-row" style="grid-template-columns: 1fr;">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
         </div>
@@ -636,7 +639,7 @@
         <table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th></th>
+            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th></th>
           </tr></thead>
           <tbody id="oltcOilHistoryTable"></tbody>
         </table>

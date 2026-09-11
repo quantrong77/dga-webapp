@@ -25,11 +25,19 @@
  *    trước khi lưu vào sheet "users" — KHÔNG lưu mật khẩu gốc.
  *  - Email trong hằng số ADMIN_EMAIL bên dưới sẽ TỰ ĐỘNG được cấp quyền "admin"
  *    ngay khi đăng ký (chỉ áp dụng đúng email đó). Mọi email khác mặc định là
- *    "user" (chỉ xem) — Admin có thể nâng quyền cho người khác sau trong tab
- *    "Quản trị" của web app.
+ *    "user" — Admin có thể nâng quyền cho người khác sau trong tab "Quản trị"
+ *    của web app.
  *  - Đăng nhập thành công trả về 1 "token" phiên (lưu 30 ngày). Token này bắt
- *    buộc phải gửi kèm mọi request đọc/ghi dữ liệu sau đó — thao tác GHI
- *    (thêm/sửa/xóa) chỉ chấp nhận khi token thuộc về user có role "admin".
+ *    buộc phải gửi kèm mọi request đọc/ghi dữ liệu sau đó.
+ *  - PHÂN QUYỀN GHI cho measurements/oil_tests/oltc_oil_tests (xem prepareOwnedRecord()):
+ *    role "user" được TỰ NHẬP bản ghi mới, và SỬA lại bản ghi do chính mình đã
+ *    nhập (không sửa được bản ghi của người khác); role "admin" sửa được TẤT
+ *    CẢ bản ghi. XÓA (deleteMeasurement/deleteOilTest/deleteOltcOilTest) luôn
+ *    yêu cầu "admin", bất kể ai đã tạo bản ghi đó. Mỗi bản ghi được "lưu vết":
+ *    cột created_by (người nhập, không đổi sau khi tạo), updated_by/updated_at
+ *    (người sửa gần nhất, lúc nào) — hiển thị ở cột "Người nhập" trong bảng
+ *    lịch sử trên web app. Các thao tác GHI khác (Tiêu chuẩn, Trạm, Quản trị
+ *    user) vẫn yêu cầu "admin" như cũ (requireAdmin).
  *
  * LƯU Ý BẢO MẬT: vì "Who has access" phải để "Anyone" để web app gọi được từ
  * trình duyệt, ai có URL này về lý thuyết vẫn gọi được API thô (giống cơ chế
@@ -47,6 +55,12 @@ const MEASUREMENT_HEADERS = [
   "id", "tram", "thiet_bi", "equipment_type", "mba_subtype", "manufacturer",
   "pha", "lan_do", "sample_date", "h2", "ch4", "c2h6", "c2h4", "c2h2", "co", "co2",
   "ghi_chu", "created_at",
+  // "Lưu vết" (audit) — thêm ở CUỐI (xem lưu ý ở STANDARD_HEADERS): created_by = email
+  // người đã NHẬP bản ghi này (không đổi sau khi tạo, kể cả khi Admin sửa lại số liệu);
+  // updated_by/updated_at = email + thời điểm SỬA gần nhất (bằng created_by/created_at
+  // ở lần lưu đầu tiên). Xem prepareOwnedRecord(). Bản ghi cũ trước khi có 2 cột này sẽ
+  // để trống — hiển thị "—" ở cột "Người nhập" trên web app, không suy diễn ngược.
+  "created_by", "updated_by", "updated_at",
 ];
 
 // QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —
@@ -83,6 +97,8 @@ const OILTEST_HEADERS = [
   "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu",
   // "manufacturer": thêm ở CUỐI, trước created_at (xem lưu ý ở STANDARD_HEADERS).
   "manufacturer", "created_at",
+  // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
+  "created_by", "updated_by", "updated_at",
 ];
 
 // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49. Sheet TÁCH RIÊNG
@@ -100,6 +116,8 @@ const OLTC_OILTEST_HEADERS = [
   "voltage_class", "oil_state", "has_membrane_n2",
   "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu",
   "manufacturer", "created_at",
+  // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
+  "created_by", "updated_by", "updated_at",
 ];
 
 // Tài khoản người dùng — mật khẩu KHÔNG lưu gốc, chỉ lưu password_hash (SHA-256
@@ -126,7 +144,7 @@ const ADMIN_EMAIL = "quantrong77@gmail.com";
 // https://console.cloud.google.com/apis/credentials (loại "OAuth client ID" > "Web
 // application"). Để TRỐNG ("") thì nút "Đăng nhập bằng Google" sẽ tự ẩn ở giao diện,
 // mọi thứ khác hoạt động bình thường như trước (chỉ đăng nhập email/mật khẩu).
-const GOOGLE_CLIENT_ID = "";
+const GOOGLE_CLIENT_ID = "162684736346-spsmoiqgk6sp3k5d8l24h85p1mcd5cja.apps.googleusercontent.com";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // phiên đăng nhập hết hạn sau 30 ngày
 
@@ -164,16 +182,18 @@ function doPost(e) {
     else if (action === "login") result = actionLogin(body);
     else if (action === "googleLogin") result = actionGoogleLogin(body);
     else if (action === "logout") result = actionLogout(body);
-    // Mọi action GHI dữ liệu dưới đây bắt buộc token hợp lệ VÀ role = "admin".
-    else if (action === "addMeasurement") { requireAdmin(token); result = upsertRow(SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, body.record); }
+    // measurements/oil_tests/oltc_oil_tests: NHẬP MỚI cho mọi role đã đăng nhập, SỬA bị
+    // giới hạn theo chủ bản ghi (Admin sửa được tất cả) — xem prepareOwnedRecord(). XÓA
+    // vẫn luôn yêu cầu "admin" (requireAdmin), bất kể ai đã tạo bản ghi đó.
+    else if (action === "addMeasurement") { result = upsertRow(SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, prepareOwnedRecord(token, SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, body.record)); }
     else if (action === "deleteMeasurement") { requireAdmin(token); result = deleteRow(SHEET_MEASUREMENTS, body.id); }
     else if (action === "saveStandard") { requireAdmin(token); result = upsertRow(SHEET_STANDARDS, STANDARD_HEADERS, body.record); }
     else if (action === "deleteStandard") { requireAdmin(token); result = deleteRow(SHEET_STANDARDS, body.id); }
     else if (action === "saveStation") { requireAdmin(token); result = upsertRow(SHEET_STATIONS, STATION_HEADERS, body.record); }
     else if (action === "deleteStation") { requireAdmin(token); result = deleteRow(SHEET_STATIONS, body.id); }
-    else if (action === "addOilTest") { requireAdmin(token); result = upsertRow(SHEET_OILTESTS, OILTEST_HEADERS, body.record); }
+    else if (action === "addOilTest") { result = upsertRow(SHEET_OILTESTS, OILTEST_HEADERS, prepareOwnedRecord(token, SHEET_OILTESTS, OILTEST_HEADERS, body.record)); }
     else if (action === "deleteOilTest") { requireAdmin(token); result = deleteRow(SHEET_OILTESTS, body.id); }
-    else if (action === "addOltcOilTest") { requireAdmin(token); result = upsertRow(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, body.record); }
+    else if (action === "addOltcOilTest") { result = upsertRow(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, prepareOwnedRecord(token, SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, body.record)); }
     else if (action === "deleteOltcOilTest") { requireAdmin(token); result = deleteRow(SHEET_OLTC_OILTESTS, body.id); }
     else if (action === "setUserRole") { requireAdmin(token); result = actionSetUserRole(body); }
     else if (action === "deleteUser") { requireAdmin(token); result = actionDeleteUser(body); }
@@ -342,6 +362,41 @@ function requireAdmin(token) {
   const user = requireSession(token);
   if (user.role !== "admin") throw new Error("Chỉ Admin mới được thực hiện thao tác này.");
   return user;
+}
+
+/** Chuẩn bị 1 bản ghi measurements/oil_tests/oltc_oil_tests trước khi upsertRow(), áp
+ *  dụng đúng quy tắc phân quyền + "lưu vết" mô tả ở đầu file: bất kỳ user nào đã đăng
+ *  nhập (role "user" hay "admin") đều được NHẬP bản ghi MỚI (record.id chưa có dòng nào
+ *  trùng); khi record.id trùng 1 dòng đã có (tức đang SỬA), chỉ Admin hoặc đúng người có
+ *  email trùng created_by của dòng đó mới được phép — nếu không, ném lỗi (client hiển thị
+ *  nguyên văn qua storageErrorMessage()). created_by luôn giữ nguyên giá trị gốc khi sửa
+ *  (không cho "đổi chủ" bản ghi); updated_by/updated_at luôn được ghi đè bằng người/lúc
+ *  đang thực hiện lần lưu này — kể cả lần tạo mới (updated_by = updated_at = như lúc tạo). */
+function prepareOwnedRecord(token, sheetName, headers, record) {
+  const user = requireSession(token);
+  if (!record || !record.id) throw new Error("Thiếu id bản ghi.");
+  const sh = getOrCreateSheet(sheetName, headers);
+  const idx = findRowIndexById(sh, record.id);
+  const now = new Date().toISOString();
+  if (idx > 0) {
+    const existing = rowToObject(headers, sh.getRange(idx, 1, 1, headers.length).getValues()[0]);
+    const ownerEmail = normalizeEmail(existing.created_by);
+    // Bản ghi CŨ (trước khi có created_by, ownerEmail rỗng) coi như không ai "sở hữu"
+    // được — chỉ Admin sửa được, an toàn hơn là mở cho bất kỳ user nào nhận là của mình.
+    if (user.role !== "admin" && ownerEmail !== normalizeEmail(user.email)) {
+      throw new Error(
+        existing.created_by
+          ? "Bạn chỉ được sửa bản ghi do chính mình nhập (bản ghi này do " + existing.created_by + " nhập)."
+          : "Bản ghi này được nhập trước khi có tính năng phân quyền theo người nhập — chỉ Admin sửa được."
+      );
+    }
+    return Object.assign({}, record, {
+      created_by: existing.created_by || user.email, // giữ nguyên người nhập gốc
+      updated_by: user.email,
+      updated_at: now,
+    });
+  }
+  return Object.assign({}, record, { created_by: user.email, updated_by: user.email, updated_at: now });
 }
 
 function actionMe(token) {

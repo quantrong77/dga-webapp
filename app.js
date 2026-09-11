@@ -43,11 +43,53 @@
 
   // ---------------------------------------------------------------------
   // Đăng nhập / phân quyền — chỉ có tác dụng khi Auth.enabled (chế độ Google
-  // Sheets, xem storage.js). Ở chế độ Supabase/localStorage, canWrite() luôn
-  // true — hành vi y hệt bản trước khi có đăng nhập.
+  // Sheets, xem storage.js). Ở chế độ Supabase/localStorage, mọi hàm bên dưới
+  // đều trả về true — hành vi y hệt bản trước khi có đăng nhập.
+  //
+  // canWrite(): CHỈ Admin — dùng cho Tiêu chuẩn/Trạm/Quản trị user, và cho nút
+  // "Xóa" của Đo khí/Dầu MBA/Dầu OLTC (xóa luôn là đặc quyền Admin).
+  //
+  // canSaveEntry(): mọi user ĐÃ ĐĂNG NHẬP (không cần Admin) — dùng để cho phép
+  // Đo khí/Dầu MBA/Dầu OLTC được TỰ NHẬP bản ghi mới. Trong thực tế luôn true
+  // một khi đã vào được giao diện chính (màn hình đăng nhập chặn từ trước),
+  // giữ lại hàm riêng để rõ ý định và phòng hờ.
+  //
+  // canEditRecord(rec): Admin sửa được mọi bản ghi; user thường chỉ sửa được
+  // bản ghi do CHÍNH MÌNH nhập (so theo rec.created_by — xem prepareOwnedRecord()
+  // ở Code.gs, đây chỉ là gợi ý hiển thị nút "Sửa"; quyền thật được kiểm tra lại
+  // ở server, không tin tưởng tuyệt đối phía client).
   // ---------------------------------------------------------------------
   function canWrite() {
     return !Auth.enabled || Auth.isAdmin();
+  }
+
+  function currentUserEmail() {
+    return (Auth.current && Auth.current.email) || null;
+  }
+
+  function isOwnRecord(rec) {
+    const email = currentUserEmail();
+    return !!(email && rec && rec.created_by && String(rec.created_by).trim().toLowerCase() === email.trim().toLowerCase());
+  }
+
+  function canSaveEntry() {
+    return !Auth.enabled || !!Auth.current;
+  }
+
+  function canEditRecord(rec) {
+    return !Auth.enabled || Auth.isAdmin() || isOwnRecord(rec);
+  }
+
+  /** Chuỗi ngắn hiển thị "Người nhập" trong bảng lịch sử — email người tạo bản ghi,
+   *  kèm tooltip cho biết ai/lúc nào sửa lần cuối nếu có. Bản ghi cũ (trước khi có
+   *  tính năng lưu vết) không có created_by → hiển thị "—". */
+  function ownerCellHtml(rec) {
+    if (!rec.created_by) return `<span class="pill muted" title="Bản ghi cũ, chưa có dữ liệu người nhập">—</span>`;
+    const editedLater = rec.updated_by && rec.updated_at && rec.updated_by !== rec.created_by;
+    const title = editedLater
+      ? `Sửa lần cuối bởi ${rec.updated_by} lúc ${new Date(rec.updated_at).toLocaleString("vi-VN")}`
+      : `Nhập lúc ${rec.created_at ? new Date(rec.created_at).toLocaleString("vi-VN") : ""}`;
+    return `<span style="font-size:12px;" title="${escapeHtml(title)}">${escapeHtml(rec.created_by)}${editedLater ? " ✎" : ""}</span>`;
   }
 
   async function init() {
@@ -431,11 +473,14 @@
 
     $("btnAnalyze").addEventListener("click", onAnalyze);
     $("btnClearForm").addEventListener("click", clearForm);
+    $("btnCancelEditMeasurement").addEventListener("click", clearForm);
     $("btnAnalyzeOil").addEventListener("click", onAnalyzeOil);
     $("btnClearOilForm").addEventListener("click", clearOilForm);
+    $("btnCancelEditOilTest").addEventListener("click", clearOilForm);
     $("o_voltage_class").addEventListener("change", toggleOilMembraneField);
     $("btnAnalyzeOltcOil").addEventListener("click", onAnalyzeOltcOil);
     $("btnClearOltcOilForm").addEventListener("click", clearOltcOilForm);
+    $("btnCancelEditOltcOilTest").addEventListener("click", clearOltcOilForm);
     $("ot_voltage_class").addEventListener("change", toggleOltcMembraneField);
     $("ot_samplepoint").addEventListener("change", toggleOltcPhaseField);
     $("btnSaveStandard").addEventListener("click", onSaveStandard);
@@ -541,11 +586,50 @@
     });
   }
 
+  // _editingMeasurementId: id của lần đo đang SỬA (null = đang nhập MỚI). Cùng cơ chế
+  // với _editingStandardId (xem onEditStandard/resetStandardForm bên dưới).
+  let _editingMeasurementId = null;
+
   function clearForm() {
     ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
     DGA.GASES.forEach((g) => ($("g_" + g).value = ""));
     $("f_landocount").value = 1;
     $("resultsPanel").classList.add("hidden");
+    resetMeasurementEditState();
+  }
+
+  function resetMeasurementEditState() {
+    _editingMeasurementId = null;
+    $("editingMeasurementNote").classList.add("hidden");
+    $("btnCancelEditMeasurement").classList.add("hidden");
+    $("btnAnalyze").textContent = "Phân tích & Lưu";
+  }
+
+  /** Nạp 1 lần đo đã lưu lên form "Nhập & Phân tích" để sửa — bấm "Cập nhật & Lưu" sẽ
+   *  ghi đè đúng bản ghi này (giữ nguyên id), thay vì tạo thêm 1 bản ghi mới. Chỉ gọi
+   *  được khi canEditRecord(rec) đã xác nhận (nút "Sửa" chỉ hiện khi đủ quyền) — server
+   *  (Code.gs) vẫn kiểm tra lại quyền này, đây chỉ là gợi ý hiển thị phía client. */
+  function onEditMeasurement(rec) {
+    if (!canEditRecord(rec)) return;
+    _editingMeasurementId = rec.id;
+    $("f_tram").value = rec.tram || "";
+    $("f_thietbi").value = rec.thiet_bi || "";
+    $("f_loai").value = rec.equipment_type || "";
+    refreshManufacturerOptions();
+    toggleMbaSubtypeField();
+    $("f_mbasubtype").value = rec.mba_subtype || "";
+    $("f_nsx").value = rec.manufacturer || "";
+    $("f_pha").value = rec.pha || "";
+    $("f_landocount").value = rec.lan_do ?? 1;
+    $("f_ngay").value = rec.sample_date || "";
+    $("f_ghichu").value = rec.ghi_chu || "";
+    const gasesRec = recordGases(rec);
+    DGA.GASES.forEach((g) => { $("g_" + g).value = gasesRec[g] ?? ""; });
+    $("editingMeasurementNote").classList.remove("hidden");
+    $("btnCancelEditMeasurement").classList.remove("hidden");
+    $("btnAnalyze").textContent = "Cập nhật & Lưu";
+    document.querySelector('button.tab-btn[data-tab="nhap"]').click();
+    $("f_tram").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   // ---------------------------------------------------------------------
@@ -1024,6 +1108,7 @@
     const mbaSubtype = equipmentType === DGA.EQUIPMENT_TYPES.MBA ? $("f_mbasubtype").value : null;
 
     const measurement = {
+      id: _editingMeasurementId || undefined,
       tram: $("f_tram").value.trim(),
       thiet_bi: $("f_thietbi").value.trim(),
       equipment_type: equipmentType,
@@ -1090,16 +1175,19 @@
 
     renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows });
 
-    // 6) Lưu vào lịch sử — CHỈ Admin (hoặc khi chưa bật đăng nhập). User thường vẫn
-    //    xem đầy đủ kết quả phân tích ở bước trên, chỉ không được lưu vào database
-    //    dùng chung (đúng như yêu cầu "user thường chỉ xem").
-    $("viewOnlyNote").classList.toggle("hidden", canWrite());
-    if (!canWrite()) return;
+    // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
+    //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
+    //    Admin hoặc đúng người đã nhập bản ghi đó (prepareOwnedRecord() ở Code.gs) — lỗi
+    //    nếu có sẽ hiện nguyên văn ở khối catch bên dưới.
+    if (!canSaveEntry()) return;
+    const wasEditing = !!_editingMeasurementId;
 
     try {
       await Storage.addMeasurement(measurement);
       await registerStationIfNew(measurement.tram);
+      resetMeasurementEditState();
       await refreshHistoryUI();
+      if (wasEditing) showToast("Đã cập nhật lần đo.");
     } catch (err) {
       alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
     }
@@ -1220,11 +1308,45 @@
     if (!applicable) $("o_membrane").checked = false;
   }
 
+  // _editingOilTestId: id của thí nghiệm dầu MBA đang SỬA (null = đang nhập MỚI).
+  let _editingOilTestId = null;
+
   function clearOilForm() {
     ["o_tram", "o_thietbi", "o_ghichu", "o_moisture", "o_tgd90", "o_bdv"].forEach((id) => ($(id).value = ""));
     $("o_membrane").checked = false;
     $("o_nsx").value = "";
     $("oilResultsPanel").classList.add("hidden");
+    resetOilTestEditState();
+  }
+
+  function resetOilTestEditState() {
+    _editingOilTestId = null;
+    $("editingOilTestNote").classList.add("hidden");
+    $("btnCancelEditOilTest").classList.add("hidden");
+    $("btnAnalyzeOil").textContent = "Đánh giá & Lưu";
+  }
+
+  /** Nạp 1 thí nghiệm dầu MBA đã lưu lên form để sửa — xem onEditMeasurement() ở trên. */
+  function onEditOilTest(rec) {
+    if (!canEditRecord(rec)) return;
+    _editingOilTestId = rec.id;
+    $("o_tram").value = rec.tram || "";
+    $("o_thietbi").value = rec.thiet_bi || "";
+    $("o_voltage_class").value = rec.voltage_class || "";
+    toggleOilMembraneField();
+    $("o_oilstate").value = rec.oil_state || "inservice";
+    $("o_nsx").value = rec.manufacturer || "";
+    $("o_membrane").checked = !!rec.has_membrane_n2;
+    $("o_ngay").value = rec.sample_date || "";
+    $("o_moisture").value = rec.moisture_ppm ?? "";
+    $("o_tgd90").value = rec.tgd_90c_percent ?? "";
+    $("o_bdv").value = rec.bdv_kv ?? "";
+    $("o_ghichu").value = rec.ghi_chu || "";
+    $("editingOilTestNote").classList.remove("hidden");
+    $("btnCancelEditOilTest").classList.remove("hidden");
+    $("btnAnalyzeOil").textContent = "Cập nhật & Lưu";
+    document.querySelector('button.tab-btn[data-tab="dau"]').click();
+    $("o_tram").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   async function onAnalyzeOil() {
@@ -1234,6 +1356,7 @@
     const manufacturer = $("o_nsx").value || null;
 
     const oilTest = {
+      id: _editingOilTestId || undefined,
       tram: $("o_tram").value.trim(),
       thiet_bi: $("o_thietbi").value.trim(),
       voltage_class: voltageClass,
@@ -1263,14 +1386,16 @@
     });
     renderOilResults(evalResult);
 
-    // Lưu vào lịch sử — CHỈ Admin (hoặc khi chưa bật đăng nhập), y hệt onAnalyze().
-    $("oilViewOnlyNote").classList.toggle("hidden", canWrite());
-    if (!canWrite()) return;
+    // Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được, y hệt onAnalyze().
+    if (!canSaveEntry()) return;
+    const wasEditing = !!_editingOilTestId;
 
     try {
       await Storage.addOilTest(oilTest);
       await registerStationIfNew(oilTest.tram);
+      resetOilTestEditState();
       await refreshOilTestsUI();
+      if (wasEditing) showToast("Đã cập nhật thí nghiệm dầu.");
     } catch (err) {
       alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
     }
@@ -1327,9 +1452,15 @@
         <td>${rec.tgd_90c_percent ?? "—"}</td>
         <td>${rec.bdv_kv ?? "—"}</td>
         <td>${overallPill}</td>
-        <td>${canWrite() ? `<button class="btn danger" data-id="${rec.id}">Xóa</button>` : ""}</td>
+        <td>${ownerCellHtml(rec)}</td>
+        <td style="white-space:nowrap;">
+          ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
+          ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
+        </td>
       `;
-      const delBtn = tr.querySelector("button");
+      const editBtn = tr.querySelector('[data-action="edit"]');
+      if (editBtn) editBtn.addEventListener("click", () => onEditOilTest(rec));
+      const delBtn = tr.querySelector('[data-action="del"]');
       if (delBtn) {
         delBtn.addEventListener("click", async () => {
           if (confirm("Xóa thí nghiệm dầu này khỏi lịch sử?")) {
@@ -1383,11 +1514,48 @@
     return found ? found.label : sp || "—";
   }
 
+  // _editingOltcOilTestId: id của thí nghiệm dầu OLTC đang SỬA (null = đang nhập MỚI).
+  let _editingOltcOilTestId = null;
+
   function clearOltcOilForm() {
     ["ot_tram", "ot_thietbi", "ot_ghichu", "ot_moisture", "ot_tgd90", "ot_bdv"].forEach((id) => ($(id).value = ""));
     $("ot_membrane").checked = false;
     $("ot_nsx").value = "";
     $("oltcOilResultsPanel").classList.add("hidden");
+    resetOltcOilTestEditState();
+  }
+
+  function resetOltcOilTestEditState() {
+    _editingOltcOilTestId = null;
+    $("editingOltcOilTestNote").classList.add("hidden");
+    $("btnCancelEditOltcOilTest").classList.add("hidden");
+    $("btnAnalyzeOltcOil").textContent = "Đánh giá & Lưu";
+  }
+
+  /** Nạp 1 thí nghiệm dầu OLTC đã lưu lên form để sửa — xem onEditMeasurement() ở trên. */
+  function onEditOltcOilTest(rec) {
+    if (!canEditRecord(rec)) return;
+    _editingOltcOilTestId = rec.id;
+    $("ot_tram").value = rec.tram || "";
+    $("ot_thietbi").value = rec.thiet_bi || "";
+    $("ot_samplepoint").value = rec.oltc_sample_point || "";
+    toggleOltcPhaseField();
+    if (rec.oltc_sample_point === "pharieng") $("ot_phase").value = rec.phase || "A";
+    $("ot_voltage_class").value = rec.voltage_class || "";
+    toggleOltcMembraneField();
+    $("ot_oilstate").value = rec.oil_state || "inservice";
+    $("ot_nsx").value = rec.manufacturer || "";
+    $("ot_membrane").checked = !!rec.has_membrane_n2;
+    $("ot_ngay").value = rec.sample_date || "";
+    $("ot_moisture").value = rec.moisture_ppm ?? "";
+    $("ot_tgd90").value = rec.tgd_90c_percent ?? "";
+    $("ot_bdv").value = rec.bdv_kv ?? "";
+    $("ot_ghichu").value = rec.ghi_chu || "";
+    $("editingOltcOilTestNote").classList.remove("hidden");
+    $("btnCancelEditOltcOilTest").classList.remove("hidden");
+    $("btnAnalyzeOltcOil").textContent = "Cập nhật & Lưu";
+    document.querySelector('button.tab-btn[data-tab="dau"]').click();
+    $("ot_tram").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   async function onAnalyzeOltcOil() {
@@ -1399,6 +1567,7 @@
     const manufacturer = $("ot_nsx").value || null;
 
     const oltcOilTest = {
+      id: _editingOltcOilTestId || undefined,
       tram: $("ot_tram").value.trim(),
       thiet_bi: $("ot_thietbi").value.trim(),
       oltc_sample_point: oltcSamplePoint,
@@ -1430,13 +1599,15 @@
     });
     renderOltcOilResults(evalResult);
 
-    $("oltcOilViewOnlyNote").classList.toggle("hidden", canWrite());
-    if (!canWrite()) return;
+    if (!canSaveEntry()) return;
+    const wasEditing = !!_editingOltcOilTestId;
 
     try {
       await Storage.addOltcOilTest(oltcOilTest);
       await registerStationIfNew(oltcOilTest.tram);
+      resetOltcOilTestEditState();
       await refreshOltcOilTestsUI();
+      if (wasEditing) showToast("Đã cập nhật thí nghiệm dầu OLTC.");
     } catch (err) {
       alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
     }
@@ -1495,9 +1666,15 @@
         <td>${rec.moisture_ppm ?? "—"}</td>
         <td>${rec.bdv_kv ?? "—"}</td>
         <td>${overallPill}</td>
-        <td>${canWrite() ? `<button class="btn danger" data-id="${rec.id}">Xóa</button>` : ""}</td>
+        <td>${ownerCellHtml(rec)}</td>
+        <td style="white-space:nowrap;">
+          ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
+          ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
+        </td>
       `;
-      const delBtn = tr.querySelector("button");
+      const editBtn = tr.querySelector('[data-action="edit"]');
+      if (editBtn) editBtn.addEventListener("click", () => onEditOltcOilTest(rec));
+      const delBtn = tr.querySelector('[data-action="del"]');
       if (delBtn) {
         delBtn.addEventListener("click", async () => {
           if (confirm("Xóa thí nghiệm dầu OLTC này khỏi lịch sử?")) {
@@ -1560,9 +1737,15 @@
         <td>${overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")}${condemnBad ? ' <span class="pill bad">⚠ Loại bỏ</span>' : ""}</td>
         <td style="font-size:12px;">${diagnosis}</td>
         <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
-        <td>${canWrite() ? `<button class="btn danger" data-id="${rec.id}">Xóa</button>` : ""}</td>
+        <td>${ownerCellHtml(rec)}</td>
+        <td style="white-space:nowrap;">
+          ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
+          ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
+        </td>
       `;
-      const delBtn = tr.querySelector("button");
+      const editBtn = tr.querySelector('[data-action="edit"]');
+      if (editBtn) editBtn.addEventListener("click", () => onEditMeasurement(rec));
+      const delBtn = tr.querySelector('[data-action="del"]');
       if (delBtn) {
         delBtn.addEventListener("click", async () => {
           if (confirm("Xóa lần đo này khỏi lịch sử?")) {
