@@ -15,9 +15,16 @@
 // PTC3/BM.15 hiện tại — nếu biên bản dùng mẫu khác/khác định dạng, có thể chỉ nhận
 // được một phần hoặc không nhận được trường nào; người dùng luôn xem lại và có thể
 // sửa tay mọi trường trước khi lưu, KHÔNG có trường nào bị khóa bởi việc tự động điền.
-import * as pdfjsLib from "./vendor/pdfjs/pdf.min.mjs";
+// LƯU Ý: dùng đuôi ".js" (không phải ".mjs") cho 2 file thư viện dưới đây — dù nội
+// dung vẫn y hệt bản ES module gốc của pdf.js. Một số server/host tĩnh (kể cả một số
+// server chạy trên Windows) không có sẵn ánh xạ MIME type cho đuôi ".mjs" và trả về
+// "text/plain" thay vì JavaScript — trình duyệt áp dụng "strict MIME type checking"
+// cho <script type="module"> nên sẽ CHẶN, không chạy file, và lỗi này chỉ hiện trong
+// Console (F12) chứ không có thông báo gì trên giao diện. Đuôi ".js" thì hầu như mọi
+// server đều tự nhận đúng loại JavaScript nên không gặp lỗi này.
+import * as pdfjsLib from "./vendor/pdfjs/pdf.min.js";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("./vendor/pdfjs/pdf.worker.min.mjs", import.meta.url).href;
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("./vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
 
 // ---------------------------------------------------------------------------
 // 1) PDF -> danh sách "dòng" văn bản theo đúng thứ tự trình bày (trên->dưới,

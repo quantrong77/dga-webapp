@@ -1364,6 +1364,20 @@
   <script src="config.js"></script>
   <script src="dga-logic.js"></script>
   <script src="storage.js"></script>
-  <script src="app.js"></script>
+  <!-- app.js cũ (2548 dòng, mọi tab gộp 1 file) đã được tách theo tab/tính năng
+       thành các file ui-*.js + app-core.js bên dưới, để dễ tìm code hơn khi sửa. Các
+       file này KHÔNG dùng ES module — chúng chia sẻ chung 1 scope toàn cục giống hệt
+       như khi còn 1 file (xem ghi chú kiến trúc ở đầu ui-auth.js) — nên thứ tự nạp
+       không quan trọng, TRỪ app-core.js phải nạp SAU CÙNG (xem ghi chú trong file đó). -->
+  <script src="ui-auth.js"></script>
+  <script src="ui-guides.js"></script>
+  <script src="ui-dga.js"></script>
+  <script src="ui-standards.js"></script>
+  <script src="ui-admin.js"></script>
+  <script src="ui-oil.js"></script>
+  <script src="ui-oltc.js"></script>
+  <script src="ui-history.js"></script>
+  <script src="ui-trend.js"></script>
+  <script src="app-core.js"></script>
 </body>
 </html>

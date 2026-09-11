@@ -339,9 +339,25 @@ nav.tabs button.active {
   border-bottom-color: var(--blue-700);
   background: var(--blue-100);
 }
-nav.tabs button .tab-icon { opacity: 0.7; }
+nav.tabs button .tab-icon { opacity: 0.82; }
 nav.tabs button:hover .tab-icon,
 nav.tabs button.active .tab-icon { opacity: 1; }
+
+/* Mỗi tab 1 màu icon riêng (icon dùng stroke="currentColor" nên chỉ cần đổi "color"
+   ngay trên .tab-icon — chữ nhãn tab KHÔNG đổi màu theo, vẫn dùng
+   var(--gray-600)/var(--blue-900) như cũ ở trên, để giữ hàng chữ đồng nhất, chỉ icon
+   là điểm nhấn màu sắc giúp nhận diện nhanh + đỡ đơn điệu). Màu chọn dàn trải quanh
+   vòng màu, không trùng tông 2 tab cạnh nhau, và có liên hệ chủ đề khi hợp lý (dầu =
+   hổ phách như màu dầu thật, quản trị = đỏ như --bad để gợi ý "khu vực nhạy cảm"). */
+nav.tabs button[data-tab="nhap"] .tab-icon { color: #0e9488; }       /* DGA — xanh ngọc (lab/phân tích) */
+nav.tabs button[data-tab="dau"] .tab-icon { color: #b8791a; }        /* Dầu cách điện — hổ phách (màu dầu) */
+nav.tabs button[data-tab="lichsu"] .tab-icon { color: #7457c7; }     /* Lịch sử đo — tím */
+nav.tabs button[data-tab="xuhuong"] .tab-icon { color: #2f9e52; }    /* Xu hướng — xanh lá (tăng trưởng) */
+nav.tabs button[data-tab="tieuchuan"] .tab-icon { color: #2e75b6; }  /* Tiêu chuẩn — xanh dương (màu chủ đạo) */
+nav.tabs button[data-tab="quytrinh"] .tab-icon { color: #d9631d; }   /* Quy trình đánh giá — cam */
+nav.tabs button[data-tab="quymau"] .tab-icon { color: #c23a72; }     /* Quy trình lấy mẫu — hồng cánh sen */
+nav.tabs button[data-tab="about"] .tab-icon { color: #5b7a8c; }      /* Giới thiệu — xanh xám trầm */
+nav.tabs button[data-tab="quantri"] .tab-icon { color: #c1121f; }    /* Quản trị — đỏ (khu vực nhạy cảm) */
 
 main {
   max-width: 1180px;
