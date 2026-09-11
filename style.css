@@ -19,6 +19,14 @@
 
 * { box-sizing: border-box; }
 
+/* Luôn chừa sẵn chỗ cho thanh cuộn dọc (kể cả khi tab hiện tại không cần cuộn) —
+   nếu không, mỗi lần chuyển tab mà nội dung ngắn/dài khác nhau, thanh cuộn sẽ tự
+   ẩn/hiện, làm bề rộng khả dụng thay đổi vài pixel, khiến khối header (do có
+   flex-wrap) ngắt dòng khác đi và đổi chiều cao. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   margin: 0;
   font-family: "Segoe UI", "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
