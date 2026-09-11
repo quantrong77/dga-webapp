@@ -478,6 +478,14 @@
     $("btnAnalyze").addEventListener("click", onAnalyze);
     $("btnClearForm").addEventListener("click", clearForm);
     $("btnCancelEditMeasurement").addEventListener("click", clearForm);
+    $("f_bbtn").addEventListener("change", onBbtnFileSelected);
+    $("btnViewBbtn").addEventListener("click", () => viewBbtn(_editingMeasurementAttachment));
+    $("btnRemoveBbtn").addEventListener("click", () => {
+      if (!confirm("Bỏ file Biên bản thí nghiệm đã đính kèm khỏi lần đo này?")) return;
+      _editingMeasurementAttachment = null;
+      _removeBbtnOnSave = true;
+      renderBbtnCurrent();
+    });
     $("btnAnalyzeOil").addEventListener("click", onAnalyzeOil);
     $("btnClearOilForm").addEventListener("click", clearOilForm);
     $("btnCancelEditOilTest").addEventListener("click", clearOilForm);
@@ -695,20 +703,157 @@
   // _editingMeasurementId: id của lần đo đang SỬA (null = đang nhập MỚI). Cùng cơ chế
   // với _editingStandardId (xem onEditStandard/resetStandardForm bên dưới).
   let _editingMeasurementId = null;
+  // _editingMeasurementAttachment: { bbtn_url, bbtn_name, bbtn_file_id } của BBTN đã lưu
+  // trên bản ghi đang sửa (null = chưa có/đang nhập mới) — giữ nguyên khi lưu lại NẾU
+  // người dùng không chọn file mới và không bấm "Bỏ file" (xem onAnalyze()).
+  let _editingMeasurementAttachment = null;
+  // _removeBbtnOnSave: true khi người dùng bấm "Bỏ file" trong lúc sửa — lần lưu kế
+  // tiếp sẽ xóa bbtn_url/bbtn_name/bbtn_file_id khỏi bản ghi thay vì giữ nguyên.
+  let _removeBbtnOnSave = false;
 
   function clearForm() {
     ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
     DGA.GASES.forEach((g) => ($("g_" + g).value = ""));
     $("f_landocount").value = 1;
+    $("f_bbtn").value = "";
     $("resultsPanel").classList.add("hidden");
     resetMeasurementEditState();
   }
 
   function resetMeasurementEditState() {
     _editingMeasurementId = null;
+    _editingMeasurementAttachment = null;
+    _removeBbtnOnSave = false;
+    $("f_bbtn").value = "";
     $("editingMeasurementNote").classList.add("hidden");
     $("btnCancelEditMeasurement").classList.add("hidden");
     $("btnAnalyze").textContent = "Phân tích & Lưu";
+    $("bbtnImportNote").classList.add("hidden");
+    renderBbtnCurrent();
+  }
+
+  /** Hiện/ẩn khối "đã đính kèm BBTN: <tên file>" bên dưới ô chọn file, theo
+   *  _editingMeasurementAttachment hiện tại (xem onEditMeasurement()/onAnalyze()). */
+  function renderBbtnCurrent() {
+    const wrap = $("bbtnCurrentWrap");
+    if (_editingMeasurementAttachment && _editingMeasurementAttachment.bbtn_url) {
+      $("bbtnCurrentName").textContent = _editingMeasurementAttachment.bbtn_name || "Biên bản thí nghiệm.pdf";
+      wrap.classList.remove("hidden");
+    } else {
+      wrap.classList.add("hidden");
+    }
+  }
+
+  /** Mở BBTN (PDF) đã lưu ở tab mới — att = { bbtn_url, bbtn_name }. Chế độ Google
+   *  Sheets/Supabase: bbtn_url là link thật, mở thẳng. Chế độ localStorage: bbtn_url có
+   *  dạng "local:<measurementId>", chỉ là khóa tra lại qua Storage.getLocalAttachment()
+   *  (file thật nằm trong localStorage, base64) — dựng lại thành Blob URL rồi mới mở. */
+  async function viewBbtn(att) {
+    if (!att || !att.bbtn_url) {
+      alert("Lần đo này chưa có Biên bản thí nghiệm đính kèm.");
+      return;
+    }
+    const url = String(att.bbtn_url);
+    if (!url.startsWith("local:")) {
+      window.open(url, "_blank", "noopener");
+      return;
+    }
+    const measurementId = url.slice("local:".length);
+    const local = Storage.getLocalAttachment(measurementId);
+    if (!local) {
+      alert("Không tìm thấy file đính kèm trong bộ nhớ trình duyệt này (file chỉ lưu được ở máy/trình duyệt đã tải lên).");
+      return;
+    }
+    try {
+      const res = await fetch(local.dataUrl);
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank", "noopener");
+    } catch (err) {
+      alert("Không mở được file: " + ((err && err.message) || err));
+    }
+  }
+
+  /** Khi người dùng CHỌN file BBTN (PDF) ở form "1. Thông tin lần đo" — thử đọc PDF
+   *  ngay trong trình duyệt (bbtn-import.js, KHÔNG gửi file lên server nào để "đọc")
+   *  và tự động điền Trạm/Thiết bị/Loại thiết bị/Pha/Ngày lấy mẫu/Nhà sản xuất/hàm
+   *  lượng khí nếu nhận diện được — đỡ phải gõ tay lại khi nhập bổ sung các lần đo
+   *  LỊCH SỬ đã có sẵn biên bản PDF (mẫu PTC3/BM.15). Chỉ là gợi ý điền sẵn: mọi
+   *  trường vẫn xem/sửa tay được bình thường trước khi lưu, không có gì bị khóa. Việc
+   *  lưu file đính kèm thật sự vẫn xảy ra riêng lúc bấm "Phân tích & Lưu" (onAnalyze()). */
+  async function onBbtnFileSelected(e) {
+    const file = e.target.files && e.target.files[0];
+    const note = $("bbtnImportNote");
+    if (!file) {
+      note.classList.add("hidden");
+      return;
+    }
+    if (!window.BbtnImport) {
+      note.textContent = "Không tự động đọc được BBTN (thư viện đọc PDF chưa tải xong) — vui lòng nhập tay các trường bên dưới.";
+      note.classList.remove("hidden");
+      return;
+    }
+    note.textContent = "Đang đọc Biên bản thí nghiệm để tự động điền form...";
+    note.classList.remove("hidden");
+    let data;
+    try {
+      data = await window.BbtnImport.extract(file);
+    } catch (err) {
+      note.textContent =
+        "Không đọc được nội dung file này để tự động điền (có thể file là ảnh scan, chưa hỗ trợ OCR) — " +
+        "vui lòng nhập tay các trường bên dưới. (" + ((err && err.message) || err) + ")";
+      return;
+    }
+    if (!data || !data.matchedCount) {
+      note.textContent = "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
+      return;
+    }
+
+    const filled = [];
+    if (data.tram) {
+      $("f_tram").value = data.tram;
+      filled.push("Trạm");
+    }
+    if (data.thietbi) {
+      $("f_thietbi").value = data.thietbi;
+      filled.push("Thiết bị");
+    }
+    if (data.loai) {
+      $("f_loai").value = data.loai;
+      refreshManufacturerOptions();
+      toggleMbaSubtypeField();
+      filled.push("Loại thiết bị");
+      if (data.hangSanXuat) {
+        const match = Array.from($("f_nsx").options).find(
+          (o) => o.value && o.value.toLowerCase().includes(data.hangSanXuat.toLowerCase())
+        );
+        if (match) {
+          $("f_nsx").value = match.value;
+          filled.push("Nhà sản xuất");
+        }
+      }
+    }
+    if (data.pha) {
+      $("f_pha").value = data.pha;
+      filled.push("Pha");
+    }
+    if (data.ngay) {
+      $("f_ngay").value = data.ngay;
+      filled.push("Ngày lấy mẫu");
+    }
+    const gasNames = [];
+    Object.keys(data.gases || {}).forEach((g) => {
+      const input = $("g_" + g);
+      if (input) {
+        input.value = data.gases[g];
+        gasNames.push(g);
+      }
+    });
+    if (gasNames.length) filled.push("Hàm lượng khí (" + gasNames.join(", ") + ")");
+
+    note.textContent = filled.length
+      ? "Đã tự động điền từ BBTN: " + filled.join(", ") + " — vui lòng kiểm tra lại số liệu trước khi lưu."
+      : "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
   }
 
   /** Nạp 1 lần đo đã lưu lên form tab "DGA" để sửa — bấm "Cập nhật & Lưu" sẽ
@@ -718,6 +863,13 @@
   function onEditMeasurement(rec) {
     if (!canEditRecord(rec)) return;
     _editingMeasurementId = rec.id;
+    _editingMeasurementAttachment = rec.bbtn_url
+      ? { bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name, bbtn_file_id: rec.bbtn_file_id }
+      : null;
+    _removeBbtnOnSave = false;
+    $("f_bbtn").value = "";
+    $("bbtnImportNote").classList.add("hidden");
+    renderBbtnCurrent();
     $("f_tram").value = rec.tram || "";
     $("f_thietbi").value = rec.thiet_bi || "";
     $("f_loai").value = rec.equipment_type || "";
@@ -1298,6 +1450,34 @@
     if (!canSaveEntry()) return;
     const wasEditing = !!_editingMeasurementId;
 
+    // 6bis) Biên bản thí nghiệm (BBTN, PDF) đính kèm — xem storage.js/uploadAttachment().
+    // measurement.id phải cố định TRƯỚC khi tải file lên (đặc biệt ở chế độ localStorage,
+    // nơi file được khóa theo measurementId) nên sinh id ở đây nếu là bản ghi MỚI, thay vì
+    // để Storage.addMeasurement() tự sinh như trước.
+    measurement.id = measurement.id || Storage.newId();
+    const bbtnFile = $("f_bbtn").files[0] || null;
+    if (bbtnFile) {
+      const originalLabel = $("btnAnalyze").textContent;
+      $("btnAnalyze").disabled = true;
+      $("btnAnalyze").textContent = "Đang tải lên Biên bản...";
+      try {
+        const uploaded = await Storage.uploadAttachment(measurement.id, bbtnFile);
+        Object.assign(measurement, uploaded);
+      } catch (err) {
+        alert(
+          "Tải lên Biên bản thí nghiệm (PDF) thất bại: " + ((err && err.message) || err) +
+          "\n\nLần đo vẫn sẽ được lưu, nhưng KHÔNG kèm file — bấm \"Sửa\" ở Lịch sử đo để đính kèm lại sau."
+        );
+      } finally {
+        $("btnAnalyze").disabled = false;
+        $("btnAnalyze").textContent = originalLabel;
+      }
+    } else if (wasEditing && _removeBbtnOnSave) {
+      Object.assign(measurement, { bbtn_url: null, bbtn_name: null, bbtn_file_id: null });
+    } else if (wasEditing && _editingMeasurementAttachment) {
+      Object.assign(measurement, _editingMeasurementAttachment);
+    }
+
     try {
       await Storage.addMeasurement(measurement);
       await registerStationIfNew(measurement.tram);
@@ -1866,10 +2046,13 @@
         <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
         <td>${ownerCellHtml(rec)}</td>
         <td style="white-space:nowrap;">
+          ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" style="padding:5px 10px; font-size:12px;">Xem BBTN</button>` : ""}
           ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
           ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
         </td>
       `;
+      const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
+      if (viewBbtnBtn) viewBbtnBtn.addEventListener("click", () => viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name }));
       const editBtn = tr.querySelector('[data-action="edit"]');
       if (editBtn) editBtn.addEventListener("click", () => onEditMeasurement(rec));
       const delBtn = tr.querySelector('[data-action="del"]');

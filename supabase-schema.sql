@@ -51,6 +51,11 @@ create table if not exists measurements (
   sample_date date not null,
   h2 numeric, ch4 numeric, c2h6 numeric, c2h4 numeric, c2h2 numeric, co numeric, co2 numeric,
   ghi_chu text,
+  -- Biên bản thí nghiệm (BBTN, file PDF) đính kèm — tùy chọn, xem uploadAttachment() ở
+  -- storage.js. bbtn_url là link công khai trong bucket Storage "bbtn" (xem cấu hình
+  -- bucket ở cuối file này); bbtn_name là tên file gốc lúc tải lên, hiển thị lại ở web app.
+  bbtn_url text,
+  bbtn_name text,
   created_at timestamptz default now()
 );
 
@@ -148,6 +153,11 @@ create index if not exists idx_oltc_oiltests_key on oltc_oil_tests (tram, thiet_
 -- sau (an toàn, không ảnh hưởng dữ liệu cũ) để nâng cấp:
 -- alter table oil_tests add column if not exists manufacturer text;
 
+-- Nếu bạn đã tạo bảng measurements từ trước (chưa có cột bbtn_url/bbtn_name — tính
+-- năng đính kèm Biên bản thí nghiệm PDF), chạy 2 dòng sau để nâng cấp:
+-- alter table measurements add column if not exists bbtn_url text;
+-- alter table measurements add column if not exists bbtn_name text;
+
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.
 -- Nếu cần giới hạn theo tài khoản đăng nhập, thay các policy "using (true)"
@@ -173,3 +183,28 @@ create policy "oiltests_all" on oil_tests for all using (true) with check (true)
 
 drop policy if exists "oltc_oiltests_all" on oltc_oil_tests;
 create policy "oltc_oiltests_all" on oltc_oil_tests for all using (true) with check (true);
+
+-- ---------------------------------------------------------------------------
+-- Storage bucket "bbtn" — nơi lưu file Biên bản thí nghiệm (PDF) đính kèm 1 lần đo
+-- (tính năng "Xem BBTN đã lưu" ở tab "DGA"/"Lịch sử đo"). Bucket công khai (public)
+-- để bbtn_url mở trực tiếp được không cần token — chấp nhận được cho công cụ nội bộ 1
+-- nhóm nhỏ dùng chung 1 link, giống cách "measurements_all" ở trên đang mở cho anon key.
+-- Nếu cần hạn chế hơn, đổi public thành false và dùng createSignedUrl() ở storage.js
+-- thay cho getPublicUrl() (xem uploadAttachment() trong storage.js).
+-- ---------------------------------------------------------------------------
+
+insert into storage.buckets (id, name, public)
+values ('bbtn', 'bbtn', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "bbtn_insert" on storage.objects;
+create policy "bbtn_insert" on storage.objects for insert
+  with check (bucket_id = 'bbtn');
+
+drop policy if exists "bbtn_select" on storage.objects;
+create policy "bbtn_select" on storage.objects for select
+  using (bucket_id = 'bbtn');
+
+drop policy if exists "bbtn_update" on storage.objects;
+create policy "bbtn_update" on storage.objects for update
+  using (bucket_id = 'bbtn') with check (bucket_id = 'bbtn');

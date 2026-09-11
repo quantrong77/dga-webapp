@@ -101,6 +101,50 @@ function uid() {
   return "id_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8);
 }
 
+// ---------------------------------------------------------------------------
+// Biên bản thí nghiệm (BBTN, file PDF) đính kèm 1 lần đo (measurements) — lưu theo
+// ĐÚNG 3 chế độ như Storage bên dưới: Google Sheets (Drive, qua action "uploadAttachment"
+// ở Code.gs), Supabase (Storage bucket "bbtn"), hoặc localStorage (base64, chỉ chế độ thử
+// nghiệm — giới hạn kích thước vì localStorage tổng dung lượng rất nhỏ, xem MAX_LOCAL_BBTN_BYTES).
+// ---------------------------------------------------------------------------
+const LS_BBTN_KEY = "dga_bbtn_files_v1";
+const MAX_LOCAL_BBTN_BYTES = 4 * 1024 * 1024; // 4MB — dè dặt hơn nhiều so với hạn mức chung của localStorage
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error("Đọc file thất bại."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function fileToBase64(file) {
+  const dataUrl = await fileToDataUrl(file);
+  const comma = dataUrl.indexOf(",");
+  return comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl;
+}
+
+function lsBbtnGetAll() {
+  try {
+    const raw = localStorage.getItem(LS_BBTN_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    console.warn("localStorage read failed (bbtn)", e);
+    return {};
+  }
+}
+
+function lsBbtnSetAll(map) {
+  try {
+    localStorage.setItem(LS_BBTN_KEY, JSON.stringify(map));
+  } catch (e) {
+    // Thường gặp nhất: QuotaExceededError khi tổng dữ liệu vượt hạn mức trình duyệt —
+    // ném lại lỗi rõ ràng để app.js hiển thị cho người dùng thay vì âm thầm mất file.
+    throw new Error("Không lưu được file vào bộ nhớ trình duyệt (có thể đã đầy dung lượng cho phép): " + ((e && e.message) || e));
+  }
+}
+
 function lsGet(key) {
   try {
     const raw = localStorage.getItem(key);
@@ -444,6 +488,59 @@ const Storage = {
     }
     const all = lsGet(LS_KEYS.oltcOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oltcOilTests, all);
+  },
+
+  // Id sinh phía client — dùng khi cần biết trước id của 1 lần đo (vd: để đính kèm
+  // BBTN trước khi gọi addMeasurement()), thay vì để addMeasurement() tự sinh id.
+  newId() {
+    return uid();
+  },
+
+  /** Tải lên 1 file BBTN (PDF) và gắn với 1 lần đo (measurementId) — trả về các cột
+   *  cần gộp vào record trước khi gọi addMeasurement(): { bbtn_url, bbtn_name, bbtn_file_id }.
+   *  bbtn_file_id chỉ có giá trị ở chế độ Google Sheets (id file trên Drive); 2 chế độ
+   *  còn lại để null. Ở chế độ localStorage, bbtn_url có dạng "local:<measurementId>" —
+   *  KHÔNG phải URL thật, chỉ là "khóa" để tra lại qua getLocalAttachment(). */
+  async uploadAttachment(measurementId, file) {
+    if (this.mode === "gsheet") {
+      const base64Data = await fileToBase64(file);
+      const res = await gsheetPost("uploadAttachment", {
+        measurementId,
+        filename: file.name,
+        mimeType: file.type || "application/pdf",
+        base64Data,
+      });
+      return { bbtn_url: res.url, bbtn_name: res.name || file.name, bbtn_file_id: res.id || null };
+    }
+    if (this.mode === "supabase") {
+      const path = `${measurementId}/${Date.now()}_${file.name}`;
+      const { error } = await sb().storage.from("bbtn").upload(path, file, {
+        upsert: true,
+        contentType: file.type || "application/pdf",
+      });
+      if (error) throw error;
+      const { data } = sb().storage.from("bbtn").getPublicUrl(path);
+      return { bbtn_url: data.publicUrl, bbtn_name: file.name, bbtn_file_id: null };
+    }
+    // Chế độ thử nghiệm (localStorage) — chỉ máy/trình duyệt hiện tại thấy được file này.
+    if (file.size > MAX_LOCAL_BBTN_BYTES) {
+      throw new Error(
+        `Chế độ lưu cục bộ (localStorage) chỉ hỗ trợ file tối đa 4MB — file này ${(file.size / 1024 / 1024).toFixed(1)}MB. ` +
+        "Cấu hình Google Sheets hoặc Supabase trong config.js để lưu file lớn hơn."
+      );
+    }
+    const dataUrl = await fileToDataUrl(file);
+    const map = lsBbtnGetAll();
+    map[measurementId] = { name: file.name, dataUrl };
+    lsBbtnSetAll(map);
+    return { bbtn_url: "local:" + measurementId, bbtn_name: file.name, bbtn_file_id: null };
+  },
+
+  /** Chỉ dùng ở chế độ localStorage — tra lại {name, dataUrl} đã lưu bằng
+   *  uploadAttachment() ở trên, theo measurementId (phần sau "local:" trong bbtn_url). */
+  getLocalAttachment(measurementId) {
+    const map = lsBbtnGetAll();
+    return map[measurementId] || null;
   },
 };
 

@@ -400,6 +400,7 @@ main {
   gap: 14px 18px;
 }
 .grid.gases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.field-wide { grid-column: 1 / -1; }
 @media (max-width: 800px) {
   .grid, .grid.gases { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -414,6 +415,30 @@ label.field {
   font-size: 13px;
   font-weight: 600;
   color: var(--gray-600);
+}
+
+/* Biên bản thí nghiệm (PDF) đính kèm 1 lần đo — ô chọn file (tab "DGA") +
+   chỉ báo file đã lưu/đang sửa, dùng chung .icon-svg/.btn/.hidden đã có. */
+.bbtn-current {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
+  padding: 7px 10px;
+  background: var(--blue-100);
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+.bbtn-current .icon-svg { flex: none; color: var(--blue-700); }
+.bbtn-current #bbtnCurrentName {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 input, select, textarea {

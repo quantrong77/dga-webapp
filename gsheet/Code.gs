@@ -61,6 +61,11 @@ const MEASUREMENT_HEADERS = [
   // ở lần lưu đầu tiên). Xem prepareOwnedRecord(). Bản ghi cũ trước khi có 2 cột này sẽ
   // để trống — hiển thị "—" ở cột "Người nhập" trên web app, không suy diễn ngược.
   "created_by", "updated_by", "updated_at",
+  // Biên bản thí nghiệm (BBTN, file PDF) đính kèm — thêm ở CUỐI (xem lưu ý ở
+  // STANDARD_HEADERS). bbtn_file_id/bbtn_url là id/link Google Drive của file (xem
+  // actionUploadAttachment()); bbtn_name là tên file gốc lúc tải lên, hiển thị lại ở
+  // web app. Cả 3 để trống nếu lần đo chưa đính kèm BBTN nào.
+  "bbtn_file_id", "bbtn_url", "bbtn_name",
 ];
 
 // QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —
@@ -187,6 +192,11 @@ function doPost(e) {
     // vẫn luôn yêu cầu "admin" (requireAdmin), bất kể ai đã tạo bản ghi đó.
     else if (action === "addMeasurement") { result = upsertRow(SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, prepareOwnedRecord(token, SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, body.record)); }
     else if (action === "deleteMeasurement") { requireAdmin(token); result = deleteRow(SHEET_MEASUREMENTS, body.id); }
+    // Tải lên 1 file Biên bản thí nghiệm (BBTN, PDF) đính kèm 1 lần đo — bất kỳ ai đã
+    // đăng nhập đều tải lên được (cùng quyền với "tự nhập lần đo mới"), KHÔNG cần là
+    // Admin hay chủ bản ghi — xem actionUploadAttachment(). Client tự ghép bbtn_url/
+    // bbtn_name/bbtn_file_id trả về vào record rồi mới gọi addMeasurement().
+    else if (action === "uploadAttachment") { result = actionUploadAttachment(token, body); }
     else if (action === "saveStandard") { requireAdmin(token); result = upsertRow(SHEET_STANDARDS, STANDARD_HEADERS, body.record); }
     else if (action === "deleteStandard") { requireAdmin(token); result = deleteRow(SHEET_STANDARDS, body.id); }
     else if (action === "saveStation") { requireAdmin(token); result = upsertRow(SHEET_STATIONS, STATION_HEADERS, body.record); }
@@ -418,6 +428,64 @@ function actionDeleteUser(body) {
   const user = findUserByEmail(email);
   if (!user) return { error: "Không tìm thấy user." };
   return deleteRow(SHEET_USERS, user.id);
+}
+
+// ---------------------------------------------------------------------------
+// Biên bản thí nghiệm (BBTN, file PDF) đính kèm lần đo — lưu vào 1 thư mục riêng
+// trên Google Drive của tài khoản đã Deploy Web App này (Execute as "Me"), chia sẻ
+// "Anyone with link, Viewer" để web app mở/xem được mà không cần đăng nhập Drive.
+// ---------------------------------------------------------------------------
+const BBTN_FOLDER_NAME = "DGA_BBTN_DinhKem";
+const MAX_BBTN_BASE64_CHARS = 20 * 1024 * 1024; // ~15MB file gốc (base64 dài hơn ~1.37 lần)
+
+function getOrCreateBbtnFolder() {
+  const folders = DriveApp.getFoldersByName(BBTN_FOLDER_NAME);
+  if (folders.hasNext()) return folders.next();
+  return DriveApp.createFolder(BBTN_FOLDER_NAME);
+}
+
+/** Nhận { token, measurementId, filename, mimeType, base64Data } — yêu cầu ĐÃ đăng
+ *  nhập (bất kỳ role nào, giống quyền "tự nhập lần đo mới" — xem prepareOwnedRecord()),
+ *  KHÔNG yêu cầu là chủ bản ghi vì tại thời điểm tải lên, lần đo có thể còn chưa được
+ *  lưu (client tải file lên TRƯỚC, rồi mới gọi addMeasurement() với bbtn_url trả về).
+ *  Trả về { id, url, name } — client tự gộp vào record dưới tên bbtn_file_id/bbtn_url/
+ *  bbtn_name trước khi lưu measurement. */
+function actionUploadAttachment(token, body) {
+  requireSession(token);
+  const filename = String(body.filename || "bien_ban_thi_nghiem.pdf");
+  const mimeType = String(body.mimeType || "application/pdf");
+  const base64Data = String(body.base64Data || "");
+  if (!base64Data) return { error: "Thiếu dữ liệu file." };
+  if (base64Data.length > MAX_BBTN_BASE64_CHARS) {
+    return { error: "File quá lớn (giới hạn khoảng 15MB)." };
+  }
+  let file;
+  try {
+    const bytes = Utilities.base64Decode(base64Data);
+    const blob = Utilities.newBlob(bytes, mimeType, filename);
+    const folder = getOrCreateBbtnFolder();
+    file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  } catch (err) {
+    const msg = String((err && err.message) || err);
+    // Lỗi "không có quyền ... DriveApp" nghĩa là script CHƯA được cấp quyền truy cập
+    // Google Drive (thường gặp lần đầu sau khi thêm tính năng đính kèm BBTN, vì code cũ
+    // chưa từng gọi DriveApp nên chưa từng xin quyền này). Dán thêm hướng dẫn khắc phục
+    // ngay trong thông báo lỗi để người dùng tự xử lý được mà không cần hỏi lại.
+    if (/quyền|permission|authoriz/i.test(msg) && /Drive/i.test(msg)) {
+      return {
+        error:
+          "Tải file lên Google Drive thất bại: " + msg +
+          "\n\nCÁCH KHẮC PHỤC: Mở script.google.com, vào đúng dự án Apps Script đang deploy web app này → " +
+          "chọn hàm \"getOrCreateBbtnFolder\" ở ô dropdown trên thanh công cụ → bấm nút Run (▶) → " +
+          "khi hiện \"Authorization required\", bấm Continue/Review permissions rồi Allow (chấp nhận quyền Google Drive) → " +
+          "sau đó vào Deploy > Manage deployments > sửa (biểu tượng bút chì) deployment đang dùng > Version chọn \"New version\" > Deploy lại " +
+          "(chỉ chạy thử trong editor KHÔNG tự cập nhật bản deploy /exec đang chạy).",
+      };
+    }
+    return { error: "Tải file lên Google Drive thất bại: " + msg };
+  }
+  return { id: file.getId(), url: file.getUrl(), name: filename };
 }
 
 function jsonOut(obj) {
