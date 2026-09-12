@@ -119,7 +119,7 @@ function renderTrendPhaseFilter(gasRecords, oilRecords, oltcRecords) {
   const el = $("trPhaseChecks");
   el.innerHTML = phases.map((p) => {
     const checked = _trendSelectedPhases.has(p) ? "checked" : "";
-    return `<label class="chk"><input type="checkbox" data-trend-phase="${escapeHtml(p)}" ${checked} /> Pha ${escapeHtml(p)}</label>`;
+    return `<label class="chk"><input type="checkbox" data-trend-phase="${escapeHtml(p)}" ${checked} /> ${escapeHtml(DGA.phaLabelWithPrefix(p))}</label>`;
   }).join("");
   el.querySelectorAll("input[data-trend-phase]").forEach((cb) => {
     cb.addEventListener("change", () => {
@@ -166,7 +166,7 @@ function renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords) {
 
   $("trHistGasTable").innerHTML = gasRecords.slice().reverse().map((r) => `
     <tr>
-      <td>${r.sample_date}</td><td>${escapeHtml(r.pha || "—")}</td><td>${r.lan_do ?? "—"}</td>
+      <td>${r.sample_date}</td><td>${escapeHtml(DGA.phaLabel(r.pha) || "—")}</td><td>${r.lan_do ?? "—"}</td>
       ${DGA.GASES.map((g) => `<td>${recordGases(r)[g] ?? "—"}</td>`).join("")}
     </tr>
   `).join("");
@@ -253,7 +253,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       tickedPhases.forEach((p) => {
         const recs = gasRecords.filter((r) => (r.pha || "").trim() === p);
         seriesSpecs.push({
-          label: `${def.label} - Pha ${p} (${def.unit})`,
+          label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`,
           axis: def.axis,
           points: trendPoints(recs, (r) => gasValueOf(r, def.field)),
         });
@@ -273,7 +273,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
         const recs = oltcRecords.filter((r) => r.oltc_sample_point === "pharieng" && (r.phase || "").trim() === p);
         const points = trendPoints(recs, (r) => r[def.field]);
         if (points.length > 0) {
-          seriesSpecs.push({ label: `${def.label} - Pha ${p} (${def.unit})`, axis: def.axis, points });
+          seriesSpecs.push({ label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`, axis: def.axis, points });
         }
       });
       return;

@@ -40,7 +40,7 @@ async function refreshHistoryUI() {
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(rec.equipment_type)}</td>
-      <td>${escapeHtml(rec.pha || "—")}</td>
+      <td>${escapeHtml(DGA.phaLabel(rec.pha) || "—")}</td>
       <td>${rec.lan_do ?? "—"}</td>
       <td>${tcg.toFixed(1)}</td>
       <td>${overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")}${condemnBad ? ' <span class="pill bad">⚠ Loại bỏ</span>' : ""}</td>
@@ -108,7 +108,7 @@ function refreshCompareDeviceOptions() {
     .forEach(([key, v]) => {
       const opt = document.createElement("option");
       opt.value = key;
-      opt.textContent = `${v.thiet_bi || "?"} — ${v.tram || "?"} — Pha ${v.pha || "?"} (${v.count} lần đo)`;
+      opt.textContent = `${v.thiet_bi || "?"} — ${v.tram || "?"} — ${v.pha ? DGA.phaLabelWithPrefix(v.pha) : "Pha ?"} (${v.count} lần đo)`;
       sel.appendChild(opt);
     });
 

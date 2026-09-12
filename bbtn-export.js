@@ -55,7 +55,7 @@ function buildBbtnExportData(a) {
 
   const data = {
     tram: m.tram || "",
-    vi_tri_lap_dat: [m.thiet_bi, m.pha ? "Pha " + m.pha : ""].filter(Boolean).join(" - "),
+    vi_tri_lap_dat: [m.thiet_bi, m.pha ? DGA.phaLabelWithPrefix(m.pha) : ""].filter(Boolean).join(" - "),
     hang_sx: m.manufacturer || "",
     ngay_lay_mau: bbtnFormatDateVN(m.sample_date),
     ngay_thi_nghiem: bbtnFormatDateVN(m.sample_date),
@@ -101,7 +101,7 @@ async function exportBbtnDocx(analysis) {
   });
 
   const m = analysis.measurement || {};
-  const namePart = [m.thiet_bi, m.pha ? "Pha" + m.pha : "", m.sample_date]
+  const namePart = [m.thiet_bi, m.pha ? DGA.phaLabelWithPrefix(m.pha) : "", m.sample_date]
     .filter(Boolean)
     .join("_")
     .replace(/[\\/:*?"<>|\s]+/g, "-");

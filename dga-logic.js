@@ -28,6 +28,33 @@ const EQUIPMENT_TYPES = {
   OTHER: "Khác",
 };
 
+// Pha của lần đo: đa số TI/TU/sứ xuyên tách riêng từng pha theo kết cấu vật lý (mỗi
+// pha 1 sứ/1 khoang dầu riêng) nên chọn A/B/C như bình thường — nhưng một số MBA 3 pha
+// kết cấu 1 THÙNG DẦU DÙNG CHUNG cho cả 3 pha thì không có mẫu tách riêng theo pha, nên
+// thêm lựa chọn "chung3pha" để phản ánh đúng thực tế đó (tương tự cách OLTC_SAMPLE_POINTS
+// bên dưới đã phân biệt "trungtinh" (chung) và "pharieng" (riêng) cho dầu OLTC).
+const PHA_CHUNG_3_PHA = "chung3pha";
+const PHA_OPTIONS = [
+  { value: "A", label: "A" },
+  { value: "B", label: "B" },
+  { value: "C", label: "C" },
+  { value: PHA_CHUNG_3_PHA, label: "Chung" },
+];
+
+/** Nhãn hiển thị NGẮN cho giá trị "pha" đã lưu — dùng ở nơi đã có tiêu đề cột/nhãn
+ * "Pha" sẵn nên không cần lặp lại chữ đó (VD ô trong bảng Lịch sử đo). */
+function phaLabel(value) {
+  if (!value) return "";
+  return value === PHA_CHUNG_3_PHA ? "Chung" : value;
+}
+
+/** Nhãn ĐẦY ĐỦ dùng ở nơi tự ghép thêm chữ "Pha " phía trước (VD "Pha A") — với
+ * "chung3pha" KHÔNG lặp chữ "Pha" vì "Chung" đã tự nói rõ nghĩa rồi. */
+function phaLabelWithPrefix(value) {
+  if (!value) return "";
+  return value === PHA_CHUNG_3_PHA ? "Chung" : "Pha " + value;
+}
+
 // Phân loại MBA theo cấu trúc OLTC (bộ đổi nấc có tải / CPC) — quyết định bảng
 // IEC Annex A.1.4 (Table A.2) nào áp dụng khi tính "tiêu chuẩn chặt hơn".
 const MBA_SUBTYPES = {
@@ -860,7 +887,8 @@ function computeOverallStatus({ overallOk, exceedCount, diagnosis, priorDiagnosi
 
 // Export cho cả trình duyệt (global) lẫn Node (module.exports, dùng để test)
 const DGA = {
-  GASES, EQUIPMENT_TYPES, MBA_SUBTYPES, INSTRUMENT_SUBTYPES,
+  GASES, EQUIPMENT_TYPES, PHA_OPTIONS, PHA_CHUNG_3_PHA, phaLabel, phaLabelWithPrefix,
+  MBA_SUBTYPES, INSTRUMENT_SUBTYPES,
   QD1901_BANG12_TI, QD1901_BANG64_MBA, QD1901_BANG65_RATE, DEFAULT_PD_THRESHOLD,
   IEC_A2_POWER_TRANSFORMER, IEC_A6_INSTRUMENT_MAX, IEC_A6_INSTRUMENT_TYPICAL, IEC_A9_BUSHING,
   pdThresholdForType, typicalReferenceStandard, resolveCondemningLimits,
