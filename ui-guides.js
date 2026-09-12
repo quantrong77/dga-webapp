@@ -4,14 +4,25 @@
    sẻ scope giữa các file ui-*.js. */
 
 
-/** Lightbox phóng to ảnh "Cẩm nang tham khảo nhanh" (tab "Quy trình đánh giá") —
- *  bấm ảnh thu nhỏ để mở, bấm nút đóng/ra ngoài ảnh/phím Esc để đóng. */
+/** Lightbox phóng to ảnh trong "Cẩm nang tham khảo nhanh" (tab "Quy trình đánh giá",
+ *  ".handbook-gallery" — có thể nhiều áp phích) — bấm ảnh thu nhỏ để mở, bấm nút
+ *  đóng/ra ngoài ảnh/phím Esc để đóng. Ảnh/caption phóng to được gán động theo
+ *  data-full/data-caption của đúng nút vừa bấm, giống hệt cơ chế setupSamplingLightbox()
+ *  bên dưới (tab "Quy trình lấy mẫu") — tách riêng 2 hàm vì 2 lightbox khác id/tab. */
 function setupHandbookLightbox() {
-  const thumb = $("btnOpenHandbook");
   const lightbox = $("handbookLightbox");
   const closeBtn = $("btnCloseHandbook");
-  if (!thumb || !lightbox || !closeBtn) return;
-  const open = () => {
+  const imgEl = $("handbookLightboxImg");
+  const captionEl = $("handbookLightboxCaption");
+  if (!lightbox || !closeBtn || !imgEl) return;
+  const open = (btn) => {
+    const full = btn.getAttribute("data-full");
+    const caption = btn.getAttribute("data-caption") || "";
+    if (!full) return;
+    imgEl.src = full;
+    imgEl.alt = caption;
+    captionEl.textContent = caption;
+    captionEl.classList.toggle("hidden", !caption);
     lightbox.classList.remove("hidden");
     document.body.style.overflow = "hidden";
   };
@@ -19,7 +30,9 @@ function setupHandbookLightbox() {
     lightbox.classList.add("hidden");
     document.body.style.overflow = "";
   };
-  thumb.addEventListener("click", open);
+  document.querySelectorAll(".handbook-thumb").forEach((btn) => {
+    btn.addEventListener("click", () => open(btn));
+  });
   closeBtn.addEventListener("click", close);
   lightbox.addEventListener("click", (e) => {
     if (e.target === lightbox) close();
@@ -36,6 +49,28 @@ function setupMindmap() {
   const root = $("mindmapRoot");
   const btnExpand = $("btnMindmapExpandAll");
   const btnCollapse = $("btnMindmapCollapseAll");
+  if (!root) return;
+  const allNodes = () => root.querySelectorAll("details.mm-node");
+  if (btnExpand) {
+    btnExpand.addEventListener("click", () => {
+      allNodes().forEach((d) => (d.open = true));
+    });
+  }
+  if (btnCollapse) {
+    btnCollapse.addEventListener("click", () => {
+      allNodes().forEach((d) => (d.open = false));
+    });
+  }
+}
+
+/** Sơ đồ tư duy tổng quan thứ 2 (tab "Quy trình đánh giá", "#overviewMindmapRoot") —
+ *  góc nhìn khác/bổ sung cho sơ đồ ở setupMindmap() (Cơ chế hình thành khí, 7 loại khí,
+ *  khí chỉ thị theo lỗi, phương pháp chẩn đoán, quy trình) — cùng cơ chế "Mở tất cả"/
+ *  "Thu gọn tất cả" như setupMindmap(), tách hàm riêng vì 2 sơ đồ khác id/nút bấm. */
+function setupOverviewMindmap() {
+  const root = $("overviewMindmapRoot");
+  const btnExpand = $("btnOverviewMindmapExpandAll");
+  const btnCollapse = $("btnOverviewMindmapCollapseAll");
   if (!root) return;
   const allNodes = () => root.querySelectorAll("details.mm-node");
   if (btnExpand) {

@@ -52,6 +52,7 @@
       <symbol id="icon-phone" viewBox="0 0 24 24"><path d="M5 4.5h3.2l1.4 4-2 1.6a12 12 0 0 0 5.3 5.3l1.6-2 4 1.4V18c0 1-1 1.8-2 1.6-6-1-11-6-12-12C4 6.5 4.5 5 5 4.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-mail" viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4 6.5l8 6.5 8-6.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-paperclip" viewBox="0 0 24 24"><path d="M7.5 12.8l6.9-6.9a3.4 3.4 0 0 1 4.8 4.8l-8.4 8.4a2 2 0 0 1-2.8-2.8l7.6-7.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3.5v11.4M8 11.3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 17v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sample" viewBox="0 0 24 24"><path d="M10 2.5h4M10.5 2.5v5.3l-3.8 6.6A1.9 1.9 0 0 0 8.3 17.4h7.4a1.9 1.9 0 0 0 1.6-3L13.5 7.8V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.2 12.6h7.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M17 15.5h3.2v3.2l-3.6 3.6-3.2-3.2 3.6-3.6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="18.6" cy="17.1" r="0.6" fill="currentColor" stroke="none"/></symbol>
     </defs>
   </svg>
@@ -114,8 +115,6 @@
         <img src="image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
         <h1>Đánh giá Dầu cách điện</h1>
       </div>
-      <p>QĐ1901/EVNNPT (Điều 10 – TI, Điều 54 – MBA) + IEC 60599:1999 Annex A (TU, Sứ xuyên, và tiêu chuẩn chặt hơn cho MBA) ·
-        Bảng 66 (Ba tỷ số khí) &amp; Tam giác Duval (Annex B) · có thể cấu hình tiêu chuẩn riêng theo nhà sản xuất</p>
     </div>
     <div class="header-right">
       <span id="userBadge" class="badge user-badge hidden"></span>
@@ -124,22 +123,29 @@
   </header>
 
   <nav class="tabs">
-    <button class="tab-btn active" data-tab="nhap"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>DGA</button>
-    <button class="tab-btn" data-tab="dau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Dầu cách điện</button>
-    <button class="tab-btn" data-tab="lichsu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</button>
-    <button class="tab-btn" data-tab="xuhuong"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng</button>
-    <button class="tab-btn" data-tab="tieuchuan"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg>Tiêu chuẩn</button>
-    <button class="tab-btn" data-tab="quytrinh"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg>Quy trình đánh giá</button>
-    <button class="tab-btn" data-tab="quymau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Quy trình lấy mẫu</button>
-    <button class="tab-btn" data-tab="about"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg>Giới thiệu</button>
-    <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg>Quản trị</button>
+    <!-- .tabs-inner: bọc riêng để canh GIỮA cả cụm nút tab bằng margin:0 auto (xem
+         style.css) — margin auto trên 1 flex-item tự co về 0 khi cụm nút không đủ chỗ
+         (màn hình hẹp), nên overflow-x:auto ở nav.tabs vẫn cuộn ngang bình thường từ
+         mép trái, không bị lỗi "kẹt giữa" như dùng justify-content:center trực tiếp
+         trên nav.tabs khi nội dung tràn. -->
+    <div class="tabs-inner">
+      <button class="tab-btn active" data-tab="nhap"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>DGA</button>
+      <button class="tab-btn" data-tab="dau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Dầu cách điện</button>
+      <button class="tab-btn" data-tab="lichsu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</button>
+      <button class="tab-btn" data-tab="xuhuong"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng</button>
+      <button class="tab-btn" data-tab="tieuchuan"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg>Tiêu chuẩn</button>
+      <button class="tab-btn" data-tab="quytrinh"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg>Quy trình đánh giá</button>
+      <button class="tab-btn" data-tab="quymau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Quy trình lấy mẫu</button>
+      <button class="tab-btn" data-tab="about"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg>Giới thiệu</button>
+      <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg>Quản trị</button>
+    </div>
   </nav>
 
   <main>
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
     <section id="tab-nhap" class="tab-panel">
       <div class="panel">
-        <h2>1. Thông tin lần đo</h2>
+        <h2>Thông tin lần đo</h2>
         <div class="grid">
           <label class="field">Trạm
             <div class="combo-wrap">
@@ -221,7 +227,14 @@
       </div>
 
       <div class="panel hidden" id="resultsPanel">
-        <h2>2. Kết quả đánh giá</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <h2 style="margin:0;">2. Kết quả đánh giá</h2>
+          <button type="button" class="btn ghost" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+        </div>
+        <p class="note" style="margin-top:2px;">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
+          thí nghiệm (PTC3/BM.15) — tải về, MỞ TRONG WORD để bổ sung các mục mẫu chưa có sẵn dữ liệu (hãng SX, số chế tạo,
+          điều kiện môi trường, chữ ký...) trước khi ban hành. Số liệu điền sẵn chỉ mang tính hỗ trợ, người dùng cần kiểm
+          tra lại trước khi ký.</p>
 
         <div id="overallStatusBanner" class="status-banner status-normal">
           <div class="status-badge" id="statusBadgeText">—</div>
@@ -534,7 +547,7 @@
             <h3>Nhập &amp; lưu kết quả đo</h3>
             <p>Nhập nồng độ 7 khí hòa tan (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) cho 1 lần đo tại 1 Trạm/Thiết bị/Pha
               cụ thể.</p>
-            <p class="maps-to">Thực hiện ở: <strong>Tab "DGA"</strong>, mục "1. Thông tin lần đo".</p>
+            <p class="maps-to">Thực hiện ở: <strong>Tab "DGA"</strong>, mục "Thông tin lần đo".</p>
           </div>
           <div class="process-step">
             <div class="step-num">2</div>
@@ -737,16 +750,150 @@
       </div>
 
       <div class="panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-sitemap"></use></svg>Sơ đồ tư duy tổng quan: Cơ chế khí &amp; chẩn đoán DGA</h2>
+        <p class="note">Bản đồ tư duy tổng hợp góc nhìn cơ chế sinh khí, 7 loại khí hòa tan chính, khí chỉ thị theo
+          từng loại lỗi và phương pháp chẩn đoán IEC 60599 — bổ sung bên cạnh sơ đồ diễn giải chi tiết ở trên; bấm
+          vào từng nhánh để mở/đóng nội dung chi tiết bên trong.</p>
+        <div class="mindmap" id="overviewMindmapRoot">
+          <div class="mm-root"><svg class="icon-svg" aria-hidden="true"><use href="#icon-flow"></use></svg>Chẩn đoán DGA theo IEC 60599</div>
+          <div class="mindmap-controls">
+            <button type="button" class="btn ghost" id="btnOverviewMindmapExpandAll">Mở tất cả</button>
+            <button type="button" class="btn ghost" id="btnOverviewMindmapCollapseAll">Thu gọn tất cả</button>
+          </div>
+          <div class="mm-branches">
+            <details class="mm-node">
+              <summary>Cơ chế hình thành khí<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <div class="mm-sub">
+                <details class="mm-node mm-node-sm">
+                  <summary>Phân hủy dầu cách điện<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Cắt liên kết C-H: tạo H2, CH4</li>
+                    <li>Cắt liên kết đơn C-C: tạo C2H6</li>
+                    <li>Cắt liên kết đôi C=C: tạo C2H4 (&gt; 500°C)</li>
+                    <li>Cắt liên kết ba C≡C: tạo C2H2 (800–1200°C)</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Phân hủy cách điện rắn (cellulose)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Phân hủy polymer ở t &gt; 105°C</li>
+                    <li>Carbon hóa hoàn toàn ở t &gt; 300°C</li>
+                    <li>Sản phẩm: CO, CO2, H2O</li>
+                  </ul>
+                </details>
+              </div>
+            </details>
+
+            <details class="mm-node">
+              <summary>7 loại khí hòa tan chính<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>H2 — Hydro</li>
+                <li>CH4 — Methane</li>
+                <li>C2H6 — Ethane</li>
+                <li>C2H4 — Ethylene</li>
+                <li>C2H2 — Acetylene</li>
+                <li>CO — Carbon Monoxide</li>
+                <li>CO2 — Carbon Dioxide</li>
+              </ul>
+            </details>
+
+            <details class="mm-node">
+              <summary>Phân loại lỗi &amp; khí chỉ thị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <div class="mm-sub">
+                <details class="mm-node mm-node-sm">
+                  <summary>Sự cố nhiệt (Thermal Faults)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>T1 (t &lt; 300°C): C2H6 (cắt liên kết đơn C-C), CH4</li>
+                    <li>T2 (300–700°C): C2H6, C2H4</li>
+                    <li>T3 (t &gt; 700°C): C2H4 chủ đạo, xuất hiện carbon</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Sự cố điện (Electrical Faults)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>PD (phóng điện cục bộ): H2, CH4</li>
+                    <li>D1 (năng lượng thấp): C2H2, H2</li>
+                    <li>D2 (năng lượng cao): C2H2, C2H4, hồ quang</li>
+                  </ul>
+                </details>
+              </div>
+            </details>
+
+            <details class="mm-node">
+              <summary>Phương pháp chẩn đoán IEC 60599<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <div class="mm-sub">
+                <details class="mm-node mm-node-sm">
+                  <summary>Các tỷ lệ khí cơ bản (Gas Ratios)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>C2H2 / C2H4</li>
+                    <li>CH4 / H2</li>
+                    <li>C2H4 / C2H6</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Chẩn đoán cách điện rắn<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Tỷ lệ CO2 / CO &lt; 3: nghi ngờ sự cố liên quan giấy cách điện</li>
+                    <li>Phân tích hợp chất furan (IEC 61198)</li>
+                  </ul>
+                </details>
+                <details class="mm-node mm-node-sm">
+                  <summary>Công cụ hỗ trợ<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+                  <ul class="mm-leaves">
+                    <li>Hệ số Ostwald (độ hòa tan khí trong dầu)</li>
+                    <li>Tam giác Duval</li>
+                    <li>Đồ thị biểu diễn tỷ lệ khí</li>
+                  </ul>
+                </details>
+              </div>
+            </details>
+
+            <details class="mm-node">
+              <summary>Quy trình thực hiện<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+              <ul class="mm-leaves">
+                <li>Kiểm tra nồng độ khí thực tế</li>
+                <li>Tính tốc độ tăng trưởng khí</li>
+                <li>So sánh với giá trị ngưỡng (typical values)</li>
+                <li>Xác định loại lỗi theo bảng tỷ lệ</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-book"></use></svg>Cẩm nang tham khảo nhanh</h2>
         <p class="note">Áp phích tổng hợp trực quan các bước an toàn lấy mẫu, ngưỡng khí, phương pháp tỷ số khí và
           Tam giác Duval theo IEC 60599 — tiện tra cứu nhanh khi ở hiện trường. <strong>Lưu ý:</strong> đây là bản
           tóm tắt trực quan mang tính tham khảo nhanh; số liệu ngưỡng CHÍNH THỨC mà công cụ này dùng để tính toán
           vẫn là bảng theo ĐÚNG loại thiết bị (TI/TU/MBA/Sứ xuyên) ở Điều 10/54 QĐ1901 và Annex A IEC 60599 như mô
-          tả ở Bước 2 và Bước 5 trên — không phải bảng gộp chung trong áp phích này.</p>
-        <button type="button" class="handbook-thumb" id="btnOpenHandbook" aria-label="Phóng to cẩm nang chẩn đoán DGA">
-          <img src="image/cam-nang-dga-thumb.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599" loading="lazy" />
-          <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
-        </button>
+          tả ở Bước 2 và Bước 5 trên — không phải bảng gộp chung trong các áp phích này.</p>
+        <div class="handbook-gallery">
+          <div class="handbook-item">
+            <button type="button" class="handbook-thumb" data-full="image/cam-nang-dga.webp"
+              data-caption="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599">
+              <img src="image/cam-nang-dga-thumb.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599" loading="lazy" />
+              <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+            </button>
+            <p class="handbook-caption">Cẩm nang chẩn đoán DGA theo IEC 60599</p>
+          </div>
+          <div class="handbook-item">
+            <button type="button" class="handbook-thumb" data-full="image/co-che-hinh-thanh-khi-dga.webp"
+              data-caption="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599 — năng lượng bẻ gãy liên kết hóa học ứng với từng mức sự cố (PD, T1/T2, T3, D1, D2)">
+              <img src="image/co-che-hinh-thanh-khi-dga-thumb.webp" alt="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599" loading="lazy" />
+              <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+            </button>
+            <p class="handbook-caption">Cơ chế hình thành khí DGA theo mức năng lượng sự cố</p>
+          </div>
+          <div class="handbook-item">
+            <button type="button" class="handbook-thumb" data-full="image/phan-tich-khi-hoa-tan.webp"
+              data-caption="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện — khí chỉ thị (H2, C2H2, C2H4, C2H6) và quy trình lấy mẫu khí bằng xilanh chuyên dụng theo IEC 60599/60567, ASTM D3612">
+              <img src="image/phan-tich-khi-hoa-tan-thumb.webp" alt="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện" loading="lazy" />
+              <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+            </button>
+            <p class="handbook-caption">Khí chỉ thị DGA &amp; quy trình lấy mẫu khí bằng xilanh</p>
+          </div>
+        </div>
       </div>
 
       <div class="panel">
@@ -1294,6 +1441,8 @@
             <p class="note">Công cụ hỗ trợ đánh giá phân tích khí hòa tan (DGA) và dầu cách điện trong thiết bị điện,
               tham chiếu QĐ1901/QĐ-EVNNPT và IEC 60599:1999 — dùng để tra cứu, đối chiếu nhanh, không thay thế
               nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.</p>
+            <p class="note">QĐ1901/EVNNPT (Điều 10 – TI, Điều 54 – MBA) + IEC 60599:1999 Annex A (TU, Sứ xuyên, và tiêu chuẩn chặt hơn cho MBA) ·
+              Bảng 66 (Ba tỷ số khí) &amp; Tam giác Duval (Annex B) · có thể cấu hình tiêu chuẩn riêng theo nhà sản xuất</p>
           </div>
         </div>
         <div class="about-contact">
@@ -1340,10 +1489,13 @@
     Dữ liệu: <span id="footerStorageInfo">—</span>
   </footer>
 
-  <!-- Lightbox phóng to cẩm nang chẩn đoán DGA (tab "Quy trình đánh giá") -->
-  <div id="handbookLightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Cẩm nang chẩn đoán DGA (phóng to)">
+  <!-- Lightbox phóng to áp phích tham khảo (tab "Quy trình đánh giá") — nội dung ảnh/caption
+       được gán động bằng JS (setupHandbookLightbox() trong ui-guides.js) khi bấm vào từng ảnh
+       trong ".handbook-gallery", cùng cơ chế với "qtLightbox" ở tab "Quy trình lấy mẫu". -->
+  <div id="handbookLightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Áp phích tham khảo (phóng to)">
     <button type="button" class="lightbox-close" id="btnCloseHandbook" aria-label="Đóng">✕</button>
-    <img src="image/cam-nang-dga.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599 (phóng to)" />
+    <img id="handbookLightboxImg" src="" alt="" />
+    <div class="lightbox-caption" id="handbookLightboxCaption"></div>
   </div>
 
   <!-- Lightbox phóng to hình ảnh minh họa (tab "Quy trình lấy mẫu") — nội dung ảnh/caption được
@@ -1361,6 +1513,12 @@
        window.BbtnImport khi người dùng chọn file, nên không cần chờ module này xong
        trước — nó luôn sẵn sàng từ trước khi có tương tác đầu tiên của người dùng. -->
   <script type="module" src="bbtn-import.js"></script>
+  <!-- PizZip + docxtemplater (MIT) — dùng để điền số liệu vào mẫu Biên bản thí nghiệm
+       (.docx) ngay trong trình duyệt khi bấm "Xuất BBTN (docx)", xem bbtn-export.js.
+       Đóng gói sẵn trong vendor/ (không phụ thuộc CDN ngoài) cùng lý do như vendor/pdfjs/
+       ở trên — vẫn hoạt động khi mạng/máy chặn CDN hoặc chạy offline (localStorage). -->
+  <script src="vendor/docxtemplater/pizzip.min.js"></script>
+  <script src="vendor/docxtemplater/docxtemplater.min.js"></script>
   <script src="config.js"></script>
   <script src="dga-logic.js"></script>
   <script src="storage.js"></script>
@@ -1372,6 +1530,7 @@
   <script src="ui-auth.js"></script>
   <script src="ui-guides.js"></script>
   <script src="ui-dga.js"></script>
+  <script src="bbtn-export.js"></script>
   <script src="ui-standards.js"></script>
   <script src="ui-admin.js"></script>
   <script src="ui-oil.js"></script>

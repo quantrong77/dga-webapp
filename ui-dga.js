@@ -14,6 +14,12 @@ let _editingMeasurementAttachment = null;
 // _removeBbtnOnSave: true khi người dùng bấm "Bỏ file" trong lúc sửa — lần lưu kế
 // tiếp sẽ xóa bbtn_url/bbtn_name/bbtn_file_id khỏi bản ghi thay vì giữ nguyên.
 let _removeBbtnOnSave = false;
+// _lastAnalysis: toàn bộ dữ liệu + kết quả tính toán của lần "Phân tích & Lưu" gần nhất
+// (gán ở cuối onAnalyze(), ngay trước khi gọi renderResults() — cùng 1 nguồn dữ liệu
+// với những gì đang hiển thị trên màn hình) — dùng để xuất BBTN (docx), xem
+// onExportBbtn() bên dưới và bbtn-export.js. null khi chưa phân tích lần nào trong
+// phiên làm việc này (bấm "Xuất BBTN" lúc đó sẽ báo yêu cầu phân tích trước).
+let _lastAnalysis = null;
 
 function clearForm() {
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
@@ -34,6 +40,31 @@ function resetMeasurementEditState() {
   $("btnAnalyze").textContent = "Phân tích & Lưu";
   $("bbtnImportNote").classList.add("hidden");
   renderBbtnCurrent();
+}
+
+/** Gợi ý "Lần đo" kế tiếp — chạy khi Trạm/Thiết bị/Pha trên form đổi (xem
+ *  addEventListener("change", ...) ở app-core.js initApp()) và sau khi lưu xong 1
+ *  lần đo MỚI (xem onAnalyze()), để nếu người dùng nhập tiếp lần đo kế tiếp của
+ *  CÙNG thiết bị (không xóa form, chỉ đổi ngày/số liệu) thì "Lần đo" tự nhảy lên.
+ *  Khớp theo đúng Trạm + Thiết bị + Pha, giống hệt tiêu chí tìm "lần đo liền trước"
+ *  để tính tốc độ sinh khí ở onAnalyze() (và deviceKey() ở ui-history.js). Không
+ *  chạy khi đang SỬA 1 bản ghi có sẵn (_editingMeasurementId) — số "Lần đo" gốc của
+ *  bản ghi đó phải giữ nguyên dù người dùng có sửa lại Trạm/Thiết bị/Pha hay không,
+ *  xem onEditMeasurement(). Nếu chưa có lần đo lịch sử nào khớp, mặc định là 1. */
+function updateLanDoSuggestion() {
+  if (_editingMeasurementId) return;
+  const tram = $("f_tram").value.trim();
+  const thietbi = $("f_thietbi").value.trim();
+  const pha = $("f_pha").value;
+  if (!thietbi) {
+    $("f_landocount").value = 1;
+    return;
+  }
+  const matches = (_allMeasurements || []).filter(
+    (r) => (r.tram || "").trim() === tram && (r.thiet_bi || "").trim() === thietbi && (r.pha || "") === pha
+  );
+  const maxLan = matches.reduce((max, r) => Math.max(max, Number(r.lan_do) || 0), 0);
+  $("f_landocount").value = maxLan + 1;
 }
 
 /** Hiện/ẩn khối "đã đính kèm BBTN: <tên file>" bên dưới ô chọn file, theo
@@ -154,6 +185,11 @@ async function onBbtnFileSelected(e) {
     }
   });
   if (gasNames.length) filled.push("Hàm lượng khí (" + gasNames.join(", ") + ")");
+
+  // Trạm/Thiết bị/Pha vừa điền bằng JS (không bắn "change" tự nhiên như khi người
+  // dùng gõ tay/chọn combo) — gọi lại thủ công để "Lần đo" cũng được gợi ý đúng theo
+  // lịch sử đã lưu, đúng tinh thần của tính năng này (nhập bổ sung lần đo LỊCH SỬ).
+  updateLanDoSuggestion();
 
   note.textContent = filled.length
     ? "Đã tự động điền từ BBTN: " + filled.join(", ") + " — vui lòng kiểm tra lại số liệu trước khi lưu."
@@ -340,11 +376,18 @@ async function onAnalyze() {
   let rateRows = null;
   let priorDiagnosis = null;
   if (prior) {
+    // prior đọc từ Storage.listMeasurements() nên khí lưu key CHỮ THƯỜNG (h2, ch4...
+    // xem normalizeGasKeys() ở storage.js) — phải chuẩn hóa lại về chữ HOA (H2, CH4...)
+    // bằng recordGases() (ui-standards.js) trước khi đưa vào computeRateOfChange()/
+    // computeRatios(), nếu không mọi giá trị "trước" sẽ luôn đọc ra 0 (khóa không khớp
+    // "H2" != "h2"), làm sai lệch tốc độ sinh khí và cả priorDiagnosis bên dưới — cùng
+    // cách chuẩn hóa đã dùng đúng ở ui-history.js (renderRateTable()).
+    const priorGases = recordGases(prior);
     const deltaDays = Math.round((new Date(measurement.sample_date) - new Date(prior.sample_date)) / 86400000);
-    rateRows = DGA.computeRateOfChange(prior, gases, deltaDays, standard.rate, measurement.equipment_type);
+    rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type);
     // Chẩn đoán Bảng 66 của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
     // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()).
-    priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(prior), standard.pdThreshold);
+    priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(priorGases), standard.pdThreshold);
   }
 
   // 5) Khuyến cáo tổng hợp
@@ -356,6 +399,7 @@ async function onAnalyze() {
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus };
   renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
@@ -398,6 +442,10 @@ async function onAnalyze() {
     await registerStationIfNew(measurement.tram);
     resetMeasurementEditState();
     await refreshHistoryUI();
+    // Form KHÔNG bị xóa Trạm/Thiết bị/Pha sau khi lưu (xem resetMeasurementEditState())
+    // để nhập nhanh lần đo kế tiếp của cùng thiết bị — cập nhật lại gợi ý "Lần đo" cho
+    // đúng với bản ghi vừa lưu (_allMeasurements đã có sẵn qua refreshHistoryUI() ở trên).
+    updateLanDoSuggestion();
     if (wasEditing) showToast("Đã cập nhật lần đo.");
   } catch (err) {
     alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
@@ -500,5 +548,30 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   $("r_recs").innerHTML = recs.map((r) => `<li>${r}</li>`).join("");
   if (typeof $("resultsPanel").scrollIntoView === "function") {
     $("resultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+// ---------------------------------------------------------------------
+// Xuất Biên bản thí nghiệm (BBTN, .docx) đã điền sẵn số liệu — xem bbtn-export.js.
+// Nút "Xuất BBTN (docx)" chỉ hiện trong #resultsPanel (đã ẩn cho tới khi phân tích lần
+// đầu) nên về lý thuyết _lastAnalysis luôn có giá trị khi hàm này chạy được — vẫn kiểm
+// tra lại cho chắc (phòng trường hợp DOM bị thao tác khác thường/lỗi khác).
+// ---------------------------------------------------------------------
+async function onExportBbtn() {
+  if (!_lastAnalysis) {
+    alert('Vui lòng bấm "Phân tích & Lưu" trước khi xuất Biên bản thí nghiệm.');
+    return;
+  }
+  const btn = $("btnExportBbtn");
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = "Đang tạo file...";
+  try {
+    await BbtnExport.exportBbtnDocx(_lastAnalysis);
+  } catch (err) {
+    alert("Xuất BBTN (docx) thất bại: " + ((err && err.message) || err));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
   }
 }

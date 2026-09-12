@@ -304,7 +304,6 @@ header.app-header p {
    lightbox (100–300) để các lớp đó luôn nổi trên cùng. */
 nav.tabs {
   display: flex;
-  gap: 4px;
   padding: 10px 24px 0;
   background: #fff;
   border-bottom: 1px solid var(--gray-300);
@@ -313,6 +312,17 @@ nav.tabs {
   top: 0;
   z-index: 40;
   box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
+}
+/* Canh GIỮA cả cụm nút tab trên màn hình rộng — margin:auto trên 1 flex-item (thay vì
+   justify-content:center trên chính nav.tabs) để khi cụm nút KHÔNG đủ chỗ (màn hình
+   hẹp/nhiều tab như lúc thêm tab "Quản trị" cho Admin), margin tự co về 0 và nav.tabs
+   cuộn ngang bình thường từ mép trái — dùng justify-content:center trực tiếp sẽ làm
+   phần đầu cụm nút bị che khuất, phải cuộn cả 2 hướng mới thấy hết. */
+.tabs-inner {
+  display: flex;
+  gap: 4px;
+  margin: 0 auto;
+  flex: none;
 }
 
 nav.tabs button {
@@ -836,6 +846,23 @@ footer.app-footer {
 
 /* ===================== Cẩm nang tham khảo (ảnh + lightbox phóng to) — tab "Quy
    trình đánh giá" ===================== */
+.handbook-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.handbook-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.handbook-caption {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-600);
+  text-align: center;
+}
 .handbook-thumb {
   display: block;
   position: relative;

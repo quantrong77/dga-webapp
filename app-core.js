@@ -19,25 +19,31 @@ async function initApp() {
     $("navQuanTri").classList.toggle("hidden", Auth.current.role !== "admin");
   }
 
+  // Badge "Đã kết nối database" chỉ hiện với Admin (chi tiết vận hành/hạ tầng, không
+  // cần thiết cho User thường) — khi tắt Auth (Auth.enabled=false, không phân quyền)
+  // vẫn hiện bình thường, coi như tương đương Admin. Cảnh báo "Chế độ thử nghiệm"
+  // (localStorage) vẫn hiện cho MỌI người vì ai cũng cần biết dữ liệu không dùng chung.
   const badge = $("storageBadge");
   const footerInfo = $("footerStorageInfo");
-  if (Storage.mode === "gsheet") {
-    badge.textContent = "Đã kết nối database";
-    badge.className = "badge supabase";
+  const isAdminOrNoAuth = !Auth.enabled || (Auth.current && Auth.current.role === "admin");
+  if (Storage.mode === "gsheet" || Storage.mode === "supabase") {
     footerInfo.textContent = "lưu trên database dùng chung (nhiều máy cùng truy cập)";
-  } else if (Storage.mode === "supabase") {
-    badge.textContent = "Đã kết nối database";
-    badge.className = "badge supabase";
-    footerInfo.textContent = "lưu trên database dùng chung (nhiều máy cùng truy cập)";
+    badge.classList.toggle("hidden", !isAdminOrNoAuth);
+    if (isAdminOrNoAuth) {
+      badge.textContent = "Đã kết nối database";
+      badge.className = "badge supabase";
+    }
   } else {
     badge.textContent = "Chế độ thử nghiệm (chỉ lưu trên trình duyệt này)";
     badge.className = "badge local";
+    badge.classList.remove("hidden");
     footerInfo.textContent = "lưu trong localStorage của trình duyệt này — điền config.js để dùng database dùng chung";
   }
 
   setupTabs();
   setupHandbookLightbox();
   setupMindmap();
+  setupOverviewMindmap();
   setupSampleMethods();
   setupSamplingLightbox();
   $("f_ngay").value = new Date().toISOString().slice(0, 10);
@@ -156,16 +162,22 @@ async function initApp() {
     },
   });
   // Ô "Thiết bị" chưa có danh mục riêng như Trạm — gợi ý được lấy từ các thiết bị
-  // đã từng nhập trong lịch sử đo (_allMeasurements), không bắt buộc chọn từ đó.
+  // đã từng nhập trong lịch sử đo (_allMeasurements), không bắt buộc chọn từ đó. Nếu
+  // đã chọn/gõ Trạm, chỉ gợi ý thiết bị THUỘC đúng trạm đó (đọc $("f_tram") mỗi lần mở
+  // danh sách nên luôn theo giá trị Trạm hiện tại, kể cả đổi sau khi đã mở form) — gõ
+  // tên chưa có trong danh mục vẫn dùng được bình thường (xem "combo-empty" ở
+  // setupCombo()), không bị khóa chỉ chọn từ gợi ý.
   setupCombo({
     input: $("f_thietbi"),
     toggleBtn: $("f_thietbi_toggle"),
     listEl: $("f_thietbi_list"),
     getOptions: () => {
+      const tram = $("f_tram").value.trim();
       const byName = new Map();
       _allMeasurements.forEach((r) => {
         const name = (r.thiet_bi || "").trim();
         if (!name || byName.has(name)) return;
+        if (tram && (r.tram || "").trim() !== tram) return;
         byName.set(name, r.tram || "");
       });
       return Array.from(byName.entries())
@@ -217,6 +229,12 @@ async function initApp() {
   $("btnClearForm").addEventListener("click", clearForm);
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
+  $("btnExportBbtn").addEventListener("click", onExportBbtn);
+  // Gợi ý "Lần đo" kế tiếp theo Trạm+Thiết bị+Pha — xem updateLanDoSuggestion() ở
+  // ui-dga.js. "change" bắt được cả lúc chọn từ danh sách gợi ý (setupCombo() tự
+  // bắn "change" khi chọn) lẫn lúc gõ tay rồi rời khỏi ô (blur mặc định của trình
+  // duyệt cũng bắn "change" nếu giá trị đã đổi).
+  ["f_tram", "f_thietbi", "f_pha"].forEach((id) => $(id).addEventListener("change", updateLanDoSuggestion));
   $("btnViewBbtn").addEventListener("click", () => viewBbtn(_editingMeasurementAttachment));
   $("btnRemoveBbtn").addEventListener("click", () => {
     if (!confirm("Bỏ file Biên bản thí nghiệm đã đính kèm khỏi lần đo này?")) return;
