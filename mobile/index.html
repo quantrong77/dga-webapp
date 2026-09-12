@@ -657,8 +657,10 @@
     </div>
   </section>
 
-  <!-- ===================== THANH ĐIỀU HƯỚNG DƯỚI (bottom tab bar) ===================== -->
-  <nav class="bottom-tabbar hidden" id="bottomTabbar">
+  <!-- ===================== THANH ĐIỀU HƯỚNG TRÊN (top tab bar) =====================
+       Đặt ở trên cùng thay vì dưới cùng để tránh bị badge "Powered by Netlify"
+       (Netlify tự chèn cố định ở góc dưới màn hình) che mất/chặn bấm 1 vài tab. -->
+  <nav class="top-tabbar hidden" id="topTabbar">
     <button class="tabbar-btn" data-screen="screenEntry">
       <svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg><span>DGA</span>
     </button>

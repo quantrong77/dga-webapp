@@ -142,7 +142,8 @@ select.select { appearance: none; background-image: url("data:image/svg+xml,%3Cs
 /* ---------- Account menu ---------- */
 .acct-backdrop { position: fixed; inset: 0; z-index: 15; max-width: 480px; margin: 0 auto; }
 .acct-menu {
-  position: fixed; top: 66px; right: max(12px, calc((100vw - 480px) / 2 + 12px));
+  /* 54px thanh tab trên cùng + 60px topbar riêng của từng màn + 6px đệm */
+  position: fixed; top: 120px; right: max(12px, calc((100vw - 480px) / 2 + 12px));
   width: 224px; background: var(--surface); border-radius: 14px;
   box-shadow: 0 6px 24px rgba(0,0,0,0.18); border: 1px solid var(--border-soft);
   padding: 14px; z-index: 16;
@@ -269,23 +270,26 @@ select.select { appearance: none; background-image: url("data:image/svg+xml,%3Cs
   .scroll-area, .auth-wrap { padding-left: 14px; padding-right: 14px; }
 }
 
-/* ---------- Bottom tab bar (điều hướng chính: DGA / Dầu / Xu hướng / Tiêu chuẩn / Quản trị) ---------- */
-.bottom-tabbar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+/* ---------- Top tab bar (điều hướng chính: DGA / Dầu / Xu hướng / Tiêu chuẩn / Quản trị) ----------
+   Đặt cố định TRÊN CÙNG (không phải dưới cùng) — vì các badge nổi mà nơi lưu trữ
+   tĩnh (VD: "Powered by Netlify") tự chèn thường nằm cố định ở GÓC DƯỚI màn hình,
+   nếu thanh tab cũng ở dưới sẽ bị badge đó che khuất/chặn mất vài tab. */
+.top-tabbar {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 30;
   max-width: 480px; margin: 0 auto;
-  background: var(--surface); border-top: 1px solid var(--border-soft);
+  background: var(--surface); border-bottom: 1px solid var(--border-soft);
   display: flex;
-  padding-bottom: env(safe-area-inset-bottom);
-  box-shadow: 0 -2px 10px rgba(8,16,28,0.05);
+  padding-top: env(safe-area-inset-top);
+  box-shadow: 0 2px 10px rgba(8,16,28,0.06);
 }
 .tabbar-btn {
-  flex: 1; height: 58px; border: none; background: transparent; cursor: pointer;
+  flex: 1; height: 54px; border: none; background: transparent; cursor: pointer;
   font-family: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; color: var(--text-faint); font-size: 10.5px; padding: 0;
 }
-.tabbar-btn .icon-svg { width: 21px; height: 21px; }
+.tabbar-btn .icon-svg { width: 20px; height: 20px; }
 .tabbar-btn.active { color: var(--primary); font-weight: 700; }
-.screen.with-tabbar { bottom: calc(58px + env(safe-area-inset-bottom)); }
+.screen.with-tabbar { top: calc(54px + env(safe-area-inset-top)); }
 
 /* ---------- Nội dung chung cho các tab mới (Dầu / Xu hướng / Tiêu chuẩn / Quản trị) ---------- */
 .note-text { font-size: 12px; color: var(--text-soft); line-height: 1.55; margin: 0 0 12px; }

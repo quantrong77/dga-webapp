@@ -47,7 +47,7 @@ function showScreen(name) {
     el.classList.toggle("with-tabbar", id === name && TOP_LEVEL_SCREENS.includes(name));
   });
   const isTop = TOP_LEVEL_SCREENS.includes(name);
-  $("bottomTabbar").classList.toggle("hidden", !isTop);
+  $("topTabbar").classList.toggle("hidden", !isTop);
   if (isTop) {
     document.querySelectorAll(".tabbar-btn").forEach((b) => b.classList.toggle("active", b.dataset.screen === name));
   }
