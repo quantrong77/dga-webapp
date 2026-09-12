@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Trợ Lý DGA</title>
+  <meta name="theme-color" content="#0061A4" />
+  <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="image/apple-touch-icon.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Cùng các thư viện/backend với bản web (index.html) — xem config.js/storage.js:
+       chỉ cần config.js 2 bên trỏ cùng 1 GSHEET_WEBAPP_URL/SUPABASE_URL là dùng
+       chung đúng 1 nơi lưu trữ, không cần đổi gì trong các file bên dưới. -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- Sprite icon dùng CHUNG với bản web (copy nguyên văn từ index.html của web app)
+     để 2 bản trông là 1 hệ thống duy nhất, không phải 2 icon set khác nhau. -->
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+  <defs>
+    <symbol id="icon-flask" viewBox="0 0 24 24"><path d="M9 2h6M10 2v6.2L4.6 17a2 2 0 0 0 1.7 3h11.4a2 2 0 0 0 1.7-3L14 8.2V2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.3 14h9.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-droplet" viewBox="0 0 24 24"><path d="M12 2.5S5 10.3 5 15a7 7 0 0 0 14 0c0-4.7-7-12.5-7-12.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-history" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 9v4l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 2h6M12 2v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.3l2.6 2.6L16.2 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M12 3.2l9.5 16.6H2.5L12 3.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9.5v4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.2-4 4-6 7.5-6s6.3 2 7.5 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3.5v11.4M8 11.3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 17v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></symbol>
+    <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 8l4 4-4 4M18 12H9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-trend" viewBox="0 0 24 24"><path d="M3 16l5.5-6 4 4L21 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 6h6v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-ruler" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 7v4M11 7v4M15 7v4M19 7v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+    <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2.5l7.5 3.2v5.6c0 5-3.2 8.6-7.5 10.2-4.3-1.6-7.5-5.2-7.5-10.2V5.7L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="icon-paperclip" viewBox="0 0 24 24"><path d="M17.5 8.5l-8 8a3 3 0 0 0 4.2 4.2l8.3-8.3a5 5 0 0 0-7-7l-8.3 8.3a7 7 0 0 0 9.9 9.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+
+  <!-- ===================== ĐĂNG NHẬP ===================== -->
+  <section id="screenAuth" class="screen hidden">
+    <div class="auth-wrap">
+      <div class="auth-logo">
+        <img src="image/app-icon-96.webp" alt="" class="auth-logo-icon" width="64" height="64" />
+        <div class="auth-title">Trợ Lý DGA</div>
+        <div class="auth-sub">Phân tích khí hòa tan · EVNNPT</div>
+      </div>
+
+      <div id="authLoginForm">
+        <label class="field-label">Email</label>
+        <input id="auth_login_email" type="email" class="input" autocomplete="username" />
+        <label class="field-label" style="margin-top:10px;">Mật khẩu</label>
+        <input id="auth_login_password" type="password" class="input" autocomplete="current-password" />
+        <div id="authLoginError" class="field-error hidden"></div>
+        <button id="btnAuthLogin" class="btn btn-primary" style="margin-top:14px;">Đăng nhập</button>
+
+        <div class="or-divider"><span>HOẶC</span></div>
+
+        <div id="googleSignInWrap" class="hidden">
+          <div id="googleSignInBtn" style="display:flex;justify-content:center;"></div>
+        </div>
+
+        <div class="auth-switch">Chưa có tài khoản? <a href="#" id="linkShowRegister">Đăng ký</a></div>
+      </div>
+
+      <div id="authRegisterForm" class="hidden">
+        <label class="field-label">Email</label>
+        <input id="auth_register_email" type="email" class="input" autocomplete="username" />
+        <label class="field-label" style="margin-top:10px;">Mật khẩu</label>
+        <input id="auth_register_password" type="password" class="input" autocomplete="new-password" />
+        <div id="authRegisterError" class="field-error hidden"></div>
+        <button id="btnAuthRegister" class="btn btn-primary" style="margin-top:14px;">Đăng ký</button>
+        <div class="auth-switch">Đã có tài khoản? <a href="#" id="linkShowLogin">Đăng nhập</a></div>
+      </div>
+
+      <div id="authSpinner" class="auth-spinner hidden"><div class="spinner"></div><span id="authSpinnerText"></span></div>
+    </div>
+  </section>
+
+  <!-- ===================== NHẬP LIỆU ===================== -->
+  <section id="screenEntry" class="screen hidden">
+    <header class="topbar">
+      <div class="topbar-title topbar-title-brand">
+        <img src="image/app-icon-96.webp" alt="" class="topbar-logo-icon" width="26" height="26" />
+        <span>Trợ Lý DGA</span>
+      </div>
+      <button class="icon-btn" id="btnGoHistory" aria-label="Lịch sử đo">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>
+      </button>
+      <button class="avatar-btn" id="btnAcctMenu" aria-label="Tài khoản">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-user"></use></svg>
+      </button>
+    </header>
+
+    <div id="acctMenuBackdrop" class="acct-backdrop hidden"></div>
+    <div id="acctMenu" class="acct-menu hidden">
+      <div class="acct-menu-label" id="acctLabel">Tài khoản</div>
+      <div class="acct-menu-email" id="acctEmail">—</div>
+      <button id="btnLogout" class="btn btn-danger-soft">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-logout"></use></svg>
+        Đăng xuất
+      </button>
+    </div>
+
+    <div class="scroll-area">
+      <div id="editingBanner" class="hint-banner hidden">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>
+        <div>Đang SỬA lần đo đã lưu. <a href="#" id="linkCancelEdit">Hủy sửa, nhập mới</a></div>
+      </div>
+
+      <div class="section-label">THÔNG TIN LẦN ĐO</div>
+
+      <div class="field">
+        <label class="field-label">Trạm / Dự án</label>
+        <div class="combo-wrap">
+          <input id="f_tram" type="text" class="input" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+          <button type="button" id="f_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">
+            <svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+          </button>
+          <div id="f_tram_list" class="combo-list hidden"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Thiết bị (tên/mã)</label>
+        <div class="combo-wrap">
+          <input id="f_thietbi" type="text" class="input" placeholder="VD: TI174 — gõ để tìm hoặc nhập thiết bị mới" autocomplete="off" />
+          <button type="button" id="f_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">
+            <svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+          </button>
+          <div id="f_thietbi_list" class="combo-list hidden"></div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Pha</label>
+        <div class="pha-row" id="phaRow"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Loại thiết bị</label>
+        <select id="f_loai" class="input select"></select>
+      </div>
+
+      <div class="field hidden" id="f_mbasubtype_wrap">
+        <label class="field-label">Phân loại CPC (chỉ MBA/Kháng dầu)</label>
+        <select id="f_mbasubtype" class="input select"></select>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Nhà sản xuất (tùy chọn)</label>
+        <select id="f_nsx" class="input select"></select>
+      </div>
+
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label">Ngày lấy mẫu</label>
+          <input id="f_ngay" type="date" class="input" />
+        </div>
+        <div class="field">
+          <label class="field-label">Lần đo</label>
+          <input id="f_landocount" type="number" min="1" step="1" class="input" value="1" />
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:18px;">GIÁ TRỊ KHÍ HÒA TAN (ppm)</div>
+      <div class="gas-grid" id="gasGrid"></div>
+
+      <div class="field" style="margin-top:12px;">
+        <label class="field-label">Ghi chú (tùy chọn)</label>
+        <textarea id="f_ghichu" class="input" rows="2"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Đính kèm Biên bản thí nghiệm (BBTN, PDF — tùy chọn)</label>
+        <input id="f_bbtn" type="file" accept="application/pdf" class="input" />
+        <p class="field-hint" id="bbtnImportHint"></p>
+        <div id="bbtnCurrentWrap" class="attach-current hidden">
+          <svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+          <a href="#" id="bbtnCurrentLink"><span id="bbtnCurrentName"></span></a>
+          <button type="button" id="btnRemoveBbtn" class="btn-link-danger">Gỡ</button>
+        </div>
+      </div>
+
+      <div id="entryError" class="field-error hidden" style="margin-top:10px;"></div>
+      <div style="height:90px;"></div>
+    </div>
+
+    <div class="bottom-bar">
+      <button id="btnCancelEdit2" class="btn btn-secondary hidden" style="flex:0 0 auto;">Hủy</button>
+      <button id="btnAnalyze" class="btn btn-primary" style="flex:1;">Phân tích &amp; Lưu</button>
+    </div>
+  </section>
+
+  <!-- ===================== KẾT QUẢ ===================== -->
+  <section id="screenResults" class="screen hidden">
+    <header class="topbar">
+      <button class="icon-btn" id="btnBackFromResults" aria-label="Quay lại">
+        <svg class="icon-svg" style="transform:scaleX(-1);" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+      </button>
+      <div class="topbar-title">Kết quả đánh giá</div>
+    </header>
+
+    <div class="scroll-area">
+      <div id="condemnBanner" class="hint-banner banner-danger hidden"></div>
+
+      <div id="overallStatusBanner" class="status-banner">
+        <div id="statusBadgeText" class="status-badge"></div>
+        <ul id="statusReasonsList" class="status-reasons"></ul>
+        <div id="statusActionText" class="status-action"></div>
+      </div>
+
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">Tổng khí cháy (TCG)</div>
+          <div class="stat-value"><span id="r_tcg">—</span></div>
+        </div>
+        <div id="r_overall"></div>
+      </div>
+
+      <div class="section-label">ĐÁNH GIÁ TỪNG KHÍ</div>
+      <div class="card">
+        <table class="mini-table">
+          <thead><tr><th>Khí</th><th>Giá trị</th><th>Giới hạn</th><th>Loại bỏ</th><th>KL</th></tr></thead>
+          <tbody id="r_gasTable"></tbody>
+        </table>
+      </div>
+      <div class="muted-line">Tiêu chuẩn áp dụng: <strong id="r_standard">—</strong></div>
+
+      <div class="section-label" style="margin-top:16px;">CHẨN ĐOÁN</div>
+      <div class="card kv-card">
+        <div class="kv-row"><span>Tỷ số khí (Bảng 66)</span><strong id="r_diag">—</strong></div>
+        <div class="kv-row"><span>Tam giác Duval</span><strong id="r_duval">—</strong></div>
+        <div class="kv-row"><span>C2H2/C2H4</span><strong id="r_ratio1">—</strong></div>
+        <div class="kv-row"><span>CH4/H2 (ngưỡng PD <span id="r_pdthreshold"></span>)</span><strong id="r_ratio2">—</strong></div>
+        <div class="kv-row"><span>C2H4/C2H6</span><strong id="r_ratio3">—</strong></div>
+        <div class="kv-row"><span>Khả năng áp dụng</span><strong id="r_applicability" style="font-weight:500;font-size:12px;text-align:right;">—</strong></div>
+      </div>
+
+      <div class="section-label" style="margin-top:16px;">TAM GIÁC DUVAL 1</div>
+      <div class="card duval-card">
+        <svg id="duvalSvg" viewBox="-8 -8 116 102" style="width:100%; max-width:260px; height:auto; display:block; margin:0 auto;"></svg>
+        <div class="duval-pct-row">
+          <span>%CH4 <strong id="r_pctch4">—</strong></span>
+          <span>%C2H4 <strong id="r_pctc2h4">—</strong></span>
+          <span>%C2H2 <strong id="r_pctc2h2">—</strong></span>
+        </div>
+        <div id="r_duvalzone" class="duval-zone-text">—</div>
+      </div>
+
+      <div id="rateSection" class="hidden">
+        <div class="section-label" style="margin-top:16px;">TỐC ĐỘ SINH KHÍ</div>
+        <div id="rateNote" class="muted-line"></div>
+        <div class="card" style="overflow-x:auto;">
+          <table class="mini-table">
+            <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>%/năm</th><th>Khoảng</th><th>KL</th></tr></thead>
+            <tbody id="r_rateTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:16px;">KHUYẾN NGHỊ</div>
+      <div class="card">
+        <ul id="r_recs" class="recs-list"></ul>
+      </div>
+      <div style="height:90px;"></div>
+    </div>
+
+    <div class="bottom-bar">
+      <button id="btnExportBbtn" class="btn btn-primary" style="flex:1;">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>
+        Xuất BBTN (docx)
+      </button>
+    </div>
+  </section>
+
+  <!-- ===================== LỊCH SỬ ĐO ===================== -->
+  <section id="screenHistory" class="screen hidden">
+    <header class="topbar">
+      <button class="icon-btn" id="btnBackFromHistory" aria-label="Quay lại">
+        <svg class="icon-svg" style="transform:scaleX(-1);" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+      </button>
+      <div class="topbar-title">Lịch sử đo</div>
+    </header>
+    <div class="scroll-area">
+      <div id="historyEmpty" class="muted-line hidden" style="padding:24px 4px;text-align:center;">Chưa có lần đo nào được lưu.</div>
+      <div id="historyList"></div>
+      <div style="height:90px;"></div>
+    </div>
+    <button id="btnFabAdd" class="fab" aria-label="Thêm lần đo mới">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-plus"></use></svg>
+    </button>
+  </section>
+
+  <!-- ===================== DẦU CÁCH ĐIỆN (MBA chính + OLTC) ===================== -->
+  <section id="screenDau" class="screen hidden">
+    <header class="topbar">
+      <div class="topbar-title">Dầu cách điện</div>
+      <button class="avatar-btn" id="btnAcctMenu2" aria-label="Tài khoản">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-user"></use></svg>
+      </button>
+    </header>
+    <div class="scroll-area">
+
+      <div class="section-label">DẦU MBA / KHÁNG DẦU CHÍNH</div>
+      <p class="note-text">Đánh giá Độ ẩm dầu, tgδ ở 90°C, Điện áp chọc thủng theo Bảng 58/55/54 QĐ1901 (chỉ MBA/Kháng dầu).</p>
+
+      <div class="field">
+        <label class="field-label">Trạm / Dự án</label>
+        <div class="combo-wrap">
+          <input id="o_tram" type="text" class="input" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+          <button type="button" id="o_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm"><svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></button>
+          <div id="o_tram_list" class="combo-list hidden"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Thiết bị (tên/mã)</label>
+        <div class="combo-wrap">
+          <input id="o_thietbi" type="text" class="input" placeholder="VD: MBA T1" autocomplete="off" />
+          <button type="button" id="o_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị"><svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></button>
+          <div id="o_thietbi_list" class="combo-list hidden"></div>
+        </div>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label">Cấp điện áp MBA</label>
+          <select id="o_voltage_class" class="input select"></select>
+        </div>
+        <div class="field">
+          <label class="field-label">Trạng thái dầu</label>
+          <select id="o_oilstate" class="input select">
+            <option value="new">Dầu mới</option>
+            <option value="inservice">Dầu vận hành</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Nhà sản xuất (tùy chọn)</label>
+        <select id="o_nsx" class="input select"><option value="">— Không có / dùng QĐ1901 —</option></select>
+      </div>
+      <label class="field chk-field hidden" id="o_membrane_wrap">
+        <input id="o_membrane" type="checkbox" />
+        <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV)</span>
+      </label>
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label">Ngày lấy mẫu</label>
+          <input id="o_ngay" type="date" class="input" />
+        </div>
+        <div class="field">
+          <label class="field-label">Ghi chú</label>
+          <input id="o_ghichu" type="text" class="input" placeholder="(không bắt buộc)" />
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:14px;">KẾT QUẢ THÍ NGHIỆM</div>
+      <div class="gas-grid" style="grid-template-columns:1fr;">
+        <div class="field"><label class="field-label">Độ ẩm dầu (ppm)</label><input id="o_moisture" type="number" step="0.1" class="input" /></div>
+        <div class="field"><label class="field-label">Tổn hao điện môi tgδ ở 90°C (%)</label><input id="o_tgd90" type="number" step="0.01" class="input" /></div>
+        <div class="field"><label class="field-label">Điện áp chọc thủng (kV)</label><input id="o_bdv" type="number" step="0.1" class="input" /></div>
+      </div>
+
+      <p class="note-text warn hidden" id="editingOilTestNote">Đang SỬA thí nghiệm dầu đã lưu — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button id="btnAnalyzeOil" class="btn btn-primary" style="flex:1;">Đánh giá &amp; Lưu</button>
+        <button id="btnCancelEditOilTest" class="btn btn-secondary hidden">Hủy</button>
+      </div>
+
+      <div class="panel-card hidden" id="oilResultsPanel" style="margin-top:14px;">
+        <div class="stat-card" style="margin-bottom:10px;">
+          <div><div class="stat-label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
+        </div>
+        <table class="mini-table">
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>KL</th></tr></thead>
+          <tbody id="o_resultTable"></tbody>
+        </table>
+      </div>
+
+      <div class="section-label" style="margin-top:18px;">LỊCH SỬ THÍ NGHIỆM DẦU CHÍNH</div>
+      <div id="oilHistoryList"></div>
+      <p class="note-text" id="oilHistoryEmpty">Chưa có thí nghiệm dầu nào được lưu.</p>
+
+      <div class="divider-line"></div>
+
+      <div class="section-label">DẦU KHOANG ĐIỀU ÁP DƯỚI TẢI (OLTC)</div>
+      <p class="note-text">Theo Điều 37, Bảng 49 QĐ1901 — dầu vận hành chỉ đánh giá Độ ẩm + Điện áp chọc thủng; dầu mới lắp dùng chung tiêu chuẩn với dầu chính MBA (có cả tgδ).</p>
+
+      <div class="field">
+        <label class="field-label">Trạm / Dự án</label>
+        <div class="combo-wrap">
+          <input id="ot_tram" type="text" class="input" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+          <button type="button" id="ot_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm"><svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></button>
+          <div id="ot_tram_list" class="combo-list hidden"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Thiết bị (tên/mã)</label>
+        <div class="combo-wrap">
+          <input id="ot_thietbi" type="text" class="input" placeholder="VD: MBA T1" autocomplete="off" />
+          <button type="button" id="ot_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị"><svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></button>
+          <div id="ot_thietbi_list" class="combo-list hidden"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Điểm lấy mẫu OLTC</label>
+        <select id="ot_samplepoint" class="input select"></select>
+      </div>
+      <div class="field" id="ot_phase_wrap">
+        <label class="field-label">Pha</label>
+        <select id="ot_phase" class="input select">
+          <option value="A">Pha A</option><option value="B">Pha B</option><option value="C">Pha C</option>
+        </select>
+      </div>
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label">Cấp điện áp MBA</label>
+          <select id="ot_voltage_class" class="input select"></select>
+        </div>
+        <div class="field">
+          <label class="field-label">Trạng thái dầu</label>
+          <select id="ot_oilstate" class="input select">
+            <option value="new">Dầu mới</option>
+            <option value="inservice">Dầu vận hành</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label class="field-label">Nhà sản xuất (tùy chọn — chỉ áp dụng khi Dầu mới)</label>
+        <select id="ot_nsx" class="input select"><option value="">— Không có / dùng QĐ1901 —</option></select>
+      </div>
+      <label class="field chk-field hidden" id="ot_membrane_wrap">
+        <input id="ot_membrane" type="checkbox" />
+        <span>Có bảo vệ bằng màng chất dẻo/nitơ (≤110kV, khi Dầu mới)</span>
+      </label>
+      <div class="row-2">
+        <div class="field">
+          <label class="field-label">Ngày lấy mẫu</label>
+          <input id="ot_ngay" type="date" class="input" />
+        </div>
+        <div class="field">
+          <label class="field-label">Ghi chú</label>
+          <input id="ot_ghichu" type="text" class="input" placeholder="(không bắt buộc)" />
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:14px;">KẾT QUẢ THÍ NGHIỆM</div>
+      <div class="gas-grid" style="grid-template-columns:1fr;">
+        <div class="field"><label class="field-label">Độ ẩm dầu OLTC (ppm)</label><input id="ot_moisture" type="number" step="0.1" class="input" /></div>
+        <div class="field"><label class="field-label">Tổn hao điện môi tgδ ở 90°C (%)</label><input id="ot_tgd90" type="number" step="0.01" class="input" /></div>
+        <div class="field"><label class="field-label">Điện áp chọc thủng (kV)</label><input id="ot_bdv" type="number" step="0.1" class="input" /></div>
+      </div>
+
+      <p class="note-text warn hidden" id="editingOltcOilTestNote">Đang SỬA thí nghiệm dầu OLTC đã lưu — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button id="btnAnalyzeOltcOil" class="btn btn-primary" style="flex:1;">Đánh giá &amp; Lưu</button>
+        <button id="btnCancelEditOltcOilTest" class="btn btn-secondary hidden">Hủy</button>
+      </div>
+
+      <div class="panel-card hidden" id="oltcOilResultsPanel" style="margin-top:14px;">
+        <div class="stat-card" style="margin-bottom:10px;">
+          <div><div class="stat-label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
+        </div>
+        <table class="mini-table">
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>KL</th></tr></thead>
+          <tbody id="ot_resultTable"></tbody>
+        </table>
+      </div>
+
+      <div class="section-label" style="margin-top:18px;">LỊCH SỬ THÍ NGHIỆM DẦU OLTC</div>
+      <div id="oltcOilHistoryList"></div>
+      <p class="note-text" id="oltcOilHistoryEmpty">Chưa có thí nghiệm dầu OLTC nào được lưu.</p>
+
+      <div style="height:24px;"></div>
+    </div>
+  </section>
+
+  <!-- ===================== XU HƯỚNG ===================== -->
+  <section id="screenXuHuong" class="screen hidden">
+    <header class="topbar">
+      <div class="topbar-title">Xu hướng</div>
+      <button class="avatar-btn" id="btnAcctMenu3" aria-label="Tài khoản">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-user"></use></svg>
+      </button>
+    </header>
+    <div class="scroll-area">
+      <p class="note-text">Chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA, dầu OLTC) và vẽ xu hướng.</p>
+      <div class="field">
+        <label class="field-label">Thiết bị</label>
+        <select id="tr_device" class="input select"><option value="">— Chọn thiết bị —</option></select>
+      </div>
+      <p class="note-text" id="trEmpty">Chưa có dữ liệu nào được lưu để vẽ xu hướng.</p>
+
+      <div class="hidden" id="trContentWrap">
+        <div class="hidden" id="trPhaseWrap" style="margin-top:14px;">
+          <div class="section-label">LỌC THEO PHA</div>
+          <div class="trend-checks" id="trPhaseChecks"></div>
+        </div>
+
+        <div class="section-label" style="margin-top:14px;">CHỌN THÔNG SỐ CẦN VẼ</div>
+        <div class="hidden" id="trParamsGasWrap">
+          <div class="subsection-label">Khí hòa tan (ppm)</div>
+          <div class="trend-checks" id="trParamsGas"></div>
+        </div>
+        <div class="hidden" id="trParamsOilWrap">
+          <div class="subsection-label">Dầu MBA chính</div>
+          <div class="trend-checks" id="trParamsOil"></div>
+        </div>
+        <div class="hidden" id="trParamsOltcWrap">
+          <div class="subsection-label">Dầu OLTC</div>
+          <div class="trend-checks" id="trParamsOltc"></div>
+        </div>
+
+        <div class="chart-wrap">
+          <canvas id="trendChart"></canvas>
+        </div>
+        <p class="note-text hidden" id="trChartEmpty">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị.</p>
+        <p class="note-text hidden" id="trChartNoLib">Không tải được thư viện vẽ đồ thị (Chart.js) — kiểm tra kết nối mạng.</p>
+
+        <div class="hidden" id="trHistGasWrap" style="margin-top:16px;">
+          <div class="section-label">LỊCH SỬ ĐO KHÍ HÒA TAN</div>
+          <div id="trHistGasList"></div>
+        </div>
+        <div class="hidden" id="trHistOilWrap" style="margin-top:16px;">
+          <div class="section-label">LỊCH SỬ THÍ NGHIỆM DẦU CHÍNH</div>
+          <div id="trHistOilList"></div>
+        </div>
+        <div class="hidden" id="trHistOltcWrap" style="margin-top:16px;">
+          <div class="section-label">LỊCH SỬ THÍ NGHIỆM DẦU OLTC</div>
+          <div id="trHistOltcList"></div>
+        </div>
+      </div>
+      <div style="height:24px;"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TIÊU CHUẨN NHÀ SẢN XUẤT ===================== -->
+  <section id="screenTieuChuan" class="screen hidden">
+    <header class="topbar">
+      <div class="topbar-title">Tiêu chuẩn NSX</div>
+      <button class="avatar-btn" id="btnAcctMenu4" aria-label="Tài khoản">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-user"></use></svg>
+      </button>
+    </header>
+    <div class="scroll-area">
+      <p class="note-text">Cấu hình ngưỡng riêng theo nhà sản xuất, thay cho QĐ1901/IEC60599 mặc định. Chỉ Admin lưu/xóa được — người dùng thường chỉ xem.</p>
+      <p class="note-text warn hidden" id="editingStandardNote">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu, hoặc "Hủy" để bỏ qua.</p>
+
+      <div id="standardFormWrap">
+        <div class="field">
+          <label class="field-label">Loại tiêu chuẩn</label>
+          <select id="s_standard_type" class="input select">
+            <option value="khi">Khí hòa tan (DGA)</option>
+            <option value="dau">Dầu cách điện</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="field-label">Tên nhà sản xuất</label>
+          <div class="combo-wrap">
+            <input id="s_manufacturer" type="text" class="input" placeholder="Gõ để tìm hoặc nhập nhà sản xuất mới" autocomplete="off" />
+            <button type="button" id="s_manufacturer_toggle" class="combo-toggle" aria-label="Hiện danh sách nhà sản xuất"><svg class="icon-svg-sm" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></button>
+            <div id="s_manufacturer_list" class="combo-list hidden"></div>
+          </div>
+        </div>
+        <div class="field" id="s_equipmenttype_wrap">
+          <label class="field-label">Áp dụng cho loại thiết bị</label>
+          <select id="s_equipmenttype" class="input select"></select>
+        </div>
+        <div class="field">
+          <label class="field-label">Nguồn tài liệu (tùy chọn)</label>
+          <input id="s_source" type="text" class="input" placeholder="VD: Quy trình TN-BD IOSK v2" />
+        </div>
+
+        <div id="stdGasFields">
+          <div class="subsection-label">Ngưỡng tuyệt đối từng khí (ppm)</div>
+          <div class="gas-grid">
+            <div class="gas-field"><label>H2</label><input id="s_H2" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>CH4</label><input id="s_CH4" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>C2H6</label><input id="s_C2H6" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>C2H4</label><input id="s_C2H4" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>C2H2</label><input id="s_C2H2" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>CO</label><input id="s_CO" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>CO2</label><input id="s_CO2" type="number" step="0.01" class="input" /></div>
+          </div>
+          <div class="subsection-label" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn)</div>
+          <p class="note-text">Không cần điền đủ 7 khí — thường chỉ cần đặt cho H2, C2H2.</p>
+          <div class="gas-grid">
+            <div class="gas-field"><label>H2</label><input id="s_loaibo_H2" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>CH4</label><input id="s_loaibo_CH4" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>C2H6</label><input id="s_loaibo_C2H6" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>C2H4</label><input id="s_loaibo_C2H4" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>C2H2</label><input id="s_loaibo_C2H2" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>CO</label><input id="s_loaibo_CO" type="number" step="0.01" class="input" /></div>
+            <div class="gas-field"><label>CO2</label><input id="s_loaibo_CO2" type="number" step="0.01" class="input" /></div>
+          </div>
+        </div>
+
+        <div id="stdOilFields" class="hidden">
+          <div class="row-2">
+            <div class="field">
+              <label class="field-label">Cấp điện áp MBA</label>
+              <select id="s_oil_voltage_class" class="input select"></select>
+            </div>
+            <div class="field">
+              <label class="field-label">Trạng thái dầu</label>
+              <select id="s_oil_state" class="input select">
+                <option value="new">Dầu mới</option>
+                <option value="inservice">Dầu vận hành</option>
+              </select>
+            </div>
+          </div>
+          <div class="subsection-label">Ngưỡng (bỏ trống nếu không muốn ghi đè QĐ1901)</div>
+          <div class="gas-grid" style="grid-template-columns:1fr;">
+            <div class="field"><label class="field-label">Độ ẩm dầu (ppm)</label><input id="s_oil_moisture" type="number" step="0.1" class="input" /></div>
+            <div class="field"><label class="field-label">tgδ ở 90°C (%)</label><input id="s_oil_tgd90" type="number" step="0.01" class="input" /></div>
+            <div class="field"><label class="field-label">Điện áp chọc thủng (kV)</label><input id="s_oil_bdv" type="number" step="0.1" class="input" /></div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:6px;">
+          <button id="btnSaveStandard" class="btn btn-primary" style="flex:1;">Lưu tiêu chuẩn</button>
+          <button id="btnCancelEditStandard" class="btn btn-secondary hidden">Hủy</button>
+        </div>
+      </div>
+      <p class="note-text" id="standardsWriteLocked" style="display:none;">Chỉ Admin mới thêm/sửa được tiêu chuẩn — bạn đang xem ở chế độ chỉ đọc.</p>
+
+      <div class="section-label" style="margin-top:20px;">DANH SÁCH TIÊU CHUẨN ĐÃ CẤU HÌNH</div>
+      <div id="standardsList"></div>
+      <p class="note-text" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào.</p>
+      <div style="height:24px;"></div>
+    </div>
+  </section>
+
+  <!-- ===================== QUẢN TRỊ (chỉ Admin) ===================== -->
+  <section id="screenQuanTri" class="screen hidden">
+    <header class="topbar">
+      <div class="topbar-title">Quản trị</div>
+      <button class="avatar-btn" id="btnAcctMenu5" aria-label="Tài khoản">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-user"></use></svg>
+      </button>
+    </header>
+    <div class="scroll-area">
+      <p class="note-text">Quản lý người dùng — chỉ Admin xem được màn này. Admin có toàn quyền; User thường chỉ tự sửa được bản ghi do chính mình nhập.</p>
+      <div id="usersList"></div>
+      <p class="note-text" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
+      <div style="height:24px;"></div>
+    </div>
+  </section>
+
+  <!-- ===================== THANH ĐIỀU HƯỚNG DƯỚI (bottom tab bar) ===================== -->
+  <nav class="bottom-tabbar hidden" id="bottomTabbar">
+    <button class="tabbar-btn" data-screen="screenEntry">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg><span>DGA</span>
+    </button>
+    <button class="tabbar-btn" data-screen="screenDau">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg><span>Dầu</span>
+    </button>
+    <button class="tabbar-btn" data-screen="screenXuHuong">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg><span>Xu hướng</span>
+    </button>
+    <button class="tabbar-btn" data-screen="screenTieuChuan">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-ruler"></use></svg><span>Tiêu chuẩn</span>
+    </button>
+    <button class="tabbar-btn hidden" id="tabbarQuanTri" data-screen="screenQuanTri">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg><span>Quản trị</span>
+    </button>
+  </nav>
+
+  <div id="toast" class="toast hidden"></div>
+</div>
+
+<script src="vendor/docxtemplater/pizzip.min.js"></script>
+<script src="vendor/docxtemplater/docxtemplater.min.js"></script>
+<script src="config.js"></script>
+<script src="dga-logic.js"></script>
+<script src="storage.js"></script>
+<script src="bbtn-export.js"></script>
+<script type="module" src="bbtn-import.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
