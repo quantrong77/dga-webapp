@@ -21,8 +21,17 @@ let _removeBbtnOnSave = false;
 // phiên làm việc này (bấm "Xuất BBTN" lúc đó sẽ báo yêu cầu phân tích trước).
 let _lastAnalysis = null;
 
+// f_kieumay..f_hientrangvanhanh: 8 trường "thông số kỹ thuật thiết bị" (nameplate) —
+// không dùng để tính toán DGA, chỉ lưu kèm bản ghi để điền vào Báo cáo phân tích kỹ
+// thuật (docx), xem tech-report-export.js.
+const TECH_SPEC_FIELD_IDS = [
+  "f_kieumay", "f_namsx", "f_namvanhanh", "f_dienapdm",
+  "f_sochetao", "f_loaidau", "f_ketcaucachdien", "f_hientrangvanhanh",
+];
+
 function clearForm() {
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
+  TECH_SPEC_FIELD_IDS.forEach((id) => ($(id).value = ""));
   DGA.GASES.forEach((g) => ($("g_" + g).value = ""));
   $("f_landocount").value = 1;
   $("f_bbtn").value = "";
@@ -221,6 +230,14 @@ function onEditMeasurement(rec) {
   $("f_landocount").value = rec.lan_do ?? 1;
   $("f_ngay").value = rec.sample_date || "";
   $("f_ghichu").value = rec.ghi_chu || "";
+  $("f_kieumay").value = rec.kieu_may || "";
+  $("f_namsx").value = rec.nam_sx || "";
+  $("f_namvanhanh").value = rec.nam_van_hanh || "";
+  $("f_dienapdm").value = rec.dien_ap_dm || "";
+  $("f_sochetao").value = rec.so_che_tao || "";
+  $("f_loaidau").value = rec.loai_dau || "";
+  $("f_ketcaucachdien").value = rec.ket_cau_cach_dien || "";
+  $("f_hientrangvanhanh").value = rec.hien_trang_van_hanh || "";
   const gasesRec = recordGases(rec);
   DGA.GASES.forEach((g) => { $("g_" + g).value = gasesRec[g] ?? ""; });
   $("editingMeasurementNote").classList.remove("hidden");
@@ -327,6 +344,15 @@ async function onAnalyze() {
     lan_do: Number($("f_landocount").value) || 1,
     sample_date: $("f_ngay").value,
     ghi_chu: $("f_ghichu").value.trim(),
+    // Thông số kỹ thuật thiết bị (tùy chọn) — xem TECH_SPEC_FIELD_IDS ở clearForm().
+    kieu_may: $("f_kieumay").value.trim(),
+    nam_sx: $("f_namsx").value ? Number($("f_namsx").value) : null,
+    nam_van_hanh: $("f_namvanhanh").value ? Number($("f_namvanhanh").value) : null,
+    dien_ap_dm: $("f_dienapdm").value.trim(),
+    so_che_tao: $("f_sochetao").value.trim(),
+    loai_dau: $("f_loaidau").value.trim(),
+    ket_cau_cach_dien: $("f_ketcaucachdien").value.trim(),
+    hien_trang_van_hanh: $("f_hientrangvanhanh").value.trim(),
     ...gases,
   };
 
@@ -482,6 +508,10 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
       escapeHtml(overallStatus.label);
     $("statusReasonsList").innerHTML = overallStatus.reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("");
     $("statusActionText").textContent = overallStatus.action;
+    // Nút "Xuất báo cáo phân tích kỹ thuật" chỉ dành cho thiết bị CÓ BẤT THƯỜNG (mức
+    // Cảnh báo/Báo động) — theo đúng yêu cầu tính năng ("đối với thiết bị có bất
+    // thường"), tránh lạm dụng cho mọi lần đo Bình thường không cần báo cáo riêng.
+    $("btnExportTechReport").classList.toggle("hidden", overallStatus.level === "normal");
   }
 
   $("r_tcg").textContent = tcg.toFixed(1) + " ppm";
@@ -570,6 +600,31 @@ async function onExportBbtn() {
     await BbtnExport.exportBbtnDocx(_lastAnalysis);
   } catch (err) {
     alert("Xuất BBTN (docx) thất bại: " + ((err && err.message) || err));
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = original;
+  }
+}
+
+// ---------------------------------------------------------------------
+// Xuất Báo cáo phân tích kỹ thuật (docx) — cho thiết bị CÓ BẤT THƯỜNG, xem
+// tech-report-export.js. Nút chỉ hiện khi overallStatus.level !== "normal" (xem
+// renderResults() ở trên) nên _lastAnalysis luôn có giá trị khi hàm này chạy được —
+// vẫn kiểm tra lại cho chắc, cùng cách làm với onExportBbtn().
+// ---------------------------------------------------------------------
+async function onExportTechReport() {
+  if (!_lastAnalysis) {
+    alert('Vui lòng bấm "Phân tích & Lưu" trước khi xuất Báo cáo phân tích kỹ thuật.');
+    return;
+  }
+  const btn = $("btnExportTechReport");
+  const original = btn.innerHTML;
+  btn.disabled = true;
+  btn.textContent = "Đang tạo file...";
+  try {
+    await TechReportExport.exportTechReportDocx(_lastAnalysis);
+  } catch (err) {
+    alert("Xuất báo cáo phân tích kỹ thuật (docx) thất bại: " + ((err && err.message) || err));
   } finally {
     btn.disabled = false;
     btn.innerHTML = original;

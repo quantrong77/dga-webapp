@@ -56,6 +56,17 @@ create table if not exists measurements (
   -- bucket ở cuối file này); bbtn_name là tên file gốc lúc tải lên, hiển thị lại ở web app.
   bbtn_url text,
   bbtn_name text,
+  -- Thông số kỹ thuật thiết bị (nameplate, tùy chọn) — chỉ dùng để điền vào "Báo cáo
+  -- phân tích kỹ thuật (docx)" (xem tech-report-export.js), KHÔNG dùng để tính toán/
+  -- đánh giá DGA.
+  kieu_may text,
+  nam_sx integer,
+  nam_van_hanh integer,
+  dien_ap_dm text,
+  so_che_tao text,
+  loai_dau text,
+  ket_cau_cach_dien text,
+  hien_trang_van_hanh text,
   created_at timestamptz default now()
 );
 
@@ -157,6 +168,18 @@ create index if not exists idx_oltc_oiltests_key on oltc_oil_tests (tram, thiet_
 -- năng đính kèm Biên bản thí nghiệm PDF), chạy 2 dòng sau để nâng cấp:
 -- alter table measurements add column if not exists bbtn_url text;
 -- alter table measurements add column if not exists bbtn_name text;
+
+-- Nếu bạn đã tạo bảng measurements từ trước (chưa có 8 cột "thông số kỹ thuật thiết
+-- bị" — dùng cho tính năng "Xuất báo cáo phân tích kỹ thuật"), chạy các dòng sau để
+-- nâng cấp (an toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table measurements add column if not exists kieu_may text;
+-- alter table measurements add column if not exists nam_sx integer;
+-- alter table measurements add column if not exists nam_van_hanh integer;
+-- alter table measurements add column if not exists dien_ap_dm text;
+-- alter table measurements add column if not exists so_che_tao text;
+-- alter table measurements add column if not exists loai_dau text;
+-- alter table measurements add column if not exists ket_cau_cach_dien text;
+-- alter table measurements add column if not exists hien_trang_van_hanh text;
 
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.

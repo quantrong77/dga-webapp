@@ -219,6 +219,42 @@
           <label class="field">CO2 <input id="g_CO2" type="number" step="0.01" /></label>
         </div>
 
+        <!-- ===================== THÔNG SỐ KỸ THUẬT THIẾT BỊ (tùy chọn) =====================
+             8 trường "nameplate" — KHÔNG dùng để tính toán/đánh giá gì (mọi phép tính DGA vẫn
+             chỉ dựa vào Loại thiết bị/Nhà sản xuất/khí như cũ) — chỉ lưu kèm bản ghi lần đo để
+             tự động điền vào "Báo cáo phân tích kỹ thuật (docx)" ở khối kết quả bên dưới (xem
+             tech-report-export.js). Để trống trường nào thì báo cáo bỏ trống dòng đó, không suy
+             diễn. Vì lưu chung 1 bản ghi lần đo nên nếu thiết bị đo nhiều lần, nên điền lại (hoặc
+             để nguyên nếu form chưa xóa) mỗi lần — xem addEventListener 3 ô Trạm/Thiết bị/Pha ở
+             app-core.js KHÔNG tự nhớ nhóm trường này giữa các thiết bị khác nhau. -->
+        <div class="section-title">Thông số kỹ thuật thiết bị (tùy chọn — dùng khi xuất Báo cáo phân tích kỹ thuật)</div>
+        <div class="grid">
+          <label class="field">Kiểu máy
+            <input id="f_kieumay" type="text" placeholder="(không bắt buộc)" />
+          </label>
+          <label class="field">Năm sản xuất
+            <input id="f_namsx" type="number" min="1950" max="2100" step="1" placeholder="VD: 2010" />
+          </label>
+          <label class="field">Năm đưa vào vận hành
+            <input id="f_namvanhanh" type="number" min="1950" max="2100" step="1" placeholder="VD: 2011" />
+          </label>
+          <label class="field">Điện áp định mức
+            <input id="f_dienapdm" type="text" placeholder="VD: 220 kV" />
+          </label>
+          <label class="field">Số chế tạo
+            <input id="f_sochetao" type="text" placeholder="(không bắt buộc)" />
+          </label>
+          <label class="field">Loại dầu cách điện
+            <input id="f_loaidau" type="text" placeholder="VD: Dầu khoáng" />
+          </label>
+          <label class="field">Kết cấu cách điện dầu
+            <input id="f_ketcaucachdien" type="text" placeholder="VD: Kín, có màng ngăn N2" />
+          </label>
+          <label class="field">Hiện trạng vận hành
+            <input id="f_hientrangvanhanh" type="text" placeholder="VD: Đang vận hành bình thường" />
+          </label>
+        </div>
+
         <p class="note hidden" id="editingMeasurementNote" style="color:var(--warn); font-weight:600;">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
         <div style="margin-top:18px; display:flex; gap:10px;">
           <button class="btn primary" id="btnAnalyze">Phân tích &amp; Lưu</button>
@@ -230,7 +266,13 @@
       <div class="panel hidden" id="resultsPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <h2 style="margin:0;">2. Kết quả đánh giá</h2>
-          <button type="button" class="btn ghost" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn ghost" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+            <!-- Chỉ hiện khi thiết bị có bất thường (overallStatus.level !== "normal") — xem
+                 renderResults() ở ui-dga.js. Báo cáo dành riêng cho trường hợp cần phân tích/báo
+                 cáo cấp trên, không cần xuất cho mọi lần đo bình thường. -->
+            <button type="button" class="btn ghost hidden" id="btnExportTechReport"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất báo cáo phân tích kỹ thuật (docx)</button>
+          </div>
         </div>
         <p class="note" style="margin-top:2px;">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
           thí nghiệm (PTC3/BM.15) — tải về, MỞ TRONG WORD để bổ sung các mục mẫu chưa có sẵn dữ liệu (hãng SX, số chế tạo,
@@ -1532,6 +1574,7 @@
   <script src="ui-guides.js"></script>
   <script src="ui-dga.js"></script>
   <script src="bbtn-export.js"></script>
+  <script src="tech-report-export.js"></script>
   <script src="ui-standards.js"></script>
   <script src="ui-admin.js"></script>
   <script src="ui-oil.js"></script>

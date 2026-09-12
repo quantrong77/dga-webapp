@@ -230,6 +230,7 @@ async function initApp() {
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
   $("btnExportBbtn").addEventListener("click", onExportBbtn);
+  $("btnExportTechReport").addEventListener("click", onExportTechReport);
   // Gợi ý "Lần đo" kế tiếp theo Trạm+Thiết bị+Pha — xem updateLanDoSuggestion() ở
   // ui-dga.js. "change" bắt được cả lúc chọn từ danh sách gợi ý (setupCombo() tự
   // bắn "change" khi chọn) lẫn lúc gõ tay rồi rời khỏi ô (blur mặc định của trình
