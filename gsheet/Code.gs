@@ -229,30 +229,13 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-/** Giới hạn tần suất gọi API nhạy cảm (đăng nhập/đăng ký) bằng CacheService để chống brute force */
-function checkRateLimit(key, maxAttempts, lockSeconds) {
-  try {
-    const cache = CacheService.getScriptCache();
-    const cacheKey = "rl_" + key;
-    const current = Number(cache.get(cacheKey) || 0);
-    if (current >= maxAttempts) {
-      throw new Error("Bạn đã thao tác quá nhiều lần. Vui lòng đợi " + Math.ceil(lockSeconds / 60) + " phút trước khi thử lại.");
-    }
-    cache.put(cacheKey, String(current + 1), lockSeconds);
-  } catch (err) {
-    if (String(err.message).indexOf("quá nhiều lần") >= 0) throw err;
+/** Chuỗi hex ngẫu nhiên (dùng làm salt và token) — không cần bảo mật cấp mật mã. */
+function randomHex(byteLen) {
+  let out = "";
+  for (let i = 0; i < byteLen; i++) {
+    out += ("0" + Math.floor(Math.random() * 256).toString(16)).slice(-2);
   }
-}
-
-function clearRateLimit(key) {
-  try {
-    CacheService.getScriptCache().remove("rl_" + key);
-  } catch (e) {}
-}
-
-/** Chuỗi ngẫu nhiên an toàn bằng UUID (dùng làm salt và token phiên) — thay thế Math.random không an toàn */
-function secureRandomToken() {
-  return (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, "");
+  return out;
 }
 
 function hashPassword(password, salt) {
@@ -276,16 +259,10 @@ function actionRegister(body) {
   const password = String(body.password || "");
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Email không hợp lệ." };
   if (password.length < 6) return { error: "Mật khẩu phải có ít nhất 6 ký tự." };
-
-  checkRateLimit("reg_" + email, 5, 300);
-
   if (findUserByEmail(email)) return { error: "Email này đã được đăng ký." };
 
-  const salt = Utilities.getUuid().replace(/-/g, "");
-  // BẢO MẬT: Đăng ký thông thường LUÔN là role "user" để tránh chiếm quyền Admin.
-  // Quyền "admin" chỉ được tự động cấp khi đăng nhập bằng Google OAuth có email đã xác minh,
-  // hoặc do Admin hiện tại trực tiếp nâng quyền trong tab Quản trị.
-  const role = "user";
+  const salt = randomHex(16);
+  const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
   const record = {
     id: "u_" + Utilities.getUuid(),
     email: email,
@@ -294,24 +271,18 @@ function actionRegister(body) {
     role: role,
     created_at: new Date().toISOString(),
     last_login: new Date().toISOString(),
-    auth_provider: "password",
   };
   upsertRow(SHEET_USERS, USER_HEADERS, record);
-  clearRateLimit("reg_" + email);
   return createSession(email, role);
 }
 
 function actionLogin(body) {
   const email = normalizeEmail(body.email);
   const password = String(body.password || "");
-
-  checkRateLimit("login_" + email, 5, 300);
-
   const user = findUserByEmail(email);
   if (!user || hashPassword(password, user.password_salt) !== user.password_hash) {
     return { error: "Email hoặc mật khẩu không đúng." };
   }
-  clearRateLimit("login_" + email);
   upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { last_login: new Date().toISOString() }));
   return createSession(email, user.role);
 }
@@ -384,27 +355,11 @@ function actionLogout(body) {
   return { ok: true };
 }
 
-function pruneExpiredSessions(sh) {
-  try {
-    const lastRow = sh.getLastRow();
-    if (lastRow < 2) return;
-    const values = sh.getRange(2, 1, lastRow - 1, SESSION_HEADERS.length).getValues();
-    const now = new Date();
-    for (let i = values.length - 1; i >= 0; i--) {
-      const exp = new Date(values[i][3]);
-      if (exp < now) {
-        sh.deleteRow(i + 2);
-      }
-    }
-  } catch (e) {}
-}
-
 function createSession(email, role) {
-  const token = secureRandomToken();
+  const token = randomHex(24);
   const now = new Date();
   const expires = new Date(now.getTime() + SESSION_TTL_MS);
   const sh = getOrCreateSheet(SHEET_SESSIONS, SESSION_HEADERS);
-  pruneExpiredSessions(sh);
   sh.appendRow([token, email, now.toISOString(), expires.toISOString()]);
   return { token: token, email: email, role: role };
 }
@@ -488,7 +443,7 @@ function actionDeleteUser(body) {
 // "Anyone with link, Viewer" để web app mở/xem được mà không cần đăng nhập Drive.
 // ---------------------------------------------------------------------------
 const BBTN_FOLDER_NAME = "DGA_BBTN_DinhKem";
-const MAX_BBTN_BASE64_CHARS = 14 * 1024 * 1024; // ~10MB file gốc (base64 dài hơn ~1.37 lần)
+const MAX_BBTN_BASE64_CHARS = 20 * 1024 * 1024; // ~15MB file gốc (base64 dài hơn ~1.37 lần)
 
 function getOrCreateBbtnFolder() {
   const folders = DriveApp.getFoldersByName(BBTN_FOLDER_NAME);
@@ -504,36 +459,17 @@ function getOrCreateBbtnFolder() {
  *  bbtn_name trước khi lưu measurement. */
 function actionUploadAttachment(token, body) {
   requireSession(token);
+  const filename = String(body.filename || "bien_ban_thi_nghiem.pdf");
+  const mimeType = String(body.mimeType || "application/pdf");
   const base64Data = String(body.base64Data || "");
   if (!base64Data) return { error: "Thiếu dữ liệu file." };
   if (base64Data.length > MAX_BBTN_BASE64_CHARS) {
-    return { error: "File quá lớn (giới hạn tối đa khoảng 10MB)." };
+    return { error: "File quá lớn (giới hạn khoảng 15MB)." };
   }
   let file;
   try {
     const bytes = Utilities.base64Decode(base64Data);
-
-    // BẢO MẬT: Kiểm tra magic bytes của định dạng PDF — 5 byte đầu phải là "%PDF-"
-    // Tránh việc kẻ xấu tải lên file HTML chứa mã độc, file thực thi .exe, hoặc script độc hại.
-    if (
-      bytes.length < 5 ||
-      bytes[0] !== 0x25 || // '%'
-      bytes[1] !== 0x50 || // 'P'
-      bytes[2] !== 0x44 || // 'D'
-      bytes[3] !== 0x46 || // 'F'
-      bytes[4] !== 0x2d    // '-'
-    ) {
-      return { error: "Định dạng file không hợp lệ — chỉ cho phép tải lên file PDF hợp lệ." };
-    }
-
-    // BẢO MẬT: Chuẩn hóa tên file an toàn (loại bỏ path traversal và ký tự nguy hiểm)
-    let rawFilename = String(body.filename || "bien_ban_thi_nghiem.pdf").trim();
-    rawFilename = rawFilename.replace(/^.*[\\\/]/, ""); // loại bỏ ký tự đường dẫn
-    if (!/\.pdf$/i.test(rawFilename)) rawFilename += ".pdf";
-    const safeFilename = rawFilename.replace(/[^a-zA-Z0-9._\-]/g, "_").slice(0, 100);
-
-    // Luôn ép cứng MIME type là application/pdf
-    const blob = Utilities.newBlob(bytes, "application/pdf", safeFilename);
+    const blob = Utilities.newBlob(bytes, mimeType, filename);
     const folder = getOrCreateBbtnFolder();
     file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
@@ -610,21 +546,13 @@ function findRowIndexById(sh, id) {
   return -1;
 }
 
-/** Khử khuẩn dữ liệu chống Spreadsheet Formula Injection (CSV Injection) trước khi ghi vào Google Sheets */
-function sanitizeForSheet(val) {
-  if (typeof val === "string" && /^[=+\-@\t\r]/.test(val)) {
-    return "'" + val; // Thêm dấu nháy đơn để Google Sheets xử lý như chuỗi thuần, không thực thi công thức
-  }
-  return val;
-}
-
 /** Thêm mới nếu id chưa tồn tại, cập nhật (ghi đè cả dòng) nếu đã tồn tại. */
 function upsertRow(sheetName, headers, record) {
   if (!record || !record.id) return { error: "missing record.id" };
   const sh = getOrCreateSheet(sheetName, headers);
   const rowValues = headers.map((h) => {
     const v = record[h];
-    return v === undefined || v === null ? "" : sanitizeForSheet(v);
+    return v === undefined || v === null ? "" : v;
   });
   const existingRowIdx = findRowIndexById(sh, record.id);
   if (existingRowIdx > 0) {
