@@ -1586,19 +1586,24 @@ function renderBbtnCurrent() {
 }
 async function viewBbtn(att) {
   if (!att || !att.bbtn_url) return;
-  if (String(att.bbtn_url).startsWith("local:")) {
+  const url = String(att.bbtn_url).trim();
+  if (url.startsWith("local:")) {
     try {
       const local = await Storage.getLocalAttachment(_editingMeasurementId);
       if (!local || !local.dataUrl) { showToast("Không tìm thấy file đính kèm trên máy này."); return; }
       const res = await fetch(local.dataUrl);
       const blob = await res.blob();
-      window.open(URL.createObjectURL(blob), "_blank");
+      window.open(URL.createObjectURL(blob), "_blank", "noopener,noreferrer");
     } catch (err) {
       showToast("Không mở được file đính kèm: " + ((err && err.message) || err));
     }
     return;
   }
-  window.open(att.bbtn_url, "_blank");
+  if (!/^https:\/\//i.test(url)) {
+    showToast("Đường dẫn file không an toàn (chỉ chấp nhận https://).");
+    return;
+  }
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 async function onBbtnFileSelected(e) {
   const file = e.target.files[0];

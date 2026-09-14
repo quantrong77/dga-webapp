@@ -97,9 +97,14 @@ async function viewBbtn(att) {
     alert("Lần đo này chưa có Biên bản thí nghiệm đính kèm.");
     return;
   }
-  const url = String(att.bbtn_url);
+  const url = String(att.bbtn_url).trim();
   if (!url.startsWith("local:")) {
-    window.open(url, "_blank", "noopener");
+    // BẢO MẬT: Chỉ cho phép URL bắt đầu bằng https://, ngăn chặn javascript: hoặc scheme nguy hiểm
+    if (!/^https:\/\//i.test(url)) {
+      alert("Đường dẫn file không hợp lệ hoặc không an toàn (chỉ chấp nhận liên kết https://).");
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
     return;
   }
   const measurementId = url.slice("local:".length);
@@ -112,7 +117,7 @@ async function viewBbtn(att) {
     const res = await fetch(local.dataUrl);
     const blob = await res.blob();
     const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, "_blank", "noopener");
+    window.open(blobUrl, "_blank", "noopener,noreferrer");
   } catch (err) {
     alert("Không mở được file: " + ((err && err.message) || err));
   }
@@ -527,7 +532,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
     $("condemnBanner").classList.remove("hidden");
     $("condemnBanner").innerHTML =
       `⚠ CẢNH BÁO NGHIÊM TRỌNG — VƯỢT NGƯỠNG LOẠI BỎ (do nhà sản xuất quy định) ở ${condemnExceeded.length} khí: ` +
-      condemnExceeded.map((r) => `${r.gas} (${r.value} &gt; ${r.limit} ppm)`).join(", ") +
+      condemnExceeded.map((r) => `${escapeHtml(r.gas)} (${escapeHtml(r.value)} &gt; ${escapeHtml(r.limit)} ppm)`).join(", ") +
       `. Đây là mức nghiêm trọng hơn "Không đạt" thông thường — khuyến cáo báo cáo ngay cấp có thẩm quyền.`;
   } else {
     $("condemnBanner").classList.add("hidden");
@@ -535,8 +540,8 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
 
   $("r_gasTable").innerHTML = evalRows.map((r) => {
     const c = condemnMap[r.gas];
-    const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${c.limit} ⚠</strong>` : c.limit;
-    return `<tr><td>${r.gas}</td><td>${r.value}</td><td>${r.limit ?? "—"}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${escapeHtml(c.limit)} ⚠</strong>` : escapeHtml(c.limit);
+    return `<tr><td>${escapeHtml(r.gas)}</td><td>${escapeHtml(r.value)}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 
   $("r_ratio1").textContent = ratios.c2h2_c2h4.toFixed(3);
@@ -549,7 +554,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
     $("r_pctch4").textContent = duval.pctCH4.toFixed(1) + "%";
     $("r_pctc2h4").textContent = duval.pctC2H4.toFixed(1) + "%";
     $("r_pctc2h2").textContent = duval.pctC2H2.toFixed(1) + "%";
-    $("r_duvalzone").innerHTML = `<strong>${duval.zone}</strong> — ${duval.label}`;
+    $("r_duvalzone").innerHTML = `<strong>${escapeHtml(duval.zone)}</strong> — ${escapeHtml(duval.label)}`;
     drawDuvalTriangleBase();
     drawDuvalPoint(duval.xy);
   } else {
@@ -566,16 +571,16 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
         : "Bảng 65 chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");
     $("r_rateTable").innerHTML = rateRows.map((r) => `
       <tr>
-        <td>${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
-        <td>${r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
-        <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${r.verdict}</span>` : r.verdict}</td>
+        <td>${escapeHtml(r.gas)}</td><td>${escapeHtml(r.before)}</td><td>${escapeHtml(r.after)}</td><td>${escapeHtml(r.delta)}</td>
+        <td>${escapeHtml(r.ratePerYear)}</td><td>${escapeHtml(r.rangeLo)} – ${escapeHtml(r.rangeHi)}</td>
+        <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${escapeHtml(r.verdict)}</span>` : escapeHtml(r.verdict)}</td>
       </tr>
     `).join("");
   } else {
     $("rateSection").classList.add("hidden");
   }
 
-  $("r_recs").innerHTML = recs.map((r) => `<li>${r}</li>`).join("");
+  $("r_recs").innerHTML = recs.map((r) => `<li>${escapeHtml(r)}</li>`).join("");
   if (typeof $("resultsPanel").scrollIntoView === "function") {
     $("resultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
   }

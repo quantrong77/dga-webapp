@@ -181,53 +181,107 @@ create index if not exists idx_oltc_oiltests_key on oltc_oil_tests (tram, thiet_
 -- alter table measurements add column if not exists ket_cau_cach_dien text;
 -- alter table measurements add column if not exists hien_trang_van_hanh text;
 
--- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
--- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.
--- Nếu cần giới hạn theo tài khoản đăng nhập, thay các policy "using (true)"
--- bằng điều kiện auth.uid() phù hợp (xem tài liệu Supabase Auth).
-
+-- ===========================================================================
+-- BẢO MẬT: Bật Row Level Security (RLS) cho tất cả các bảng
+-- ===========================================================================
 alter table measurements enable row level security;
 alter table manufacturer_standards enable row level security;
 alter table stations enable row level security;
 alter table oil_tests enable row level security;
 alter table oltc_oil_tests enable row level security;
 
+-- ---------------------------------------------------------------------------
+-- Chế độ bảo vệ cơ bản: Cho phép đọc (SELECT) và nhập mới (INSERT/UPDATE)
+-- nhưng NGĂN CHẶN lệnh DELETE tự do từ anon key (tránh việc kẻ xấu gọi API xóa
+-- sạch toàn bộ cơ sở dữ liệu).
+-- Nếu bạn sử dụng Supabase Auth đầy đủ, thay 'true' bằng 'auth.role() = ''authenticated'''
+-- ---------------------------------------------------------------------------
+
+-- 1) Bảng measurements
 drop policy if exists "measurements_all" on measurements;
-create policy "measurements_all" on measurements for all using (true) with check (true);
+drop policy if exists "measurements_select" on measurements;
+drop policy if exists "measurements_insert" on measurements;
+drop policy if exists "measurements_update" on measurements;
+drop policy if exists "measurements_delete" on measurements;
 
+create policy "measurements_select" on measurements for select using (true);
+create policy "measurements_insert" on measurements for insert with check (true);
+create policy "measurements_update" on measurements for update using (true) with check (true);
+-- Chỉ tài khoản authenticated (hoặc service_role) mới được xóa bản ghi
+create policy "measurements_delete" on measurements for delete using (auth.role() = 'authenticated');
+
+-- 2) Bảng manufacturer_standards
 drop policy if exists "standards_all" on manufacturer_standards;
-create policy "standards_all" on manufacturer_standards for all using (true) with check (true);
+drop policy if exists "standards_select" on manufacturer_standards;
+drop policy if exists "standards_insert" on manufacturer_standards;
+drop policy if exists "standards_update" on manufacturer_standards;
+drop policy if exists "standards_delete" on manufacturer_standards;
 
+create policy "standards_select" on manufacturer_standards for select using (true);
+create policy "standards_insert" on manufacturer_standards for insert with check (auth.role() = 'authenticated');
+create policy "standards_update" on manufacturer_standards for update using (auth.role() = 'authenticated');
+create policy "standards_delete" on manufacturer_standards for delete using (auth.role() = 'authenticated');
+
+-- 3) Bảng stations
 drop policy if exists "stations_all" on stations;
-create policy "stations_all" on stations for all using (true) with check (true);
+drop policy if exists "stations_select" on stations;
+drop policy if exists "stations_insert" on stations;
+drop policy if exists "stations_update" on stations;
+drop policy if exists "stations_delete" on stations;
 
+create policy "stations_select" on stations for select using (true);
+create policy "stations_insert" on stations for insert with check (true);
+create policy "stations_update" on stations for update using (true);
+create policy "stations_delete" on stations for delete using (auth.role() = 'authenticated');
+
+-- 4) Bảng oil_tests
 drop policy if exists "oiltests_all" on oil_tests;
-create policy "oiltests_all" on oil_tests for all using (true) with check (true);
+drop policy if exists "oiltests_select" on oil_tests;
+drop policy if exists "oiltests_insert" on oil_tests;
+drop policy if exists "oiltests_update" on oil_tests;
+drop policy if exists "oiltests_delete" on oil_tests;
 
+create policy "oiltests_select" on oil_tests for select using (true);
+create policy "oiltests_insert" on oil_tests for insert with check (true);
+create policy "oiltests_update" on oil_tests for update using (true) with check (true);
+create policy "oiltests_delete" on oil_tests for delete using (auth.role() = 'authenticated');
+
+-- 5) Bảng oltc_oil_tests
 drop policy if exists "oltc_oiltests_all" on oltc_oil_tests;
-create policy "oltc_oiltests_all" on oltc_oil_tests for all using (true) with check (true);
+drop policy if exists "oltc_oiltests_select" on oltc_oil_tests;
+drop policy if exists "oltc_oiltests_insert" on oltc_oil_tests;
+drop policy if exists "oltc_oiltests_update" on oltc_oil_tests;
+drop policy if exists "oltc_oiltests_delete" on oltc_oil_tests;
+
+create policy "oltc_oiltests_select" on oltc_oil_tests for select using (true);
+create policy "oltc_oiltests_insert" on oltc_oil_tests for insert with check (true);
+create policy "oltc_oiltests_update" on oltc_oil_tests for update using (true) with check (true);
+create policy "oltc_oiltests_delete" on oltc_oil_tests for delete using (auth.role() = 'authenticated');
 
 -- ---------------------------------------------------------------------------
--- Storage bucket "bbtn" — nơi lưu file Biên bản thí nghiệm (PDF) đính kèm 1 lần đo
--- (tính năng "Xem BBTN đã lưu" ở tab "DGA"/"Lịch sử đo"). Bucket công khai (public)
--- để bbtn_url mở trực tiếp được không cần token — chấp nhận được cho công cụ nội bộ 1
--- nhóm nhỏ dùng chung 1 link, giống cách "measurements_all" ở trên đang mở cho anon key.
--- Nếu cần hạn chế hơn, đổi public thành false và dùng createSignedUrl() ở storage.js
--- thay cho getPublicUrl() (xem uploadAttachment() trong storage.js).
+-- Storage bucket "bbtn" — lưu file Biên bản thí nghiệm (PDF) đính kèm
 -- ---------------------------------------------------------------------------
-
 insert into storage.buckets (id, name, public)
 values ('bbtn', 'bbtn', true)
 on conflict (id) do update set public = true;
 
 drop policy if exists "bbtn_insert" on storage.objects;
+drop policy if exists "bbtn_select" on storage.objects;
+drop policy if exists "bbtn_update" on storage.objects;
+drop policy if exists "bbtn_delete" on storage.objects;
+
+-- Cho phép tải file lên bucket bbtn
 create policy "bbtn_insert" on storage.objects for insert
   with check (bucket_id = 'bbtn');
 
-drop policy if exists "bbtn_select" on storage.objects;
+-- Cho phép xem/tải về file trong bucket bbtn
 create policy "bbtn_select" on storage.objects for select
   using (bucket_id = 'bbtn');
 
-drop policy if exists "bbtn_update" on storage.objects;
+-- Chỉ cho phép sửa/xóa file nếu là người dùng đã xác thực
 create policy "bbtn_update" on storage.objects for update
-  using (bucket_id = 'bbtn') with check (bucket_id = 'bbtn');
+  using (bucket_id = 'bbtn' and auth.role() = 'authenticated')
+  with check (bucket_id = 'bbtn' and auth.role() = 'authenticated');
+
+create policy "bbtn_delete" on storage.objects for delete
+  using (bucket_id = 'bbtn' and auth.role() = 'authenticated');
