@@ -93,6 +93,14 @@ header.app-header > * { position: relative; z-index: 1; }
    trang). Phải: thông tin người đăng nhập + nút đăng xuất. */
 header.app-header .header-left {
   justify-self: start;
+  /* PHẢI có display:flex + align-items:center ở đây (giống .header-right bên dưới) —
+     nếu không, nút icon #btnToggleTabLayout (display:inline-flex, canh theo baseline
+     mặc định) và badge #storageBadge (display:inline-block, vertical-align:middle) là
+     2 phần tử inline-level nằm cạnh nhau sẽ bị lệch cao/thấp so với nhau (baseline vs
+     middle khác nhau), dù cả 2 đều "cao 30px"/"canh middle" riêng lẻ. */
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 header.app-header .header-center {
@@ -172,12 +180,53 @@ header.app-header p {
   box-shadow: var(--shadow-sm);
 }
 .badge.local { background: #fff3cd; color: #7a5b00; }
+/* #userBadge giờ là <button> (tích hợp luôn đăng xuất — bấm vào hiện xác nhận rồi mới
+   đăng xuất, xem ui-auth.js), nên cần reset kiểu mặc định của <button> (font/border/
+   cursor) — phần còn lại (nền mờ trắng/viền, hợp nền header gradient tối) giữ nguyên
+   như .badge.local ở trên. */
 .badge.user-badge {
   background: rgba(255, 255, 255, 0.16);
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.28);
   box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
+.badge.user-badge:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Nút icon đổi bố cục thanh tab (ngang ⇄ dọc) ở header — #btnToggleTabLayout. Kiểu
+   riêng (không dùng .btn.ghost) vì nằm trên nền header gradient tối, cần viền/nền mờ
+   trắng như .badge.user-badge ở trên mới đủ tương phản, thay vì màu --blue-700 gần
+   như biến mất trên nền đó. aria-pressed="true" (đang ở chế độ dọc) đảo màu nền/chữ
+   để nhận biết nhanh trạng thái đang bật — xem setupTabLayoutToggle() ở app-core.js. */
+.header-icon-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.header-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
+.header-icon-btn[aria-pressed="true"] {
+  background: #fff;
+  color: var(--blue-900);
+  border-color: #fff;
+}
+.header-icon-btn .icon-svg { width: 16px; height: 16px; margin-right: 0; }
 
 /* ===================== Màn hình đăng nhập / đăng ký ===================== */
 .auth-overlay {
@@ -367,13 +416,188 @@ nav.tabs button[data-tab="tieuchuan"] .tab-icon { color: #2e75b6; }  /* Tiêu ch
 nav.tabs button[data-tab="quytrinh"] .tab-icon { color: #d9631d; }   /* Quy trình đánh giá — cam */
 nav.tabs button[data-tab="quymau"] .tab-icon { color: #c23a72; }     /* Quy trình lấy mẫu — hồng cánh sen */
 nav.tabs button[data-tab="about"] .tab-icon { color: #5b7a8c; }      /* Giới thiệu — xanh xám trầm */
+nav.tabs button[data-tab="phanhoi"] .tab-icon { color: #4338ca; }    /* Người dùng phản hồi — chàm (tương tác/hỗ trợ) */
 nav.tabs button[data-tab="quantri"] .tab-icon { color: #c1121f; }    /* Quản trị — đỏ (khu vực nhạy cảm) */
+
+/* ===================== Bố cục thanh tab DỌC (sidebar bên trái) =====================
+   Tùy chọn thay thế cho thanh tab ngang mặc định phía trên — bật/tắt bằng nút
+   #btnToggleTabLayout ở header (thêm/bỏ class "tabs-sidebar" trên <body>, xem
+   setupTabLayoutToggle() ở app-core.js). <body> chỉ có 3 phần tử "trong luồng"
+   (header.app-header, nav.tabs, main — các phần khác như #authOverlay/#toastContainer
+   đều position:fixed nên không tham gia layout), nên dùng CSS Grid ngay trên <body>:
+   header trải hết hàng đầu, nav.tabs (cột trái, cố định bề rộng) và main (phần còn
+   lại) cùng nằm hàng dưới. Trên màn hình hẹp (≤800px) TỰ ĐỘNG quay lại thanh tab
+   ngang như mặc định (xem media query cuối khối này) — sidebar cố định không hợp
+   với màn hình điện thoại dù người dùng đã chọn chế độ dọc trên máy tính. */
+body.tabs-sidebar {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+body.tabs-sidebar header.app-header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+body.tabs-sidebar main {
+  grid-column: 2;
+  grid-row: 2;
+}
+body.tabs-sidebar nav.tabs {
+  grid-column: 1;
+  grid-row: 2;
+  /* height:100vh (không phải 100%) + position:sticky top:0 là cách quen thuộc để 1
+     sidebar LUÔN hiện khi cuộn trang, bất kể nội dung main dài bao nhiêu — xem thêm
+     ghi chú ở nav.tabs (bản ngang) phía trên, cùng cơ chế sticky nhưng đổi hướng
+     "dính" từ đỉnh trang (dưới header) sang dính suốt chiều cao màn hình. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 14px 10px;
+  overflow-x: visible;
+  overflow-y: auto;
+  border-bottom: none;
+  border-right: 1px solid var(--gray-300);
+  box-shadow: 2px 0 10px rgba(20, 40, 70, 0.06);
+}
+body.tabs-sidebar .tabs-inner {
+  flex-direction: column;
+  margin: 0;
+  width: 100%;
+  gap: 2px;
+}
+body.tabs-sidebar nav.tabs button {
+  width: 100%;
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+  border-bottom: none;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+}
+body.tabs-sidebar nav.tabs button.active {
+  border-bottom-color: transparent;
+  border-left-color: var(--blue-700);
+}
+
+/* Nút thu gọn/mở rộng sidebar (#btnCollapseSidebar, xem index.html + app-core.js) —
+   ẩn hoàn toàn ở bố cục ngang mặc định, chỉ hiện khi body.tabs-sidebar đang bật, và tự
+   ẩn lại ở màn hình hẹp (khối media query bên dưới) vì lúc đó sidebar đã tự chuyển về
+   thanh ngang, nút thu gọn không còn ý nghĩa. */
+.sidebar-collapse-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  padding: 0;
+  border: 1px solid var(--gray-300);
+  border-radius: 7px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.2s ease, color 0.15s ease;
+}
+.sidebar-collapse-btn:hover {
+  background: var(--gray-200);
+  color: var(--blue-800);
+}
+.sidebar-collapse-btn .icon-svg {
+  width: 16px;
+  height: 16px;
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+body.tabs-sidebar .sidebar-collapse-btn { display: flex; }
+/* Nút xoay chiều theo trạng thái: mặc định (sidebar mở rộng) mũi tên chỉ SANG TRÁI
+   (gợi ý bấm để thu gọn); khi đã thu gọn thì xoay lại chỉ SANG PHẢI (gợi ý bấm để mở
+   rộng lại). */
+body.tabs-sidebar.sidebar-collapsed .sidebar-collapse-btn .icon-svg { transform: rotate(0deg); }
+
+/* Trạng thái sidebar đã THU GỌN — chỉ còn 1 cột icon hẹp, nhường bề ngang cho nội dung
+   chính (main) — đúng yêu cầu "bật tắt sidebar để mở rộng màn hình". Tên tab vẫn xem
+   được qua tooltip (title= trên từng nút, xem index.html) khi rê chuột vào icon. */
+body.tabs-sidebar.sidebar-collapsed {
+  grid-template-columns: 60px minmax(0, 1fr);
+}
+body.tabs-sidebar.sidebar-collapsed nav.tabs {
+  padding: 14px 8px;
+}
+body.tabs-sidebar.sidebar-collapsed .sidebar-collapse-btn {
+  align-self: center;
+}
+body.tabs-sidebar.sidebar-collapsed .tab-label {
+  display: none;
+}
+body.tabs-sidebar.sidebar-collapsed nav.tabs button {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (max-width: 800px) {
+  /* Điện thoại/màn hình hẹp: bỏ hẳn bố cục cột (dù người dùng đã bật "dọc" trên máy
+     tính) — quay lại thanh tab ngang cuộn được như mặc định, để không chiếm hết bề
+     ngang vốn đã chật. */
+  body.tabs-sidebar {
+    display: block;
+    min-height: 0;
+  }
+  body.tabs-sidebar nav.tabs {
+    position: sticky;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 24px 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--gray-300);
+    box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
+  }
+  body.tabs-sidebar .tabs-inner {
+    flex-direction: row;
+    margin: 0 auto;
+    width: auto;
+    gap: 4px;
+  }
+  body.tabs-sidebar nav.tabs button {
+    width: auto;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 8px 8px 0 0;
+  }
+  body.tabs-sidebar nav.tabs button.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--blue-700);
+  }
+  /* Màn hình hẹp: sidebar đã tự quay về thanh ngang ở trên nên nút thu gọn (và trạng
+     thái đã thu gọn lỡ lưu từ trước trên máy tính) không còn ý nghĩa — luôn ẩn nút,
+     luôn hiện đủ tên tab, bất kể class "sidebar-collapsed" trên <body>. */
+  .sidebar-collapse-btn {
+    display: none !important;
+  }
+  body.tabs-sidebar.sidebar-collapsed .tab-label {
+    display: inline;
+  }
+  body.tabs-sidebar.sidebar-collapsed nav.tabs button {
+    justify-content: flex-start;
+  }
+}
 
 main {
   max-width: 1180px;
   margin: 0 auto;
   padding: 24px;
 }
+body.tabs-sidebar main { max-width: none; }
 
 .panel {
   background: #fff;
@@ -442,6 +666,65 @@ label.field {
   font-weight: 600;
   color: var(--gray-600);
 }
+
+/* Nút icon "i" nhỏ cạnh nhãn 1 trường (vd. "Điểm lấy mẫu OLTC") để mở khung giải
+   thích thêm bên dưới — xem .info-popover và setupInfoPopovers() ở app-core.js. */
+.field-label-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.info-icon-btn {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid var(--gray-600);
+  background: #fff;
+  color: var(--gray-600);
+  font-size: 11px;
+  font-weight: 700;
+  font-style: italic;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.info-icon-btn:hover, .info-icon-btn[aria-expanded="true"] {
+  border-color: var(--blue-700);
+  color: #fff;
+  background: var(--blue-700);
+}
+.info-popover {
+  position: relative;
+  padding: 10px 32px 10px 12px;
+  background: var(--blue-100);
+  border: 1px solid var(--blue-700);
+  border-radius: var(--radius);
+  font-size: 12.5px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: var(--gray-900);
+}
+.info-popover.hidden { display: none; }
+.info-popover p { margin: 0 0 8px; }
+.info-popover p:last-child { margin-bottom: 0; }
+.info-popover-close {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.info-popover-close:hover { color: var(--blue-900); }
 
 /* Biên bản thí nghiệm (PDF) đính kèm 1 lần đo — ô chọn file (tab "DGA") +
    chỉ báo file đã lưu/đang sửa, dùng chung .icon-svg/.btn/.hidden đã có. */
@@ -515,6 +798,90 @@ label.field {
   border: none;
   padding: 0;
 }
+
+/* ===================== Tab "Người dùng phản hồi" ===================== */
+/* Ảnh minh họa đã chọn (trước khi gửi) — hiện thay/kèm #fbDropzone ở trên, xem
+   onFeedbackImageSelected() ở ui-feedback.js. */
+.feedback-image-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  background: var(--blue-100);
+  border-radius: var(--radius);
+}
+.feedback-image-preview.hidden { display: none; }
+.feedback-image-preview img {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--gray-300);
+  flex: none;
+  background: #fff;
+}
+.feedback-image-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--gray-900);
+}
+.feedback-image-preview-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+/* Danh sách góp ý đã gửi — thẻ (card), không dùng bảng vì nội dung là văn bản tự do
+   dài ngắn khác nhau + có thể kèm ảnh, khác các bảng lịch sử đo/tiêu chuẩn còn lại. */
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.feedback-card {
+  display: flex;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  background: var(--gray-50);
+}
+.feedback-card-thumb {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--gray-300);
+  cursor: zoom-in;
+  background: #fff;
+}
+.feedback-card-body { flex: 1 1 auto; min-width: 0; }
+.feedback-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 5px;
+  font-size: 12px;
+  color: var(--gray-600);
+}
+.feedback-card-content {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--gray-900);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+.feedback-card-actions { margin-top: 8px; }
 
 input, select, textarea {
   font: inherit;

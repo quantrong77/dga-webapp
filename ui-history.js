@@ -48,7 +48,7 @@ async function refreshHistoryUI() {
       <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
-        ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" style="padding:5px 10px; font-size:12px;">Xem BBTN</button>` : ""}
+        ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" title="Xem biên bản thí nghiệm (BBTN) đã đính kèm" style="padding:5px 10px; font-size:12px;">Xem</button>` : ""}
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
       </div></td>

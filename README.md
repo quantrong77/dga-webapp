@@ -36,6 +36,8 @@ Tính năng:
 - Khuyến cáo tổng hợp dựa trên kết quả đánh giá tuyệt đối, 2 mã chẩn đoán và
   tốc độ sinh khí.
 - Lưu trữ toàn bộ lịch sử đo, xem lại/lọc theo trạm hoặc thiết bị.
+- Tab **"Người dùng phản hồi"**: góp ý tự do cho ứng dụng (ý kiến + 1 ảnh minh họa tùy
+  chọn), lưu lại và hiển thị cho cả nhóm cùng xem, tránh đề xuất trùng nhau.
 
 > **Lưu ý về nguồn dữ liệu IEC**: các bảng Annex A (A.2, A.6, A.9) và bảng ranh
 > giới vùng của Tam giác Duval (Annex B, Figure B.3) được trích trực tiếp và
@@ -84,10 +86,16 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
    };
    ```
 7. Lưu lại, mở lại trang — góc trên bên phải sẽ hiện "Đã kết nối database
-   (Google Sheets)". Script sẽ tự tạo 2 sheet con (`measurements`,
-   `manufacturer_standards`) kèm tiêu đề cột trong chính Google Sheet của bạn —
-   không cần tạo tay, và bạn có thể mở Sheet đó bất kỳ lúc nào để xem/lọc/xuất
-   dữ liệu thô bằng chính Google Sheets.
+   (Google Sheets)". Script sẽ tự tạo các sheet con (`measurements`,
+   `manufacturer_standards`, `feedback`...) kèm tiêu đề cột trong chính Google
+   Sheet của bạn — không cần tạo tay, và bạn có thể mở Sheet đó bất kỳ lúc nào
+   để xem/lọc/xuất dữ liệu thô bằng chính Google Sheets.
+
+> **Đã deploy từ trước, giờ thấy tab mới báo lỗi?** Mở lại đúng dự án Apps
+> Script, dán ĐÈ toàn bộ nội dung `gsheet/Code.gs` mới nhất vào `Code.gs`, Lưu,
+> rồi **Deploy → Manage deployments → sửa (biểu tượng bút chì) deployment đang
+> dùng → Version chọn "New version" → Deploy** (chỉ Lưu trong editor KHÔNG tự
+> cập nhật bản `/exec` đang chạy).
 
 > **Lưu ý bảo mật**: vì "Who has access" phải để "Anyone" thì web app mới gọi
 > được từ trình duyệt, bất kỳ ai có URL Web App này đều đọc/ghi được vào Sheet
@@ -107,9 +115,11 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 1. Tạo tài khoản tại https://supabase.com → **New project** (chọn khu vực gần
    Việt Nam, ví dụ Singapore).
 2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase-schema.sql`](./supabase-schema.sql)
-   → **Run**. Lệnh này tạo 2 bảng (`measurements`, `manufacturer_standards`) và
-   bật Row Level Security cho phép đọc/ghi bằng anon key (phù hợp 1 nhóm nhỏ
-   dùng chung 1 link nội bộ).
+   → **Run**. Lệnh này tạo các bảng (`measurements`, `manufacturer_standards`,
+   `feedback`...) và bật Row Level Security cho phép đọc/ghi bằng anon key (phù
+   hợp 1 nhóm nhỏ dùng chung 1 link nội bộ). Đã chạy file này từ trước? Chạy lại
+   toàn bộ vẫn an toàn — mọi lệnh đều dùng `if not exists`/`on conflict`, không
+   ảnh hưởng dữ liệu đã có, chỉ thêm phần còn thiếu (ví dụ bảng `feedback` mới).
 3. Vào **Settings → API** → copy **Project URL** và **anon public key**.
 4. Mở file `config.js` trong repo, dán vào:
    ```js

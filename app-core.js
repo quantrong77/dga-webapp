@@ -15,7 +15,6 @@ async function initApp() {
     const roleLabel = Auth.current.role === "admin" ? "Admin" : "User";
     $("userBadge").textContent = `${Auth.current.email} — ${roleLabel}`;
     $("userBadge").classList.remove("hidden");
-    $("btnLogout").classList.remove("hidden");
     $("navQuanTri").classList.toggle("hidden", Auth.current.role !== "admin");
   }
 
@@ -46,6 +45,8 @@ async function initApp() {
   setupOverviewMindmap();
   setupSampleMethods();
   setupSamplingLightbox();
+  setupFeedbackDropzone();
+  setupFeedbackLightbox();
   $("f_ngay").value = new Date().toISOString().slice(0, 10);
   $("o_ngay").value = new Date().toISOString().slice(0, 10);
   $("ot_ngay").value = new Date().toISOString().slice(0, 10);
@@ -89,6 +90,14 @@ async function initApp() {
     await refreshOltcOilTestsUI();
   } catch (err) {
     console.warn("Không tải được lịch sử thí nghiệm dầu OLTC:", err);
+  }
+
+  // Tab "Người dùng phản hồi" — cô lập trong try/catch RIÊNG, y hệt lý do ở Dầu OLTC:
+  // sheet "feedback" là MỚI, backend có thể chưa deploy/tạo bảng kịp.
+  try {
+    await refreshFeedbackUI();
+  } catch (err) {
+    console.warn("Không tải được danh sách góp ý:", err);
   }
 
   // Tab "Quản trị" (quản lý user) — cô lập trong try/catch riêng, chỉ Admin mới
@@ -230,6 +239,9 @@ async function initApp() {
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
   setupBbtnDropzone();
+  setupInfoPopovers();
+  setupTabLayoutToggle();
+  setupSidebarCollapseToggle();
   $("btnExportBbtn").addEventListener("click", onExportBbtn);
   $("btnExportTechReport").addEventListener("click", onExportTechReport);
   // Tùy chọn nhập liệu thứ 2 (bên cạnh nhập rời từng BBTN ở trên): nhập hàng loạt
@@ -263,6 +275,9 @@ async function initApp() {
   $("btnCancelEditOltcOilTest").addEventListener("click", clearOltcOilForm);
   $("ot_voltage_class").addEventListener("change", toggleOltcMembraneField);
   $("ot_samplepoint").addEventListener("change", toggleOltcPhaseField);
+  $("fb_image").addEventListener("change", onFeedbackImageSelected);
+  $("btnRemoveFbImage").addEventListener("click", clearFeedbackImage);
+  $("btnSubmitFeedback").addEventListener("click", onSubmitFeedback);
   $("btnSaveStandard").addEventListener("click", onSaveStandard);
   $("btnCancelEditStandard").addEventListener("click", resetStandardForm);
   $("s_standard_type").addEventListener("change", toggleStandardTypeFields);
@@ -347,6 +362,106 @@ function setupCombo({ input, toggleBtn, listEl, getOptions }) {
   });
   document.addEventListener("click", (e) => {
     if (!input.contains(e.target) && !toggleBtn.contains(e.target) && !listEl.contains(e.target)) close();
+  });
+}
+
+/** Gắn sự kiện cho MỌI nút icon "i" (class="info-icon-btn", có aria-controls trỏ tới id
+ *  1 div.info-popover ngay trong HTML — xem ví dụ "Điểm lấy mẫu OLTC" ở index.html/tab
+ *  OLTC) — bấm icon để mở/đóng khung giải thích thêm ngay dưới trường đó. Dùng 1 hàm
+ *  chung cho tất cả các icon loại này thay vì viết lặp lại: thêm 1 icon mới ở HTML chỉ
+ *  cần đúng 2 thuộc tính (aria-controls + id khớp trên div.info-popover), không cần sửa
+ *  gì thêm ở đây. Chỉ cho phép 1 khung mở tại 1 thời điểm; bấm ra ngoài hoặc bấm nút "×"
+ *  trong khung đều đóng lại. */
+function setupInfoPopovers() {
+  const closeAll = () => {
+    document.querySelectorAll(".info-popover:not(.hidden)").forEach((panel) => {
+      panel.classList.add("hidden");
+      const btn = document.querySelector(`.info-icon-btn[aria-controls="${panel.id}"]`);
+      if (btn) btn.setAttribute("aria-expanded", "false");
+    });
+  };
+  document.querySelectorAll(".info-icon-btn[aria-controls]").forEach((btn) => {
+    const panel = document.getElementById(btn.getAttribute("aria-controls"));
+    if (!panel) return;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const willShow = panel.classList.contains("hidden");
+      closeAll();
+      if (willShow) {
+        panel.classList.remove("hidden");
+        btn.setAttribute("aria-expanded", "true");
+      }
+    });
+    const closeBtn = panel.querySelector(".info-popover-close");
+    if (closeBtn) closeBtn.addEventListener("click", closeAll);
+  });
+  document.addEventListener("click", (e) => {
+    if (e.target.closest(".info-popover") || e.target.closest(".info-icon-btn")) return;
+    closeAll();
+  });
+}
+
+/** Khóa localStorage lưu lựa chọn bố cục thanh tab (xem setupTabLayoutToggle() ngay
+ *  dưới) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng, không phải dữ liệu
+ *  nghiệp vụ, nên KHÔNG lưu qua Storage (gsheet/Supabase) như measurements. */
+const TAB_LAYOUT_STORAGE_KEY = "dga_tab_layout";
+
+/** Bật/tắt bố cục thanh tab dọc (sidebar) trên <body> + đồng bộ trạng thái nút
+ *  #btnToggleTabLayout (aria-pressed + title) cho khớp. */
+function applyTabLayout(isSidebar) {
+  document.body.classList.toggle("tabs-sidebar", isSidebar);
+  const btn = $("btnToggleTabLayout");
+  if (!btn) return;
+  btn.setAttribute("aria-pressed", String(isSidebar));
+  btn.title = isSidebar ? "Chuyển thanh tab về ngang (phía trên)" : "Chuyển thanh tab sang cột dọc (bên trái)";
+}
+
+/** Gắn sự kiện cho nút #btnToggleTabLayout ở header — đổi thanh tab giữa "ngang"
+ *  (mặc định, phía trên) và "dọc" (sidebar bên trái, xem khối CSS "body.tabs-sidebar"
+ *  ở style.css), lưu lại lựa chọn vào localStorage để lần sau mở lại vẫn giữ nguyên.
+ *  Lựa chọn đã lưu được áp dụng SỚM ở ngay đầu <body> (xem index.html) để tránh nháy
+ *  layout lúc tải trang — hàm này chỉ cần đồng bộ lại nút cho khớp trạng thái đó rồi
+ *  gắn sự kiện bấm. */
+function setupTabLayoutToggle() {
+  const btn = $("btnToggleTabLayout");
+  if (!btn) return;
+  applyTabLayout(document.body.classList.contains("tabs-sidebar"));
+  btn.addEventListener("click", () => {
+    const next = !document.body.classList.contains("tabs-sidebar");
+    applyTabLayout(next);
+    try { localStorage.setItem(TAB_LAYOUT_STORAGE_KEY, next ? "sidebar" : "top"); } catch (e) {}
+  });
+}
+
+/** Khóa localStorage lưu trạng thái thu gọn sidebar — chỉ có tác dụng hiển thị khi
+ *  đang ở bố cục dọc (xem CSS "body.tabs-sidebar.sidebar-collapsed" ở style.css), lưu
+ *  riêng khóa với TAB_LAYOUT_STORAGE_KEY vì đây là 2 lựa chọn độc lập nhau (người dùng
+ *  có thể chọn dọc nhưng không thu gọn, hoặc từng thu gọn rồi tạm quay về ngang mà vẫn
+ *  muốn nhớ trạng thái thu gọn cho lần sau bật lại "dọc"). */
+const SIDEBAR_COLLAPSE_STORAGE_KEY = "dga_sidebar_collapsed";
+
+/** Bật/tắt trạng thái thu gọn sidebar trên <body> + đồng bộ nút #btnCollapseSidebar
+ *  (aria-pressed + title) cho khớp. */
+function applySidebarCollapse(isCollapsed) {
+  document.body.classList.toggle("sidebar-collapsed", isCollapsed);
+  const btn = $("btnCollapseSidebar");
+  if (!btn) return;
+  btn.setAttribute("aria-pressed", String(isCollapsed));
+  btn.title = isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar";
+}
+
+/** Gắn sự kiện cho nút #btnCollapseSidebar trong <nav class="tabs"> — thu gọn sidebar
+ *  (chỉ còn 1 cột icon hẹp) để "mở rộng màn hình" cho nội dung chính, hoặc mở lại như
+ *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem style.css) nên ở
+ *  đây chỉ cần lo phần bật/tắt + lưu lựa chọn, không cần kiểm tra thêm điều kiện. */
+function setupSidebarCollapseToggle() {
+  const btn = $("btnCollapseSidebar");
+  if (!btn) return;
+  applySidebarCollapse(document.body.classList.contains("sidebar-collapsed"));
+  btn.addEventListener("click", () => {
+    const next = !document.body.classList.contains("sidebar-collapsed");
+    applySidebarCollapse(next);
+    try { localStorage.setItem(SIDEBAR_COLLAPSE_STORAGE_KEY, next ? "1" : "0"); } catch (e) {}
   });
 }
 

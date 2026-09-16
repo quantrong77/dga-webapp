@@ -14,6 +14,7 @@ const LS_KEYS = {
   stations: "dga_stations_v1",
   oilTests: "dga_oil_tests_v1",
   oltcOilTests: "dga_oltc_oil_tests_v1",
+  feedback: "dga_feedback_v1",
 };
 
 // Tên các khí — dùng để chuẩn hóa key về chữ thường (h2, ch4, ...) khi lưu, khớp với
@@ -496,6 +497,87 @@ const Storage = {
     }
     const all = lsGet(LS_KEYS.oltcOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oltcOilTests, all);
+  },
+
+  // Góp ý người dùng (tab "Người dùng phản hồi") — nội dung tự do + 1 ảnh minh họa tùy
+  // chọn (xem uploadFeedbackImage() bên dưới). KHÔNG dùng prepareOwnedRecord()/audit như
+  // measurements (feedback không có khái niệm "sửa lại" — chỉ tạo mới và Admin xóa được),
+  // nên phía gsheet (Code.gs) vẫn gắn created_by nếu đã đăng nhập nhưng không giới hạn ai
+  // sửa vì client không cung cấp tính năng sửa.
+  async listFeedback() {
+    if (this.mode === "gsheet") {
+      return await gsheetGet("listFeedback");
+    }
+    if (this.mode === "supabase") {
+      const { data, error } = await sb().from("feedback").select("*").order("created_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    }
+    return lsGet(LS_KEYS.feedback);
+  },
+
+  async addFeedback(f) {
+    const record = { ...f, id: f.id || uid(), created_at: new Date().toISOString() };
+    if (this.mode === "gsheet") {
+      return await gsheetPost("addFeedback", { record });
+    }
+    if (this.mode === "supabase") {
+      const { data, error } = await sb().from("feedback").insert(record).select();
+      if (error) throw error;
+      return data[0];
+    }
+    const all = lsGet(LS_KEYS.feedback);
+    all.push(record);
+    lsSet(LS_KEYS.feedback, all);
+    return record;
+  },
+
+  async deleteFeedback(id) {
+    if (this.mode === "gsheet") {
+      await gsheetPost("deleteFeedback", { id });
+      return;
+    }
+    if (this.mode === "supabase") {
+      const { error } = await sb().from("feedback").delete().eq("id", id);
+      if (error) throw error;
+      return;
+    }
+    const all = lsGet(LS_KEYS.feedback).filter((r) => r.id !== id);
+    lsSet(LS_KEYS.feedback, all);
+  },
+
+  /** Tải lên 1 ảnh minh họa đính kèm góp ý — cùng cơ chế với uploadAttachment() (BBTN) ở
+   *  trên, nhưng tách riêng bucket Supabase ("feedback" thay vì "bbtn") / thư mục Drive
+   *  ("DGA_Feedback_DinhKem" thay vì "DGA_BBTN_DinhKem") để 2 loại file khác mục đích
+   *  không lẫn vào nhau. Chế độ localStorage dùng lại NGUYÊN uploadAttachment()/
+   *  getLocalAttachment() — cơ chế đó vốn chỉ là 1 map id→file dùng chung, khóa nào (id
+   *  lần đo hay id góp ý) cũng được, không cần tách riêng như 2 chế độ kia. feedbackId
+   *  phải sinh TRƯỚC bằng Storage.newId() (giống cách BBTN làm) vì ảnh có thể tải lên
+   *  trước khi gọi addFeedback(). Trả về { image_url, image_name, image_file_id }. */
+  async uploadFeedbackImage(feedbackId, file) {
+    if (this.mode === "gsheet") {
+      const base64Data = await fileToBase64(file);
+      const res = await gsheetPost("uploadAttachment", {
+        measurementId: feedbackId,
+        filename: file.name,
+        mimeType: file.type || "image/png",
+        base64Data,
+        folder: "DGA_Feedback_DinhKem",
+      });
+      return { image_url: res.url, image_name: res.name || file.name, image_file_id: res.id || null };
+    }
+    if (this.mode === "supabase") {
+      const path = `${feedbackId}/${Date.now()}_${file.name}`;
+      const { error } = await sb().storage.from("feedback").upload(path, file, {
+        upsert: true,
+        contentType: file.type || "image/png",
+      });
+      if (error) throw error;
+      const { data } = sb().storage.from("feedback").getPublicUrl(path);
+      return { image_url: data.publicUrl, image_name: file.name, image_file_id: null };
+    }
+    const uploaded = await this.uploadAttachment(feedbackId, file);
+    return { image_url: uploaded.bbtn_url, image_name: uploaded.bbtn_name, image_file_id: uploaded.bbtn_file_id };
   },
 
   // Id sinh phía client — dùng khi cần biết trước id của 1 lần đo (vd: để đính kèm

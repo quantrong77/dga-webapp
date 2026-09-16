@@ -141,6 +141,17 @@ create table if not exists oltc_oil_tests (
 
 create index if not exists idx_oltc_oiltests_key on oltc_oil_tests (tram, thiet_bi);
 
+-- Góp ý người dùng (tab "Người dùng phản hồi") — nội dung tự do + 1 ảnh minh họa tùy
+-- chọn (image_url/image_name, xem bucket Storage "feedback" ở cuối file này — tách
+-- riêng bucket "bbtn" để không lẫn 2 loại file khác mục đích).
+create table if not exists feedback (
+  id text primary key,
+  content text not null,
+  image_url text,
+  image_name text,
+  created_at timestamptz default now()
+);
+
 -- Nếu bạn đã tạo bảng measurements từ trước (chưa có cột mba_subtype), chạy thêm dòng
 -- sau (an toàn, không ảnh hưởng dữ liệu cũ) để nâng cấp:
 -- alter table measurements add column if not exists mba_subtype text;
@@ -207,6 +218,7 @@ alter table manufacturer_standards enable row level security;
 alter table stations enable row level security;
 alter table oil_tests enable row level security;
 alter table oltc_oil_tests enable row level security;
+alter table feedback enable row level security;
 
 drop policy if exists "measurements_all" on measurements;
 create policy "measurements_all" on measurements for all using (true) with check (true);
@@ -222,6 +234,9 @@ create policy "oiltests_all" on oil_tests for all using (true) with check (true)
 
 drop policy if exists "oltc_oiltests_all" on oltc_oil_tests;
 create policy "oltc_oiltests_all" on oltc_oil_tests for all using (true) with check (true);
+
+drop policy if exists "feedback_all" on feedback;
+create policy "feedback_all" on feedback for all using (true) with check (true);
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket "bbtn" — nơi lưu file Biên bản thí nghiệm (PDF) đính kèm 1 lần đo
@@ -247,3 +262,26 @@ create policy "bbtn_select" on storage.objects for select
 drop policy if exists "bbtn_update" on storage.objects;
 create policy "bbtn_update" on storage.objects for update
   using (bucket_id = 'bbtn') with check (bucket_id = 'bbtn');
+
+-- ---------------------------------------------------------------------------
+-- Storage bucket "feedback" — ảnh minh họa đính kèm góp ý (tab "Người dùng phản hồi").
+-- Tách riêng khỏi bucket "bbtn" ở trên vì khác mục đích (BBTN vs. ảnh chụp màn hình góp
+-- ý), cùng cấu hình công khai (public) — xem lý do đầy đủ ở ghi chú "Storage bucket
+-- "bbtn"" phía trên, áp dụng y hệt ở đây.
+-- ---------------------------------------------------------------------------
+
+insert into storage.buckets (id, name, public)
+values ('feedback', 'feedback', true)
+on conflict (id) do update set public = true;
+
+drop policy if exists "feedback_insert" on storage.objects;
+create policy "feedback_insert" on storage.objects for insert
+  with check (bucket_id = 'feedback');
+
+drop policy if exists "feedback_select" on storage.objects;
+create policy "feedback_select" on storage.objects for select
+  using (bucket_id = 'feedback');
+
+drop policy if exists "feedback_update" on storage.objects;
+create policy "feedback_update" on storage.objects for update
+  using (bucket_id = 'feedback') with check (bucket_id = 'feedback');

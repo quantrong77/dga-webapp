@@ -187,7 +187,11 @@ function setupAuthForms() {
     }
   });
 
-  $("btnLogout").addEventListener("click", async () => {
+  // Nút tên user (#userBadge, xem index.html) tích hợp luôn đăng xuất — không còn nút
+  // "Đăng xuất" rời như trước. Bấm vào hiện hộp thoại xác nhận (confirm) TRƯỚC, tránh
+  // đăng xuất nhầm khi lỡ chạm/bấm vào badge chỉ để xem tên tài khoản đang đăng nhập.
+  $("userBadge").addEventListener("click", async () => {
+    if (!confirm("Đăng xuất khỏi ứng dụng?")) return;
     await Auth.logout();
     // Tải lại trang cho gọn — reset toàn bộ state trong bộ nhớ (danh sách đã
     // nạp, form đang nhập dở...) và quay lại đúng luồng init() từ đầu.

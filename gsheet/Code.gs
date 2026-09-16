@@ -154,6 +154,16 @@ const USER_HEADERS = [
 const SHEET_SESSIONS = "sessions";
 const SESSION_HEADERS = ["token", "email", "created_at", "expires_at"];
 
+// Góp ý người dùng (tab "Người dùng phản hồi") — nội dung tự do + 1 ảnh minh họa tùy
+// chọn (lưu trên Drive, xem actionUploadAttachment() — dùng CHUNG hàm với BBTN nhưng
+// khác thư mục, xem tham số "folder"). Không có khái niệm "sửa lại" (chỉ tạo mới +
+// Admin xóa), nên vẫn dùng prepareOwnedRecord() để gắn created_by nhưng không cho sửa.
+const SHEET_FEEDBACK = "feedback";
+const FEEDBACK_HEADERS = [
+  "id", "content", "image_file_id", "image_url", "image_name", "created_at",
+  "created_by", "updated_by", "updated_at",
+];
+
 // Email này TỰ ĐỘNG được cấp quyền "admin" ngay khi đăng ký (dù đăng ký bằng mật khẩu
 // hay bằng Google) — đổi thành email Admin thật của bạn nếu khác. Mọi email khác mặc
 // định là "user" (tự nhập/sửa được bản ghi của chính mình — xem prepareOwnedRecord()).
@@ -180,6 +190,7 @@ function doGet(e) {
     if (action === "listStations") { requireSession(token); return jsonOut(listRows(SHEET_STATIONS, STATION_HEADERS)); }
     if (action === "listOilTests") { requireSession(token); return jsonOut(listRows(SHEET_OILTESTS, OILTEST_HEADERS)); }
     if (action === "listOltcOilTests") { requireSession(token); return jsonOut(listRows(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS)); }
+    if (action === "listFeedback") { requireSession(token); return jsonOut(listRows(SHEET_FEEDBACK, FEEDBACK_HEADERS)); }
     // Danh sách user: chỉ Admin xem được (dùng cho tab "Quản trị").
     if (action === "listUsers") { requireAdmin(token); return jsonOut(listPublicUsers()); }
 
@@ -219,6 +230,10 @@ function doPost(e) {
     else if (action === "deleteOilTest") { requireAdmin(token); result = deleteRow(SHEET_OILTESTS, body.id); }
     else if (action === "addOltcOilTest") { result = upsertRow(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, prepareOwnedRecord(token, SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, body.record)); }
     else if (action === "deleteOltcOilTest") { requireAdmin(token); result = deleteRow(SHEET_OLTC_OILTESTS, body.id); }
+    // Góp ý: bất kỳ ai đã đăng nhập đều gửi được (giống quyền "tự nhập lần đo mới"); xóa
+    // luôn yêu cầu Admin, giống mọi thao tác xóa khác trong app.
+    else if (action === "addFeedback") { result = upsertRow(SHEET_FEEDBACK, FEEDBACK_HEADERS, prepareOwnedRecord(token, SHEET_FEEDBACK, FEEDBACK_HEADERS, body.record)); }
+    else if (action === "deleteFeedback") { requireAdmin(token); result = deleteRow(SHEET_FEEDBACK, body.id); }
     else if (action === "setUserRole") { requireAdmin(token); result = actionSetUserRole(body); }
     else if (action === "deleteUser") { requireAdmin(token); result = actionDeleteUser(body); }
     else result = { error: "unknown action: " + action };
@@ -452,18 +467,24 @@ function actionDeleteUser(body) {
 const BBTN_FOLDER_NAME = "DGA_BBTN_DinhKem";
 const MAX_BBTN_BASE64_CHARS = 20 * 1024 * 1024; // ~15MB file gốc (base64 dài hơn ~1.37 lần)
 
-function getOrCreateBbtnFolder() {
-  const folders = DriveApp.getFoldersByName(BBTN_FOLDER_NAME);
+/** name mặc định BBTN_FOLDER_NAME nếu không truyền — dùng CHUNG cho mọi loại file đính
+ *  kèm qua actionUploadAttachment() (BBTN, ảnh góp ý...), chỉ khác tên thư mục Drive để
+ *  không lẫn các loại file khác mục đích vào cùng 1 chỗ (xem tham số "folder" bên dưới). */
+function getOrCreateBbtnFolder(name) {
+  const folderName = name || BBTN_FOLDER_NAME;
+  const folders = DriveApp.getFoldersByName(folderName);
   if (folders.hasNext()) return folders.next();
-  return DriveApp.createFolder(BBTN_FOLDER_NAME);
+  return DriveApp.createFolder(folderName);
 }
 
-/** Nhận { token, measurementId, filename, mimeType, base64Data } — yêu cầu ĐÃ đăng
- *  nhập (bất kỳ role nào, giống quyền "tự nhập lần đo mới" — xem prepareOwnedRecord()),
- *  KHÔNG yêu cầu là chủ bản ghi vì tại thời điểm tải lên, lần đo có thể còn chưa được
- *  lưu (client tải file lên TRƯỚC, rồi mới gọi addMeasurement() với bbtn_url trả về).
- *  Trả về { id, url, name } — client tự gộp vào record dưới tên bbtn_file_id/bbtn_url/
- *  bbtn_name trước khi lưu measurement. */
+/** Nhận { token, measurementId, filename, mimeType, base64Data, folder } — yêu cầu ĐÃ
+ *  đăng nhập (bất kỳ role nào, giống quyền "tự nhập lần đo mới" — xem prepareOwnedRecord()),
+ *  KHÔNG yêu cầu là chủ bản ghi vì tại thời điểm tải lên, bản ghi liên quan (lần đo/góp ý)
+ *  có thể còn chưa được lưu (client tải file lên TRƯỚC, rồi mới gộp url trả về vào record).
+ *  "folder" tùy chọn — tên thư mục Drive đích, mặc định BBTN_FOLDER_NAME nếu bỏ trống (giữ
+ *  đúng hành vi cũ cho BBTN); uploadFeedbackImage() ở storage.js truyền
+ *  "DGA_Feedback_DinhKem" để tách riêng ảnh góp ý khỏi BBTN. Trả về { id, url, name } —
+ *  client tự gộp vào record dưới tên phù hợp (bbtn_* hoặc image_*) trước khi lưu. */
 function actionUploadAttachment(token, body) {
   requireSession(token);
   const filename = String(body.filename || "bien_ban_thi_nghiem.pdf");
@@ -477,7 +498,7 @@ function actionUploadAttachment(token, body) {
   try {
     const bytes = Utilities.base64Decode(base64Data);
     const blob = Utilities.newBlob(bytes, mimeType, filename);
-    const folder = getOrCreateBbtnFolder();
+    const folder = getOrCreateBbtnFolder(body.folder);
     file = folder.createFile(blob);
     file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
   } catch (err) {
@@ -577,6 +598,7 @@ function headersForSheet(sheetName) {
   if (sheetName === SHEET_SESSIONS) return SESSION_HEADERS;
   if (sheetName === SHEET_OILTESTS) return OILTEST_HEADERS;
   if (sheetName === SHEET_OLTC_OILTESTS) return OLTC_OILTEST_HEADERS;
+  if (sheetName === SHEET_FEEDBACK) return FEEDBACK_HEADERS;
   return STANDARD_HEADERS;
 }
 

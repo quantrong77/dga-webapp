@@ -29,6 +29,26 @@
   <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
+  <script>
+    // Đọc lựa chọn bố cục thanh tab đã lưu trước đó (ngang/dọc) và áp dụng NGAY, trước
+    // khi phần còn lại của trang render, để tránh nháy layout (đổi từ ngang sang dọc
+    // ngay sau khi tải xong) — đặt ngay đầu <body> (không đặt ở <head>, vì lúc đó
+    // document.body CHƯA tồn tại). Đây là SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang
+    // dùng (không phải dữ liệu nghiệp vụ) nên lưu ở localStorage, không qua Storage
+    // (gsheet/Supabase) — xem setupTabLayoutToggle() ở app-core.js (gắn sự kiện bấm nút
+    // #btnToggleTabLayout + lưu lại lựa chọn khi đổi).
+    try {
+      if (localStorage.getItem("dga_tab_layout") === "sidebar") {
+        document.body.classList.add("tabs-sidebar");
+      }
+      // Trạng thái "thu gọn sidebar" (chỉ có ý nghĩa khi đang ở bố cục dọc) — cũng đọc
+      // và áp dụng SỚM ở đây cùng lúc để tránh nháy (sidebar rộng đầy đủ rồi mới co lại
+      // ngay sau khi JS ở app-core.js chạy) — xem setupSidebarCollapseToggle().
+      if (localStorage.getItem("dga_sidebar_collapsed") === "1") {
+        document.body.classList.add("sidebar-collapsed");
+      }
+    } catch (e) {}
+  </script>
   <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
        ẩn, tham chiếu bằng <use href="#icon-..."> để không lặp lại mã SVG nhiều nơi. -->
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
@@ -55,6 +75,12 @@
       <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3.5v11.4M8 11.3l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.5 17v2a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-upload-cloud" viewBox="0 0 24 24"><path d="M7.2 17.8a4 4 0 0 1-0.9-7.9 5.2 5.2 0 0 1 10-2 4.4 4.4 0 0 1-0.6 8.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 20v-7.3M9.2 15.3l2.8-2.8 2.8 2.8" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sample" viewBox="0 0 24 24"><path d="M10 2.5h4M10.5 2.5v5.3l-3.8 6.6A1.9 1.9 0 0 0 8.3 17.4h7.4a1.9 1.9 0 0 0 1.6-3L13.5 7.8V2.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8.2 12.6h7.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M17 15.5h3.2v3.2l-3.6 3.6-3.2-3.2 3.6-3.6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="18.6" cy="17.1" r="0.6" fill="currentColor" stroke="none"/></symbol>
+      <!-- Icon nút đổi bố cục thanh tab (ngang ⇄ dọc/sidebar) — khung trang + 1 cột hẹp
+           bên trái được tô đậm, gợi hình bố cục sidebar. Xem #btnToggleTabLayout. -->
+      <symbol id="icon-sidebar" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="15" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M9.3 4.5v15" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <!-- Icon tab "Người dùng phản hồi" — bong bóng chat có đuôi + 2 gạch ngang tượng
+           trưng cho dòng chữ góp ý. -->
+      <symbol id="icon-feedback" viewBox="0 0 24 24"><path d="M4.5 5h15a1.5 1.5 0 0 1 1.5 1.5V15a1.5 1.5 0 0 1-1.5 1.5H10.5l-4.9 3.3c-0.5 0.3-1.1-0.1-1.1-0.6V16.5H4.5A1.5 1.5 0 0 1 3 15V6.5A1.5 1.5 0 0 1 4.5 5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><path d="M7.3 9.6h9.4M7.3 12.6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
     </defs>
   </svg>
 
@@ -109,6 +135,9 @@
 
   <header class="app-header">
     <div class="header-left">
+      <button type="button" id="btnToggleTabLayout" class="header-icon-btn" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg>
+      </button>
       <span id="storageBadge" class="badge local">Đang tải...</span>
     </div>
     <div class="header-center">
@@ -118,27 +147,38 @@
       </div>
     </div>
     <div class="header-right">
-      <span id="userBadge" class="badge user-badge hidden"></span>
-      <button id="btnLogout" class="btn ghost hidden" style="padding:6px 12px; font-size:12px;">Đăng xuất</button>
+      <!-- Nút tên user TÍCH HỢP luôn đăng xuất (không còn nút "Đăng xuất" rời) — bấm vào
+           hiện hộp thoại xác nhận rồi mới đăng xuất, xem $("userBadge").addEventListener
+           ở ui-auth.js (thay cho $("btnLogout") cũ). -->
+      <button type="button" id="userBadge" class="badge user-badge hidden" title="Bấm để đăng xuất"></button>
     </div>
   </header>
 
   <nav class="tabs">
+    <!-- Nút thu gọn/mở rộng sidebar — CHỈ hiện khi đang ở bố cục dọc (body.tabs-sidebar,
+         xem style.css) và tự ẩn lại ở màn hình hẹp (sidebar tự động về dạng ngang thì nút
+         này cũng vô nghĩa). Thu gọn giúp "mở rộng màn hình" cho nội dung chính, chỉ còn
+         icon từng tab (đã có title= để vẫn xem được tên tab qua tooltip khi rê chuột) —
+         xem setupSidebarCollapseToggle() ở app-core.js. -->
+    <button type="button" id="btnCollapseSidebar" class="sidebar-collapse-btn" aria-pressed="false" title="Thu gọn sidebar">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
+    </button>
     <!-- .tabs-inner: bọc riêng để canh GIỮA cả cụm nút tab bằng margin:0 auto (xem
          style.css) — margin auto trên 1 flex-item tự co về 0 khi cụm nút không đủ chỗ
          (màn hình hẹp), nên overflow-x:auto ở nav.tabs vẫn cuộn ngang bình thường từ
          mép trái, không bị lỗi "kẹt giữa" như dùng justify-content:center trực tiếp
          trên nav.tabs khi nội dung tràn. -->
     <div class="tabs-inner">
-      <button class="tab-btn active" data-tab="nhap"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>DGA</button>
-      <button class="tab-btn" data-tab="dau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Dầu cách điện</button>
-      <button class="tab-btn" data-tab="lichsu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</button>
-      <button class="tab-btn" data-tab="xuhuong"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng</button>
-      <button class="tab-btn" data-tab="tieuchuan"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg>Tiêu chuẩn</button>
-      <button class="tab-btn" data-tab="quytrinh"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg>Quy trình đánh giá</button>
-      <button class="tab-btn" data-tab="quymau"><svg class="tab-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Quy trình lấy mẫu</button>
-      <button class="tab-btn" data-tab="about"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg>Giới thiệu</button>
-      <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg>Quản trị</button>
+      <button class="tab-btn active" data-tab="nhap" title="DGA"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg><span class="tab-label">DGA</span></button>
+      <button class="tab-btn" data-tab="dau" title="Dầu cách điện"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg><span class="tab-label">Dầu cách điện</span></button>
+      <button class="tab-btn" data-tab="lichsu" title="Lịch sử đo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="tab-label">Lịch sử đo</span></button>
+      <button class="tab-btn" data-tab="xuhuong" title="Xu hướng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg><span class="tab-label">Xu hướng</span></button>
+      <button class="tab-btn" data-tab="tieuchuan" title="Tiêu chuẩn"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg><span class="tab-label">Tiêu chuẩn</span></button>
+      <button class="tab-btn" data-tab="quytrinh" title="Quy trình đánh giá"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg><span class="tab-label">Quy trình đánh giá</span></button>
+      <button class="tab-btn" data-tab="quymau" title="Quy trình lấy mẫu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-sample"></use></svg><span class="tab-label">Quy trình lấy mẫu</span></button>
+      <button class="tab-btn" data-tab="about" title="Giới thiệu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg><span class="tab-label">Giới thiệu</span></button>
+      <button class="tab-btn" data-tab="phanhoi" title="Người dùng phản hồi"><svg class="tab-icon" aria-hidden="true"><use href="#icon-feedback"></use></svg><span class="tab-label">Người dùng phản hồi</span></button>
+      <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="tab-label">Quản trị</span></button>
     </div>
   </nav>
 
@@ -1476,9 +1516,17 @@
               <div id="ot_thietbi_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field">Điểm lấy mẫu OLTC
+          <label class="field">
+            <span class="field-label-row">Điểm lấy mẫu OLTC
+              <button type="button" class="info-icon-btn" aria-controls="ot_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu OLTC" title="Giải thích Điểm lấy mẫu OLTC">i</button>
+            </span>
             <select id="ot_samplepoint"></select>
           </label>
+          <div class="info-popover field-wide hidden" id="ot_samplepoint_info">
+            <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
+            <p><strong>Điểm cuối trung tính (neutral point end):</strong> với MBA 3 pha đấu sao (Y), điểm trung tính là điểm chung nơi 3 đầu cuộn dây gặp nhau (thường nối đất). Nếu OLTC được đặt ở đầu cuộn dây phía điểm trung tính — nơi điện áp so với đất thấp nhất — thì 3 pha có thể dùng CHUNG một khoang dầu/buồng dập hồ quang duy nhất, vì không cần cách điện pha-pha lớn ở vị trí đó. Do dùng chung khoang, khi lấy mẫu dầu chỉ cần 1 mẫu đại diện cho cả 3 pha, và ngưỡng đánh giá theo Bảng 49 là cố định, không phân theo cấp điện áp MBA.</p>
+            <p><strong>Điểm không trung tính (line end / một pha):</strong> nếu OLTC đặt ở đầu dây phía đường dây (không phải điểm trung tính), điện áp tại đó cao hơn nhiều nên mỗi pha A/B/C cần khoang dầu và buồng dập hồ quang RIÊNG, phải lấy mẫu riêng từng pha. Trường hợp MBA 1 pha thì OLTC vốn chỉ có 1 pha nên cũng xếp vào nhóm này. Ngưỡng Bảng 49 cho kiểu này phân theo cấp điện áp MBA (≤35kV / 110kV / 220kV / 500kV), riêng bậc 35kV–110kV thì Bảng 49 gốc không có số liệu nên app báo "Không có ngưỡng".</p>
+          </div>
           <label class="field" id="ot_phase_wrap">Pha
             <select id="ot_phase">
               <option value="A">Pha A</option>
@@ -1591,6 +1639,47 @@
       </div>
     </section>
 
+    <!-- ===================== NGƯỜI DÙNG PHẢN HỒI =====================
+         Góp ý tự do (không phải dữ liệu thí nghiệm) — nội dung + 1 ảnh minh họa tùy chọn
+         (chụp màn hình lỗi, giao diện muốn cải thiện...). Lưu qua Storage.listFeedback()/
+         addFeedback()/deleteFeedback()/uploadFeedbackImage() (xem storage.js) — cùng 3 chế
+         độ lưu trữ (Google Sheets/Supabase/localStorage) như mọi dữ liệu khác của app. Xem
+         toàn bộ logic ở ui-feedback.js. -->
+    <section id="tab-phanhoi" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Góp ý cho ứng dụng</h2>
+        <p class="note">Anh/chị gặp lỗi, thấy điều gì bất tiện, hoặc có đề xuất cải thiện ứng dụng — cứ để lại vài
+          dòng ở đây. Có thể đính kèm 1 ảnh chụp màn hình để mô tả rõ hơn (không bắt buộc).</p>
+        <div class="grid">
+          <label class="field field-wide">Ý kiến góp ý
+            <textarea id="fb_content" rows="4" placeholder="VD: Mục Lịch sử đo lọc theo Trạm hơi chậm khi dữ liệu nhiều, hoặc: đề xuất thêm xuất Excel cho bảng Xu hướng..."></textarea>
+          </label>
+          <label class="field field-wide">Hình ảnh minh họa (tùy chọn)
+            <div class="file-dropzone" id="fbDropzone">
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+              <span class="file-dropzone-text" id="fbDropzoneText">Kéo thả ảnh vào đây, hoặc <span class="file-dropzone-link">bấm để chọn ảnh</span></span>
+              <input id="fb_image" type="file" accept="image/*" />
+            </div>
+            <div class="feedback-image-preview hidden" id="fbImagePreviewWrap">
+              <img id="fbImagePreviewImg" alt="Ảnh minh họa đã chọn" />
+              <div class="feedback-image-preview-info">
+                <span id="fbImagePreviewName">—</span>
+                <button type="button" class="btn ghost" id="btnRemoveFbImage" style="padding:3px 9px; font-size:11.5px;">Bỏ ảnh</button>
+              </div>
+            </div>
+          </label>
+        </div>
+        <button type="button" class="btn primary" id="btnSubmitFeedback" style="margin-top:6px;">Gửi góp ý</button>
+      </div>
+
+      <div class="panel">
+        <h2>Góp ý đã gửi</h2>
+        <p class="note">Mọi người trong nhóm đều xem được các góp ý đã gửi, để tránh đề xuất trùng nhau.</p>
+        <div class="feedback-list" id="feedbackList"></div>
+        <p class="note" id="feedbackEmpty">Chưa có góp ý nào — hãy là người đầu tiên!</p>
+      </div>
+    </section>
+
     <section id="tab-quantri" class="tab-panel hidden">
       <div class="panel">
         <h2>Quản lý người dùng</h2>
@@ -1629,6 +1718,14 @@
     <div class="lightbox-caption" id="qtLightboxCaption"></div>
   </div>
 
+  <!-- Lightbox phóng to ảnh minh họa đính kèm góp ý (tab "Người dùng phản hồi") — nội
+       dung ảnh gán động bằng JS (setupFeedbackLightbox() trong ui-feedback.js) khi bấm
+       vào ảnh thu nhỏ ở 1 thẻ góp ý trong #feedbackList. -->
+  <div id="fbLightbox" class="lightbox hidden" role="dialog" aria-modal="true" aria-label="Ảnh minh họa góp ý (phóng to)">
+    <button type="button" class="lightbox-close" id="btnCloseFbLightbox" aria-label="Đóng">✕</button>
+    <img id="fbLightboxImg" src="" alt="" />
+  </div>
+
   <!-- Đọc BBTN (PDF) để tự động điền form khi nhập lại lần đo lịch sử — xem
        bbtn-import.js. type="module" nên tải "song song, chạy sau khi trang đã dựng
        xong" giống defer; không ảnh hưởng thứ tự chạy config.js/dga-logic.js/storage.js/
@@ -1662,6 +1759,7 @@
   <script src="ui-oltc.js"></script>
   <script src="ui-history.js"></script>
   <script src="ui-trend.js"></script>
+  <script src="ui-feedback.js"></script>
   <script src="app-core.js"></script>
 </body>
 </html>
