@@ -67,6 +67,14 @@ create table if not exists measurements (
   loai_dau text,
   ket_cau_cach_dien text,
   hien_trang_van_hanh text,
+  -- Thông tin thí nghiệm bổ sung (tùy chọn) — tự đọc được từ BBTN (bbtn-import.js) hoặc
+  -- nhập tay, dùng để điền vào "Xuất BBTN (docx)" (xem bbtn-export.js), KHÔNG dùng để
+  -- tính toán/đánh giá DGA. Khác nhóm "nameplate" ở trên vì đây là thông tin của TỪNG
+  -- LẦN đo (có thể khác nhau giữa các lần đo cùng thiết bị).
+  ngay_thi_nghiem date,
+  ly_do_thi_nghiem text,
+  nhiet_do numeric,
+  do_am numeric,
   created_at timestamptz default now()
 );
 
@@ -180,6 +188,14 @@ create index if not exists idx_oltc_oiltests_key on oltc_oil_tests (tram, thiet_
 -- alter table measurements add column if not exists loai_dau text;
 -- alter table measurements add column if not exists ket_cau_cach_dien text;
 -- alter table measurements add column if not exists hien_trang_van_hanh text;
+
+-- Nếu bạn đã tạo bảng measurements từ trước (chưa có 4 cột "thông tin thí nghiệm bổ
+-- sung" — Ngày thí nghiệm/Lý do thí nghiệm/Điều kiện môi trường, dùng cho tính năng
+-- "Xuất BBTN"), chạy các dòng sau để nâng cấp (an toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table measurements add column if not exists ngay_thi_nghiem date;
+-- alter table measurements add column if not exists ly_do_thi_nghiem text;
+-- alter table measurements add column if not exists nhiet_do numeric;
+-- alter table measurements add column if not exists do_am numeric;
 
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.

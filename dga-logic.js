@@ -55,8 +55,16 @@ function phaLabelWithPrefix(value) {
   return value === PHA_CHUNG_3_PHA ? "Chung" : "Pha " + value;
 }
 
-// Phân loại MBA theo cấu trúc OLTC (bộ đổi nấc có tải / CPC) — quyết định bảng
-// IEC Annex A.1.4 (Table A.2) nào áp dụng khi tính "tiêu chuẩn chặt hơn".
+// Phân loại MBA theo cấu trúc OLTC (bộ đổi nấc điện áp dưới tải) — ngăn OLTC có thông
+// dầu/khí với thùng dầu chính hay không, quyết định bảng IEC Annex A.1.4 (Table A.2)
+// nào áp dụng khi tính "tiêu chuẩn chặt hơn". Ở form (index.html, #f_mbasubtype) đây
+// là 1 checkbox ("Ngăn OLTC (thông dầu/khí với thùng chính?)", mặc định KHÔNG tick) —
+// xem toggleMbaSubtypeField()/onAnalyze() ở ui-dga.js.
+// LƯU Ý: 2 chuỗi giá trị dưới đây vẫn giữ nguyên chữ "CPC" cũ (dù UI đã đổi tên hiển
+// thị thành "OLTC") vì đây chính là giá trị được LƯU trong cột mba_subtype của các bản
+// ghi đã có sẵn (gsheet/Supabase/localStorage) — đổi chuỗi này sẽ làm mọi bản ghi CŨ hết
+// khớp so sánh === MBA_SUBTYPES.NO_OLTC/COMM_OLTC, tự rơi về mặc định sai. Chỉ đổi nếu
+// đồng thời chạy migrate lại toàn bộ dữ liệu measurements.mba_subtype hiện có.
 const MBA_SUBTYPES = {
   NO_OLTC: "Không có CPC (hoặc CPC không thông dầu/khí với thùng chính)",
   COMM_OLTC: "CPC có thông dầu/khí với thùng chính",
@@ -515,6 +523,30 @@ function round1(n) {
   return Math.round(n * 10) / 10;
 }
 
+/**
+ * Tốc độ sinh khí (%/tháng) của TỔNG lượng khí cháy (TCG) giữa 2 lần đo — cùng công
+ * thức ratePerMonth với computeRateOfChange() ở trên. Khác chỗ: Bảng 65 (Điều 54
+ * QĐ1901) chỉ quy định khoảng tham chiếu ppm/năm cho TỪNG khí riêng lẻ, KHÔNG có
+ * khoảng tham chiếu cho TCG — nên hàm này chỉ trả về số liệu %/tháng để tham khảo
+ * (dùng khi xuất BBTN, xem tcg_toc ở bbtn-export.js), không có rangeLo/rangeHi/verdict
+ * như computeRateOfChange().
+ * @param {number} prevTcg, {number} currTcg  ppm (kết quả computeTCG())
+ * @param {number} deltaDays  số ngày giữa 2 lần đo
+ */
+function computeTcgRateOfChange(prevTcg, currTcg, deltaDays) {
+  if (!deltaDays || deltaDays <= 0) return null;
+  const before = num(prevTcg);
+  const after = num(currTcg);
+  const delta = after - before;
+  const ratePerMonth = before === 0 ? null : (delta / before) / (deltaDays / 30) * 100;
+  return {
+    before: round1(before),
+    after: round1(after),
+    delta: round1(delta),
+    ratePerMonth: ratePerMonth === null ? null : round1(ratePerMonth),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // 8) Khuyến cáo tổng hợp — tổng hợp kết luận tuyệt đối + chẩn đoán tỷ lệ (Bảng 66) +
 //    chẩn đoán Tam giác Duval + tốc độ sinh khí.
@@ -895,6 +927,7 @@ const DGA = {
   defaultAbsoluteStandard, resolveStandard, computeTCG, evaluateAbsolute, overallVerdict,
   evaluateCondemning, condemningExceededRows,
   countExceedTypical, computeRatios, diagnoseRatios, ratioApplicability, computeRateOfChange,
+  computeTcgRateOfChange,
   normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
   buildRecommendations, computeOverallStatus,
   OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,

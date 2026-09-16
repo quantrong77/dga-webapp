@@ -47,11 +47,11 @@ async function refreshHistoryUI() {
       <td style="font-size:12px;">${diagnosis}</td>
       <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
       <td>${ownerCellHtml(rec)}</td>
-      <td style="white-space:nowrap;">
+      <td class="actions-cell"><div class="btn-row">
         ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" style="padding:5px 10px; font-size:12px;">Xem BBTN</button>` : ""}
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
-      </td>
+      </div></td>
     `;
     const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
     if (viewBbtnBtn) viewBbtnBtn.addEventListener("click", () => viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name }));

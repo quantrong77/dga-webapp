@@ -187,10 +187,10 @@ async function refreshOltcOilTestsUI() {
       <td>${rec.bdv_kv ?? "—"}</td>
       <td>${overallPill}</td>
       <td>${ownerCellHtml(rec)}</td>
-      <td style="white-space:nowrap;">
+      <td class="actions-cell"><div class="btn-row">
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
-      </td>
+      </div></td>
     `;
     const editBtn = tr.querySelector('[data-action="edit"]');
     if (editBtn) editBtn.addEventListener("click", () => onEditOltcOilTest(rec));

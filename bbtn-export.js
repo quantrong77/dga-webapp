@@ -6,12 +6,16 @@
    server nào để "điền" — chỉ tải mẫu .docx tĩnh về rồi xử lý ngay trong trình duyệt,
    giống triết lý của bbtn-import.js (đọc BBTN PDF) ở chiều ngược lại.
 
-   CHỈ điền vào các trường webapp CÓ dữ liệu (Trạm, Vị trí lắp đặt, Hãng SX, Ngày lấy
-   mẫu/thí nghiệm, 7 khí hòa tan + TCG, Ghi chú, Kết luận) — các trường khác (Năm SX,
-   Điện áp định mức, Công suất, Số chế tạo, Năm vận hành, Loại dầu, Lý do thí nghiệm,
-   Điều kiện môi trường, N2, O2, Tổng hàm lượng khí, chữ ký) giữ NGUYÊN trống như mẫu gốc
-   — người dùng tự bổ sung trong Word trước khi ký ban hành (xem tag_template.py đã dùng
-   để chèn placeholder vào mẫu, không đi kèm trong webapp). */
+   Điền vào các trường webapp CÓ dữ liệu (Trạm, Vị trí lắp đặt, Hãng SX, Ngày lấy mẫu,
+   Ngày thí nghiệm, Lý do thí nghiệm, Điều kiện môi trường (nhiệt độ/độ ẩm), 7 khí hòa
+   tan + TCG, tốc độ sinh khí %/tháng của từng khí + TCG nếu có lần đo trước liền kề để
+   so sánh (xem computeRateOfChange()/computeTcgRateOfChange() ở dga-logic.js, tính ở
+   onAnalyze()), Ghi chú, Kết luận) — các trường khác (Năm SX, Điện áp định mức, Công
+   suất, Số chế tạo, Năm vận hành, Loại dầu, N2, O2, Tổng hàm lượng khí, chữ ký) vẫn giữ
+   NGUYÊN trống như mẫu gốc vì webapp không thu thập số liệu này — người dùng tự bổ sung
+   trong Word trước khi ký ban hành (xem tag_template.py đã dùng để chèn placeholder vào
+   mẫu, không đi kèm trong webapp — các tag {ly_do_thi_nghiem}/{nhiet_do}/{do_am}/
+   {tcg_toc} chèn thêm sau này bằng script riêng, không qua tag_template.py). */
 
 const BBTN_TEMPLATE_URL = "template/template-bbtn-dga.docx";
 
@@ -58,13 +62,24 @@ function buildBbtnExportData(a) {
     vi_tri_lap_dat: [m.thiet_bi, m.pha ? DGA.phaLabelWithPrefix(m.pha) : ""].filter(Boolean).join(" - "),
     hang_sx: m.manufacturer || "",
     ngay_lay_mau: bbtnFormatDateVN(m.sample_date),
-    ngay_thi_nghiem: bbtnFormatDateVN(m.sample_date),
+    // Ưu tiên "Ngày thí nghiệm" thu thập riêng (m.ngay_thi_nghiem, xem khối "Thông tin
+    // thí nghiệm bổ sung" ở ui-dga.js) — chỉ dùng lại "Ngày lấy mẫu" nếu để trống, giữ
+    // đúng hành vi cũ (trước khi có trường riêng, 2 mốc coi như trùng nhau).
+    ngay_thi_nghiem: bbtnFormatDateVN(m.ngay_thi_nghiem || m.sample_date),
+    ly_do_thi_nghiem: m.ly_do_thi_nghiem || "",
+    nhiet_do: bbtnFormatNum(m.nhiet_do),
+    do_am: bbtnFormatNum(m.do_am),
     ghi_chu: m.ghi_chu || "",
     ket_luan: bbtnBuildKetLuan(a),
     // .toFixed(1) giống hệt cách hiển thị TCG trên màn hình (xem $("r_tcg") ở
     // renderResults(), ui-dga.js) — tcg là tổng cộng dồn nhiều số thập phân nên có thể
     // dính sai số dấu phẩy động kiểu 125.89999999999999 nếu không làm tròn.
     tcg: Number.isFinite(a.tcg) ? a.tcg.toFixed(1) : bbtnFormatNum(a.tcg),
+    // Tốc độ sinh khí (%/tháng) của TCG — chỉ có khi có lần đo trước để so sánh (xem
+    // computeTcgRateOfChange() ở dga-logic.js, tính ở onAnalyze()); để trống nếu chưa
+    // có lần đo trước hoặc TCG lần trước = 0 (không chia được), giống hệt cách 7 khí
+    // riêng lẻ xử lý _toc bên dưới.
+    tcg_toc: a.tcgRate && a.tcgRate.ratePerMonth !== null ? bbtnFormatNum(a.tcgRate.ratePerMonth) + "%" : "",
   };
 
   Object.keys(BBTN_GAS_TAG_KEYS).forEach((gas) => {

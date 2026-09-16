@@ -73,6 +73,13 @@ const MEASUREMENT_HEADERS = [
   // ứng trong báo cáo, không suy diễn ngược.
   "kieu_may", "nam_sx", "nam_van_hanh", "dien_ap_dm",
   "so_che_tao", "loai_dau", "ket_cau_cach_dien", "hien_trang_van_hanh",
+  // Thông tin thí nghiệm bổ sung (tùy chọn) — thêm ở CUỐI (xem lưu ý ngay trên) — tự
+  // đọc được từ BBTN (bbtn-import.js) hoặc nhập tay, dùng để điền vào "Xuất BBTN (docx)"
+  // phía web app (xem bbtn-export.js), KHÔNG dùng để tính toán/đánh giá DGA. Khác nhóm
+  // 8 cột "nameplate" ở trên vì đây là thông tin của TỪNG LẦN đo (ngày thí nghiệm/lý do/
+  // điều kiện môi trường có thể khác nhau giữa các lần đo cùng thiết bị). Bản ghi lưu
+  // trước khi có 4 cột này sẽ để trống — không suy diễn ngược.
+  "ngay_thi_nghiem", "ly_do_thi_nghiem", "nhiet_do", "do_am",
 ];
 
 // QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —

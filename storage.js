@@ -287,17 +287,25 @@ const Storage = {
   },
 
   async addMeasurement(m) {
-    const record = normalizeGasKeys({ ...m, id: m.id || uid(), created_at: new Date().toISOString() });
+    // Dùng chung cho cả TẠO MỚI và SỬA/LƯU LẠI 1 bản ghi đã có (không có
+    // updateMeasurement() riêng — khi sửa, m.id là id bản ghi cũ nên phải UPDATE
+    // đúng dòng đó, không được tạo thêm dòng mới trùng thiết bị/ngày đo).
+    const isEdit = !!m.id;
+    const record = normalizeGasKeys({ ...m, id: m.id || uid(), created_at: m.created_at || new Date().toISOString() });
     if (this.mode === "gsheet") {
+      // upsertRow() ở Code.gs tự UPDATE nếu id đã tồn tại, INSERT nếu chưa — đúng ngữ nghĩa.
       return await gsheetPost("addMeasurement", { record });
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("measurements").insert(record).select();
+      // upsert (không phải insert) để lần SỬA/LƯU LẠI ghi đè đúng dòng cũ theo khóa
+      // chính id, thay vì báo lỗi trùng khóa hoặc âm thầm bỏ qua.
+      const { data, error } = await sb().from("measurements").upsert(record).select();
       if (error) throw error;
       return data[0];
     }
     const all = lsGet(LS_KEYS.measurements);
-    all.push(record);
+    const idx = isEdit ? all.findIndex((r) => r.id === record.id) : -1;
+    if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.measurements, all);
     return record;
   },

@@ -10,7 +10,7 @@ cấu hình đầy đủ ngưỡng) lấy **CHẶT HƠN** giữa **Quyết đị
 | Loại thiết bị | Nguồn ngưỡng tuyệt đối | Ngưỡng PD (CH4/H2) |
 |---|---|---|
 | TI / TU | QĐ1901 Bảng 12 (Điều 10) = IEC Annex A.3.4 "giá trị tối đa cho phép" (2 nguồn trùng khớp) | < 0,2 (Annex A.3.3) |
-| MBA/Kháng dầu | min(QĐ1901 Bảng 64, IEC Annex A.1 Table A.2) theo từng khí, phân theo CPC không thông dầu/khí hoặc có thông dầu/khí | < 0,1 (mặc định, Table 2) |
+| MBA/Kháng dầu | min(QĐ1901 Bảng 64, IEC Annex A.1 Table A.2) theo từng khí, phân theo ngăn OLTC không/có thông dầu/khí với thùng chính | < 0,1 (mặc định, Table 2) |
 | Sứ xuyên (Bushing) | IEC Annex A.4.4 Table A.9 (QĐ1901 chưa có bảng riêng) | < 0,07 (Annex A.4.3) |
 
 Ngoài ra, công cụ vẫn cho phép **cấu hình tiêu chuẩn riêng theo từng nhà sản
@@ -176,11 +176,11 @@ policy "cho phép tất cả" trong `supabase-schema.sql`).
 - Tỷ lệ khí (Bảng 66) chỉ có ý nghĩa chẩn đoán khi có ít nhất 1 khí vượt giá
   trị điển hình (Điều 54 QĐ1901/mục 6.1(c) IEC 60599:1999) — công cụ tự ghi
   chú "Điều kiện áp dụng" nhưng vẫn hiển thị mã chẩn đoán để tham khảo.
-- Với MBA/Kháng dầu, nhớ chọn đúng **Phân loại CPC** (không thông dầu/khí hay
-  có thông dầu/khí với thùng chính) — lựa chọn này quyết định bảng IEC Annex
-  A.1 Table A.2 nào được dùng để tính "tiêu chuẩn chặt hơn". Nếu không chắc,
-  để mặc định "Không có CPC" (ngưỡng C2H2 chặt hơn nhiều so với lựa chọn còn
-  lại: 20 ppm so với ~270 ppm).
+- Với MBA/Kháng dầu, nhớ tick đúng checkbox **"Ngăn OLTC (thông dầu/khí với
+  thùng chính?)"** nếu thiết bị có OLTC và ngăn OLTC đó thông dầu/khí với thùng
+  dầu chính — lựa chọn này quyết định bảng IEC Annex A.1 Table A.2 nào được
+  dùng để tính "tiêu chuẩn chặt hơn". Nếu không chắc, cứ để mặc định KHÔNG tick
+  (ngưỡng C2H2 chặt hơn nhiều so với khi tick: 20 ppm so với ~270 ppm).
 - Bảng A.3 (IEC, vận tốc sinh khí theo mL/ngày cho MBA lực) **không được** dùng
   trong công cụ vì cần biết khối lượng/thể tích dầu để quy đổi — công cụ chỉ
   dùng Bảng 65 QĐ1901 (ppm/năm) cho tốc độ sinh khí.

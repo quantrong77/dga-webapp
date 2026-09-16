@@ -1,8 +1,12 @@
 // bbtn-import.js — Đọc file PDF "Biên bản thí nghiệm" (BBTN) mẫu PTC3/BM.15 (phân
 // tích khí hòa tan trong dầu cách điện) ngay trong trình duyệt và tự động nhận diện
-// Trạm / Thiết bị / Loại thiết bị / Pha / Ngày lấy mẫu / Nhà sản xuất / hàm lượng 7
-// khí, để điền sẵn vào form "1. Thông tin lần đo" khi người dùng đính kèm BBTN của
-// một lần đo LỊCH SỬ (đỡ phải gõ tay lại số liệu đã có sẵn trong biên bản giấy/PDF).
+// Trạm / Thiết bị / Loại thiết bị / Pha / Ngày lấy mẫu / Nhà sản xuất / Số chế tạo /
+// Điện áp định mức / Năm sản xuất / Năm đưa vào vận hành / Loại dầu cách điện / Ngày
+// thí nghiệm / Lý do thí nghiệm / Điều kiện môi trường (nhiệt độ, độ ẩm) / hàm lượng
+// 7 khí, để điền sẵn vào form "1. Thông tin lần đo" (kể cả khối "Thông số kỹ thuật
+// thiết bị" dùng cho xuất báo cáo phân tích kỹ thuật, và khối "Thông tin thí nghiệm
+// bổ sung" dùng khi xuất BBTN) khi người dùng đính kèm BBTN của một lần đo LỊCH SỬ
+// (đỡ phải gõ tay lại số liệu đã có sẵn trong biên bản giấy/PDF).
 //
 // Chạy 100% phía client (không gửi file lên server nào để "đọc" nội dung — file vẫn
 // chỉ được tải lên nơi lưu trữ đính kèm như bình thường qua Storage.uploadAttachment
@@ -107,6 +111,31 @@ function guessSampleDateISO(fullText) {
   return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 }
 
+// "Ngày thí nghiệm" nằm ở 1 đoạn văn riêng (không thuộc bảng thông tin chung), dạng
+// "Ngày thí nghiệm: 30/08/2026 17:21:20" — CHỈ lấy phần ngày (giờ:phút:giây không dùng
+// ở đâu trong app, xem bbtnFormatDateVN() ở bbtn-export.js chỉ định dạng dd/mm/yyyy).
+// Khác "Ngày lấy mẫu" (guessSampleDateISO) vì 2 mốc có thể lệch nhau nếu gửi mẫu đi
+// phân tích sau ngày lấy mẫu thực tế ngoài hiện trường.
+function guessTestDateISO(fullText) {
+  const m = fullText.match(/Ngày thí nghiệm[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
+  if (!m) return null;
+  const [, dd, mm, yyyy] = m;
+  return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+}
+
+// "Điều kiện môi trường (Ambient condition): t (Temp.) = 29 ºC , Độ ẩm (Humidity) = 78 %"
+// — 2 giá trị số (nhiệt độ/độ ẩm) nằm chung 1 dòng, tách bằng 2 regex riêng dựa vào
+// nhãn tiếng Anh trong ngoặc (ổn định hơn nhãn tiếng Việt vì không dấu/không viết tắt).
+function guessNhietDo(fullText) {
+  const m = fullText.match(/(?:t\s*\(Temp\.?\)|Nhiệt độ)\s*=\s*(-?\d+(?:[.,]\d+)?)\s*º?C/i);
+  return m ? parseFloat(m[1].replace(",", ".")) : null;
+}
+
+function guessDoAm(fullText) {
+  const m = fullText.match(/Độ ẩm[^=]*=\s*(\d+(?:[.,]\d+)?)\s*%/i);
+  return m ? parseFloat(m[1].replace(",", ".")) : null;
+}
+
 // ---------------------------------------------------------------------------
 // 3) Trích 7 giá trị khí hòa tan (ppm) từ bảng "KẾT QUẢ THÍ NGHIỆM" — tìm dòng có
 //    tên khí, rồi lấy SỐ ĐẦU TIÊN xuất hiện sau tên khí trên chính dòng đó, sau khi
@@ -142,9 +171,21 @@ function extractGasValues(lines) {
   return values;
 }
 
+// Các trường "Thông số kỹ thuật thiết bị" (dùng khi xuất báo cáo phân tích kỹ thuật)
+// nằm chung 1 hàng theo cặp trong mẫu PTC3/BM.15 — VD "Hãng sản xuất (Manufacturer):
+// HAEFELY    Năm sản xuất: 2000" — nên dùng đúng cơ chế stopRe (dừng trước nhãn kế
+// tiếp trên cùng hàng) như hangSanXuat đã làm, cho Số chế tạo/Điện áp định mức/Loại
+// dầu; riêng 2 trường "năm" (Năm sản xuất/Năm vận hành) chỉ lấy đúng 4 chữ số ngay
+// sau nhãn vì bản thân chúng đã là nhãn-2 trên hàng, không cần stopRe.
+function extractYearAfterLabel(fullText, labelRe) {
+  const m = fullText.match(labelRe);
+  return m ? m[1] : null;
+}
+
 // ---------------------------------------------------------------------------
-// 4) Hàm chính — trả về { tram, thietbi, loai, pha, ngay, hangSanXuat, gases,
-//    matchedCount } — mọi trường có thể null nếu không nhận diện được.
+// 4) Hàm chính — trả về { tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao,
+//    dienApDm, namSx, namVanHanh, loaiDau, ngayThiNghiem, lyDoThiNghiem, nhietDo,
+//    doAm, gases, matchedCount } — mọi trường có thể null nếu không nhận diện được.
 // ---------------------------------------------------------------------------
 async function extract(file) {
   const lines = await pdfFileToLines(file);
@@ -153,16 +194,28 @@ async function extract(file) {
   const tram = extractLabelValue(lines, /Tên dự án\/tên trạm[^:]*:/i, /\s{2,}\S/);
   const viTri = extractLabelValue(lines, /Vị trí lắp đặt[^:]*:/i, /\s{2,}\S/);
   const hangSanXuat = extractLabelValue(lines, /Hãng sản xuất[^:]*:/i, /Năm sản xuất/i);
+  const soCheTao = extractLabelValue(lines, /Số chế tạo[^:]*:/i, /Năm vận hành/i);
+  const dienApDm = extractLabelValue(lines, /Điện áp định mức[^:]*:/i, /Công suất/i);
+  const loaiDau = extractLabelValue(lines, /Loại dầu[^:]*:/i, /Ngày lấy mẫu/i);
+  const namSx = extractYearAfterLabel(fullText, /Năm sản xuất[^:]*:\s*(\d{4})/i);
+  const namVanHanh = extractYearAfterLabel(fullText, /Năm (?:vận hành|đưa vào vận hành)[^:]*:\s*(\d{4})/i);
+  const lyDoThiNghiem = extractLabelValue(lines, /Lý do thí nghiệm[^:]*:/i, /\s{2,}\S/);
   const loai = guessEquipmentType(fullText);
   const thietbi = guessDeviceCode(viTri) || guessDeviceCode(fullText);
   const pha = guessPhase(fullText);
   const ngay = guessSampleDateISO(fullText);
+  const ngayThiNghiem = guessTestDateISO(fullText);
+  const nhietDo = guessNhietDo(fullText);
+  const doAm = guessDoAm(fullText);
   const gases = extractGasValues(lines);
 
   const matchedCount =
     [tram, thietbi, loai, pha, ngay].filter(Boolean).length + Object.keys(gases).length;
 
-  return { tram, thietbi, loai, pha, ngay, hangSanXuat, gases, matchedCount };
+  return {
+    tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, namSx, namVanHanh, loaiDau,
+    ngayThiNghiem, lyDoThiNghiem, nhietDo, doAm, gases, matchedCount,
+  };
 }
 
 window.BbtnImport = { extract };

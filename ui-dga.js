@@ -29,12 +29,22 @@ const TECH_SPEC_FIELD_IDS = [
   "f_sochetao", "f_loaidau", "f_ketcaucachdien", "f_hientrangvanhanh",
 ];
 
+// f_ngaythinghiem..f_doam: 4 trường "thông tin thí nghiệm bổ sung" — cũng không dùng
+// để tính toán DGA, chỉ lưu kèm bản ghi để điền vào BBTN (docx) khi xuất, xem
+// bbtn-export.js. Khác TECH_SPEC_FIELD_IDS ở chỗ đây là thông tin của TỪNG LẦN đo
+// (có thể khác nhau giữa các lần đo cùng thiết bị), không phải nameplate cố định.
+const BBTN_EXTRA_FIELD_IDS = ["f_ngaythinghiem", "f_lydothinghiem", "f_nhietdo", "f_doam"];
+
 function clearForm() {
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
   TECH_SPEC_FIELD_IDS.forEach((id) => ($(id).value = ""));
+  BBTN_EXTRA_FIELD_IDS.forEach((id) => ($(id).value = ""));
+  // Checkbox "Ngăn OLTC (thông dầu/khí với thùng chính?)" — về mặc định KHÔNG tick.
+  $("f_mbasubtype").checked = false;
   DGA.GASES.forEach((g) => ($("g_" + g).value = ""));
   $("f_landocount").value = 1;
   $("f_bbtn").value = "";
+  renderBbtnDropzoneLabel();
   $("resultsPanel").classList.add("hidden");
   resetMeasurementEditState();
 }
@@ -44,6 +54,7 @@ function resetMeasurementEditState() {
   _editingMeasurementAttachment = null;
   _removeBbtnOnSave = false;
   $("f_bbtn").value = "";
+  renderBbtnDropzoneLabel();
   $("editingMeasurementNote").classList.add("hidden");
   $("btnCancelEditMeasurement").classList.add("hidden");
   $("btnAnalyze").textContent = "Phân tích & Lưu";
@@ -74,6 +85,27 @@ function updateLanDoSuggestion() {
   );
   const maxLan = matches.reduce((max, r) => Math.max(max, Number(r.lan_do) || 0), 0);
   $("f_landocount").value = maxLan + 1;
+}
+
+/** Cập nhật nhãn hiển thị trong Ô KÉO-THẢ BBTN (#bbtnDropzone) — tên file NGƯỜI DÙNG
+ *  VỪA CHỌN để tải lên (khác với renderBbtnCurrent(), hiển thị file ĐÃ LƯU trước đó
+ *  của bản ghi đang sửa). Đọc trực tiếp từ $("f_bbtn").files nên dùng chung được cho cả
+ *  2 cách chọn file: bấm chọn tay (input tự bắn "change") VÀ kéo-thả (gán file vào input
+ *  rồi tự bắn "change", xem setupBbtnDropzone() ở app-core.js) — xem onBbtnFileSelected()
+ *  bên dưới. Gọi lại mỗi khi $("f_bbtn").value bị xóa (clearForm(),
+ *  resetMeasurementEditState()) để nhãn quay về chữ hướng dẫn mặc định. */
+function renderBbtnDropzoneLabel() {
+  const zone = $("bbtnDropzone");
+  const label = $("bbtnDropzoneText");
+  if (!zone || !label) return;
+  const file = $("f_bbtn").files && $("f_bbtn").files[0];
+  if (file) {
+    label.textContent = file.name;
+    zone.classList.add("has-file");
+  } else {
+    label.innerHTML = 'Kéo thả file PDF vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>';
+    zone.classList.remove("has-file");
+  }
 }
 
 /** Hiện/ẩn khối "đã đính kèm BBTN: <tên file>" bên dưới ô chọn file, theo
@@ -127,6 +159,7 @@ async function viewBbtn(att) {
  *  lưu file đính kèm thật sự vẫn xảy ra riêng lúc bấm "Phân tích & Lưu" (onAnalyze()). */
 async function onBbtnFileSelected(e) {
   const file = e.target.files && e.target.files[0];
+  renderBbtnDropzoneLabel();
   const note = $("bbtnImportNote");
   if (!file) {
     note.classList.add("hidden");
@@ -177,6 +210,29 @@ async function onBbtnFileSelected(e) {
       }
     }
   }
+  // Các trường "Thông số kỹ thuật thiết bị" (dùng khi xuất báo cáo phân tích kỹ thuật)
+  // không phụ thuộc Loại thiết bị nên điền độc lập với khối data.loai ở trên — xem
+  // bbtn-import.js để biết cách trích từng trường từ mẫu BBTN PTC3/BM.15.
+  if (data.soCheTao) {
+    $("f_sochetao").value = data.soCheTao;
+    filled.push("Số chế tạo");
+  }
+  if (data.dienApDm) {
+    $("f_dienapdm").value = data.dienApDm;
+    filled.push("Điện áp định mức");
+  }
+  if (data.namSx) {
+    $("f_namsx").value = data.namSx;
+    filled.push("Năm sản xuất");
+  }
+  if (data.namVanHanh) {
+    $("f_namvanhanh").value = data.namVanHanh;
+    filled.push("Năm đưa vào vận hành");
+  }
+  if (data.loaiDau) {
+    $("f_loaidau").value = data.loaiDau;
+    filled.push("Loại dầu cách điện");
+  }
   if (data.pha) {
     $("f_pha").value = data.pha;
     filled.push("Pha");
@@ -184,6 +240,24 @@ async function onBbtnFileSelected(e) {
   if (data.ngay) {
     $("f_ngay").value = data.ngay;
     filled.push("Ngày lấy mẫu");
+  }
+  // Thông tin thí nghiệm bổ sung (dùng khi xuất BBTN) — cũng tự đọc được từ BBTN như
+  // các trường trên, xem BBTN_EXTRA_FIELD_IDS đầu file này.
+  if (data.ngayThiNghiem) {
+    $("f_ngaythinghiem").value = data.ngayThiNghiem;
+    filled.push("Ngày thí nghiệm");
+  }
+  if (data.lyDoThiNghiem) {
+    $("f_lydothinghiem").value = data.lyDoThiNghiem;
+    filled.push("Lý do thí nghiệm");
+  }
+  if (data.nhietDo !== null && data.nhietDo !== undefined) {
+    $("f_nhietdo").value = data.nhietDo;
+    filled.push("Nhiệt độ môi trường");
+  }
+  if (data.doAm !== null && data.doAm !== undefined) {
+    $("f_doam").value = data.doAm;
+    filled.push("Độ ẩm môi trường");
   }
   const gasNames = [];
   Object.keys(data.gases || {}).forEach((g) => {
@@ -217,6 +291,7 @@ function onEditMeasurement(rec) {
     : null;
   _removeBbtnOnSave = false;
   $("f_bbtn").value = "";
+  renderBbtnDropzoneLabel();
   $("bbtnImportNote").classList.add("hidden");
   renderBbtnCurrent();
   $("f_tram").value = rec.tram || "";
@@ -224,7 +299,10 @@ function onEditMeasurement(rec) {
   $("f_loai").value = rec.equipment_type || "";
   refreshManufacturerOptions();
   toggleMbaSubtypeField();
-  $("f_mbasubtype").value = rec.mba_subtype || "";
+  // Checkbox "Ngăn OLTC (thông dầu/khí với thùng chính?)" — chỉ tick nếu bản ghi lưu
+  // ĐÚNG giá trị COMM_OLTC; bản ghi cũ/không có OLTC/không rõ đều mặc định bỏ tick
+  // (NO_OLTC, chặt hơn — xem MBA_SUBTYPES ở dga-logic.js).
+  $("f_mbasubtype").checked = rec.mba_subtype === DGA.MBA_SUBTYPES.COMM_OLTC;
   $("f_nsx").value = rec.manufacturer || "";
   $("f_pha").value = rec.pha || "";
   $("f_landocount").value = rec.lan_do ?? 1;
@@ -238,6 +316,10 @@ function onEditMeasurement(rec) {
   $("f_loaidau").value = rec.loai_dau || "";
   $("f_ketcaucachdien").value = rec.ket_cau_cach_dien || "";
   $("f_hientrangvanhanh").value = rec.hien_trang_van_hanh || "";
+  $("f_ngaythinghiem").value = rec.ngay_thi_nghiem || "";
+  $("f_lydothinghiem").value = rec.ly_do_thi_nghiem || "";
+  $("f_nhietdo").value = rec.nhiet_do ?? "";
+  $("f_doam").value = rec.do_am ?? "";
   const gasesRec = recordGases(rec);
   DGA.GASES.forEach((g) => { $("g_" + g).value = gasesRec[g] ?? ""; });
   $("editingMeasurementNote").classList.remove("hidden");
@@ -331,7 +413,11 @@ async function onAnalyze() {
   DGA.GASES.forEach((g) => (gases[g] = $("g_" + g).value === "" ? 0 : Number($("g_" + g).value)));
 
   const equipmentType = $("f_loai").value;
-  const mbaSubtype = equipmentType === DGA.EQUIPMENT_TYPES.MBA ? $("f_mbasubtype").value : null;
+  // Checkbox tick = OLTC thông dầu/khí với thùng chính (COMM_OLTC, ngưỡng C2H2 tham
+  // khảo nới hơn); bỏ tick (mặc định) = NO_OLTC — xem MBA_SUBTYPES ở dga-logic.js.
+  const mbaSubtype = equipmentType === DGA.EQUIPMENT_TYPES.MBA
+    ? ($("f_mbasubtype").checked ? DGA.MBA_SUBTYPES.COMM_OLTC : DGA.MBA_SUBTYPES.NO_OLTC)
+    : null;
 
   const measurement = {
     id: _editingMeasurementId || undefined,
@@ -353,6 +439,13 @@ async function onAnalyze() {
     loai_dau: $("f_loaidau").value.trim(),
     ket_cau_cach_dien: $("f_ketcaucachdien").value.trim(),
     hien_trang_van_hanh: $("f_hientrangvanhanh").value.trim(),
+    // Thông tin thí nghiệm bổ sung (tùy chọn) — xem BBTN_EXTRA_FIELD_IDS ở clearForm();
+    // tự đọc được từ BBTN (bbtn-import.js) hoặc nhập tay, dùng khi xuất BBTN (docx),
+    // xem bbtn-export.js.
+    ngay_thi_nghiem: $("f_ngaythinghiem").value || null,
+    ly_do_thi_nghiem: $("f_lydothinghiem").value.trim(),
+    nhiet_do: $("f_nhietdo").value !== "" ? Number($("f_nhietdo").value) : null,
+    do_am: $("f_doam").value !== "" ? Number($("f_doam").value) : null,
     ...gases,
   };
 
@@ -401,6 +494,7 @@ async function onAnalyze() {
 
   let rateRows = null;
   let priorDiagnosis = null;
+  let tcgRate = null;
   if (prior) {
     // prior đọc từ Storage.listMeasurements() nên khí lưu key CHỮ THƯỜNG (h2, ch4...
     // xem normalizeGasKeys() ở storage.js) — phải chuẩn hóa lại về chữ HOA (H2, CH4...)
@@ -414,6 +508,11 @@ async function onAnalyze() {
     // Chẩn đoán Bảng 66 của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
     // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()).
     priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(priorGases), standard.pdThreshold);
+    // Tốc độ sinh khí (%/tháng) của TỔNG lượng khí cháy (TCG) — cùng công thức %/tháng
+    // dùng cho từng khí ở trên nhưng KHÔNG có khoảng tham chiếu Bảng 65 riêng cho TCG
+    // (chỉ tham khảo). Hiện ở stat-card TCG (renderResults()) và điền vào BBTN khi xuất
+    // (tag {tcg_toc}, xem bbtn-export.js).
+    tcgRate = DGA.computeTcgRateOfChange(DGA.computeTCG(priorGases), tcg, deltaDays);
   }
 
   // 5) Khuyến cáo tổng hợp
@@ -425,8 +524,8 @@ async function onAnalyze() {
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
-  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus };
-  renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus });
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus };
+  renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -497,7 +596,7 @@ function verdictPill(v) {
   return `<span class="pill bad">Không đạt</span>`;
 }
 
-function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus }) {
+function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus }) {
   $("resultsPanel").classList.remove("hidden");
 
   if (overallStatus) {
@@ -515,6 +614,22 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   }
 
   $("r_tcg").textContent = tcg.toFixed(1) + " ppm";
+  // Tốc độ sinh khí TCG (%/tháng, xem computeTcgRateOfChange() ở dga-logic.js) — chỉ
+  // hiện khi có lần đo trước để so sánh (tcgRate != null) VÀ TCG lần trước > 0 (nếu
+  // không, ratePerMonth = null vì chia cho 0, xem cùng lưu ý ở rateRows). Không có
+  // khoảng tham chiếu Bảng 65 riêng cho TCG nên chỉ hiện số liệu để tham khảo, không
+  // gắn "Đạt/Không đạt" — cùng số liệu được điền vào BBTN khi xuất (tag {tcg_toc}).
+  const tcgRateNote = $("r_tcgRateNote");
+  if (tcgRateNote) {
+    if (tcgRate && tcgRate.ratePerMonth !== null) {
+      const sign = tcgRate.ratePerMonth > 0 ? "+" : "";
+      tcgRateNote.textContent = `${sign}${tcgRate.ratePerMonth}%/tháng so với lần đo trước`;
+      tcgRateNote.classList.remove("hidden");
+    } else {
+      tcgRateNote.textContent = "";
+      tcgRateNote.classList.add("hidden");
+    }
+  }
   $("r_overall").innerHTML = overall === "Đạt" ? `<span class="pill ok">Đạt</span>` : `<span class="pill bad">Không đạt</span>`;
   $("r_diag").textContent = diagnosis;
   $("r_duval").textContent = duval ? duval.zone : "—";

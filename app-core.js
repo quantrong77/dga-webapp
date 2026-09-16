@@ -229,8 +229,19 @@ async function initApp() {
   $("btnClearForm").addEventListener("click", clearForm);
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
+  setupBbtnDropzone();
   $("btnExportBbtn").addEventListener("click", onExportBbtn);
   $("btnExportTechReport").addEventListener("click", onExportTechReport);
+  // Tùy chọn nhập liệu thứ 2 (bên cạnh nhập rời từng BBTN ở trên): nhập hàng loạt
+  // nhiều file BBTN cùng lúc (chọn nhiều file, chọn cả thư mục, hoặc kéo-thả nhiều
+  // file) — xem bbtn-batch-import.js.
+  $("batchFiles").addEventListener("change", (e) => handleBatchFileList(e.target.files));
+  $("btnBatchChooseFolder").addEventListener("click", () => $("batchFolderFiles").click());
+  $("batchFolderFiles").addEventListener("change", (e) => handleBatchFileList(e.target.files));
+  setupBatchDropzone();
+  $("btnBatchSelectAll").addEventListener("click", onBatchSelectAll);
+  $("btnBatchSelectNone").addEventListener("click", onBatchSelectNone);
+  $("btnBatchSave").addEventListener("click", onBatchSave);
   // Gợi ý "Lần đo" kế tiếp theo Trạm+Thiết bị+Pha — xem updateLanDoSuggestion() ở
   // ui-dga.js. "change" bắt được cả lúc chọn từ danh sách gợi ý (setupCombo() tự
   // bắn "change" khi chọn) lẫn lúc gõ tay rồi rời khỏi ô (blur mặc định của trình
@@ -336,6 +347,88 @@ function setupCombo({ input, toggleBtn, listEl, getOptions }) {
   });
   document.addEventListener("click", (e) => {
     if (!input.contains(e.target) && !toggleBtn.contains(e.target) && !listEl.contains(e.target)) close();
+  });
+}
+
+/** Gắn sự kiện kéo-thả (drag & drop) cho ô chọn BBTN (PDF) ở tab "DGA" — #bbtnDropzone
+ *  bọc quanh input[type=file] #f_bbtn thật (xem index.html), input đó đã phủ opacity:0
+ *  toàn bộ khung nên bấm chọn tay vẫn hoạt động bình thường không cần thêm gì; hàm này
+ *  chỉ thêm phần kéo-thả. Khi thả file: gán file vào input thật bằng DataTransfer rồi tự
+ *  bắn sự kiện "change" — TÁI DÙNG đúng luồng xử lý sẵn có (onBbtnFileSelected() ở
+ *  ui-dga.js: tự động đọc BBTN điền form, cập nhật nhãn tên file...) như khi người dùng
+ *  bấm chọn file thủ công, không viết trùng logic ở đây. */
+function setupBbtnDropzone() {
+  const zone = $("bbtnDropzone");
+  const input = $("f_bbtn");
+  if (!zone || !input) return;
+
+  ["dragenter", "dragover"].forEach((evt) => {
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.add("dragover");
+    });
+  });
+  ["dragleave", "dragend"].forEach((evt) => {
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.remove("dragover");
+    });
+  });
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.remove("dragover");
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    if (!isPdf) {
+      const note = $("bbtnImportNote");
+      note.textContent = `Chỉ nhận file PDF — "${file.name}" không phải PDF, vui lòng kéo-thả lại đúng file Biên bản thí nghiệm (PDF).`;
+      note.classList.remove("hidden");
+      return;
+    }
+    // DataTransfer: cách chuẩn để gán 1 File (lấy từ sự kiện "drop") vào lại 1
+    // input[type=file] thật — input.files chỉ đọc (readonly) nên không gán trực tiếp
+    // được, phải đi qua DataTransfer.items.add() rồi gán .files của nó.
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
+/** Kéo-thả NHIỀU file cùng lúc cho panel "Nhập hàng loạt" (#batchDropzone) — cùng
+ *  cơ chế với setupBbtnDropzone() ở trên (dragenter/dragover/dragleave/dragend/drop),
+ *  khác chỗ: nhận toàn bộ danh sách file thả vào (không chỉ file đầu tiên) và không
+ *  chặn sớm nếu có file không phải PDF — handleBatchFileList() ở bbtn-batch-import.js
+ *  đã tự lọc/báo cáo từng file không hợp lệ trong bảng xem trước. */
+function setupBatchDropzone() {
+  const zone = $("batchDropzone");
+  if (!zone) return;
+
+  ["dragenter", "dragover"].forEach((evt) => {
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.add("dragover");
+    });
+  });
+  ["dragleave", "dragend"].forEach((evt) => {
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.remove("dragover");
+    });
+  });
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.remove("dragover");
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || !files.length) return;
+    handleBatchFileList(files);
   });
 }
 
