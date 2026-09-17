@@ -690,6 +690,29 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/** Xác thực dữ liệu đầu vào: không đại lượng nào ở đây (nồng độ khí ppm, %, kV, °C, năm,
+ *  lần đo, ngưỡng cấu hình...) có thể ÂM về mặt vật lý — người dùng gõ nhầm dấu "-" hoặc
+ *  paste nhầm số âm là lỗi nhập liệu, không phải giá trị hợp lệ. Dùng CHUNG cho mọi form
+ *  nhập số liệu (DGA, dầu MBA, dầu OLTC, cấu hình tiêu chuẩn NSX — xem các lời gọi ở
+ *  ui-dga.js/ui-oil.js/ui-oltc.js/ui-standards.js). fields: mảng [{label, value}]; value
+ *  có thể là number|null|undefined|NaN — bỏ qua khi không phải số (nghĩa là "chưa nhập").
+ *  Trả về nhãn tiếng Việt của trường ÂM đầu tiên tìm thấy, hoặc null nếu tất cả hợp lệ. */
+function findNegativeValueField(fields) {
+  for (const { label, value } of fields) {
+    if (typeof value === "number" && !Number.isNaN(value) && value < 0) return label;
+  }
+  return null;
+}
+
+function alertIfNegative(fields) {
+  const negativeField = findNegativeValueField(fields);
+  if (negativeField) {
+    alert(`Giá trị "${negativeField}" không hợp lệ: không được nhập số âm.`);
+    return true;
+  }
+  return false;
+}
+
 /** Icon nhỏ cạnh TÊN 1 khí hòa tan cụ thể — dùng ở mọi nơi hiển thị tên khí đứng riêng
  *  (ô nhập DGA, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox "Xu hướng", pill "Chỉ
  *  tiêu vượt ngưỡng" tab "Cảnh báo"), KHÔNG dùng trong câu văn khuyến cáo (những câu đó

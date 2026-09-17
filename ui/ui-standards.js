@@ -305,6 +305,11 @@ async function onSaveStandard() {
       oil_tgd_90c_percent: tgd90 === "" ? null : Number(tgd90),
       oil_bdv_kv: bdv === "" ? null : Number(bdv),
     };
+    if (alertIfNegative([
+      { label: "Độ ẩm dầu", value: rec.oil_moisture_ppm },
+      { label: "tgδ ở 90°C", value: rec.oil_tgd_90c_percent },
+      { label: "Điện áp chọc thủng", value: rec.oil_bdv_kv },
+    ])) return;
   } else {
     const equipmentType = $("s_equipmenttype").value;
     rec = {
@@ -317,6 +322,12 @@ async function onSaveStandard() {
       const vLoaibo = $("s_loaibo_" + g).value;
       rec["loaibo_" + g.toLowerCase()] = vLoaibo === "" ? null : Number(vLoaibo);
     });
+    if (alertIfNegative(
+      DGA.GASES.flatMap((g) => [
+        { label: `Ngưỡng ${g}`, value: rec[g.toLowerCase()] },
+        { label: `Ngưỡng loại bỏ ${g}`, value: rec["loaibo_" + g.toLowerCase()] },
+      ])
+    )) return;
   }
   if (_editingStandardId) rec.id = _editingStandardId;
 

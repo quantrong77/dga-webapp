@@ -643,6 +643,34 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
 //    Chỉ mang tính hỗ trợ; không thay thế nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901.
 // ---------------------------------------------------------------------------
 
+/** Trích các cảnh báo THEO ĐIỀU KIỆN cụ thể mà Điều 54 QĐ1901 nêu rõ (Tỷ lệ bổ sung
+ *  CO2/CO, O2/N2, và Tổng hàm lượng khí hòa tan Bảng 63) — tách riêng khỏi
+ *  buildRecommendations() để dùng CHUNG cho khuyến cáo ở tab "DGA" VÀ rà soát tự động ở
+ *  tab "Cảnh báo" (computeGasAlerts(), ui-alerts.js), tránh định nghĩa lại điều kiện ở
+ *  2 nơi rồi lệch nhau. Chỉ trả về khi rơi vào điều kiện cảnh báo QĐ1901 nêu rõ (không
+ *  lặp lại ghi chú "bình thường"/"chưa đủ dữ liệu" — những ghi chú đó đã hiển thị đầy đủ
+ *  trong bảng kết quả riêng ở tab "DGA"). Trả về mảng chuỗi, rỗng nếu không có gì đáng
+ *  cảnh báo. */
+function dieu54AdvisoryMessages({ additionalRatios, bang63 }) {
+  const msgs = [];
+  if (additionalRatios) {
+    if (additionalRatios.co2_co !== null && additionalRatios.co2coNote && additionalRatios.co2coNote.startsWith("CO2/CO")) {
+      msgs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
+    }
+    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
+      msgs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
+    }
+  }
+  if (bang63 && bang63.verdict === "Không đạt") {
+    msgs.push(
+      `⚠ Tổng hàm lượng khí hòa tan vượt ngưỡng Bảng 63 (cấp điện áp áp dụng: <${bang63.limit}%) — áp dụng cho dầu mới/sau ` +
+      `sửa chữa có thay dầu hoặc lọc dầu; khuyến cáo kiểm tra lại quy trình xử lý dầu (chân không hóa/lọc khí) trước khi ` +
+      `đưa thiết bị vào vận hành chính thức.`
+    );
+  }
+  return msgs;
+}
+
 function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63 }) {
   const recs = [];
   const rateWarnings = (rateRows || []).filter((r) => r.verdict && r.verdict.startsWith("⚠"));
@@ -682,24 +710,8 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
   if (exceedCount === 0 && diagnosis) {
     recs.push("Chưa đủ điều kiện áp dụng chính thức tỷ lệ khí (chưa có khí vượt giá trị điển hình) — mã chẩn đoán Bảng 66/Tam giác Duval ở trên chỉ mang tính tham khảo.");
   }
-  // Tỷ lệ bổ sung (Điều 54) — chỉ đưa vào khuyến cáo khi rơi vào 1 trong các điều kiện
-  // cảnh báo mà QĐ1901 nêu rõ, tránh lặp lại ghi chú "bình thường"/"chưa đủ dữ liệu"
-  // ở đây vì đã hiển thị đầy đủ trong bảng kết quả riêng.
-  if (additionalRatios) {
-    if (additionalRatios.co2_co !== null && additionalRatios.co2coNote && additionalRatios.co2coNote.startsWith("CO2/CO")) {
-      recs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
-    }
-    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
-      recs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
-    }
-  }
-  if (bang63 && bang63.verdict === "Không đạt") {
-    recs.push(
-      `⚠ Tổng hàm lượng khí hòa tan vượt ngưỡng Bảng 63 (cấp điện áp áp dụng: <${bang63.limit}%) — áp dụng cho dầu mới/sau ` +
-      `sửa chữa có thay dầu hoặc lọc dầu; khuyến cáo kiểm tra lại quy trình xử lý dầu (chân không hóa/lọc khí) trước khi ` +
-      `đưa thiết bị vào vận hành chính thức.`
-    );
-  }
+  // Tỷ lệ bổ sung + Tổng hàm lượng khí hòa tan (Điều 54) — xem dieu54AdvisoryMessages().
+  recs.push(...dieu54AdvisoryMessages({ additionalRatios, bang63 }));
   return recs;
 }
 
@@ -1038,7 +1050,7 @@ const DGA = {
   computeTcgRateOfChange,
   normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
   QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
-  buildRecommendations, computeOverallStatus,
+  dieu54AdvisoryMessages, buildRecommendations, computeOverallStatus,
   OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
   OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest,
 };

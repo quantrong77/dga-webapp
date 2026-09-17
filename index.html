@@ -286,13 +286,13 @@
 
         <div class="section-title">Hàm lượng khí hòa tan (ppm)</div>
         <div class="grid gases">
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="g_H2" type="number" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="g_CH4" type="number" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="g_C2H6" type="number" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="g_C2H4" type="number" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="g_C2H2" type="number" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="g_CO" type="number" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="g_CO2" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="g_H2" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="g_CH4" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="g_C2H6" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="g_C2H4" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="g_C2H2" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="g_CO" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="g_CO2" type="number" min="0" step="0.01" /></label>
         </div>
 
         <!-- ===================== KHÍ BỔ SUNG N2, O2 (tùy chọn) =====================
@@ -305,8 +305,8 @@
              trống thì 2 mục này tự ẩn/bỏ qua, không ảnh hưởng các đánh giá khác. -->
         <div class="section-title">Khí bổ sung N2, O2 (tùy chọn — dùng cho tỷ lệ O2/N2 và Tổng hàm lượng khí hòa tan Bảng 63)</div>
         <div class="grid gases">
-          <label class="field">N2 (ppm) <input id="g_N2" type="number" step="0.01" /></label>
-          <label class="field">O2 (ppm) <input id="g_O2" type="number" step="0.01" /></label>
+          <label class="field">N2 (ppm) <input id="g_N2" type="number" min="0" step="0.01" /></label>
+          <label class="field">O2 (ppm) <input id="g_O2" type="number" min="0" step="0.01" /></label>
           <label class="field">Cấp điện áp (áp dụng Bảng 63)
             <select id="f_bang63_voltage">
               <option value="110-220">110 – 220 kV</option>
@@ -327,14 +327,14 @@
              ưu tiên trường này, chỉ dùng lại "Ngày lấy mẫu" nếu để trống (giữ hành vi cũ). -->
         <div class="section-title">Thông tin thí nghiệm bổ sung (tùy chọn — dùng khi xuất BBTN)</div>
         <div class="grid">
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày thí nghiệm
+          <label class="field">Ngày thí nghiệm
             <input id="f_ngaythinghiem" type="date" />
           </label>
           <label class="field">Lý do thí nghiệm
             <input id="f_lydothinghiem" type="text" placeholder="VD: Định kỳ / Đột xuất / Sau lắp đặt..." />
           </label>
           <label class="field">Nhiệt độ môi trường (°C)
-            <input id="f_nhietdo" type="number" step="0.1" placeholder="VD: 29" />
+            <input id="f_nhietdo" type="number" min="0" step="0.1" placeholder="VD: 29" />
           </label>
           <label class="field">Độ ẩm môi trường (%)
             <input id="f_doam" type="number" step="0.1" min="0" max="100" placeholder="VD: 78" />
@@ -781,13 +781,13 @@
         <div id="stdGasFields">
           <div class="section-title">Ngưỡng tuyệt đối từng khí (ppm)</div>
           <div class="grid gases">
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_H2" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_CH4" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_C2H6" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_C2H4" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_C2H2" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_CO" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_CO2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_CH4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_C2H6" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_C2H4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_C2H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_CO" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_CO2" type="number" min="0" step="0.01" /></label>
           </div>
           <p class="note">Bỏ trống khoảng tốc độ sinh khí nếu muốn dùng Bảng 65 QĐ1901 làm mặc định (khuyến nghị).</p>
 
@@ -796,13 +796,13 @@
             này, chỉ áp dụng khi chính nhà sản xuất/đơn vị bạn tự đặt ra. Không cần điền đủ 7 khí — để trống khí nào
             thì khí đó không bị kiểm tra ngưỡng loại bỏ (thường chỉ cần đặt cho H2, C2H2).</p>
           <div class="grid gases">
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_loaibo_H2" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_loaibo_CH4" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_loaibo_C2H6" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_loaibo_C2H4" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_loaibo_C2H2" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_loaibo_CO" type="number" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_loaibo_CO2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_loaibo_H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_loaibo_CH4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_loaibo_C2H6" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_loaibo_C2H4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_loaibo_C2H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_loaibo_CO" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_loaibo_CO2" type="number" min="0" step="0.01" /></label>
           </div>
         </div>
 
@@ -824,9 +824,9 @@
           </div>
           <div class="section-title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
           <div class="grid gases">
-            <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" step="0.1" /></label>
-            <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" step="0.01" /></label>
-            <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" step="0.1" /></label>
+            <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" min="0" step="0.1" /></label>
+            <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" min="0" step="0.01" /></label>
+            <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" min="0" step="0.1" /></label>
           </div>
         </div>
 
@@ -1611,9 +1611,9 @@
 
         <div class="section-title">Kết quả thí nghiệm</div>
         <div class="grid gases">
-          <label class="field">Độ ẩm dầu (ppm) <input id="o_moisture" type="number" step="0.1" /></label>
-          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="o_tgd90" type="number" step="0.01" /></label>
-          <label class="field">Điện áp chọc thủng (kV) <input id="o_bdv" type="number" step="0.1" /></label>
+          <label class="field">Độ ẩm dầu (ppm) <input id="o_moisture" type="number" min="0" step="0.1" /></label>
+          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="o_tgd90" type="number" min="0" step="0.01" /></label>
+          <label class="field">Điện áp chọc thủng (kV) <input id="o_bdv" type="number" min="0" step="0.1" /></label>
         </div>
 
         <p class="note hidden" id="editingOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
@@ -1724,9 +1724,9 @@
 
         <div class="section-title">Kết quả thí nghiệm</div>
         <div class="grid gases">
-          <label class="field">Độ ẩm dầu OLTC (ppm) <input id="ot_moisture" type="number" step="0.1" /></label>
-          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="ot_tgd90" type="number" step="0.01" /></label>
-          <label class="field">Điện áp chọc thủng (kV) <input id="ot_bdv" type="number" step="0.1" /></label>
+          <label class="field">Độ ẩm dầu OLTC (ppm) <input id="ot_moisture" type="number" min="0" step="0.1" /></label>
+          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="ot_tgd90" type="number" min="0" step="0.01" /></label>
+          <label class="field">Điện áp chọc thủng (kV) <input id="ot_bdv" type="number" min="0" step="0.1" /></label>
         </div>
 
         <p class="note hidden" id="editingOltcOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>

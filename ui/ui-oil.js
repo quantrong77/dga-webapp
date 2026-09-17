@@ -99,6 +99,11 @@ async function onAnalyzeOil() {
     alert("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
     return;
   }
+  if (alertIfNegative([
+    { label: "Độ ẩm dầu", value: oilTest.moisture_ppm },
+    { label: "tgδ ở 90°C", value: oilTest.tgd_90c_percent },
+    { label: "Điện áp chọc thủng", value: oilTest.bdv_kv },
+  ])) return;
 
   const evalResult = DGA.evaluateOilTest({
     voltageClass, oilState, hasMembraneN2, manufacturer,

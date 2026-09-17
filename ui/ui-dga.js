@@ -475,6 +475,22 @@ async function onAnalyze() {
     alert("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
     return;
   }
+  if (alertIfNegative([
+    { label: "H2", value: gases.H2 },
+    { label: "CH4", value: gases.CH4 },
+    { label: "C2H6", value: gases.C2H6 },
+    { label: "C2H4", value: gases.C2H4 },
+    { label: "C2H2", value: gases.C2H2 },
+    { label: "CO", value: gases.CO },
+    { label: "CO2", value: gases.CO2 },
+    { label: "N2", value: n2 },
+    { label: "O2", value: o2 },
+    { label: "Lần đo", value: measurement.lan_do },
+    { label: "Năm sản xuất", value: measurement.nam_sx },
+    { label: "Năm vận hành", value: measurement.nam_van_hanh },
+    { label: "Nhiệt độ môi trường", value: measurement.nhiet_do },
+    { label: "Độ ẩm môi trường", value: measurement.do_am },
+  ])) return;
 
   // 1) Xác định tiêu chuẩn áp dụng: NSX nếu có cấu hình đầy đủ; ngược lại, tiêu chuẩn
   //    CHẶT HƠN giữa QĐ1901 và bảng tham khảo tương ứng của IEC 60599:1999 Annex A

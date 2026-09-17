@@ -111,6 +111,11 @@ async function onAnalyzeOltcOil() {
     alert("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
     return;
   }
+  if (alertIfNegative([
+    { label: "Độ ẩm dầu OLTC", value: oltcOilTest.moisture_ppm },
+    { label: "tgδ ở 90°C", value: oltcOilTest.tgd_90c_percent },
+    { label: "Điện áp chọc thủng", value: oltcOilTest.bdv_kv },
+  ])) return;
 
   const evalResult = DGA.evaluateOltcOilTest({
     oltcSamplePoint, voltageClass, oilState, hasMembraneN2, manufacturer,

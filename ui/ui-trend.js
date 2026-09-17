@@ -16,6 +16,16 @@ const TREND_PARAM_DEFS = Object.assign(
   {},
   ...DGA.GASES.map((g) => ({ ["gas:" + g]: { label: g, unit: "ppm", axis: "yGas", field: g } })),
   {
+    // N2, O2 (khí bổ sung, tùy chọn — không thuộc DGA.GASES, xem ghi chú ở onAnalyze()
+    // trong ui-dga.js) + 2 chỉ tiêu TỔNG HỢP tính từ 7 khí chính (và N2/O2 với Bảng 63):
+    // TCG (Tổng lượng khí cháy — DGA.computeTCG(), không tính CO2) và Tổng hàm lượng khí
+    // hòa tan (Bảng 63, Điều 54 QĐ1901 — DGA.computeTotalDissolvedGasPercent(), CẦN cả
+    // N2 lẫn O2 mới tính được nên điểm dữ liệu sẽ trống ở các lần đo chưa nhập đủ 2 khí
+    // này). Đọc giá trị qua gasTrendValue() (không nằm trong recordGases() 7 khí chính).
+    "gas:N2": { label: "Nitơ N2", unit: "ppm", axis: "yGas", field: "N2" },
+    "gas:O2": { label: "Oxy O2", unit: "ppm", axis: "yGas", field: "O2" },
+    "gas:TCG": { label: "Tổng lượng khí cháy (TCG)", unit: "ppm", axis: "yGas", field: "TCG" },
+    "gas:BANG63": { label: "Tổng hàm lượng khí hòa tan (Bảng 63)", unit: "%", axis: "yBang63", field: "BANG63" },
     "oil:moisture": { label: "Độ ẩm dầu chính", unit: "ppm", axis: "yMoisture", field: "moisture_ppm" },
     "oil:tgd90": { label: "tgδ 90°C dầu chính", unit: "%", axis: "yTgd", field: "tgd_90c_percent" },
     "oil:bdv": { label: "Điện áp chọc thủng dầu chính", unit: "kV", axis: "yBdv", field: "bdv_kv" },
@@ -194,9 +204,10 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
     el.innerHTML = keys.map((key) => {
       const def = TREND_PARAM_DEFS[key];
       const checked = _trendSelectedParams.has(key) ? "checked" : "";
-      // Icon cạnh tên khí CHỈ áp dụng cho nhóm "gas:..." (khí hòa tan) — nhóm "oil:"/
-      // "oltc:" là nhãn mô tả (vd "Độ ẩm dầu chính"), không phải tên 1 khí cụ thể.
-      const icon = key.startsWith("gas:") ? gasLabelIcon(key.slice(4)) : "";
+      // Icon cạnh tên khí CHỈ áp dụng cho 7 khí chính trong DGA.GASES — N2/O2/TCG/Bảng 63
+      // (cùng nhóm "gas:..." vì đọc từ gasRecords, nhưng không phải khí phân hủy đơn lẻ)
+      // và nhóm "oil:"/"oltc:" (nhãn mô tả, vd "Độ ẩm dầu chính") không có icon.
+      const icon = key.startsWith("gas:") && DGA.GASES.includes(key.slice(4)) ? gasLabelIcon(key.slice(4)) : "";
       return `<label class="chk"><input type="checkbox" data-trend-key="${key}" ${checked} /> ${icon}${escapeHtml(def.label)}</label>`;
     }).join("");
     el.querySelectorAll("input[data-trend-key]").forEach((cb) => {
@@ -208,7 +219,7 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
     });
   };
 
-  if (hasGas) buildChecks("trParamsGas", DGA.GASES.map((g) => "gas:" + g));
+  if (hasGas) buildChecks("trParamsGas", [...DGA.GASES.map((g) => "gas:" + g), "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"]);
   if (hasOil) buildChecks("trParamsOil", ["oil:moisture", "oil:tgd90", "oil:bdv"]);
   if (hasOltc) buildChecks("trParamsOltc", ["oltc:moisture", "oltc:tgd90", "oltc:bdv"]);
 }
@@ -256,7 +267,29 @@ const TREND_AXIS_DEFS = {
   yTgd: { title: "tgδ 90°C (%)", position: "left" },
   yMoisture: { title: "Độ ẩm dầu (ppm)", position: "right" },
   yBdv: { title: "Điện áp chọc thủng (kV)", position: "right" },
+  yBang63: { title: "Tổng hàm lượng khí hòa tan (%)", position: "right" },
 };
+
+/** Đọc giá trị 1 điểm dữ liệu cho nhóm "gas:..." ở biểu đồ Xu hướng — 7 khí chính đọc
+ *  qua recordGases() (chấp nhận cả 2 kiểu hoa/thường) như cũ; N2/O2 là trường riêng
+ *  trên bản ghi (KHÔNG thuộc recordGases()); TCG và Tổng hàm lượng khí hòa tan (Bảng 63)
+ *  là 2 chỉ tiêu TÍNH TOÁN từ các khí + N2/O2 của CHÍNH bản ghi đó (không đọc từ DB) —
+ *  xem computeTCG()/computeTotalDissolvedGasPercent() ở dga-logic.js. Bảng 63 trả về
+ *  null (bỏ qua điểm) nếu lần đo đó chưa nhập đủ CẢ N2 lẫn O2, đúng ràng buộc đã áp dụng
+ *  ở tab DGA (xem onAnalyze() ở ui-dga.js) — không tự suy diễn khi thiếu dữ liệu. */
+function gasTrendValue(r, field) {
+  if (field === "N2") return r.n2 ?? r.N2;
+  if (field === "O2") return r.o2 ?? r.O2;
+  const gases = recordGases(r);
+  if (field === "TCG") return DGA.computeTCG(gases);
+  if (field === "BANG63") {
+    const n2 = r.n2 ?? r.N2;
+    const o2 = r.o2 ?? r.O2;
+    if (n2 === null || n2 === undefined || o2 === null || o2 === undefined) return null;
+    return DGA.computeTotalDissolvedGasPercent(gases, n2, o2);
+  }
+  return gases[field];
+}
 
 // Lọc + gom điểm dữ liệu hợp lệ (bỏ qua giá trị rỗng/null) thành mảng {x,y} cho Chart.js.
 function trendPoints(records, valueOf) {
@@ -287,9 +320,10 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
   destroyTrendChart();
 
   // Khí hòa tan: Storage.addMeasurement() hạ chữ thường các key khí (H2 -> h2, xem
-  // normalizeGasKeys trong storage.js) trước khi lưu — dùng recordGases() để đọc lại
-  // đúng như phần Lịch sử đo đang làm, thay vì đọc thẳng r[def.field] (viết hoa).
-  const gasValueOf = (r, field) => recordGases(r)[field];
+  // normalizeGasKeys trong storage.js) trước khi lưu — gasTrendValue() tự đọc đúng cả 2
+  // kiểu hoa/thường (qua recordGases()), đồng thời xử lý riêng N2/O2 (trường ngoài
+  // recordGases()) và tính TCG/Bảng 63 tại chỗ — xem chú thích đầy đủ ở gasTrendValue().
+  const gasValueOf = (r, field) => gasTrendValue(r, field);
 
   const phases = trendDistinctPhases(gasRecords, oltcRecords);
   const phaseFilterActive = phases.length >= 2;

@@ -100,7 +100,41 @@ function computeGasAlerts() {
     const overallStatus = DGA.computeOverallStatus({
       overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
     });
-    if (overallStatus.level === "normal") return;
+
+    // Tỷ lệ bổ sung (CO2/CO, O2/N2) + Tổng hàm lượng khí hòa tan (Bảng 63) — Điều 54
+    // QĐ1901 — TÍNH LẠI y hệt onAnalyze() (ui-dga.js: additionalRatios/bang63), dùng
+    // dieu54AdvisoryMessages() (dga-logic.js) để lấy ĐÚNG cùng điều kiện/câu chữ đang
+    // hiện ở khối khuyến cáo của tab "DGA" — không tự định nghĩa lại ngưỡng ở đây. N2/O2
+    // là tùy chọn nên có thể null (chưa nhập) — khi đó additionalRatios/bang63 tự báo
+    // "chưa đủ dữ liệu" và dieu54Msgs rỗng, không ảnh hưởng gì.
+    const n2 = latest.n2 ?? latest.N2 ?? null;
+    const o2 = latest.o2 ?? latest.O2 ?? null;
+    const additionalRatios = DGA.diagnoseAdditionalRatios(gases, n2, o2);
+    const bang63Percent = DGA.computeTotalDissolvedGasPercent(gases, n2, o2);
+    const bang63 = DGA.evaluateBang63(bang63Percent, latest.bang63_voltage_class || "110-220", !!latest.bang63_applicable);
+    const dieu54Msgs = DGA.dieu54AdvisoryMessages({ additionalRatios, bang63 });
+
+    // Cả 2 chỉ tiêu Điều 54 này VỐN không ảnh hưởng overallStatus ở tab "DGA" (chỉ tham
+    // khảo/khuyến cáo thêm — xem dga-logic.js) — nhưng ở tab "Cảnh báo" (rà soát tự
+    // động), một thiết bị CHỈ có vấn đề Điều 54 (các khí chính khác vẫn bình thường) vẫn
+    // cần được liệt kê, không thể bỏ qua chỉ vì overallStatus đang "normal". Khi đó xếp
+    // vào mức Cảnh báo (ALERT) — advisory, chưa tới mức Báo động. Nếu thiết bị ĐÃ Cảnh
+    // báo/Báo động vì lý do khác, GIỮ NGUYÊN mức đó (không hạ cấp) và CHỈ nối thêm lý do
+    // Điều 54 vào danh sách "reasons" để người dùng thấy đủ trong cùng 1 dòng.
+    let effectiveStatus = overallStatus;
+    if (dieu54Msgs.length > 0) {
+      effectiveStatus = overallStatus.level === "normal"
+        ? {
+            level: "alert",
+            label: "CẢNH BÁO (ALERT)",
+            reasons: dieu54Msgs,
+            action: "Đối chiếu Điều 54 QĐ1901 (tỷ lệ bổ sung CO2/CO, O2/N2, Tổng hàm lượng khí hòa tan Bảng 63) ở tab " +
+              "\"DGA\"; xem xét phân tích furanic/đo độ trùng hợp giấy nếu nghi carbon hóa giấy cách điện, hoặc kiểm " +
+              "tra lại quy trình xử lý dầu nếu vượt ngưỡng Bảng 63.",
+          }
+        : { ...overallStatus, reasons: [...overallStatus.reasons, ...dieu54Msgs] };
+    }
+    if (effectiveStatus.level === "normal") return;
 
     const condemnExceeded = DGA.condemningExceededRows(condemningRows);
     const condemnBad = condemnExceeded.length > 0;
@@ -116,8 +150,15 @@ function computeGasAlerts() {
     const exceededItems = Array.from(new Set([...failingGases, ...condemnGases, ...rateGases]));
     // Khóa thông số dùng để TỰ TICK đúng đường khí này ở tab "Xu hướng" khi bấm "Xem xu
     // hướng" (xem TREND_PARAM_DEFS/goToTrendForDevice) — cùng định dạng "gas:<TÊN KHÍ>"
-    // (vd "gas:H2") mà ui-trend.js đang dùng cho checkbox thông số khí.
+    // (vd "gas:H2") mà ui-trend.js đang dùng cho checkbox thông số khí. Điều 54: tự tick
+    // thêm đúng đường N2/O2/Bảng 63 tương ứng với ĐÚNG lý do đã kích hoạt cảnh báo này.
     const exceededKeys = exceededItems.map((g) => "gas:" + g);
+    if (additionalRatios && additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
+      exceededKeys.push("gas:N2", "gas:O2");
+    }
+    if (bang63 && bang63.verdict === "Không đạt") {
+      exceededKeys.push("gas:BANG63");
+    }
 
     const statusText = (overall === "Đạt" ? "Đạt" : "Không đạt") + (condemnBad ? " (Vượt ngưỡng loại bỏ)" : "");
 
@@ -127,8 +168,8 @@ function computeGasAlerts() {
       tram: latest.tram || "",
       deviceName: latest.thiet_bi || "",
       thietBiLabel: (latest.thiet_bi || "?") + (latest.pha ? ` — ${DGA.phaLabelWithPrefix(latest.pha)}` : ""),
-      level: overallStatus.level,
-      levelLabel: overallStatus.label,
+      level: effectiveStatus.level,
+      levelLabel: effectiveStatus.label,
       statusHtml: (overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")) +
         (condemnBad ? ' <span class="pill bad">⚠ Loại bỏ</span>' : ""),
       statusText,
@@ -139,8 +180,8 @@ function computeGasAlerts() {
       // hướng" khi bấm "Xem xu hướng" (xem goToTrendForDevice()), thay vì mặc định tick
       // sẵn cả A/B/C. Rỗng/không có nếu thiết bị không phân pha (vd 1 số MBA nhập gộp).
       phase: latest.pha || null,
-      reasons: overallStatus.reasons,
-      action: overallStatus.action,
+      reasons: effectiveStatus.reasons,
+      action: effectiveStatus.action,
       lanDo: latest.lan_do ?? "—",
       sampleDate: latest.sample_date,
     });
