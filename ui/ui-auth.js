@@ -107,6 +107,19 @@ function ownerCellHtml(rec) {
   return `<span style="font-size:12px;" title="${escapeHtml(title)}">${escapeHtml(rec.created_by)}${editedLater ? " ✎" : ""}</span>`;
 }
 
+/** Huy hiệu "✎ N lần sửa" cạnh ownerCellHtml() ở tab "Lịch sử đo" — CHỈ hiện khi bản ghi
+ *  đã từng bị sửa SỐ LIỆU KHÍ ít nhất 1 lần (rec.edit_log khác rỗng, xem
+ *  diffTrackedGasFields() ở app-core.js/onAnalyze() ở ui-dga.js). Khác ✎ của
+ *  ownerCellHtml() (chỉ báo "khác người sửa" dựa trên updated_by phía server, không có
+ *  chi tiết) — huy hiệu này hiện ĐẦY ĐỦ log từng lần sửa (khí nào, cũ→mới, lúc nào) qua
+ *  tooltip, hoạt động cả ở chế độ LOCAL không cần đăng nhập. */
+function editLogBadgeHtml(rec) {
+  if (!rec.edit_log) return "";
+  const entries = String(rec.edit_log).split("\n").filter(Boolean);
+  const title = "Log chỉnh sửa số liệu:\n" + entries.join("\n");
+  return `<span class="edit-log-badge" title="${escapeHtml(title)}">✎ ${entries.length} lần sửa</span>`;
+}
+
 async function init() {
   setupAuthForms();
 

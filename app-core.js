@@ -713,6 +713,74 @@ function alertIfNegative(fields) {
   return false;
 }
 
+// ---------------------------------------------------------------------------
+// Lưu vết CHỈNH SỬA số liệu khí — khi người dùng SỬA 1 lần đo đã lưu (không phải nhập
+// mới), so sánh 7 khí chính + N2/O2 giữa bản ghi GỐC và giá trị vừa nhập để biết ĐÚNG
+// những ô nào đã bị chỉnh sửa, dùng tô nền đỏ cảnh báo + ghi log kèm timestamp ở tab
+// "Lịch sử đo" (xem onAnalyze() ở ui-dga.js gọi diffTrackedGasFields(), và
+// refreshHistoryUI() ở ui-history.js đọc lại rec.edited_fields/edit_log để hiển thị).
+// KHÔNG theo dõi các trường khác (Ghi chú, thông số kỹ thuật...) — chỉ số liệu khí là
+// dữ liệu đo đạc gốc, quan trọng nhất về mặt truy xuất nguồn gốc/tính toàn vẹn.
+// ---------------------------------------------------------------------------
+
+const EDIT_TRACKED_GAS_FIELDS = ["H2", "CH4", "C2H6", "C2H4", "C2H2", "CO", "CO2", "N2", "O2"];
+
+function editTrackedFieldOldValue(oldRec, field) {
+  if (field === "N2") return oldRec.n2 ?? oldRec.N2 ?? null;
+  if (field === "O2") return oldRec.o2 ?? oldRec.O2 ?? null;
+  return recordGases(oldRec)[field] ?? null;
+}
+
+function editTrackedFieldNewValue(field, gases, n2, o2) {
+  if (field === "N2") return n2;
+  if (field === "O2") return o2;
+  return gases[field] ?? null;
+}
+
+function numOrNullForDiff(v) {
+  return v === null || v === undefined || v === "" ? null : Number(v);
+}
+
+/** So sánh giá trị 9 trường số liệu chính (7 khí + N2/O2) giữa bản ghi GỐC (trước khi
+ *  sửa, "oldRec") và giá trị MỚI đang chuẩn bị lưu ("gases"/"n2"/"o2") — dùng khi SỬA 1
+ *  lần đo đã lưu. Trả về { editedFields, editLogEntry }:
+ *  - editedFields: chuỗi "H2:12|CO2:2000" (field:GIÁ TRỊ CŨ, chỉ những field ĐÃ ĐỔI) —
+ *    dùng để tô nền đỏ ĐÚNG ô đã sửa và hiện tooltip "giá trị trước khi sửa" ở tab "Lịch
+ *    sử đo", không cần phân tích lại edit_log dạng văn bản.
+ *  - editLogEntry: 1 dòng log dạng "<thời điểm>: H2: 12 → 18; CO2: 2000 → 2500" — nối
+ *    vào edit_log (lưu TOÀN BỘ lịch sử các lần sửa, không chỉ lần gần nhất).
+ *  Cả 2 đều rỗng nếu không field nào thực sự đổi giá trị (vd chỉ sửa Ghi chú) — không
+ *  coi đó là "đã sửa số liệu". */
+function diffTrackedGasFields(oldRec, gases, n2, o2) {
+  const changes = [];
+  EDIT_TRACKED_GAS_FIELDS.forEach((field) => {
+    const oldVal = numOrNullForDiff(editTrackedFieldOldValue(oldRec, field));
+    const newVal = numOrNullForDiff(editTrackedFieldNewValue(field, gases, n2, o2));
+    if (oldVal === newVal) return; // cả 2 cùng null, hoặc cùng 1 số — không đổi
+    changes.push({ field, oldVal, newVal });
+  });
+  if (changes.length === 0) return { editedFields: "", editLogEntry: "" };
+  const editedFields = changes.map((c) => `${c.field}:${c.oldVal ?? ""}`).join("|");
+  const changeText = changes.map((c) => `${c.field}: ${c.oldVal ?? "—"} → ${c.newVal ?? "—"}`).join("; ");
+  const editLogEntry = `${new Date().toLocaleString("vi-VN")}: ${changeText}`;
+  return { editedFields, editLogEntry };
+}
+
+/** Phân tích chuỗi "H2:12|CO2:2000" (rec.edited_fields, xem diffTrackedGasFields() trên)
+ *  thành Map<field, giá trị cũ dạng chuỗi> — dùng ở refreshHistoryUI() (ui-history.js)
+ *  để biết field nào cần tô đỏ và hiện giá trị cũ trong tooltip. Trả về Map rỗng nếu
+ *  chưa từng sửa số liệu (edited_fields rỗng/không có). */
+function parseEditedFields(editedFieldsStr) {
+  const map = new Map();
+  if (!editedFieldsStr) return map;
+  String(editedFieldsStr).split("|").forEach((part) => {
+    const idx = part.indexOf(":");
+    if (idx < 0) return;
+    map.set(part.slice(0, idx), part.slice(idx + 1));
+  });
+  return map;
+}
+
 /** Icon nhỏ cạnh TÊN 1 khí hòa tan cụ thể — dùng ở mọi nơi hiển thị tên khí đứng riêng
  *  (ô nhập DGA, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox "Xu hướng", pill "Chỉ
  *  tiêu vượt ngưỡng" tab "Cảnh báo"), KHÔNG dùng trong câu văn khuyến cáo (những câu đó

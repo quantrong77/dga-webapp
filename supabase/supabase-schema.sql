@@ -84,6 +84,17 @@ create table if not exists measurements (
   -- Cấp điện áp áp dụng Bảng 63: '110-220' hoặc '500'.
   bang63_voltage_class text,
   bang63_applicable boolean,
+  -- Lưu vết CHỈNH SỬA SỐ LIỆU (khác created_by/updated_by/updated_at do Apps Script quản lý
+  -- riêng cho GSheet — đó là AI sửa/lúc nào chung chung; đây là KHÍ NÀO đã đổi giá trị).
+  -- edited_fields: "H2:12|CO2:2000" (field:GIÁ TRỊ CŨ, chỉ field vừa đổi ở lần sửa gần
+  -- nhất) — web app dùng tô nền đỏ đúng ô đã sửa ở tab "Lịch sử đo". edited_at: thời điểm
+  -- ISO của lần sửa SỐ LIỆU gần nhất (không đổi nếu lần sửa sau chỉ sửa Ghi chú). edit_log:
+  -- TOÀN BỘ lịch sử các lần sửa số liệu, mỗi dòng 1 lần sửa (mới nhất ở đầu), xem
+  -- diffTrackedGasFields() ở app-core.js phía web app. Cả 3 để trống nếu bản ghi chưa từng
+  -- bị sửa số liệu kể từ lúc nhập lần đầu.
+  edited_fields text,
+  edited_at timestamptz,
+  edit_log text,
   created_at timestamptz default now()
 );
 
@@ -224,6 +235,13 @@ create table if not exists feedback (
 -- alter table measurements add column if not exists o2 numeric;
 -- alter table measurements add column if not exists bang63_voltage_class text;
 -- alter table measurements add column if not exists bang63_applicable boolean;
+
+-- Nếu bạn đã tạo bảng measurements từ trước (chưa có 3 cột lưu vết CHỈNH SỬA SỐ LIỆU —
+-- tô nền đỏ + log thời điểm sửa ở tab "Lịch sử đo"), chạy các dòng sau để nâng cấp (an
+-- toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table measurements add column if not exists edited_fields text;
+-- alter table measurements add column if not exists edited_at timestamptz;
+-- alter table measurements add column if not exists edit_log text;
 
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.

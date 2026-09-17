@@ -7,6 +7,12 @@
 // _editingMeasurementId: id của lần đo đang SỬA (null = đang nhập MỚI). Cùng cơ chế
 // với _editingStandardId (xem onEditStandard/resetStandardForm bên dưới).
 let _editingMeasurementId = null;
+// _editingOriginalRecord: bản ghi GỐC (trước khi sửa), gán ở onEditMeasurement() —
+// dùng để SO SÁNH với giá trị vừa nhập lúc bấm "Cập nhật & Lưu" (xem onAnalyze()), phát
+// hiện đúng những khí/N2/O2 đã bị chỉnh sửa để tô nền đỏ cảnh báo + ghi log kèm timestamp
+// ở tab "Lịch sử đo" (xem diffTrackedGasFields() ở app-core.js, refreshHistoryUI() ở
+// ui-history.js). null khi đang nhập MỚI (không có gì để so sánh).
+let _editingOriginalRecord = null;
 // _editingMeasurementAttachment: { bbtn_url, bbtn_name, bbtn_file_id } của BBTN đã lưu
 // trên bản ghi đang sửa (null = chưa có/đang nhập mới) — giữ nguyên khi lưu lại NẾU
 // người dùng không chọn file mới và không bấm "Bỏ file" (xem onAnalyze()).
@@ -57,6 +63,7 @@ function clearForm() {
 
 function resetMeasurementEditState() {
   _editingMeasurementId = null;
+  _editingOriginalRecord = null;
   _editingMeasurementAttachment = null;
   _removeBbtnOnSave = false;
   $("f_bbtn").value = "";
@@ -292,6 +299,7 @@ async function onBbtnFileSelected(e) {
 function onEditMeasurement(rec) {
   if (!canEditRecord(rec)) return;
   _editingMeasurementId = rec.id;
+  _editingOriginalRecord = rec;
   _editingMeasurementAttachment = rec.bbtn_url
     ? { bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name, bbtn_file_id: rec.bbtn_file_id }
     : null;
@@ -470,6 +478,33 @@ async function onAnalyze() {
     bang63_applicable: bang63Applicable,
     ...gases,
   };
+
+  // Lưu vết CHỈNH SỬA số liệu (edited_fields/edited_at/edit_log) — CHỈ áp dụng khi đang
+  // SỬA 1 bản ghi có sẵn (_editingMeasurementId + _editingOriginalRecord, gán ở
+  // onEditMeasurement()); bản ghi MỚI luôn để trống 3 trường này. Xem
+  // diffTrackedGasFields() (app-core.js) — so sánh 7 khí chính + N2/O2 giữa bản ghi GỐC
+  // và giá trị vừa nhập — và cách dùng ở refreshHistoryUI() (ui-history.js) để tô nền đỏ
+  // đúng ô đã sửa + hiện log đầy đủ (kèm timestamp) khi hover.
+  if (_editingMeasurementId && _editingOriginalRecord) {
+    const diff = diffTrackedGasFields(_editingOriginalRecord, gases, n2, o2);
+    if (diff.editedFields) {
+      measurement.edited_fields = diff.editedFields;
+      measurement.edited_at = new Date().toISOString();
+      const priorLog = _editingOriginalRecord.edit_log || "";
+      // Mới nhất lên ĐẦU log, để hover thấy ngay lần sửa gần nhất mà không cần cuộn.
+      measurement.edit_log = priorLog ? `${diff.editLogEntry}\n${priorLog}` : diff.editLogEntry;
+    } else {
+      // Lần sửa này không đổi số liệu khí nào (vd chỉ sửa Ghi chú) — giữ nguyên dấu vết
+      // lần sửa SỐ LIỆU gần nhất trước đó (nếu có), không xóa mất bằng chứng cũ.
+      measurement.edited_fields = _editingOriginalRecord.edited_fields || "";
+      measurement.edited_at = _editingOriginalRecord.edited_at || null;
+      measurement.edit_log = _editingOriginalRecord.edit_log || "";
+    }
+  } else {
+    measurement.edited_fields = "";
+    measurement.edited_at = null;
+    measurement.edit_log = "";
+  }
 
   if (!measurement.thiet_bi || !measurement.sample_date) {
     alert("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");

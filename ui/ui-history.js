@@ -46,6 +46,20 @@ async function refreshHistoryUI() {
     const tcg = DGA.computeTCG(gases);
     const condemnBad = DGA.condemningExceededRows(DGA.evaluateCondemning(gases, standard.condemning)).length > 0;
 
+    // N2, O2 (tùy chọn, KHÔNG thuộc gases/recordGases()) + ô số liệu khí đã bị SỬA so
+    // với lần lưu gốc (rec.edited_fields, xem diffTrackedGasFields() ở app-core.js) —
+    // gasCellHtml() tô nền đỏ + tooltip "giá trị trước khi sửa/thời điểm sửa" đúng ô đó.
+    const editedMap = parseEditedFields(rec.edited_fields);
+    const gasCellHtml = (field, value) => {
+      const oldVal = editedMap.get(field);
+      if (oldVal === undefined) return `<td>${value ?? "—"}</td>`;
+      const editedAtText = rec.edited_at ? new Date(rec.edited_at).toLocaleString("vi-VN") : "?";
+      const title = `Giá trị trước khi sửa: ${oldVal === "" ? "(trống)" : oldVal} — đã sửa lúc ${editedAtText}`;
+      return `<td class="cell-edited-warn" title="${escapeHtml(title)}">${value ?? "—"}</td>`;
+    };
+    const n2 = rec.n2 ?? rec.N2 ?? null;
+    const o2 = rec.o2 ?? rec.O2 ?? null;
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${rec.sample_date}</td>
@@ -54,11 +68,14 @@ async function refreshHistoryUI() {
       <td>${escapeHtml(rec.equipment_type)}</td>
       <td>${escapeHtml(DGA.phaLabel(rec.pha) || "—")}</td>
       <td>${rec.lan_do ?? "—"}</td>
+      ${DGA.GASES.map((g) => gasCellHtml(g, gases[g])).join("")}
+      ${gasCellHtml("N2", n2)}
+      ${gasCellHtml("O2", o2)}
       <td>${tcg.toFixed(1)}</td>
       <td>${overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")}${condemnBad ? ' <span class="pill bad">⚠ Loại bỏ</span>' : ""}</td>
       <td style="font-size:12px;">${diagnosis}</td>
       <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
-      <td>${ownerCellHtml(rec)}</td>
+      <td>${ownerCellHtml(rec)}${editLogBadgeHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
         ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" title="Xem biên bản thí nghiệm (BBTN) đã đính kèm" style="padding:5px 10px; font-size:12px;">Xem</button>` : ""}
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}

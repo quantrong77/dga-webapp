@@ -88,6 +88,15 @@ const MEASUREMENT_HEADERS = [
   // bang63_voltage_class: "110-220" hoặc "500". bang63_applicable: boolean — cùng cách
   // lưu true/false trực tiếp đã dùng cho has_membrane_n2 (OILTEST_HEADERS) ở trên.
   "n2", "o2", "bang63_voltage_class", "bang63_applicable",
+  // Lưu vết CHỈNH SỬA SỐ LIỆU (khác created_by/updated_by/updated_at ở trên — đó là AI
+  // sửa/lúc nào chung chung; đây là KHÍ NÀO đã đổi giá trị) — thêm ở CUỐI (xem lưu ý ngay
+  // trên). edited_fields: "H2:12|CO2:2000" (field:GIÁ TRỊ CŨ, chỉ field vừa đổi ở lần sửa
+  // gần nhất) — web app dùng tô nền đỏ đúng ô đã sửa ở tab "Lịch sử đo". edited_at: thời
+  // điểm ISO của lần sửa SỐ LIỆU gần nhất (không đổi nếu lần sửa sau chỉ sửa Ghi chú).
+  // edit_log: TOÀN BỘ lịch sử các lần sửa số liệu, mỗi dòng 1 lần sửa (mới nhất ở đầu),
+  // xem diffTrackedGasFields() ở app-core.js phía web app. Cả 3 để trống nếu bản ghi chưa
+  // từng bị sửa số liệu kể từ lúc nhập lần đầu.
+  "edited_fields", "edited_at", "edit_log",
 ];
 
 // QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —

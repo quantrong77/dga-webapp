@@ -1102,6 +1102,28 @@ tbody tr:hover { background: var(--blue-100); }
 .pill.warn { background: var(--warn-bg); color: var(--warn); border-color: rgba(180, 83, 9, 0.22); }
 .pill.muted { background: var(--gray-100); color: var(--gray-600); }
 
+/* Tab "Lịch sử đo" — ô số liệu khí đã bị SỬA so với lần lưu gốc (xem
+   diffTrackedGasFields() ở app-core.js, refreshHistoryUI() ở ui-history.js). */
+.cell-edited-warn {
+  background: var(--bad-bg);
+  color: var(--bad);
+  font-weight: 600;
+  cursor: help;
+}
+.edit-log-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bad-bg);
+  color: var(--bad);
+  border: 1px solid rgba(193, 18, 31, 0.22);
+  cursor: help;
+  white-space: nowrap;
+}
+
 .stat-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
