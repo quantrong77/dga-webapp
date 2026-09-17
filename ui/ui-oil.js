@@ -198,6 +198,7 @@ async function refreshOilTestsUI() {
   });
 
   refreshTrendDeviceOptions();
+  refreshAlertsUI();
 }
 
 // ---------------------------------------------------------------------

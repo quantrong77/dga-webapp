@@ -108,6 +108,10 @@ async function initApp() {
   // đây và setHistoryLoading() ở ui-history.js).
   setComboLoading(true);
   setHistoryLoading(true);
+  // Tab "Cảnh báo" cần CẢ 3 nguồn dữ liệu (khí/dầu MBA/dầu OLTC) mới tổng hợp đủ và
+  // đúng — không tắt sớm theo từng nguồn riêng lẻ như setHistoryLoading(), để tránh
+  // hiện "Chưa phát hiện thiết bị nào..." nhầm lẫn khi mới có 1-2/3 nguồn đã tải xong.
+  setAlertsLoading(true);
 
   // Danh mục Trạm được cô lập trong try/catch RIÊNG — nếu backend chưa deploy
   // hỗ trợ Trạm (vd: Apps Script chưa deploy bản mới, hoặc bảng "stations" chưa
@@ -167,6 +171,7 @@ async function initApp() {
   // measurements, oil_tests, oltc_oil_tests) đều đã thử tải xong (thành công hay
   // lỗi đều tắt thông báo — lỗi đã có console.warn/alert riêng ở từng khối trên).
   setComboLoading(false);
+  setAlertsLoading(false);
 
   // Tab "Người dùng phản hồi" — cô lập trong try/catch RIÊNG, y hệt lý do ở Dầu OLTC:
   // sheet "feedback" là MỚI, backend có thể chưa deploy/tạo bảng kịp.
@@ -361,7 +366,36 @@ async function initApp() {
   $("f_loai").addEventListener("change", () => { refreshManufacturerOptions(); toggleMbaSubtypeField(); });
   $("cmp_device").addEventListener("change", refreshCompareMeasurementOptions);
   $("btnCompareRate").addEventListener("click", onCompareRate);
+  $("btnExportAlertsExcel").addEventListener("click", onExportAlertsExcel);
+  // Tab "Xu hướng" — 2 ô combo tự gõ-tìm (không còn là <select> tĩnh) giống ô Trạm/Thiết
+  // bị ở tab DGA/Dầu cách điện, xem setupCombo() bên dưới. #tr_device gợi ý chỉ trong
+  // đúng trạm đang gõ ở #tr_station (ràng buộc lọc theo trạm, xem trendDeviceOptions()
+  // ở ui-trend.js); #tr_station chỉ cập nhật lại thông báo "Chưa có dữ liệu" khi gõ, vì
+  // danh sách gợi ý của #tr_device tự đọc lại đúng giá trị Trạm hiện tại mỗi lần mở.
+  setupCombo({
+    input: $("tr_station"),
+    toggleBtn: $("tr_station_toggle"),
+    listEl: $("tr_station_list"),
+    getOptions: () => trendStationOptions(),
+  });
+  setupCombo({
+    input: $("tr_device"),
+    toggleBtn: $("tr_device_toggle"),
+    listEl: $("tr_device_list"),
+    getOptions: () => trendDeviceOptions(),
+  });
   $("tr_device").addEventListener("change", onTrendDeviceChange);
+  ["input", "change"].forEach((evt) => $("tr_station").addEventListener(evt, updateTrendEmptyNote));
+  // Tab "Cảnh báo" — combo tự gõ-tìm lọc theo Trạm biến áp (#al_stationFilter), chỉ gợi
+  // ý các trạm đang thực sự có cảnh báo (xem alertStationOptions(), ui-alerts.js); để
+  // trống = xem tất cả. Gõ/chọn xong gọi lại refreshAlertsUI() để lọc lại bảng + thống kê.
+  setupCombo({
+    input: $("al_stationFilter"),
+    toggleBtn: $("al_stationFilter_toggle"),
+    listEl: $("al_stationFilter_list"),
+    getOptions: () => alertStationOptions(),
+  });
+  ["input", "change"].forEach((evt) => $("al_stationFilter").addEventListener(evt, refreshAlertsUI));
   toggleMbaSubtypeField();
   toggleStandardTypeFields();
   drawDuvalTriangleBase();

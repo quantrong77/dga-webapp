@@ -19,6 +19,11 @@
        khi app.js chạy — app.js kiểm tra typeof Chart === "undefined" trước khi dùng, nên
        nếu mất mạng/CDN lỗi, chỉ phần đồ thị bị ẩn, các phần khác của trang không ảnh hưởng. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <!-- SheetJS (xlsx) — xuất file Excel (.xlsx) cho nút "Xuất Excel" ở tab "Cảnh báo"
+       (xem onExportAlertsExcel(), ui/ui-alerts.js). Tải đồng bộ giống Chart.js ở trên;
+       ui-alerts.js kiểm tra typeof XLSX === "undefined" trước khi dùng, nên nếu mất
+       mạng/CDN lỗi thì chỉ nút xuất Excel báo lỗi rõ ràng, không ảnh hưởng phần còn lại. -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Google Identity Services — cho nút "Đăng nhập bằng Google". Nếu GOOGLE_CLIENT_ID
        trong config.js để trống, hoặc script này tải không được (mất mạng...), nút
        Google sẽ tự ẩn — không ảnh hưởng đến đăng nhập email/mật khẩu như trước.
@@ -176,6 +181,7 @@
       <button class="tab-btn active" data-tab="nhap" title="DGA"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg><span class="tab-label">DGA</span></button>
       <button class="tab-btn" data-tab="dau" title="Dầu cách điện"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg><span class="tab-label">Dầu cách điện</span></button>
       <button class="tab-btn" data-tab="lichsu" title="Lịch sử đo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="tab-label">Lịch sử đo</span></button>
+      <button class="tab-btn" data-tab="canhbao" title="Cảnh báo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg><span class="tab-label">Cảnh báo</span></button>
       <button class="tab-btn" data-tab="xuhuong" title="Xu hướng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg><span class="tab-label">Xu hướng</span></button>
       <button class="tab-btn" data-tab="tieuchuan" title="Tiêu chuẩn"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg><span class="tab-label">Tiêu chuẩn</span></button>
       <button class="tab-btn" data-tab="quytrinh" title="Quy trình đánh giá"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg><span class="tab-label">Quy trình đánh giá</span></button>
@@ -524,15 +530,90 @@
       </div>
     </section>
 
+    <!-- ===================== TAB: CẢNH BÁO ===================== -->
+    <!-- Tự động rà soát LẦN ĐO GẦN NHẤT của TỪNG thiết bị (khí hòa tan/dầu MBA/dầu OLTC)
+         và liệt kê những thiết bị đang ở mức Cảnh báo/Báo động — tái dùng NGUYÊN các hàm
+         đánh giá đã có ở tab "DGA"/"Dầu cách điện" (DGA.computeOverallStatus()/
+         DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()), xem ui/ui-alerts.js. -->
+    <section id="tab-canhbao" class="tab-panel hidden">
+      <div class="panel">
+        <div class="toolbar">
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Cảnh báo thiết bị</h2>
+          <button type="button" class="btn ghost" id="btnExportAlertsExcel" disabled title="Xuất danh sách cảnh báo đang hiển thị ra file Excel (.xlsx)">
+            <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-download"></use></svg>
+            Xuất Excel
+          </button>
+        </div>
+        <p class="note">Tự động rà soát TOÀN BỘ thiết bị đã có dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC) và
+          liệt kê những thiết bị mà LẦN ĐO GẦN NHẤT đang ở mức Cảnh báo/Báo động — theo đúng nguyên tắc đang dùng ở
+          tab "DGA"/"Dầu cách điện" (xem thêm tab "Quy trình đánh giá"). Công cụ hỗ trợ tham khảo, không thay thế
+          nguyên tắc đánh giá tổng thể tại Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/diễn biến vận hành...).</p>
+
+        <!-- Đang nạp dữ liệu khí/dầu MBA/dầu OLTC để tổng hợp cảnh báo (ẩn khi
+             setAlertsLoading(false), xem ui-alerts.js) — tránh hiện "chưa có cảnh báo"
+             nhầm lẫn trong lúc dữ liệu thật vẫn đang tải lúc mới vào app. -->
+        <div class="loading-hint hidden" id="alertsLoadingHint">
+          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu...
+        </div>
+
+        <!-- Lọc theo Trạm biến áp — combo tự gõ-tìm giống #tr_station ở tab "Xu hướng"
+             (xem setupCombo()/alertStationOptions(), ui-alerts.js): CHỈ gợi ý các trạm
+             THỰC SỰ đang có ít nhất 1 thiết bị ở mức Cảnh báo/Báo động; để trống = xem
+             TẤT CẢ trạm đang có cảnh báo (mặc định). -->
+        <div class="toolbar" style="margin-bottom:14px;">
+          <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;">Trạm biến áp
+            <div class="combo-wrap">
+              <input id="al_stationFilter" type="text" placeholder="Gõ để tìm trạm, để trống = TẤT CẢ trạm có cảnh báo" autocomplete="off" />
+              <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm đang có cảnh báo">▼</button>
+              <div id="al_stationFilter_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+        </div>
+
+        <div class="stat-row" id="alertsStatRow">
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Thiết bị đang theo dõi</div><div class="value" id="al_totalDevices">—</div></div>
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị đang có cảnh báo</div><div class="value" id="al_warnDevices">—</div></div>
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true" style="color:var(--warn);"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value" id="al_alertCount" style="color:var(--warn);">—</div></div>
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true" style="color:var(--bad);"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value" id="al_alarmCount" style="color:var(--bad);">—</div></div>
+        </div>
+
+        <div class="table-scroll"><table>
+          <thead><tr>
+            <th>Trạm</th><th>Thiết bị</th><th>Loại đo</th><th>Cảnh báo</th><th>Tình trạng</th>
+            <th>Chỉ tiêu vượt ngưỡng</th><th>Hạng mục cảnh báo</th><th>Khuyến cáo</th><th>Lần đo</th>
+            <th>Ngày thí nghiệm</th><th class="actions-col-header"></th>
+          </tr></thead>
+          <tbody id="alertsTable"></tbody>
+        </table></div>
+        <p class="note hidden" id="alertsEmpty">Chưa phát hiện thiết bị nào đang ở mức Cảnh báo/Báo động — tất cả
+          thiết bị đã có dữ liệu đều đang ở mức Bình thường (theo lần đo gần nhất của từng thiết bị).</p>
+      </div>
+    </section>
+
     <!-- ===================== TAB: XU HƯỚNG (ĐỒ THỊ THEO THỜI GIAN) ===================== -->
     <section id="tab-xuhuong" class="tab-panel hidden">
       <div class="panel">
         <h2>Xu hướng theo thời gian</h2>
-        <p class="note">Chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA chính, dầu OLTC) và vẽ
-          đồ thị xu hướng cho các thông số bạn chọn — biểu đồ luôn thể hiện toàn bộ lịch sử của thiết bị đó.</p>
-        <label class="field" style="max-width:420px;">Thiết bị
-          <select id="tr_device"><option value="">— Chọn thiết bị —</option></select>
-        </label>
+        <p class="note">Gõ để tìm và chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA chính, dầu
+          OLTC) và vẽ đồ thị xu hướng cho các thông số bạn chọn — biểu đồ luôn thể hiện toàn bộ lịch sử của thiết bị
+          đó. Gõ/chọn trước 1 Trạm biến áp để ô Thiết bị chỉ gợi ý các thiết bị thuộc trạm đó (đỡ phải dò tên trong
+          danh sách dài); để trống Trạm để xem thiết bị của TẤT CẢ các trạm như trước.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:18px;">
+          <label class="field" style="max-width:300px; flex:1 1 260px;">Trạm biến áp
+            <div class="combo-wrap">
+              <input id="tr_station" type="text" placeholder="Gõ để tìm trạm, để trống để xem TẤT CẢ" autocomplete="off" />
+              <button type="button" id="tr_station_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="tr_station_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field" style="max-width:300px; flex:1 1 260px;">Thiết bị
+            <div class="combo-wrap">
+              <input id="tr_device" type="text" placeholder="Gõ để tìm thiết bị" autocomplete="off" />
+              <button type="button" id="tr_device_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+              <div id="tr_device_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+        </div>
         <p class="note hidden" id="trEmpty">Chưa có dữ liệu nào được lưu (khí hòa tan / dầu MBA / dầu OLTC) để vẽ xu hướng.</p>
       </div>
 
@@ -1781,6 +1862,7 @@
   <script src="ui/ui-oltc.js"></script>
   <script src="ui/ui-history.js"></script>
   <script src="ui/ui-trend.js"></script>
+  <script src="ui/ui-alerts.js"></script>
   <script src="ui/ui-feedback.js"></script>
   <script src="app-core.js"></script>
 </body>

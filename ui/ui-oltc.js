@@ -211,4 +211,5 @@ async function refreshOltcOilTestsUI() {
   });
 
   refreshTrendDeviceOptions();
+  refreshAlertsUI();
 }

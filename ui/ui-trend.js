@@ -37,6 +37,27 @@ function trendDeviceName(rec) {
   return (rec.thiet_bi || "").trim();
 }
 
+function trendStationName(rec) {
+  return (rec.tram || "").trim();
+}
+
+/** Danh sách gợi ý cho ô combo "Trạm biến áp" (#tr_station — ô nhập text tự gõ-tìm,
+ *  xem setupCombo()/setupTrendCombos() ở app-core.js) — chỉ liệt kê các trạm THỰC
+ *  SỰ có ít nhất 1 bản ghi (khí hòa tan/dầu MBA/dầu OLTC) đã lưu, KHÔNG lấy toàn bộ
+ *  danh mục Trạm (_allStations) như ô "Trạm" ở tab DGA/Dầu cách điện đang làm —
+ *  tránh gợi ý trạm chưa có dữ liệu gì để xem xu hướng, dẫn vào ngõ cụt. setupCombo()
+ *  tự gọi lại hàm này mỗi lần mở/gõ vào ô nên danh sách luôn tự động theo dữ liệu
+ *  mới nhất, không cần nạp lại thủ công như <select> trước đây. */
+function trendStationOptions() {
+  const names = new Set();
+  _allMeasurements.forEach((r) => { const n = trendStationName(r); if (n) names.add(n); });
+  _allOilTests.forEach((r) => { const n = trendStationName(r); if (n) names.add(n); });
+  _allOltcOilTests.forEach((r) => { const n = trendStationName(r); if (n) names.add(n); });
+  return Array.from(names)
+    .sort((a, b) => a.localeCompare(b, "vi"))
+    .map((name) => ({ value: name, label: name }));
+}
+
 // Gộp chung pha của cả khí hòa tan (trường "pha") lẫn dầu OLTC lấy mẫu riêng từng pha
 // (trường "phase", chỉ có khi oltc_sample_point = "pharieng") — cùng 1 thiết bị thì pha
 // A/B/C phải là cùng ý nghĩa vật lý cho mọi loại số liệu, nên dùng chung 1 bộ lọc.
@@ -51,26 +72,56 @@ function trendDistinctPhases(gasRecords, oltcRecords) {
   return Array.from(set).sort((a, b) => (TREND_PHASE_ORDER[a] ?? 99) - (TREND_PHASE_ORDER[b] ?? 99) || a.localeCompare(b));
 }
 
+/** Danh sách gợi ý cho ô combo "Thiết bị" (#tr_device) — khi #tr_station đang có giá
+ *  trị, CHỈ gợi ý các thiết bị THUỘC đúng trạm đó (đọc trực tiếp $("tr_station").value
+ *  mỗi lần setupCombo() mở/gõ vào ô, nên luôn theo đúng giá trị Trạm hiện tại, kể cả
+ *  vừa đổi trạm xong chưa nạp lại gì khác — đây là RÀNG BUỘC lọc theo trạm mà tính
+ *  năng yêu cầu). Để trống Trạm thì gợi ý thiết bị của TẤT CẢ các trạm, kèm tên trạm
+ *  trong nhãn hiển thị để phân biệt (giống ô "Thiết bị" ở tab Dầu cách điện, xem
+ *  setupCombo() cho #o_thietbi/#ot_thietbi ở app-core.js). Vẫn cho gõ tự do tên chưa
+ *  có trong gợi ý (setupCombo() không ép buộc chọn từ danh sách). */
+function trendDeviceOptions() {
+  const station = $("tr_station") ? $("tr_station").value.trim() : "";
+  const matchesStation = (r) => !station || trendStationName(r) === station;
+
+  const byName = new Map();
+  const add = (r) => {
+    const name = trendDeviceName(r);
+    if (!name || byName.has(name)) return;
+    byName.set(name, trendStationName(r));
+  };
+  _allMeasurements.filter(matchesStation).forEach(add);
+  _allOilTests.filter(matchesStation).forEach(add);
+  _allOltcOilTests.filter(matchesStation).forEach(add);
+
+  return Array.from(byName.entries())
+    .sort((a, b) => a[0].localeCompare(b[0], "vi"))
+    .map(([name, tram]) => ({ value: name, label: station || !tram ? name : `${name} — ${tram}` }));
+}
+
+/** Cập nhật thông báo "Chưa có dữ liệu..." (#trEmpty) — hiện khi Trạm đang gõ/chọn
+ *  (hoặc toàn bộ app, nếu để trống Trạm) chưa có bất kỳ thiết bị nào có dữ liệu để vẽ
+ *  xu hướng. Gọi lại mỗi khi gõ/đổi Trạm (xem setupTrendCombos() ở app-core.js) và mỗi
+ *  khi dữ liệu đo/thí nghiệm thay đổi (refreshTrendDeviceOptions() ngay dưới đây). */
+function updateTrendEmptyNote() {
+  const station = $("tr_station") ? $("tr_station").value.trim() : "";
+  const hasAny = trendDeviceOptions().length > 0;
+  $("trEmpty").classList.toggle("hidden", hasAny);
+  $("trEmpty").textContent = station
+    ? `Trạm "${station}" chưa có dữ liệu nào được lưu (khí hòa tan / dầu MBA / dầu OLTC) để vẽ xu hướng.`
+    : "Chưa có dữ liệu nào được lưu (khí hòa tan / dầu MBA / dầu OLTC) để vẽ xu hướng.";
+}
+
+/** Gọi lại sau mỗi lần nạp/lưu/xóa dữ liệu ở 3 tab kia (xem refreshHistoryUI() ở
+ *  ui-history.js, refreshOilTestsUI() ở ui-oil.js, refreshOltcOilTestsUI() ở
+ *  ui-oltc.js) — giữ NGUYÊN tên hàm để 3 nơi đó không cần sửa gì thêm. KHÔNG còn cần
+ *  nạp lại option cho #tr_station/#tr_device như hồi còn là <select> (2 ô nay là combo
+ *  tự gõ-tìm, setupCombo() tự đọc dữ liệu mới nhất mỗi lần mở/gõ — xem
+ *  trendStationOptions()/trendDeviceOptions() ở trên) — chỉ cần cập nhật thông báo
+ *  "Chưa có dữ liệu" và vẽ lại biểu đồ/bảng lịch sử nếu thiết bị đang xem có thêm dữ
+ *  liệu mới. */
 function refreshTrendDeviceOptions() {
-  const sel = $("tr_device");
-  if (!sel) return;
-  const currentVal = sel.value;
-
-  const names = new Set();
-  _allMeasurements.forEach((r) => { const n = trendDeviceName(r); if (n) names.add(n); });
-  _allOilTests.forEach((r) => { const n = trendDeviceName(r); if (n) names.add(n); });
-  _allOltcOilTests.forEach((r) => { const n = trendDeviceName(r); if (n) names.add(n); });
-
-  sel.innerHTML = '<option value="">— Chọn thiết bị —</option>';
-  Array.from(names).sort((a, b) => a.localeCompare(b, "vi")).forEach((name) => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    sel.appendChild(opt);
-  });
-
-  $("trEmpty").classList.toggle("hidden", names.size > 0);
-  if (names.has(currentVal)) sel.value = currentVal;
+  updateTrendEmptyNote();
   onTrendDeviceChange();
 }
 

@@ -1,0 +1,458 @@
+/* ui-alerts.js — Tab "Cảnh báo": tự động rà soát LẦN ĐO GẦN NHẤT của TỪNG thiết bị
+   (khí hòa tan/dầu MBA chính/dầu OLTC) và liệt kê thiết bị đang ở mức Cảnh báo/Báo
+   động — tái dùng NGUYÊN các hàm đánh giá đã có (DGA.computeOverallStatus()/
+   DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()), KHÔNG tự đặt thêm ngưỡng nào
+   mới, để luôn nhất quán với kết quả hiện ở tab "DGA"/"Dầu cách điện". Tách từ
+   app.js — xem ui-auth.js đầu file đó để biết quy ước chia sẻ scope giữa các file
+   ui-*.js. Đọc _allMeasurements/_allOilTests/_allOltcOilTests (ui-history.js) và
+   _allStandards (ui-standards.js) — chỉ TÍNH LẠI (không gọi Storage), nên gọi được
+   ngay sau bất kỳ lần nạp/lưu/xóa nào ở 3 tab kia (xem refreshHistoryUI()/
+   refreshOilTestsUI()/refreshOltcOilTestsUI()). */
+
+/** Hiện/ẩn thông báo "Vui lòng chờ! Đang nạp dữ liệu..." (#alertsLoadingHint) —
+ *  chỉ trong lúc nạp LẦN ĐẦU cả 3 nguồn dữ liệu lúc mở app (xem initApp() ở
+ *  app-core.js); tránh hiện "Chưa phát hiện thiết bị nào..." gây hiểu lầm là mọi
+ *  thứ đều bình thường trong khi dữ liệu thật vẫn đang trên đường về. */
+function setAlertsLoading(isLoading) {
+  const hint = $("alertsLoadingHint");
+  if (!hint) return;
+  hint.classList.toggle("hidden", !isLoading);
+}
+
+/** Tổng số thiết bị (Trạm+Thiết bị) THỰC SỰ có ít nhất 1 bản ghi ở 1 trong 3 nguồn
+ *  dữ liệu — dùng làm mẫu số cho thống kê "Thiết bị đang có cảnh báo". Có thể giới hạn
+ *  về đúng 1 Trạm (tham số "station") để khớp với bộ lọc #al_stationFilter — để trống/
+ *  không truyền = đếm TẤT CẢ trạm như trước. */
+function totalTrackedDeviceCount(station) {
+  const keys = new Set();
+  const matchesStation = (r) => !station || (r.tram || "").trim() === station;
+  const add = (r) => {
+    if (!matchesStation(r)) return;
+    keys.add(`${(r.tram || "").trim()}|||${(r.thiet_bi || "").trim()}`);
+  };
+  _allMeasurements.forEach(add);
+  _allOilTests.forEach(add);
+  _allOltcOilTests.forEach(add);
+  return keys.size;
+}
+
+/** Danh sách gợi ý cho ô combo lọc "Trạm biến áp" (#al_stationFilter) — CHỈ liệt kê
+ *  các trạm THỰC SỰ đang có ít nhất 1 thiết bị ở mức Cảnh báo/Báo động (tính lại từ 3
+ *  hàm compute*Alerts() bên dưới), KHÔNG lấy toàn bộ danh mục Trạm (_allStations) —
+ *  tránh gợi ý trạm không có cảnh báo nào, dẫn vào ngõ cụt giống lý do đã áp dụng cho
+ *  trendStationOptions() ở ui-trend.js. setupCombo() tự gọi lại hàm này mỗi lần mở/gõ
+ *  nên danh sách luôn theo đúng dữ liệu mới nhất. */
+function alertStationOptions() {
+  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts()];
+  const names = new Set();
+  allAlerts.forEach((a) => { const n = (a.tram || "").trim(); if (n) names.add(n); });
+  return Array.from(names)
+    .sort((a, b) => a.localeCompare(b, "vi"))
+    .map((name) => ({ value: name, label: name }));
+}
+
+/** Rà soát khí hòa tan (đo DGA) — gộp theo ĐÚNG khóa thiết bị Trạm+Thiết bị+Pha đang
+ *  dùng ở tab Lịch sử đo (deviceKey(), xem ui-history.js), lấy lần đo GẦN NHẤT của mỗi
+ *  nhóm làm "hiện tại", lần đo liền trước (nếu có) để tính tốc độ sinh khí/đổi loại sự
+ *  cố — giống HỆT quy trình DGA.computeOverallStatus() đang chạy khi phân tích 1 lần đo
+ *  ở tab "DGA" (xem onAnalyze(), ui-dga.js), chỉ khác là chạy tự động cho MỌI thiết bị
+ *  thay vì 1 lần đo người dùng vừa nhập. */
+function computeGasAlerts() {
+  const groups = new Map();
+  _allMeasurements.forEach((r) => {
+    const key = deviceKey(r);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+
+  const results = [];
+  const manufacturerStandards = toManufacturerStandardsForLogic(_allStandards);
+
+  groups.forEach((records) => {
+    const sorted = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+    const latest = sorted[0];
+    const prior = sorted[1] || null;
+
+    const mbaSubtype = latest.mba_subtype ?? latest.mbaSubtype ?? null;
+    const logicMeasurement = { equipmentType: latest.equipment_type, manufacturer: latest.manufacturer, mbaSubtype };
+    const standard = DGA.resolveStandard(logicMeasurement, manufacturerStandards);
+
+    const gases = recordGases(latest);
+    const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
+    const overall = DGA.overallVerdict(evalRows);
+    const exceedCount = DGA.countExceedTypical(gases, latest.equipment_type, logicMeasurement);
+    const ratios = DGA.computeRatios(gases);
+    const diagnosis = DGA.diagnoseRatios(ratios, standard.pdThreshold);
+    const condemningRows = DGA.evaluateCondemning(gases, standard.condemning);
+
+    let rateRows = null;
+    let priorDiagnosis = null;
+    if (prior) {
+      // Chuẩn hóa khí lần đo trước về chữ HOA giống recordGases() — cùng lưu ý đã ghi ở
+      // onAnalyze() (ui-dga.js)/renderRateTable() (ui-history.js): dữ liệu đọc từ Storage
+      // lưu khí chữ thường, không chuẩn hóa lại sẽ làm sai lệch toàn bộ tốc độ sinh khí.
+      const priorGases = recordGases(prior);
+      const deltaDays = Math.round((new Date(latest.sample_date) - new Date(prior.sample_date)) / 86400000);
+      rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, latest.equipment_type);
+      priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(priorGases), standard.pdThreshold);
+    }
+
+    const overallStatus = DGA.computeOverallStatus({
+      overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
+    });
+    if (overallStatus.level === "normal") return;
+
+    const condemnExceeded = DGA.condemningExceededRows(condemningRows);
+    const condemnBad = condemnExceeded.length > 0;
+
+    // Danh sách KHÍ cụ thể đã vượt ngưỡng (cột "Chỉ tiêu vượt ngưỡng") — gộp từ 3 nguồn
+    // độc lập có thể khiến overallStatus báo Cảnh báo/Báo động: vượt ngưỡng tuyệt đối
+    // đang áp dụng, vượt ngưỡng LOẠI BỎ riêng của NSX, và tốc độ tăng vượt Bảng 65. Có
+    // thể rỗng nếu lý do DUY NHẤT là đổi loại sự cố (Bảng 66) giữa 2 lần đo liền kề —
+    // khi đó không quy được về 1 khí cụ thể, xem cột "Hạng mục cảnh báo" để rõ lý do.
+    const failingGases = evalRows.filter((r) => r.verdict === "Không đạt").map((r) => r.gas);
+    const condemnGases = condemnExceeded.map((r) => r.gas);
+    const rateGases = (rateRows || []).filter((r) => r.verdict && r.verdict.startsWith("⚠")).map((r) => r.gas);
+    const exceededItems = Array.from(new Set([...failingGases, ...condemnGases, ...rateGases]));
+    // Khóa thông số dùng để TỰ TICK đúng đường khí này ở tab "Xu hướng" khi bấm "Xem xu
+    // hướng" (xem TREND_PARAM_DEFS/goToTrendForDevice) — cùng định dạng "gas:<TÊN KHÍ>"
+    // (vd "gas:H2") mà ui-trend.js đang dùng cho checkbox thông số khí.
+    const exceededKeys = exceededItems.map((g) => "gas:" + g);
+
+    const statusText = (overall === "Đạt" ? "Đạt" : "Không đạt") + (condemnBad ? " (Vượt ngưỡng loại bỏ)" : "");
+
+    results.push({
+      source: "gas",
+      sourceLabel: "Khí hòa tan (DGA)",
+      tram: latest.tram || "",
+      deviceName: latest.thiet_bi || "",
+      thietBiLabel: (latest.thiet_bi || "?") + (latest.pha ? ` — ${DGA.phaLabelWithPrefix(latest.pha)}` : ""),
+      level: overallStatus.level,
+      levelLabel: overallStatus.label,
+      statusHtml: (overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")) +
+        (condemnBad ? ' <span class="pill bad">⚠ Loại bỏ</span>' : ""),
+      statusText,
+      exceededItems,
+      exceededKeys,
+      // Mỗi dòng cảnh báo khí hòa tan gắn với ĐÚNG 1 pha cụ thể (gộp theo deviceKey()
+      // tram+thiet_bi+pha, xem groups ở trên) — dùng để CHỈ tick đúng pha này ở tab "Xu
+      // hướng" khi bấm "Xem xu hướng" (xem goToTrendForDevice()), thay vì mặc định tick
+      // sẵn cả A/B/C. Rỗng/không có nếu thiết bị không phân pha (vd 1 số MBA nhập gộp).
+      phase: latest.pha || null,
+      reasons: overallStatus.reasons,
+      action: overallStatus.action,
+      lanDo: latest.lan_do ?? "—",
+      sampleDate: latest.sample_date,
+    });
+  });
+
+  return results;
+}
+
+/** Rà soát dầu MBA chính — gộp theo Trạm+Thiết bị (dầu MBA không có khái niệm Pha
+ *  riêng), lấy thí nghiệm GẦN NHẤT của mỗi thiết bị, đối chiếu DGA.evaluateOilTest()
+ *  (Bảng 58/55/54 QĐ1901) y hệt refreshOilTestsUI() (ui-oil.js). Không có khái niệm
+ *  "Cảnh báo" trung gian cho dầu (chỉ Đạt/Không đạt/Chưa đủ dữ liệu) nên "Không đạt"
+ *  được xếp thẳng vào mức Báo động (ALARM) — tương đương "vượt ngưỡng tuyệt đối" bên
+ *  khí hòa tan. */
+function computeOilAlerts() {
+  const groups = new Map();
+  _allOilTests.forEach((r) => {
+    const key = `${r.tram || ""}|||${r.thiet_bi || ""}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+
+  const results = [];
+  const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
+
+  groups.forEach((records) => {
+    const latest = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
+    const evalResult = DGA.evaluateOilTest({
+      voltageClass: latest.voltage_class, oilState: latest.oil_state, hasMembraneN2: latest.has_membrane_n2,
+      manufacturer: latest.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
+      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent, bdv: latest.bdv_kv,
+    });
+    if (evalResult.overall !== "Không đạt") return; // bỏ qua "Đạt"/"Chưa đủ dữ liệu"
+
+    const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
+    results.push({
+      source: "oil",
+      sourceLabel: "Dầu MBA chính",
+      tram: latest.tram || "",
+      deviceName: latest.thiet_bi || "",
+      thietBiLabel: latest.thiet_bi || "?",
+      level: "alarm",
+      levelLabel: "BÁO ĐỘNG (ALARM)",
+      statusHtml: verdictPill("Không đạt"),
+      statusText: "Không đạt",
+      exceededItems: failing.map((r) => r.label),
+      // "oil:<key>" khớp đúng TREND_PARAM_DEFS ở ui-trend.js (r.key: "moisture"/"tgd90"/
+      // "bdv", xem DGA.evaluateOilTest()) — dùng để tự tick đúng thông số dầu đã vượt
+      // ngưỡng khi bấm "Xem xu hướng".
+      exceededKeys: failing.map((r) => "oil:" + r.key),
+      phase: null, // dầu MBA chính không có khái niệm pha riêng — không giới hạn pha nào ở tab "Xu hướng".
+      reasons: failing.map((r) =>
+        `${r.label}: ${r.value} ${r.unit} (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit}, ${r.ref}).`
+      ),
+      action: "Lấy mẫu dầu bổ sung xác nhận; xem xét lọc/sấy chân không hoặc thay dầu theo hướng dẫn nhà sản xuất; " +
+        "đối chiếu thêm kết quả phân tích khí hòa tan (DGA) cùng thời điểm nếu có; báo cáo cấp có thẩm quyền theo " +
+        "Điều 6 QĐ1901.",
+      lanDo: "—",
+      sampleDate: latest.sample_date,
+    });
+  });
+
+  return results;
+}
+
+/** Rà soát dầu OLTC — gộp theo Trạm+Thiết bị+điểm lấy mẫu (mẫu chung 3 pha "chung",
+ *  hoặc riêng từng pha "pha:A/B/C" khi oltc_sample_point = "pharieng"), lấy thí nghiệm
+ *  GẦN NHẤT của mỗi nhóm, đối chiếu DGA.evaluateOltcOilTest() (Điều 37/Bảng 49 QĐ1901,
+ *  hoặc Bảng 58/55/54 nếu là dầu MỚI) y hệt refreshOltcOilTestsUI() (ui-oltc.js). */
+function computeOltcOilAlerts() {
+  const groups = new Map();
+  _allOltcOilTests.forEach((r) => {
+    const sub = r.oltc_sample_point === "pharieng" ? `pha:${r.phase || ""}` : "chung";
+    const key = `${r.tram || ""}|||${r.thiet_bi || ""}|||${sub}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+
+  const results = [];
+  const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
+
+  groups.forEach((records) => {
+    const latest = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
+    const evalResult = DGA.evaluateOltcOilTest({
+      oltcSamplePoint: latest.oltc_sample_point, voltageClass: latest.voltage_class, oilState: latest.oil_state,
+      hasMembraneN2: latest.has_membrane_n2, manufacturer: latest.manufacturer || null,
+      manufacturerOilStandards: oilStandardsForLogic,
+      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent, bdv: latest.bdv_kv,
+    });
+    if (evalResult.overall !== "Không đạt") return;
+
+    const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
+    const phaSuffix = latest.oltc_sample_point === "pharieng" && latest.phase ? ` — Pha ${latest.phase}` : "";
+    results.push({
+      source: "oltc",
+      sourceLabel: "Dầu OLTC",
+      tram: latest.tram || "",
+      deviceName: latest.thiet_bi || "",
+      thietBiLabel: `${latest.thiet_bi || "?"} (OLTC${phaSuffix})`,
+      level: "alarm",
+      levelLabel: "BÁO ĐỘNG (ALARM)",
+      statusHtml: verdictPill("Không đạt"),
+      statusText: "Không đạt",
+      exceededItems: failing.map((r) => r.label),
+      // "oltc:<key>" khớp đúng TREND_PARAM_DEFS ở ui-trend.js — dùng để tự tick đúng
+      // thông số dầu OLTC đã vượt ngưỡng khi bấm "Xem xu hướng".
+      exceededKeys: failing.map((r) => "oltc:" + r.key),
+      // Chỉ có 1 PHA cụ thể khi lấy mẫu riêng từng pha (oltc_sample_point = "pharieng")
+      // — mẫu "chung" đại diện cả 3 pha nên không giới hạn pha nào ở tab "Xu hướng".
+      phase: latest.oltc_sample_point === "pharieng" ? (latest.phase || null) : null,
+      reasons: failing.map((r) =>
+        `${r.label}: ${r.value} ${r.unit}${r.limit === null ? "" : ` (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit})`}, ${r.ref}.`
+      ),
+      action: "Lấy mẫu dầu OLTC bổ sung xác nhận; kiểm tra tiếp điểm/hồ quang khoang đổi nấc, xem xét lọc/thay dầu " +
+        "OLTC theo hướng dẫn nhà sản xuất; báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
+      lanDo: "—",
+      sampleDate: latest.sample_date,
+    });
+  });
+
+  return results;
+}
+
+function alertLevelPill(level, label) {
+  // Cùng quy ước icon theo cấp độ đã dùng ở STATUS_ICON (ui-dga.js)/.status-badge
+  // (index.html, banner kết quả phân tích) — alert: tam giác, alarm: bát giác.
+  const icon = level === "alarm" ? "alert-octagon" : "alert-triangle";
+  return `<span class="status-pill status-${level}"><svg class="icon-svg" aria-hidden="true"><use href="#icon-${icon}"></use></svg>${escapeHtml(label)}</span>`;
+}
+
+/** Icon nhỏ trước tên "Loại đo" (cột trong bảng) để phân biệt nhanh khí hòa tan
+ *  (icon-flask, giống tab "DGA") với dầu MBA/OLTC (icon-droplet, giống tab "Dầu
+ *  cách điện") — không thêm khái niệm mới, chỉ tái dùng đúng icon nav đã có. */
+function sourceIcon(source) {
+  const icon = source === "gas" ? "flask" : "droplet";
+  return `<svg class="icon-svg" aria-hidden="true" style="width:15px; height:15px; margin-right:6px; vertical-align:-2px;"><use href="#icon-${icon}"></use></svg>`;
+}
+
+/** Chuyển sang tab "Xu hướng" và MỞ HẲN biểu đồ/lịch sử của đúng Trạm+Thiết bị của
+ *  dòng cảnh báo vừa bấm — set giá trị 2 ô combo #tr_station/#tr_device (để lần sau
+ *  mở lại combo vẫn thấy đúng giá trị đã chọn) RỒI GỌI THẲNG updateTrendEmptyNote()/
+ *  onTrendDeviceChange() (xem ui-trend.js) thay vì chỉ bắn sự kiện "change" và hy
+ *  vọng listener xử lý kịp — đảm bảo biểu đồ hiện ra NGAY, người dùng không cần
+ *  chọn/gõ lại gì thêm ở 2 ô đó. */
+function goToTrendForDevice(tram, thietBi, exceededKeys, phase) {
+  const tabBtn = document.querySelector('button.tab-btn[data-tab="xuhuong"]');
+  if (tabBtn) tabBtn.click();
+  const stationSel = $("tr_station");
+  const deviceSel = $("tr_device");
+  if (stationSel) stationSel.value = tram || "";
+  if (deviceSel) deviceSel.value = thietBi || "";
+  // Tự TICK sẵn đúng (các) thông số đã khiến thiết bị này bị liệt vào danh sách Cảnh
+  // báo (vd "gas:H2", "oil:moisture" — xem exceededKeys ở computeGasAlerts()/
+  // computeOilAlerts()/computeOltcOilAlerts() trên) — _trendSelectedParams (ui-trend.js)
+  // vốn được GIỮ NGUYÊN qua các lần đổi thiết bị để khỏi phải chọn lại, nên nếu người
+  // dùng chưa từng mở tab "Xu hướng" trước đó thì Set này đang RỖNG và biểu đồ sẽ
+  // trống trơn — phải chủ động thêm vào đây thì đồ thị mới hiện NGAY thông số đã cảnh
+  // báo, đúng yêu cầu "không phải lọc chọn lại". Dùng "thêm vào" (không xóa các thông
+  // số đang tick sẵn) để không làm mất lựa chọn khác người dùng đang xem.
+  if (Array.isArray(exceededKeys) && typeof TREND_PARAM_DEFS !== "undefined") {
+    exceededKeys.forEach((k) => { if (TREND_PARAM_DEFS[k]) _trendSelectedParams.add(k); });
+  }
+  // Nếu dòng cảnh báo vừa bấm gắn với ĐÚNG 1 PHA cụ thể (khí hòa tan theo pha, hoặc dầu
+  // OLTC lấy mẫu riêng từng pha — xem trường "phase" ở computeGasAlerts()/
+  // computeOltcOilAlerts() trên), THAY THẾ (không cộng dồn) bộ lọc pha ở tab "Xu hướng"
+  // bằng đúng 1 pha đó — mặc định _trendSelectedPhases (ui-trend.js) đang tick sẵn cả
+  // A/B/C, nếu không thay thế thì bấm cảnh báo của riêng Pha C vẫn hiện cả 3 pha, gây
+  // hiểu lầm/rối biểu đồ. Không đụng gì nếu thiết bị không phân pha (phase rỗng/null).
+  if (phase && typeof _trendSelectedPhases !== "undefined") {
+    _trendSelectedPhases = new Set([phase]);
+  }
+  if (typeof updateTrendEmptyNote === "function") updateTrendEmptyNote();
+  if (typeof onTrendDeviceChange === "function") onTrendDeviceChange();
+}
+
+// Cache kết quả lần refreshAlertsUI() gần nhất — dùng cho onExportAlertsExcel() để
+// xuất ĐÚNG những gì đang hiển thị trên bảng, khỏi phải tính lại (và khỏi lệch nhau
+// nếu 2 nơi tính theo 2 cách khác nhau).
+let _lastAlerts = [];
+
+function refreshAlertsUI() {
+  const tbody = $("alertsTable");
+  if (!tbody) return; // phòng khi gọi trước khi DOM có tab này (không nên xảy ra)
+
+  // Lọc theo Trạm biến áp (#al_stationFilter, combo tự gõ-tìm — xem alertStationOptions()
+  // ở trên) — để trống = xem TẤT CẢ trạm đang có cảnh báo (mặc định, không đổi hành vi cũ).
+  const station = $("al_stationFilter") ? $("al_stationFilter").value.trim() : "";
+  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts()];
+  const alerts = station ? allAlerts.filter((a) => (a.tram || "").trim() === station) : allAlerts;
+  // Báo động (ALARM) lên trước Cảnh báo (ALERT); trong cùng mức, mới nhất lên trước.
+  alerts.sort((a, b) => {
+    if (a.level !== b.level) return a.level === "alarm" ? -1 : 1;
+    return new Date(b.sampleDate) - new Date(a.sampleDate);
+  });
+  _lastAlerts = alerts;
+
+  tbody.innerHTML = "";
+  const emptyEl = $("alertsEmpty");
+  emptyEl.classList.toggle("hidden", alerts.length > 0);
+  if (alerts.length === 0) {
+    emptyEl.textContent = station
+      ? `Trạm "${station}" hiện không có thiết bị nào đang ở mức Cảnh báo/Báo động (theo lần đo gần nhất của từng thiết bị).`
+      : "Chưa phát hiện thiết bị nào đang ở mức Cảnh báo/Báo động — tất cả thiết bị đã có dữ liệu đều đang ở mức " +
+        "Bình thường (theo lần đo gần nhất của từng thiết bị).";
+  }
+
+  alerts.forEach((a) => {
+    const tr = document.createElement("tr");
+    const exceededHtml = (a.exceededItems || []).length === 0
+      ? "—"
+      : a.exceededItems.map((g) => `<span class="pill bad" style="margin:0 3px 3px 0;">${escapeHtml(g)}</span>`).join("");
+    tr.innerHTML = `
+      <td>${escapeHtml(a.tram || "—")}</td>
+      <td>${escapeHtml(a.thietBiLabel)}</td>
+      <td>${sourceIcon(a.source)}${escapeHtml(a.sourceLabel)}</td>
+      <td>${alertLevelPill(a.level, a.levelLabel)}</td>
+      <td>${a.statusHtml}</td>
+      <td style="max-width:160px;">${exceededHtml}</td>
+      <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
+      <td style="font-size:12px; max-width:280px;">${escapeHtml(a.action)}</td>
+      <td>${a.lanDo}</td>
+      <td>${a.sampleDate}</td>
+      <td class="actions-cell"><div class="btn-row">
+        <button class="btn ghost icon-only" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>
+        </button>
+      </div></td>
+    `;
+    const trendBtn = tr.querySelector('[data-action="trend"]');
+    if (trendBtn) trendBtn.addEventListener("click", () => goToTrendForDevice(a.tram, a.deviceName, a.exceededKeys, a.phase));
+    tbody.appendChild(tr);
+  });
+
+  const totalDevices = totalTrackedDeviceCount(station);
+  const warnDeviceKeys = new Set(alerts.map((a) => `${(a.tram || "").trim()}|||${(a.deviceName || "").trim()}`));
+  const alarmCount = alerts.filter((a) => a.level === "alarm").length;
+  const alertCount = alerts.filter((a) => a.level === "alert").length;
+  if ($("al_totalDevices")) $("al_totalDevices").textContent = String(totalDevices);
+  if ($("al_warnDevices")) $("al_warnDevices").textContent = `${warnDeviceKeys.size} / ${totalDevices}`;
+  if ($("al_alertCount")) $("al_alertCount").textContent = String(alertCount);
+  if ($("al_alarmCount")) $("al_alarmCount").textContent = String(alarmCount);
+  if ($("btnExportAlertsExcel")) $("btnExportAlertsExcel").disabled = alerts.length === 0;
+}
+
+/** Xuất danh sách cảnh báo đang hiển thị (_lastAlerts, xem refreshAlertsUI() ở trên)
+ *  ra file Excel (.xlsx) — dùng thư viện SheetJS (biến toàn cục "XLSX", tải qua CDN ở
+ *  index.html, xem cùng cách tải/kiểm tra Chart.js: nếu mất mạng/CDN lỗi thì báo lỗi
+ *  rõ ràng thay vì im lặng thất bại). Toàn bộ xử lý diễn ra ngay trong trình duyệt —
+ *  không gửi dữ liệu lên server nào khác. */
+function onExportAlertsExcel() {
+  if (typeof XLSX === "undefined") {
+    alert("Không tải được thư viện xuất Excel (có thể do mất mạng khi tải trang) — kiểm tra kết nối mạng rồi tải lại trang.");
+    return;
+  }
+  if (_lastAlerts.length === 0) {
+    alert("Chưa có thiết bị nào đang ở mức Cảnh báo/Báo động để xuất.");
+    return;
+  }
+
+  const now = new Date();
+  const exportedAt = now.toLocaleString("vi-VN");
+  // Khớp đúng bộ lọc Trạm đang áp dụng trên bảng (#al_stationFilter) — xuất đúng những
+  // gì đang hiển thị, kể cả khi đã lọc về 1 trạm cụ thể.
+  const station = $("al_stationFilter") ? $("al_stationFilter").value.trim() : "";
+  const totalDevices = totalTrackedDeviceCount(station);
+  const warnDeviceKeys = new Set(_lastAlerts.map((a) => `${(a.tram || "").trim()}|||${(a.deviceName || "").trim()}`));
+  const alarmCount = _lastAlerts.filter((a) => a.level === "alarm").length;
+  const alertCount = _lastAlerts.filter((a) => a.level === "alert").length;
+
+  const HEADER = [
+    "Trạm", "Thiết bị", "Loại đo", "Mức cảnh báo", "Tình trạng", "Chỉ tiêu vượt ngưỡng",
+    "Hạng mục cảnh báo", "Khuyến cáo", "Lần đo", "Ngày thí nghiệm",
+  ];
+  const aoa = [
+    ["BÁO CÁO CẢNH BÁO THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
+    [station ? `Ngày xuất: ${exportedAt}  |  Trạm biến áp: ${station}` : `Ngày xuất: ${exportedAt}  |  Trạm biến áp: Tất cả`],
+    [
+      `Tổng thiết bị theo dõi: ${totalDevices}`,
+      `Thiết bị đang có cảnh báo: ${warnDeviceKeys.size}/${totalDevices}`,
+      `Mức Cảnh báo (ALERT): ${alertCount}`,
+      `Mức Báo động (ALARM): ${alarmCount}`,
+    ],
+    [],
+    HEADER,
+    ..._lastAlerts.map((a) => [
+      a.tram || "—",
+      a.thietBiLabel,
+      a.sourceLabel,
+      a.levelLabel,
+      a.statusText || "",
+      (a.exceededItems || []).join(", ") || "—",
+      (a.reasons || []).join("\n"),
+      a.action || "",
+      a.lanDo,
+      a.sampleDate,
+    ]),
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws["!cols"] = [
+    { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 18 },
+    { wch: 55 }, { wch: 45 }, { wch: 8 }, { wch: 14 },
+  ];
+  // Gộp ô tiêu đề/dòng thống kê cho gọn (span hết bề rộng bảng, 10 cột).
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: HEADER.length - 1 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: HEADER.length - 1 } },
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Cảnh báo thiết bị");
+
+  const fileDate = now.toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `Canh_bao_thiet_bi_${fileDate}.xlsx`);
+}

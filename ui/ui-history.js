@@ -87,6 +87,7 @@ async function refreshHistoryUI() {
 
   refreshCompareDeviceOptions();
   refreshTrendDeviceOptions();
+  refreshAlertsUI();
 }
 
 // ---------------------------------------------------------------------
