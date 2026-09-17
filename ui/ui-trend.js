@@ -135,17 +135,40 @@ function refreshTrendDeviceOptions() {
   onTrendDeviceChange();
 }
 
+/** BUG ĐÃ SỬA: trước đây hàm này chỉ lọc theo TÊN thiết bị, bỏ qua hẳn ô "Trạm biến áp"
+ *  (#tr_station) — dù người dùng đã gõ/chọn Trạm để lọc. Vì tên thiết bị kiểu "MBA T1",
+ *  "MBA T2"... rất hay bị TRÙNG giữa nhiều trạm khác nhau, việc này khiến đồ thị xu hướng
+ *  âm thầm GỘP chung số liệu của các trạm khác vào — ví dụ 1 khí trống ở BBTN của trạm
+ *  đang xem vẫn hiện giá trị trên đồ thị, vì thực ra điểm đó lấy từ thiết bị TRÙNG TÊN ở
+ *  1 trạm khác. Nay lọc thêm theo Trạm (matchesStation, giống hệt logic trendDeviceOptions()
+ *  ở trên) mỗi khi ô Trạm đang có giá trị — khớp đúng cặp (Trạm, Thiết bị) như quy ước khóa
+ *  idx_measurements_key (tram, thiet_bi, pha) ở supabase-schema.sql. */
 function trendRecordsForDevice(device) {
+  const station = $("tr_station") ? $("tr_station").value.trim() : "";
+  const matchesStation = (r) => !station || trendStationName(r) === station;
   const gasRecords = _allMeasurements
-    .filter((r) => trendDeviceName(r) === device)
+    .filter((r) => trendDeviceName(r) === device && matchesStation(r))
     .sort((a, b) => new Date(a.sample_date) - new Date(b.sample_date));
   const oilRecords = _allOilTests
-    .filter((r) => trendDeviceName(r) === device)
+    .filter((r) => trendDeviceName(r) === device && matchesStation(r))
     .sort((a, b) => new Date(a.sample_date) - new Date(b.sample_date));
   const oltcRecords = _allOltcOilTests
-    .filter((r) => trendDeviceName(r) === device)
+    .filter((r) => trendDeviceName(r) === device && matchesStation(r))
     .sort((a, b) => new Date(a.sample_date) - new Date(b.sample_date));
   return { gasRecords, oilRecords, oltcRecords };
+}
+
+/** Khi Trạm đang để TRỐNG (xem toàn bộ thiết bị của mọi trạm — xem ghi chú ở
+ *  trendDeviceOptions()), tên thiết bị vẫn có thể trùng giữa ≥2 trạm khác nhau. Hàm này
+ *  trả về danh sách trạm KHÁC NHAU thực sự có mặt trong 1 bộ bản ghi của 1 thiết bị, để
+ *  cảnh báo người dùng nếu bị trùng tên (xem trDeviceAmbiguousNote ở onTrendDeviceChange). */
+function trendDistinctStationsIn(gasRecords, oilRecords, oltcRecords) {
+  const set = new Set();
+  [...gasRecords, ...oilRecords, ...oltcRecords].forEach((r) => {
+    const s = trendStationName(r);
+    if (s) set.add(s);
+  });
+  return Array.from(set);
 }
 
 function onTrendDeviceChange() {
@@ -160,6 +183,24 @@ function onTrendDeviceChange() {
   $("trContentWrap").classList.remove("hidden");
 
   const { gasRecords, oilRecords, oltcRecords } = trendRecordsForDevice(device);
+
+  // Cảnh báo trùng tên thiết bị giữa nhiều trạm — chỉ có thể xảy ra khi ô Trạm đang để
+  // trống (matchesStation() ở trendRecordsForDevice() không lọc gì trong trường hợp đó).
+  // Xem ghi chú đầy đủ ở trendDistinctStationsIn()/trendRecordsForDevice() phía trên.
+  const stationVal = $("tr_station") ? $("tr_station").value.trim() : "";
+  const ambiguousNote = $("trDeviceAmbiguousNote");
+  if (ambiguousNote) {
+    const distinctStations = stationVal ? [] : trendDistinctStationsIn(gasRecords, oilRecords, oltcRecords);
+    if (distinctStations.length >= 2) {
+      ambiguousNote.textContent =
+        `⚠ Thiết bị "${device}" trùng tên giữa ${distinctStations.length} trạm khác nhau (${distinctStations.join(", ")}) ` +
+        `— đồ thị bên dưới đang GỘP CHUNG số liệu của cả ${distinctStations.length} trạm này. Hãy chọn đúng 1 Trạm biến áp ở ô trên để chỉ xem đúng thiết bị của trạm đó.`;
+      ambiguousNote.classList.remove("hidden");
+    } else {
+      ambiguousNote.classList.add("hidden");
+    }
+  }
+
   renderTrendPhaseFilter(gasRecords, oilRecords, oltcRecords);
   renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords);
   renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords);

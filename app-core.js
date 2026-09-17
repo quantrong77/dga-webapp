@@ -370,8 +370,11 @@ async function initApp() {
   // Tab "Xu hướng" — 2 ô combo tự gõ-tìm (không còn là <select> tĩnh) giống ô Trạm/Thiết
   // bị ở tab DGA/Dầu cách điện, xem setupCombo() bên dưới. #tr_device gợi ý chỉ trong
   // đúng trạm đang gõ ở #tr_station (ràng buộc lọc theo trạm, xem trendDeviceOptions()
-  // ở ui-trend.js); #tr_station chỉ cập nhật lại thông báo "Chưa có dữ liệu" khi gõ, vì
-  // danh sách gợi ý của #tr_device tự đọc lại đúng giá trị Trạm hiện tại mỗi lần mở.
+  // ở ui-trend.js). #tr_station cũng phải gọi lại onTrendDeviceChange() (không chỉ
+  // updateTrendEmptyNote()) — vì trendRecordsForDevice() giờ LỌC DỮ LIỆU đồ thị theo
+  // đúng Trạm đang gõ (sửa lỗi đồ thị gộp nhầm số liệu của thiết bị TRÙNG TÊN ở trạm
+  // khác — xem ghi chú đầy đủ ở trendRecordsForDevice()), nên đổi Trạm phải vẽ lại ngay,
+  // không đợi người dùng chọn lại Thiết bị.
   setupCombo({
     input: $("tr_station"),
     toggleBtn: $("tr_station_toggle"),
@@ -385,7 +388,10 @@ async function initApp() {
     getOptions: () => trendDeviceOptions(),
   });
   $("tr_device").addEventListener("change", onTrendDeviceChange);
-  ["input", "change"].forEach((evt) => $("tr_station").addEventListener(evt, updateTrendEmptyNote));
+  ["input", "change"].forEach((evt) => $("tr_station").addEventListener(evt, () => {
+    updateTrendEmptyNote();
+    onTrendDeviceChange();
+  }));
   // Tab "Cảnh báo" — combo tự gõ-tìm lọc theo Trạm biến áp (#al_stationFilter), chỉ gợi
   // ý các trạm đang thực sự có cảnh báo (xem alertStationOptions(), ui-alerts.js); để
   // trống = xem tất cả. Gõ/chọn xong gọi lại refreshAlertsUI() để lọc lại bảng + thống kê.
@@ -711,6 +717,34 @@ function alertIfNegative(fields) {
     return true;
   }
   return false;
+}
+
+/** Cảnh báo (KHÔNG chặn lưu, khác alertIfNegative ở trên) khi để TRỐNG 1/nhiều trong 7
+ *  khí chính (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) lúc nhập/sửa số liệu ở tab DGA. Lý do
+ *  cần cảnh báo riêng: để trống 1 ô khí sẽ tự động tính là 0 ppm khi lưu (xem onAnalyze()
+ *  ở ui-dga.js — num() ở dga-logic.js coi mọi giá trị rỗng/không phải số là 0), và 0 ppm
+ *  đó VẪN được đưa vào TCG/so sánh tiêu chuẩn/Bảng 66/Duval/vẽ đồ thị xu hướng y như thể
+ *  đã đo được 0 ppm thật — khác N2/O2 (2 khí BỔ SUNG, không thuộc DGA.GASES) vốn để trống
+ *  thì giữ đúng là "chưa đo", tự ẩn khỏi các phép tính cần cả 2 khí đó (xem ghi chú ở
+ *  onAnalyze()). Vì nhiều khí (đặc biệt C2H2) trong thực tế thường ĐÚNG LÀ đo được 0 ppm
+ *  ở thiết bị bình thường, không thể coi "trống" là lỗi nhập liệu để chặn lưu như số âm —
+ *  chỉ nhắc người dùng tự kiểm tra lại BBTN/số liệu gốc xem khí đó thực sự đo được 0 ppm
+ *  hay đơn giản là CHƯA ĐO (quên nhập) trước khi tin vào kết quả đánh giá/đồ thị. Đọc
+ *  thẳng DOM (không dùng object "gases" đã build ở onAnalyze() vì lúc đó "" đã bị đổi
+ *  thành 0, không còn phân biệt được nữa) để biết CHÍNH XÁC ô nào người dùng để trống. */
+function findEmptyMainGasLabels() {
+  return DGA.GASES.filter((g) => $("g_" + g) && $("g_" + g).value.trim() === "");
+}
+
+function warnIfEmptyMainGas() {
+  const empty = findEmptyMainGasLabels();
+  if (empty.length === 0) return;
+  alert(
+    `Lưu ý: khí ${empty.join(", ")} đang để TRỐNG — hệ thống sẽ tự động tính là 0 ppm và vẫn dùng ` +
+    `giá trị này để đánh giá/vẽ đồ thị xu hướng như đã đo được 0 ppm.\n\n` +
+    `Vui lòng kiểm tra lại BBTN/số liệu gốc: nếu khí này CHƯA ĐO (không phải đo được 0), hãy quay lại ` +
+    `sửa cho đúng sau khi lưu — số liệu vẫn được lưu lại bình thường ngay bây giờ.`
+  );
 }
 
 // ---------------------------------------------------------------------------

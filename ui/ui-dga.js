@@ -526,6 +526,11 @@ async function onAnalyze() {
     { label: "Nhiệt độ môi trường", value: measurement.nhiet_do },
     { label: "Độ ẩm môi trường", value: measurement.do_am },
   ])) return;
+  // Cảnh báo (không chặn lưu) nếu để trống 1/nhiều trong 7 khí chính — xem ghi chú đầy đủ
+  // ở warnIfEmptyMainGas() (app-core.js). Đặt SAU alertIfNegative (chặn lưu khi có lỗi rõ
+  // ràng hơn) nhưng TRƯỚC khi tính toán/lưu, để người dùng kịp thấy cảnh báo dù vẫn lưu
+  // bình thường ngay sau đó (không có return ở đây).
+  warnIfEmptyMainGas();
 
   // 1) Xác định tiêu chuẩn áp dụng: NSX nếu có cấu hình đầy đủ; ngược lại, tiêu chuẩn
   //    CHẶT HƠN giữa QĐ1901 và bảng tham khảo tương ứng của IEC 60599:1999 Annex A
