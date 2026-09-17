@@ -349,9 +349,13 @@ function refreshAlertsUI() {
 
   alerts.forEach((a) => {
     const tr = document.createElement("tr");
+    // Icon cạnh tên khí CHỈ áp dụng khi nguồn là "gas" (khí hòa tan) — nguồn "oil"/
+    // "oltc" liệt kê nhãn mô tả (vd "Độ ẩm dầu"), không phải tên 1 khí cụ thể.
     const exceededHtml = (a.exceededItems || []).length === 0
       ? "—"
-      : a.exceededItems.map((g) => `<span class="pill bad" style="margin:0 3px 3px 0;">${escapeHtml(g)}</span>`).join("");
+      : a.exceededItems.map((g) =>
+          `<span class="pill bad" style="margin:0 3px 3px 0;">${a.source === "gas" ? gasLabelIcon(g) : ""}${escapeHtml(g)}</span>`
+        ).join("");
     tr.innerHTML = `
       <td>${escapeHtml(a.tram || "—")}</td>
       <td>${escapeHtml(a.thietBiLabel)}</td>

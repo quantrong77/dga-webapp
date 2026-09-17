@@ -1132,6 +1132,13 @@ tbody tr:hover { background: var(--blue-100); }
    nhãn (13px) nhỏ hơn nhiều nơi khác đang dùng .icon-svg (nút, dropzone...). */
 .field-label-icon { width: 14px; height: 14px; margin-right: 5px; vertical-align: -2px; flex: none; color: var(--blue-700); }
 
+/* Icon nhỏ cạnh TÊN từng khí hòa tan cụ thể (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) — ở ô
+   nhập, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox chọn thông số (tab "Xu hướng")
+   và pill "Chỉ tiêu vượt ngưỡng" (tab "Cảnh báo"). KHÔNG ép màu (khác .field-label-icon)
+   để tự nhận màu chữ hiện tại của từng nơi (bảng: chữ thường; pill: đỏ...) — xem
+   gasLabelIcon() ở app-core.js. */
+.gas-icon { width: 13px; height: 13px; margin-right: 4px; vertical-align: -2px; flex: none; }
+
 /* Ô lọc dạng "tìm kiếm" (vd #historyFilter, tab "Lịch sử đo") — icon kính lúp đặt đè
    lên input bằng position:absolute thay vì đứng trước như nhãn field thường, giống
    UX thanh tìm kiếm phổ biến. */

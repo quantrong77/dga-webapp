@@ -690,4 +690,16 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/** Icon nhỏ cạnh TÊN 1 khí hòa tan cụ thể — dùng ở mọi nơi hiển thị tên khí đứng riêng
+ *  (ô nhập DGA, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox "Xu hướng", pill "Chỉ
+ *  tiêu vượt ngưỡng" tab "Cảnh báo"), KHÔNG dùng trong câu văn khuyến cáo (những câu đó
+ *  là chuỗi thuần từ dga-logic.js, không có HTML). 5 khí sinh ra từ phân hủy DẦU cách
+ *  điện (H2, CH4, C2H6, C2H4, C2H2) dùng icon-flask (giống icon tab "DGA"); CO/CO2 sinh
+ *  ra từ phân hủy GIẤY CÁCH ĐIỆN (cellulose, không phải dầu) nên dùng icon-book (trang
+ *  giấy) để phân biệt đúng nguồn gốc — không phải icon chọn ngẫu nhiên. */
+function gasLabelIcon(gas) {
+  const icon = gas === "CO" || gas === "CO2" ? "book" : "flask";
+  return `<svg class="gas-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>`;
+}
+
 document.addEventListener("DOMContentLoaded", init);

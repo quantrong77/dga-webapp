@@ -194,7 +194,7 @@ function onCompareRate() {
       : "Chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");
   $("cmpTable").innerHTML = rateRows.map((r) => `
     <tr>
-      <td>${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
+      <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
       <td>${r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
       <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${r.verdict}</span>` : r.verdict}</td>
     </tr>

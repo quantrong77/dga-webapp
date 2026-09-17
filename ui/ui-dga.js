@@ -651,7 +651,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   $("r_gasTable").innerHTML = evalRows.map((r) => {
     const c = condemnMap[r.gas];
     const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${c.limit} ⚠</strong>` : c.limit;
-    return `<tr><td>${r.gas}</td><td>${r.value}</td><td>${r.limit ?? "—"}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.value}</td><td>${r.limit ?? "—"}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 
   $("r_ratio1").textContent = ratios.c2h2_c2h4.toFixed(3);
@@ -681,7 +681,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
         : "Bảng 65 chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");
     $("r_rateTable").innerHTML = rateRows.map((r) => `
       <tr>
-        <td>${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
+        <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
         <td>${r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
         <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${r.verdict}</span>` : r.verdict}</td>
       </tr>

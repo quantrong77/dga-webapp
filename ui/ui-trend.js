@@ -194,7 +194,10 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
     el.innerHTML = keys.map((key) => {
       const def = TREND_PARAM_DEFS[key];
       const checked = _trendSelectedParams.has(key) ? "checked" : "";
-      return `<label class="chk"><input type="checkbox" data-trend-key="${key}" ${checked} /> ${escapeHtml(def.label)}</label>`;
+      // Icon cạnh tên khí CHỈ áp dụng cho nhóm "gas:..." (khí hòa tan) — nhóm "oil:"/
+      // "oltc:" là nhãn mô tả (vd "Độ ẩm dầu chính"), không phải tên 1 khí cụ thể.
+      const icon = key.startsWith("gas:") ? gasLabelIcon(key.slice(4)) : "";
+      return `<label class="chk"><input type="checkbox" data-trend-key="${key}" ${checked} /> ${icon}${escapeHtml(def.label)}</label>`;
     }).join("");
     el.querySelectorAll("input[data-trend-key]").forEach((cb) => {
       cb.addEventListener("change", () => {

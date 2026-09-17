@@ -286,13 +286,13 @@
 
         <div class="section-title">Hàm lượng khí hòa tan (ppm)</div>
         <div class="grid gases">
-          <label class="field">H2 <input id="g_H2" type="number" step="0.01" /></label>
-          <label class="field">CH4 <input id="g_CH4" type="number" step="0.01" /></label>
-          <label class="field">C2H6 <input id="g_C2H6" type="number" step="0.01" /></label>
-          <label class="field">C2H4 <input id="g_C2H4" type="number" step="0.01" /></label>
-          <label class="field">C2H2 <input id="g_C2H2" type="number" step="0.01" /></label>
-          <label class="field">CO <input id="g_CO" type="number" step="0.01" /></label>
-          <label class="field">CO2 <input id="g_CO2" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="g_H2" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="g_CH4" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="g_C2H6" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="g_C2H4" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="g_C2H2" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="g_CO" type="number" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="g_CO2" type="number" step="0.01" /></label>
         </div>
 
         <!-- ===================== THÔNG TIN THÍ NGHIỆM BỔ SUNG (tùy chọn) =====================
@@ -668,7 +668,7 @@
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Pha</th><th>Lần</th>
-            <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th>
+            <th><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2</th><th><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4</th><th><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6</th><th><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4</th><th><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2</th><th><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO</th><th><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2</th>
           </tr></thead>
           <tbody id="trHistGasTable"></tbody>
         </table></div>
@@ -737,13 +737,13 @@
         <div id="stdGasFields">
           <div class="section-title">Ngưỡng tuyệt đối từng khí (ppm)</div>
           <div class="grid gases">
-            <label class="field">H2 <input id="s_H2" type="number" step="0.01" /></label>
-            <label class="field">CH4 <input id="s_CH4" type="number" step="0.01" /></label>
-            <label class="field">C2H6 <input id="s_C2H6" type="number" step="0.01" /></label>
-            <label class="field">C2H4 <input id="s_C2H4" type="number" step="0.01" /></label>
-            <label class="field">C2H2 <input id="s_C2H2" type="number" step="0.01" /></label>
-            <label class="field">CO <input id="s_CO" type="number" step="0.01" /></label>
-            <label class="field">CO2 <input id="s_CO2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_H2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_CH4" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_C2H6" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_C2H4" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_C2H2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_CO" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_CO2" type="number" step="0.01" /></label>
           </div>
           <p class="note">Bỏ trống khoảng tốc độ sinh khí nếu muốn dùng Bảng 65 QĐ1901 làm mặc định (khuyến nghị).</p>
 
@@ -752,13 +752,13 @@
             này, chỉ áp dụng khi chính nhà sản xuất/đơn vị bạn tự đặt ra. Không cần điền đủ 7 khí — để trống khí nào
             thì khí đó không bị kiểm tra ngưỡng loại bỏ (thường chỉ cần đặt cho H2, C2H2).</p>
           <div class="grid gases">
-            <label class="field">H2 <input id="s_loaibo_H2" type="number" step="0.01" /></label>
-            <label class="field">CH4 <input id="s_loaibo_CH4" type="number" step="0.01" /></label>
-            <label class="field">C2H6 <input id="s_loaibo_C2H6" type="number" step="0.01" /></label>
-            <label class="field">C2H4 <input id="s_loaibo_C2H4" type="number" step="0.01" /></label>
-            <label class="field">C2H2 <input id="s_loaibo_C2H2" type="number" step="0.01" /></label>
-            <label class="field">CO <input id="s_loaibo_CO" type="number" step="0.01" /></label>
-            <label class="field">CO2 <input id="s_loaibo_CO2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_loaibo_H2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_loaibo_CH4" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_loaibo_C2H6" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_loaibo_C2H4" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_loaibo_C2H2" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_loaibo_CO" type="number" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_loaibo_CO2" type="number" step="0.01" /></label>
           </div>
         </div>
 
