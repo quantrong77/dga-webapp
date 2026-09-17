@@ -191,6 +191,12 @@
     <section id="tab-nhap" class="tab-panel">
       <div class="panel">
         <h2>Thông tin lần đo</h2>
+        <!-- Đang nạp Trạm/Thiết bị từ database (ẩn khi setComboLoading(false), xem
+             app-core.js) — tránh cảm giác app bị đứng khi bấm mở gợi ý mà danh sách
+             còn rỗng lúc mới vào app. -->
+        <div class="loading-hint combo-loading-hint hidden" id="dgaComboLoadingHint">
+          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+        </div>
         <div class="grid">
           <label class="field">Trạm
             <div class="combo-wrap">
@@ -472,6 +478,12 @@
           <h2 style="margin:0;">Nhật ký các lần đo đã lưu</h2>
           <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
         </div>
+        <!-- Đang nạp lịch sử đo từ database (ẩn khi setHistoryLoading(false), xem
+             ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
+             dưới trong khi dữ liệu thật vẫn đang tải. -->
+        <div class="loading-hint hidden" id="historyLoadingHint">
+          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu...
+        </div>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
@@ -479,7 +491,7 @@
           </tr></thead>
           <tbody id="historyTable"></tbody>
         </table></div>
-        <p class="note" id="historyEmpty">Chưa có lần đo nào được lưu.</p>
+        <p class="note hidden" id="historyEmpty">Chưa có lần đo nào được lưu.</p>
       </div>
 
       <div class="panel">
@@ -1413,6 +1425,9 @@
           không tự quy định giới hạn cho 3 hạng mục này (thuộc phạm vi IEC 60422) nên công cụ chỉ đối chiếu theo
           đúng bảng số liệu của QĐ1901.</p>
 
+        <div class="loading-hint combo-loading-hint hidden" id="oilComboLoadingHint">
+          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+        </div>
         <div class="grid">
           <label class="field">Trạm
             <div class="combo-wrap">
@@ -1505,6 +1520,9 @@
           cho cấp điện áp 35kV–110kV ở kiểu lấy mẫu pha riêng — công cụ sẽ báo "Không có ngưỡng" thay vì tự suy
           diễn số liệu.</p>
 
+        <div class="loading-hint combo-loading-hint hidden" id="oltcComboLoadingHint">
+          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+        </div>
         <div class="grid">
           <label class="field">Trạm
             <div class="combo-wrap">

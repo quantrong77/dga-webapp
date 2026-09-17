@@ -99,6 +99,16 @@ async function initApp() {
   toggleOltcPhaseField();
   toggleOltcMembraneField();
 
+  // Trong lúc nạp Trạm/Thiết bị/Lịch sử đo lần đầu (chuỗi try/catch tuần tự bên dưới —
+  // có thể mất vài giây, đặc biệt ở chế độ gsheet do Apps Script có độ trễ khởi động),
+  // hiện thông báo "đang tải" ở khung Trạm/Thiết bị (DGA, Dầu cách điện MBA lẫn OLTC —
+  // xem class "combo-loading-hint" trong index.html) và ở bảng Lịch sử đo, tránh cảm
+  // giác app bị đứng/lỗi khi bấm mở gợi ý mà danh sách rỗng hoặc thấy "Chưa có lần đo
+  // nào" trong lúc dữ liệu thật sự vẫn đang trên đường về (xem setComboLoading() dưới
+  // đây và setHistoryLoading() ở ui-history.js).
+  setComboLoading(true);
+  setHistoryLoading(true);
+
   // Danh mục Trạm được cô lập trong try/catch RIÊNG — nếu backend chưa deploy
   // hỗ trợ Trạm (vd: Apps Script chưa deploy bản mới, hoặc bảng "stations" chưa
   // tạo trong Supabase), lỗi ở đây KHÔNG được để chặn phần Tiêu chuẩn/Lịch sử
@@ -128,6 +138,11 @@ async function initApp() {
       // CẦN mở thẳng Sheet/Dashboard lúc này để xem trực tiếp chuyện gì đang xảy ra.
       applyDatabaseBadgeLink(badge);
     }
+  } finally {
+    // Tắt thông báo "đang tải" của bảng Lịch sử đo ngay khi refreshHistoryUI() ở trên
+    // xong (dù thành công hay lỗi) — sớm hơn setComboLoading(false) vì Trạm/Thiết bị
+    // ở tab Dầu cách điện còn cần chờ thêm 2 bước tải oil_tests/oltc_oil_tests bên dưới.
+    setHistoryLoading(false);
   }
 
   // Tab "Dầu cách điện" — cô lập trong try/catch RIÊNG (giống danh mục Trạm):
@@ -147,6 +162,11 @@ async function initApp() {
   } catch (err) {
     console.warn("Không tải được lịch sử thí nghiệm dầu OLTC:", err);
   }
+
+  // Đến đây cả 4 nguồn dữ liệu mà gợi ý Trạm/Thiết bị dùng tới (stations,
+  // measurements, oil_tests, oltc_oil_tests) đều đã thử tải xong (thành công hay
+  // lỗi đều tắt thông báo — lỗi đã có console.warn/alert riêng ở từng khối trên).
+  setComboLoading(false);
 
   // Tab "Người dùng phản hồi" — cô lập trong try/catch RIÊNG, y hệt lý do ở Dầu OLTC:
   // sheet "feedback" là MỚI, backend có thể chưa deploy/tạo bảng kịp.
@@ -361,6 +381,19 @@ function normalizeSearch(s) {
     .replace(/đ|Đ/g, "d") // "đ"/"Đ" không tách bằng NFD nên thay thủ công
     .toLowerCase()
     .trim();
+}
+
+/** Hiện/ẩn thông báo "Vui lòng chờ! Đang nạp dữ liệu..." ở mọi khung Trạm/Thiết bị
+ *  đang gắn class "combo-loading-hint" (DGA, Dầu cách điện MBA, Dầu OLTC — xem
+ *  index.html) — dùng querySelectorAll thay vì liệt kê từng id để tự động áp dụng
+ *  cho cả 3 nơi cùng lúc, khỏi phải sửa thêm nếu sau này có thêm khung Trạm/Thiết bị
+ *  mới (chỉ cần gắn đúng class này). Gọi ở initApp() (xem phía trên), KHÔNG gọi lại ở
+ *  mỗi lần refreshStationsUI()/refreshHistoryUI() thường (vd sau khi lưu 1 bản ghi)
+ *  để tránh chớp thông báo không cần thiết ngoài lần tải đầu tiên. */
+function setComboLoading(isLoading) {
+  document.querySelectorAll(".combo-loading-hint").forEach((el) => {
+    el.classList.toggle("hidden", !isLoading);
+  });
 }
 
 function setupCombo({ input, toggleBtn, listEl, getOptions }) {

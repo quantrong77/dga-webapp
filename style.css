@@ -330,6 +330,33 @@ header.app-header p {
 }
 @keyframes dga-spin { to { transform: rotate(360deg); } }
 
+/* Thông báo "Vui lòng chờ! Đang nạp dữ liệu..." — khung Trạm/Thiết bị (DGA, Dầu cách
+   điện MBA/OLTC, class dùng chung "combo-loading-hint") và bảng Lịch sử đo
+   (#historyLoadingHint) trong lúc chờ dữ liệu ban đầu từ database, xem
+   setComboLoading()/setHistoryLoading() ở app-core.js/ui-history.js. */
+.loading-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--blue-100);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--blue-900);
+  font-weight: 600;
+}
+.loading-hint.hidden { display: none; }
+.spinner-sm {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.65);
+  border-top-color: var(--blue-900);
+  animation: dga-spin 0.8s linear infinite;
+}
+
 /* Thông báo "toast" góc trên bên phải (vd: "Đăng nhập thành công!") */
 .toast-container {
   position: fixed;

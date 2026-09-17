@@ -9,6 +9,18 @@ let _allMeasurements = [];
 let _allOilTests = [];
 let _allOltcOilTests = [];
 
+/** Hiện/ẩn thông báo "Vui lòng chờ! Đang nạp dữ liệu..." (#historyLoadingHint) khi
+ *  tải lịch sử đo LẦN ĐẦU lúc mở app (gọi ở initApp(), xem app-core.js) — tránh vừa
+ *  vào tab đã thấy "Chưa có lần đo nào được lưu" (#historyEmpty) trong lúc dữ liệu
+ *  thật vẫn đang trên đường về, dễ hiểu lầm là mất hết dữ liệu. Ẩn luôn #historyEmpty
+ *  trong lúc tải để 2 thông báo không chồng lên nhau. */
+function setHistoryLoading(isLoading) {
+  const hint = $("historyLoadingHint");
+  if (!hint) return;
+  hint.classList.toggle("hidden", !isLoading);
+  if (isLoading) $("historyEmpty").classList.add("hidden");
+}
+
 async function refreshHistoryUI() {
   const all = await Storage.listMeasurements();
   _allMeasurements = all;
