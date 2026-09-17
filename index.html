@@ -86,6 +86,18 @@
       <!-- Icon tab "Người dùng phản hồi" — bong bóng chat có đuôi + 2 gạch ngang tượng
            trưng cho dòng chữ góp ý. -->
       <symbol id="icon-feedback" viewBox="0 0 24 24"><path d="M4.5 5h15a1.5 1.5 0 0 1 1.5 1.5V15a1.5 1.5 0 0 1-1.5 1.5H10.5l-4.9 3.3c-0.5 0.3-1.1-0.1-1.1-0.6V16.5H4.5A1.5 1.5 0 0 1 3 15V6.5A1.5 1.5 0 0 1 4.5 5z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"/><path d="M7.3 9.6h9.4M7.3 12.6h6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <!-- Bộ icon bổ sung — gắn trước nhãn các trường nhập liệu lặp lại ở tab "DGA"/
+           "Dầu cách điện"/"Lịch sử đo"/"Xu hướng" (Trạm, Thiết bị, Loại thiết bị, Cấp
+           điện áp, Nhà sản xuất, Pha, Ngày, Lần đo, Ghi chú) để dễ quét mắt hơn. -->
+      <symbol id="icon-pin" viewBox="0 0 24 24"><path d="M12 2.5c-4 0-7 3-7 7 0 5.2 7 12 7 12s7-6.8 7-12c0-4-3-7-7-7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="icon-cpu" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.3" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="10" y="10" width="4" height="4" rx="0.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M9 2.5v3M12 2.5v3M15 2.5v3M9 18.5v3M12 18.5v3M15 18.5v3M2.5 9h3M2.5 12h3M2.5 15h3M18.5 9h3M18.5 12h3M18.5 15h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <symbol id="icon-tag" viewBox="0 0 24 24"><path d="M11.6 3.3H4.8a1.5 1.5 0 0 0-1.5 1.5v6.8c0 .4.16.78.44 1.06l9 9c.58.58 1.53.58 2.12 0l6.8-6.8c.58-.58.58-1.53 0-2.12l-9-9a1.5 1.5 0 0 0-1.06-.44z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="1.4" fill="currentColor" stroke="none"/></symbol>
+      <symbol id="icon-bolt" viewBox="0 0 24 24"><path d="M12.8 2.5L4.5 13.8h5.6L10.2 21.5l9-12.2h-5.8l-0.6-6.8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-factory" viewBox="0 0 24 24"><path d="M3 21V12l5-3v3l5-3v3l5-3v12H3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 21v-4M12 21v-4M17 21v-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></symbol>
+      <symbol id="icon-waveform" viewBox="0 0 24 24"><path d="M2.5 12c2 0 2-6 4-6s2 12 4 12 2-12 4-12 2 6 4 6 2-4 3.5-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-hash" viewBox="0 0 24 24"><path d="M9.5 3L7 21M17 3l-2.5 18M4 8.5h16M3 15.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-note" viewBox="0 0 24 24"><path d="M5 3.5h11l3 3v13.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
     </defs>
   </svg>
 
@@ -196,7 +208,7 @@
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
     <section id="tab-nhap" class="tab-panel">
       <div class="panel">
-        <h2>Thông tin lần đo</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thông tin lần đo</h2>
         <!-- Đang nạp Trạm/Thiết bị từ database (ẩn khi setComboLoading(false), xem
              app-core.js) — tránh cảm giác app bị đứng khi bấm mở gợi ý mà danh sách
              còn rỗng lúc mới vào app. -->
@@ -204,21 +216,21 @@
           <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
-          <label class="field">Trạm
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
             <div class="combo-wrap">
               <input id="f_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
               <button type="button" id="f_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="f_tram_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field">Thiết bị (tên/mã)
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
             <div class="combo-wrap">
               <input id="f_thietbi" type="text" placeholder="VD: TI174 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
               <button type="button" id="f_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
               <div id="f_thietbi_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field">Loại thiết bị
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị
             <select id="f_loai">
               <option>TI (biến dòng điện)</option>
               <option>TU (biến điện áp)</option>
@@ -231,27 +243,27 @@
             <input id="f_mbasubtype" type="checkbox" style="width:auto; margin-top:4px;" />
             <span>Ngăn OLTC (thông dầu/khí với thùng chính)</span>
           </label>
-          <label class="field">Nhà sản xuất (tùy chọn)
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn)
             <select id="f_nsx">
               <option value="">— Không có / dùng tiêu chuẩn chặt hơn QĐ1901/IEC60599 —</option>
             </select>
           </label>
-          <label class="field">Pha
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
             <select id="f_pha">
               <option>A</option><option>B</option><option>C</option>
               <option value="chung3pha">Chung</option>
             </select>
           </label>
-          <label class="field">Lần đo
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo
             <input id="f_landocount" type="number" min="1" value="1" />
           </label>
-          <label class="field">Ngày lấy mẫu
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
             <input id="f_ngay" type="date" />
           </label>
-          <label class="field">Ghi chú
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="f_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
-          <label class="field field-wide">Biên bản thí nghiệm (PDF, tùy chọn)
+          <label class="field field-wide"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Biên bản thí nghiệm (PDF, tùy chọn)
             <!-- Ô kéo-thả: input file THẬT phủ toàn bộ (opacity:0) để bấm vào bất kỳ
                  đâu trong khung đều mở được hộp thoại chọn file như trước (không cần
                  thêm JS cho việc này) — 3 sự kiện dragenter/dragover/dragleave + drop
@@ -291,7 +303,7 @@
              ưu tiên trường này, chỉ dùng lại "Ngày lấy mẫu" nếu để trống (giữ hành vi cũ). -->
         <div class="section-title">Thông tin thí nghiệm bổ sung (tùy chọn — dùng khi xuất BBTN)</div>
         <div class="grid">
-          <label class="field">Ngày thí nghiệm
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày thí nghiệm
             <input id="f_ngaythinghiem" type="date" />
           </label>
           <label class="field">Lý do thí nghiệm
@@ -357,7 +369,7 @@
            OLTC/Nhà sản xuất đang chọn Ở FORM PHÍA TRÊN cho TẤT CẢ file trong đợt —
            chỉ Pha/Ngày lấy mẫu/hàm lượng khí đọc riêng từng file (xem bbtn-batch-import.js). -->
       <div class="panel">
-        <h2>Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị</h2>
         <p class="note" style="margin-top:-6px;">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
           đang chọn ở form "1. Thông tin lần đo" phía trên cho TẤT CẢ file bên dưới — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
           được đọc riêng từng file PDF. Phù hợp khi nhập bổ sung nhiều lần đo lịch sử để phân tích xu hướng (tab "Xu hướng").</p>
@@ -401,7 +413,7 @@
 
       <div class="panel hidden" id="resultsPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <h2 style="margin:0;">2. Kết quả đánh giá</h2>
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>2. Kết quả đánh giá</h2>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
             <button type="button" class="btn ghost" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
             <!-- Chỉ hiện khi thiết bị có bất thường (overallStatus.level !== "normal") — xem
@@ -481,8 +493,11 @@
     <section id="tab-lichsu" class="tab-panel hidden">
       <div class="panel">
         <div class="toolbar">
-          <h2 style="margin:0;">Nhật ký các lần đo đã lưu</h2>
-          <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Nhật ký các lần đo đã lưu</h2>
+          <span class="search-input-wrap">
+            <svg class="icon-svg search-input-icon" aria-hidden="true"><use href="#icon-zoom"></use></svg>
+            <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
+          </span>
         </div>
         <!-- Đang nạp lịch sử đo từ database (ẩn khi setHistoryLoading(false), xem
              ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
@@ -501,18 +516,18 @@
       </div>
 
       <div class="panel">
-        <h2>So sánh tốc độ gia tăng khí giữa 2 lần đo</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>So sánh tốc độ gia tăng khí giữa 2 lần đo</h2>
         <p class="note">Chọn 1 thiết bị (Trạm + Thiết bị + Pha) đã có từ 2 lần đo trở lên, rồi chọn 2 mốc thời gian
           bất kỳ để so sánh — không bắt buộc phải là 2 lần liền kề. Tốc độ tự động đối chiếu Bảng 65 QĐ1901 (Điều 54,
           tương ứng mục 8.4 IEC 60599:1999), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
         <div class="grid">
-          <label class="field">Thiết bị
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
             <select id="cmp_device"><option value="">— Chọn thiết bị —</option></select>
           </label>
-          <label class="field">Lần đo thứ nhất
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo thứ nhất
             <select id="cmp_before"></select>
           </label>
-          <label class="field">Lần đo thứ hai
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo thứ hai
             <select id="cmp_after"></select>
           </label>
         </div>
@@ -561,7 +576,7 @@
              THỰC SỰ đang có ít nhất 1 thiết bị ở mức Cảnh báo/Báo động; để trống = xem
              TẤT CẢ trạm đang có cảnh báo (mặc định). -->
         <div class="toolbar" style="margin-bottom:14px;">
-          <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;">Trạm biến áp
+          <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="al_stationFilter" type="text" placeholder="Gõ để tìm trạm, để trống = TẤT CẢ trạm có cảnh báo" autocomplete="off" />
               <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm đang có cảnh báo">▼</button>
@@ -593,20 +608,20 @@
     <!-- ===================== TAB: XU HƯỚNG (ĐỒ THỊ THEO THỜI GIAN) ===================== -->
     <section id="tab-xuhuong" class="tab-panel hidden">
       <div class="panel">
-        <h2>Xu hướng theo thời gian</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng theo thời gian</h2>
         <p class="note">Gõ để tìm và chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA chính, dầu
           OLTC) và vẽ đồ thị xu hướng cho các thông số bạn chọn — biểu đồ luôn thể hiện toàn bộ lịch sử của thiết bị
           đó. Gõ/chọn trước 1 Trạm biến áp để ô Thiết bị chỉ gợi ý các thiết bị thuộc trạm đó (đỡ phải dò tên trong
           danh sách dài); để trống Trạm để xem thiết bị của TẤT CẢ các trạm như trước.</p>
         <div style="display:flex; flex-wrap:wrap; gap:18px;">
-          <label class="field" style="max-width:300px; flex:1 1 260px;">Trạm biến áp
+          <label class="field" style="max-width:300px; flex:1 1 260px;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="tr_station" type="text" placeholder="Gõ để tìm trạm, để trống để xem TẤT CẢ" autocomplete="off" />
               <button type="button" id="tr_station_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="tr_station_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field" style="max-width:300px; flex:1 1 260px;">Thiết bị
+          <label class="field" style="max-width:300px; flex:1 1 260px;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
             <div class="combo-wrap">
               <input id="tr_device" type="text" placeholder="Gõ để tìm thiết bị" autocomplete="off" />
               <button type="button" id="tr_device_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
@@ -619,13 +634,13 @@
 
       <div class="panel hidden" id="trContentWrap">
         <div id="trPhaseWrap" class="hidden" style="margin-bottom:18px;">
-          <p class="section-title" style="margin-top:0;">Lọc theo pha</p>
+          <p class="section-title" style="margin-top:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Lọc theo pha</p>
           <p class="note" style="margin:0 0 8px;">Thiết bị này có dữ liệu từ nhiều pha — tick các pha muốn so sánh, mỗi
             pha sẽ vẽ thành 1 đường riêng trên đồ thị để đối chiếu với nhau.</p>
           <div class="trend-checks" id="trPhaseChecks"></div>
         </div>
 
-        <h2>Chọn thông số cần vẽ</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-ruler"></use></svg>Chọn thông số cần vẽ</h2>
         <div id="trParamsGasWrap" class="hidden">
           <p class="section-title" style="margin-top:0;">Khí hòa tan (ppm)</p>
           <div class="trend-checks" id="trParamsGas"></div>
@@ -649,7 +664,7 @@
       </div>
 
       <div class="panel hidden" id="trHistGasWrap">
-        <h2>Lịch sử đo khí hòa tan</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo khí hòa tan</h2>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Pha</th><th>Lần</th>
@@ -660,7 +675,7 @@
       </div>
 
       <div class="panel hidden" id="trHistOilWrap">
-        <h2>Lịch sử thí nghiệm dầu MBA chính</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu MBA chính</h2>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>Điện áp chọc thủng (kV)</th>
@@ -670,7 +685,7 @@
       </div>
 
       <div class="panel hidden" id="trHistOltcWrap">
-        <h2>Lịch sử thí nghiệm dầu OLTC</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu OLTC</h2>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Trạng thái dầu</th>
@@ -753,10 +768,10 @@
             phân biệt theo cấp điện áp/trạng thái dầu. Bỏ trống hạng mục nào thì hạng mục đó vẫn dùng QĐ1901 mặc
             định, chỉ các hạng mục có nhập số mới bị nhà sản xuất ghi đè.</p>
           <div class="grid">
-            <label class="field">Cấp điện áp MBA
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
               <select id="s_oil_voltage_class"></select>
             </label>
-            <label class="field">Trạng thái dầu
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
               <select id="s_oil_state">
                 <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
                 <option value="inservice">Dầu vận hành</option>
@@ -1499,7 +1514,7 @@
     <!-- ===================== TAB: DẦU CÁCH ĐIỆN (MBA/Kháng dầu) ===================== -->
     <section id="tab-dau" class="tab-panel hidden">
       <div class="panel">
-        <h2>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
         <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
           thủng dầu (kV) — theo Bảng 58/55/54, Điều 50/47/46 QĐ1901, phân theo cấp điện áp MBA. Chỉ áp dụng cho
           MBA/Kháng dầu — QĐ1901 không có bảng riêng cho dầu TI/TU (theo quy định nhà sản xuất). IEC 60599:1999
@@ -1510,30 +1525,30 @@
           <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
-          <label class="field">Trạm
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
             <div class="combo-wrap">
               <input id="o_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
               <button type="button" id="o_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="o_tram_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field">Thiết bị (tên/mã)
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
             <div class="combo-wrap">
               <input id="o_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
               <button type="button" id="o_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
               <div id="o_thietbi_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field">Cấp điện áp MBA
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
             <select id="o_voltage_class"></select>
           </label>
-          <label class="field">Trạng thái dầu
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
             <select id="o_oilstate">
               <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
               <option value="inservice">Dầu vận hành</option>
             </select>
           </label>
-          <label class="field">Nhà sản xuất (tùy chọn)
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn)
             <select id="o_nsx">
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
@@ -1542,10 +1557,10 @@
             <input id="o_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV)</span>
           </label>
-          <label class="field">Ngày lấy mẫu
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
             <input id="o_ngay" type="date" />
           </label>
-          <label class="field">Ghi chú
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="o_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
         </div>
@@ -1566,7 +1581,7 @@
       </div>
 
       <div class="panel hidden" id="oilResultsPanel">
-        <h2>Kết quả đánh giá dầu cách điện</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
         </div>
@@ -1577,7 +1592,7 @@
       </div>
 
       <div class="panel">
-        <h2>Lịch sử thí nghiệm dầu đã lưu</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu đã lưu</h2>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
@@ -1590,7 +1605,7 @@
 
       <!-- ============== DẦU KHOANG ĐIỀU ÁP DƯỚI TẢI (OLTC) — Điều 37/Bảng 49 ============== -->
       <div class="panel">
-        <h2>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
         <p class="note">Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
           (đánh giá Độ ẩm + Điện áp chọc thủng; QĐ1901 không quy định ngưỡng tgδ cho dầu OLTC lúc vận hành, chỉ
           ghi nhận để theo dõi xu hướng). Khi dầu OLTC <strong>mới lắp</strong>, Điều 37 quy định áp dụng CHUNG
@@ -1605,14 +1620,14 @@
           <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
-          <label class="field">Trạm
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
             <div class="combo-wrap">
               <input id="ot_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
               <button type="button" id="ot_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="ot_tram_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field">Thiết bị (tên/mã)
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
             <div class="combo-wrap">
               <input id="ot_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
               <button type="button" id="ot_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
@@ -1620,7 +1635,7 @@
             </div>
           </label>
           <label class="field">
-            <span class="field-label-row">Điểm lấy mẫu OLTC
+            <span class="field-label-row"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Điểm lấy mẫu OLTC
               <button type="button" class="info-icon-btn" aria-controls="ot_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu OLTC" title="Giải thích Điểm lấy mẫu OLTC">i</button>
             </span>
             <select id="ot_samplepoint"></select>
@@ -1630,23 +1645,23 @@
             <p><strong>Điểm cuối trung tính (neutral point end):</strong> với MBA 3 pha đấu sao (Y), điểm trung tính là điểm chung nơi 3 đầu cuộn dây gặp nhau (thường nối đất). Nếu OLTC được đặt ở đầu cuộn dây phía điểm trung tính — nơi điện áp so với đất thấp nhất — thì 3 pha có thể dùng CHUNG một khoang dầu/buồng dập hồ quang duy nhất, vì không cần cách điện pha-pha lớn ở vị trí đó. Do dùng chung khoang, khi lấy mẫu dầu chỉ cần 1 mẫu đại diện cho cả 3 pha, và ngưỡng đánh giá theo Bảng 49 là cố định, không phân theo cấp điện áp MBA.</p>
             <p><strong>Điểm không trung tính (line end / một pha):</strong> nếu OLTC đặt ở đầu dây phía đường dây (không phải điểm trung tính), điện áp tại đó cao hơn nhiều nên mỗi pha A/B/C cần khoang dầu và buồng dập hồ quang RIÊNG, phải lấy mẫu riêng từng pha. Trường hợp MBA 1 pha thì OLTC vốn chỉ có 1 pha nên cũng xếp vào nhóm này. Ngưỡng Bảng 49 cho kiểu này phân theo cấp điện áp MBA (≤35kV / 110kV / 220kV / 500kV), riêng bậc 35kV–110kV thì Bảng 49 gốc không có số liệu nên app báo "Không có ngưỡng".</p>
           </div>
-          <label class="field" id="ot_phase_wrap">Pha
+          <label class="field" id="ot_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
             <select id="ot_phase">
               <option value="A">Pha A</option>
               <option value="B">Pha B</option>
               <option value="C">Pha C</option>
             </select>
           </label>
-          <label class="field">Cấp điện áp MBA
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
             <select id="ot_voltage_class"></select>
           </label>
-          <label class="field">Trạng thái dầu
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
             <select id="ot_oilstate">
               <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
               <option value="inservice">Dầu vận hành</option>
             </select>
           </label>
-          <label class="field">Nhà sản xuất (tùy chọn — chỉ áp dụng khi Dầu mới)
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn — chỉ áp dụng khi Dầu mới)
             <select id="ot_nsx">
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
@@ -1655,10 +1670,10 @@
             <input id="ot_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV, khi Dầu mới)</span>
           </label>
-          <label class="field">Ngày lấy mẫu
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
             <input id="ot_ngay" type="date" />
           </label>
-          <label class="field">Ghi chú
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="ot_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
         </div>
@@ -1679,7 +1694,7 @@
       </div>
 
       <div class="panel hidden" id="oltcOilResultsPanel">
-        <h2>Kết quả đánh giá dầu OLTC</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
         </div>
@@ -1690,7 +1705,7 @@
       </div>
 
       <div class="panel">
-        <h2>Lịch sử thí nghiệm dầu OLTC đã lưu</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu OLTC đã lưu</h2>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
