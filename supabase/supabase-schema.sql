@@ -208,10 +208,20 @@ create table if not exists feedback (
 -- alter table measurements add column if not exists nhiet_do numeric;
 -- alter table measurements add column if not exists do_am numeric;
 
--- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
--- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.
--- Nếu cần giới hạn theo tài khoản đăng nhập, thay các policy "using (true)"
--- bằng điều kiện auth.uid() phù hợp (xem tài liệu Supabase Auth).
+-- Bật Row Level Security — MẶC ĐỊNH CHẶN TOÀN BỘ anon key (không tạo policy nào cho
+-- phép đọc/ghi). Trước đây file này tạo policy "using (true) with check (true)" cho
+-- MỌI thao tác, với lý do "công cụ nội bộ dùng chung 1 link" — nhưng SUPABASE_URL +
+-- SUPABASE_ANON_KEY nằm sẵn trong config.js mà website phục vụ công khai (ai mở
+-- DevTools cũng lấy được), nên "using (true)" thực chất là mở cho BẤT KỲ AI TRÊN
+-- INTERNET đọc/sửa/xóa toàn bộ dữ liệu qua thẳng Supabase REST API, không cần qua giao
+-- diện web/đăng nhập gì cả. Ứng dụng web hiện tại luôn chạy qua Google Apps Script
+-- (Storage.mode === "gsheet", xem storage.js), KHÔNG đụng tới các bảng Supabase này —
+-- nên khóa lại (deny-all) không ảnh hưởng gì tới hoạt động hiện tại.
+--
+-- CHỈ KHI NÀO thật sự chuyển hẳn sang dùng Supabase làm backend chính (không còn cấu
+-- hình GSHEET_WEBAPP_URL), PHẢI tự thiết kế lại policy ở đây gắn với xác thực thật
+-- (Supabase Auth + điều kiện auth.uid()/auth.role() = 'authenticated') — KHÔNG được
+-- quay lại "using (true)" một khi app đã public repo + public site.
 
 alter table measurements enable row level security;
 alter table manufacturer_standards enable row level security;
@@ -221,67 +231,40 @@ alter table oltc_oil_tests enable row level security;
 alter table feedback enable row level security;
 
 drop policy if exists "measurements_all" on measurements;
-create policy "measurements_all" on measurements for all using (true) with check (true);
-
 drop policy if exists "standards_all" on manufacturer_standards;
-create policy "standards_all" on manufacturer_standards for all using (true) with check (true);
-
 drop policy if exists "stations_all" on stations;
-create policy "stations_all" on stations for all using (true) with check (true);
-
 drop policy if exists "oiltests_all" on oil_tests;
-create policy "oiltests_all" on oil_tests for all using (true) with check (true);
-
 drop policy if exists "oltc_oiltests_all" on oltc_oil_tests;
-create policy "oltc_oiltests_all" on oltc_oil_tests for all using (true) with check (true);
-
 drop policy if exists "feedback_all" on feedback;
-create policy "feedback_all" on feedback for all using (true) with check (true);
+-- (Không create policy nào thay thế — RLS bật + 0 policy = deny-all mặc định.)
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket "bbtn" — nơi lưu file Biên bản thí nghiệm (PDF) đính kèm 1 lần đo
--- (tính năng "Xem BBTN đã lưu" ở tab "DGA"/"Lịch sử đo"). Bucket công khai (public)
--- để bbtn_url mở trực tiếp được không cần token — chấp nhận được cho công cụ nội bộ 1
--- nhóm nhỏ dùng chung 1 link, giống cách "measurements_all" ở trên đang mở cho anon key.
--- Nếu cần hạn chế hơn, đổi public thành false và dùng createSignedUrl() ở storage.js
--- thay cho getPublicUrl() (xem uploadAttachment() trong storage.js).
+-- (tính năng "Xem BBTN đã lưu" ở tab "DGA"/"Lịch sử đo"). ĐÃ THẮT CHẶT: đổi public
+-- thành false + xóa policy cho anon (lý do giống hệt phần bảng ở trên — anon key đã
+-- công khai qua config.js). Bucket này KHÔNG được app hiện tại dùng (đang chạy chế độ
+-- gsheet) nên khóa lại an toàn. Khi nào thật sự chuyển sang Supabase, dùng
+-- createSignedUrl() ở storage.js (đã có sẵn hàm uploadAttachment()) thay cho
+-- getPublicUrl(), và thêm lại policy gắn với xác thực thật thay vì mở public.
 -- ---------------------------------------------------------------------------
 
 insert into storage.buckets (id, name, public)
-values ('bbtn', 'bbtn', true)
-on conflict (id) do update set public = true;
+values ('bbtn', 'bbtn', false)
+on conflict (id) do update set public = false;
 
 drop policy if exists "bbtn_insert" on storage.objects;
-create policy "bbtn_insert" on storage.objects for insert
-  with check (bucket_id = 'bbtn');
-
 drop policy if exists "bbtn_select" on storage.objects;
-create policy "bbtn_select" on storage.objects for select
-  using (bucket_id = 'bbtn');
-
 drop policy if exists "bbtn_update" on storage.objects;
-create policy "bbtn_update" on storage.objects for update
-  using (bucket_id = 'bbtn') with check (bucket_id = 'bbtn');
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket "feedback" — ảnh minh họa đính kèm góp ý (tab "Người dùng phản hồi").
--- Tách riêng khỏi bucket "bbtn" ở trên vì khác mục đích (BBTN vs. ảnh chụp màn hình góp
--- ý), cùng cấu hình công khai (public) — xem lý do đầy đủ ở ghi chú "Storage bucket
--- "bbtn"" phía trên, áp dụng y hệt ở đây.
+-- Cùng lý do + cách thắt chặt như bucket "bbtn" ở trên.
 -- ---------------------------------------------------------------------------
 
 insert into storage.buckets (id, name, public)
-values ('feedback', 'feedback', true)
-on conflict (id) do update set public = true;
+values ('feedback', 'feedback', false)
+on conflict (id) do update set public = false;
 
 drop policy if exists "feedback_insert" on storage.objects;
-create policy "feedback_insert" on storage.objects for insert
-  with check (bucket_id = 'feedback');
-
 drop policy if exists "feedback_select" on storage.objects;
-create policy "feedback_select" on storage.objects for select
-  using (bucket_id = 'feedback');
-
 drop policy if exists "feedback_update" on storage.objects;
-create policy "feedback_update" on storage.objects for update
-  using (bucket_id = 'feedback') with check (bucket_id = 'feedback');
