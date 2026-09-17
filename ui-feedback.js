@@ -18,7 +18,7 @@ function renderFeedbackDropzoneLabel() {
     label.textContent = file.name;
     zone.classList.add("has-file");
   } else {
-    label.innerHTML = 'Kéo thả ảnh vào đây, hoặc <span class="file-dropzone-link">bấm để chọn ảnh</span>';
+    label.innerHTML = 'Kéo thả ảnh vào đây, <span class="file-dropzone-link">bấm để chọn ảnh</span>, hoặc dán ảnh đã chụp/copy (Ctrl+V)';
     zone.classList.remove("has-file");
   }
 }
@@ -90,6 +90,40 @@ function setupFeedbackDropzone() {
     dt.items.add(file);
     input.files = dt.files;
     input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
+/** Cho phép DÁN ảnh (Ctrl+V) trực tiếp vào tab "Người dùng phản hồi" — tiện khi người
+ *  dùng vừa chụp màn hình (PrintScreen/Snipping Tool...) xong, không cần lưu file ra
+ *  đĩa rồi mới "bấm để chọn ảnh" như trước. Gắn sự kiện "paste" lên CẢ khung
+ *  #tab-phanhoi (không chỉ riêng #fbDropzone) vì lúc dán, con trỏ thường đang ở trong ô
+ *  "Ý kiến góp ý" (#fb_content) chứ không phải trong khung ảnh — nghe ở cấp cha để bắt
+ *  được dù đang focus ở đâu trong tab này. Chỉ can thiệp (preventDefault + gán file) khi
+ *  clipboard THẬT SỰ có ảnh; dán văn bản bình thường vào #fb_content không bị ảnh hưởng
+ *  gì (clipboard lúc đó không có "item" kiểu file nên vòng lặp bên dưới bỏ qua). Cùng cơ
+ *  chế tái dùng input thật qua DataTransfer như setupFeedbackDropzone() (kéo-thả). */
+function setupFeedbackPaste() {
+  const panel = $("tab-phanhoi");
+  const input = $("fb_image");
+  if (!panel || !input) return;
+  panel.addEventListener("paste", (e) => {
+    const items = (e.clipboardData || window.clipboardData || {}).items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.kind !== "file" || !item.type.startsWith("image/")) continue;
+      const file = item.getAsFile();
+      if (!file) continue;
+      e.preventDefault();
+      // Ảnh dán từ clipboard thường KHÔNG có tên file (hoặc tên chung chung "image.png")
+      // — đặt lại tên kèm thời điểm dán để dễ phân biệt nếu người dùng lỡ dán nhiều lần.
+      const ext = (file.type.split("/")[1] || "png").split("+")[0];
+      const named = new File([file], `dan-anh-${Date.now()}.${ext}`, { type: file.type });
+      const dt = new DataTransfer();
+      dt.items.add(named);
+      input.files = dt.files;
+      input.dispatchEvent(new Event("change", { bubbles: true }));
+      break;
+    }
   });
 }
 

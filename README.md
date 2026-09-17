@@ -136,6 +136,51 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 > đã bật ở bước 2. **Không dán "service_role key"** (khóa có toàn quyền, phải
 > giữ bí mật) vào `config.js`.
 
+### 2c. Thiết lập Supabase SONG SONG với Google Sheets (dự phòng / chuẩn bị chuyển sau)
+
+Đang dùng Google Sheets làm chính, muốn thiết lập sẵn Supabase để dự phòng hoặc
+thử nghiệm, mà KHÔNG ảnh hưởng gì đến hệ thống đang chạy? App chỉ dùng **đúng 1**
+nơi lưu trữ tại 1 thời điểm — thứ tự ưu tiên nếu `config.js` điền cả 2 là
+**Google Sheets > Supabase > localStorage** (xem đầu file `config.js`) — nên có
+thể điền sẵn cả 2 mà không lo "song song" theo nghĩa ghi cùng lúc 2 nơi (app
+KHÔNG hỗ trợ tự động đồng bộ 2 chiều Gsheet ⇄ Supabase).
+
+1. Làm đúng bước 1–3 ở mục 2b bên trên (tạo project Supabase, chạy
+   `supabase-schema.sql`, copy Project URL + anon key) — **chưa cần đổi
+   `config.js` vội**.
+2. Mở `config.js`, điền thêm `SUPABASE_URL`/`SUPABASE_ANON_KEY` **bên cạnh**
+   `GSHEET_WEBAPP_URL` đang có sẵn (giữ nguyên, không xóa):
+   ```js
+   window.DGA_CONFIG = {
+     GSHEET_WEBAPP_URL: "https://script.google.com/macros/s/.../exec", // giữ nguyên
+     SUPABASE_URL: "https://xxxxxxxx.supabase.co",
+     SUPABASE_ANON_KEY: "eyJhbGciOi...",
+   };
+   ```
+3. Lưu lại, mở lại trang — vì Google Sheets vẫn được ưu tiên trước, badge
+   "Database" và toàn bộ hoạt động của app **không đổi gì cả**. Supabase lúc
+   này coi như đã "đứng sẵn ở hàng chờ", có bảng/cấu trúc đầy đủ nhưng chưa có
+   dữ liệu (chưa ai ghi vào).
+4. **Khi nào thật sự muốn CHUYỂN HẲN sang Supabase**: xóa trắng (để `""`) giá
+   trị `GSHEET_WEBAPP_URL` trong `config.js` → lưu lại → mở lại trang là app tự
+   chuyển sang dùng Supabase ngay (không cần sửa gì khác). Muốn quay lại Google
+   Sheets thì điền lại đúng URL cũ vào `GSHEET_WEBAPP_URL`.
+
+> **2 lưu ý quan trọng trước khi chuyển hẳn:**
+>
+> - **Không tự động chuyển dữ liệu cũ.** Toàn bộ lịch sử đo/dầu MBA/dầu
+>   OLTC/tiêu chuẩn/góp ý đang có trong Google Sheets sẽ **không** tự xuất hiện
+>   bên Supabase — 2 nơi lưu trữ độc lập hoàn toàn. Cần dữ liệu cũ bên Supabase
+>   thì phải xuất/nhập tay (hoặc nhờ viết 1 script chuyển đổi riêng).
+> - **Đăng nhập/phân quyền (Admin/User) chỉ hoạt động ở chế độ Google Sheets**
+>   (`Auth.enabled` chỉ bật khi có cấu hình `GSHEET_WEBAPP_URL`, xem `storage.js`).
+>   Nếu chuyển hẳn sang Supabase như hướng dẫn ở bước 4, màn hình đăng nhập sẽ
+>   **biến mất** và mọi người vào app đều có quyền sửa/xóa như nhau (giống hệt
+>   chế độ không đăng nhập hiện tại) — tính năng phân quyền Admin/User hiện
+>   CHƯA được xây dựng cho Supabase. Nếu cần giữ phân quyền khi dùng Supabase,
+>   đây là việc cần phát triển thêm riêng (có thể dùng Supabase Auth) trước khi
+>   chuyển hẳn.
+
 ## 3. Đưa lên GitHub + GitHub Pages (miễn phí)
 
 ```bash

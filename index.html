@@ -138,7 +138,11 @@
       <button type="button" id="btnToggleTabLayout" class="header-icon-btn" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg>
       </button>
-      <span id="storageBadge" class="badge local">Đang tải...</span>
+      <!-- <button> (không phải <span> như trước) — khi đã cấu hình link quản lý (xem
+           databaseManagementUrl() ở storage.js), bấm vào mở Google Sheet/Supabase
+           Dashboard ở tab mới, xem setupStorageBadgeLink() ở app-core.js. Nếu chưa cấu
+           hình link thì vẫn hiển thị bình thường, bấm vào không có gì xảy ra. -->
+      <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
     </div>
     <div class="header-center">
       <div class="app-title-row">
@@ -1657,7 +1661,7 @@
           <label class="field field-wide">Hình ảnh minh họa (tùy chọn)
             <div class="file-dropzone" id="fbDropzone">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-              <span class="file-dropzone-text" id="fbDropzoneText">Kéo thả ảnh vào đây, hoặc <span class="file-dropzone-link">bấm để chọn ảnh</span></span>
+              <span class="file-dropzone-text" id="fbDropzoneText">Kéo thả ảnh vào đây, <span class="file-dropzone-link">bấm để chọn ảnh</span>, hoặc dán ảnh đã chụp/copy (Ctrl+V)</span>
               <input id="fb_image" type="file" accept="image/*" />
             </div>
             <div class="feedback-image-preview hidden" id="fbImagePreviewWrap">

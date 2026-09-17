@@ -51,6 +51,33 @@ function hasGsheetConfig() {
   );
 }
 
+/** URL "quản lý database" để Admin bấm vào badge #storageBadge ở header mở nhanh
+ *  Google Sheet/Supabase Dashboard tương ứng (xem setupStorageBadgeLink() ở
+ *  app-core.js), tiện thao tác trực tiếp (sửa tay bản ghi lỗi, lọc, export...) mà
+ *  không cần tự đi tìm lại đúng Sheet/dự án. Trả về null nếu không có link (chế độ
+ *  local, hoặc chưa cấu hình) — badge khi đó vẫn hiển thị bình thường, chỉ không bấm
+ *  mở được gì, y hệt hành vi trước khi có tính năng này.
+ *    - Google Sheets: KHÔNG suy ra được từ GSHEET_WEBAPP_URL (URL đó là link Web App
+ *      /exec, khác hẳn link Sheet) nên phải đọc từ GSHEET_SHEET_URL — admin tự dán tay
+ *      1 lần vào config.js (xem chú thích ở đó).
+ *    - Supabase: TỰ suy ra từ SUPABASE_URL (dạng https://<ref>.supabase.co) thành link
+ *      Dashboard https://supabase.com/dashboard/project/<ref> — không cần cấu hình gì
+ *      thêm. Nếu SUPABASE_URL không đúng khuôn dạng này (vd Supabase tự host), trả về
+ *      null thay vì đoán bừa 1 link sai.
+ */
+function databaseManagementUrl() {
+  if (typeof window === "undefined" || !window.DGA_CONFIG) return null;
+  if (Storage.mode === "gsheet") {
+    const url = String(window.DGA_CONFIG.GSHEET_SHEET_URL || "").trim();
+    return url || null;
+  }
+  if (Storage.mode === "supabase") {
+    const m = /^https:\/\/([a-z0-9-]+)\.supabase\.co\/?$/i.exec(String(window.DGA_CONFIG.SUPABASE_URL || "").trim());
+    return m ? `https://supabase.com/dashboard/project/${m[1]}` : null;
+  }
+  return null;
+}
+
 let _sb = null;
 function sb() {
   if (!_sb) {

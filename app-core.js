@@ -5,6 +5,41 @@
    được khai báo từ ui-auth.js. Xem ui-auth.js đầu file đó để biết đầy đủ quy ước
    chia sẻ scope giữa các file ui-*.js + app-core.js. */
 
+/** Gắn sự kiện bấm cho badge #storageBadge — mở Google Sheet/Supabase Dashboard (link
+ *  lấy từ data-db-link, xem applyDatabaseBadgeLink() ngay dưới) ở tab mới, tiện cho
+ *  Admin thao tác trực tiếp lên dữ liệu. Gắn DUY NHẤT 1 LẦN (initApp() có thể chạy lại
+ *  nhiều lần trong 1 phiên trình duyệt — sau khi đăng nhập, sau khi đổi trạng thái badge
+ *  do mất kết nối... — nhưng listener chỉ cần gắn 1 lần, luôn đọc link MỚI NHẤT từ
+ *  dataset ngay lúc bấm chứ không cần gắn lại) — dùng dataset.linkBound làm cờ đánh dấu
+ *  đã gắn, y hệt cách setSidebarCollapse/setupTabLayoutToggle tự đồng bộ trạng thái. */
+function setupStorageBadgeLink() {
+  const badge = $("storageBadge");
+  if (!badge || badge.dataset.linkBound) return;
+  badge.dataset.linkBound = "1";
+  badge.addEventListener("click", () => {
+    const url = badge.dataset.dbLink;
+    if (url) window.open(url, "_blank", "noopener");
+  });
+}
+
+/** Cập nhật link quản lý database gắn trên badge #storageBadge (data-db-link + class
+ *  "has-link", xem CSS) theo cấu hình hiện tại (databaseManagementUrl() ở storage.js).
+ *  PHẢI gọi lại mỗi khi initApp() gán lại badge.className (className bị GHI ĐÈ toàn bộ
+ *  ở đó, xóa mất class "has-link" nếu gọi hàm này trước đó) — xem 3 nơi gọi hàm này
+ *  trong initApp(). Không đổi textContent (vẫn luôn là "Database"/"Chế độ thử
+ *  nghiệm..." như initApp() đã đặt), chỉ nối thêm gợi ý bấm vào title nếu có link. */
+function applyDatabaseBadgeLink(badge) {
+  const url = databaseManagementUrl();
+  badge.classList.toggle("has-link", !!url);
+  if (!url) {
+    delete badge.dataset.dbLink;
+    return;
+  }
+  badge.dataset.dbLink = url;
+  const hint = Storage.mode === "gsheet" ? "Bấm để mở Google Sheet quản lý dữ liệu" : "Bấm để mở Supabase Dashboard";
+  badge.title = badge.title ? `${badge.title} — ${hint}` : hint;
+}
+
 // ---------------------------------------------------------------------
 // Khởi động app THẬT SỰ — chỉ gọi sau khi đã xác định được quyền truy cập
 // (Auth tắt, hoặc đã đăng nhập thành công). Hiện trạng thái lưu trữ, nạp
@@ -29,8 +64,14 @@ async function initApp() {
     footerInfo.textContent = "lưu trên database dùng chung (nhiều máy cùng truy cập)";
     badge.classList.toggle("hidden", !isAdminOrNoAuth);
     if (isAdminOrNoAuth) {
-      badge.textContent = "Đã kết nối database";
+      // Màu xanh (.badge.supabase) là trạng thái LẠC QUAN ban đầu — đã có cấu hình
+      // (config.js) nên coi như sẽ kết nối được; nếu bước tải Tiêu chuẩn/Lịch sử đo
+      // ngay bên dưới (nơi thật sự gọi API đầu tiên) thất bại, badge sẽ bị chuyển
+      // sang đỏ (.badge.error) ở khối try/catch tương ứng, xem thêm ghi chú ở đó.
+      badge.textContent = "Database";
       badge.className = "badge supabase";
+      badge.title = "Đã kết nối database";
+      applyDatabaseBadgeLink(badge);
     }
   } else {
     badge.textContent = "Chế độ thử nghiệm (chỉ lưu trên trình duyệt này)";
@@ -38,6 +79,7 @@ async function initApp() {
     badge.classList.remove("hidden");
     footerInfo.textContent = "lưu trong localStorage của trình duyệt này — điền config.js để dùng database dùng chung";
   }
+  setupStorageBadgeLink();
 
   setupTabs();
   setupHandbookLightbox();
@@ -46,6 +88,7 @@ async function initApp() {
   setupSampleMethods();
   setupSamplingLightbox();
   setupFeedbackDropzone();
+  setupFeedbackPaste();
   setupFeedbackLightbox();
   $("f_ngay").value = new Date().toISOString().slice(0, 10);
   $("o_ngay").value = new Date().toISOString().slice(0, 10);
@@ -72,6 +115,19 @@ async function initApp() {
     await refreshHistoryUI();
   } catch (err) {
     alert(storageErrorMessage(err));
+    // Đây là lần gọi API đầu tiên thật sự chạm tới database (Tiêu chuẩn/Lịch sử đo) —
+    // nếu lỗi ngay tại đây, coi như MẤT KẾT NỐI database, chuyển badge #storageBadge
+    // (đang lạc quan để xanh từ đầu initApp(), xem phía trên) sang đỏ để phản ánh
+    // đúng tình trạng thay vì vẫn hiện xanh gây hiểu lầm là app đang hoạt động bình
+    // thường. Không đổi badge khi ở chế độ local (không có khái niệm "mất kết nối").
+    if ((Storage.mode === "gsheet" || Storage.mode === "supabase") && isAdminOrNoAuth) {
+      badge.textContent = "Database";
+      badge.className = "badge error";
+      badge.title = "Mất kết nối database: " + storageErrorMessage(err);
+      // Vẫn giữ link Sheet/Dashboard (nếu có) ngay cả khi mất kết nối — admin thường sẽ
+      // CẦN mở thẳng Sheet/Dashboard lúc này để xem trực tiếp chuyện gì đang xảy ra.
+      applyDatabaseBadgeLink(badge);
+    }
   }
 
   // Tab "Dầu cách điện" — cô lập trong try/catch RIÊNG (giống danh mục Trạm):

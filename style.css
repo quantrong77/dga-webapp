@@ -180,6 +180,20 @@ header.app-header p {
   box-shadow: var(--shadow-sm);
 }
 .badge.local { background: #fff3cd; color: #7a5b00; }
+/* #storageBadge giờ là <button> (có thể bấm mở Google Sheet/Supabase Dashboard khi đã
+   cấu hình link quản lý, xem databaseManagementUrl() ở storage.js) — reset kiểu mặc
+   định của <button> (font/border), giữ nguyên nền/màu theo trạng thái
+   (.badge.local/.badge.supabase/.badge.error ở trên/dưới) như khi còn là <span>. Con
+   trỏ chuột CHỈ đổi thành pointer khi thật sự có link (class "has-link", gắn ở
+   setupStorageBadgeLink() ở app-core.js) — không thì vẫn "default" như badge tĩnh
+   thông thường, tránh gợi ý bấm được trong khi không có gì xảy ra. */
+#storageBadge {
+  font: inherit;
+  border: none;
+  cursor: default;
+}
+#storageBadge.has-link { cursor: pointer; }
+#storageBadge.has-link:hover { filter: brightness(0.94); }
 /* #userBadge giờ là <button> (tích hợp luôn đăng xuất — bấm vào hiện xác nhận rồi mới
    đăng xuất, xem ui-auth.js), nên cần reset kiểu mặc định của <button> (font/border/
    cursor) — phần còn lại (nền mờ trắng/viền, hợp nền header gradient tối) giữ nguyên
@@ -345,6 +359,11 @@ header.app-header p {
 
 .role-select { font-size: 12px; padding: 4px 6px; }
 .badge.supabase { background: #d7f5df; color: #10692f; }
+/* Badge "Database" (#storageBadge) khi MẤT kết nối — dùng khi tải Tiêu chuẩn/Lịch sử
+   đo lúc khởi động bị lỗi (xem initApp() ở app-core.js), thay cho màu xanh
+   .badge.supabase ở trên để báo ngay tình trạng mất kết nối thay vì vẫn hiện xanh gây
+   hiểu lầm là đang hoạt động bình thường. Rê chuột vào badge (title=) xem chi tiết lỗi. */
+.badge.error { background: #fde2e1; color: #b42318; }
 
 /* Cố định thanh tab ở đầu trang khi cuộn xuống nội dung dài (header phía trên
    vẫn cuộn đi bình thường) — để người dùng luôn chuyển tab được mà không phải
