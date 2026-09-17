@@ -114,13 +114,24 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 
 1. Tạo tài khoản tại https://supabase.com → **New project** (chọn khu vực gần
    Việt Nam, ví dụ Singapore).
-2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase-schema.sql`](./supabase-schema.sql)
+2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase/supabase-schema.sql`](./supabase/supabase-schema.sql)
    → **Run**. Lệnh này tạo các bảng (`measurements`, `manufacturer_standards`,
    `feedback`...) và bật Row Level Security cho phép đọc/ghi bằng anon key (phù
    hợp 1 nhóm nhỏ dùng chung 1 link nội bộ). Đã chạy file này từ trước? Chạy lại
    toàn bộ vẫn an toàn — mọi lệnh đều dùng `if not exists`/`on conflict`, không
    ảnh hưởng dữ liệu đã có, chỉ thêm phần còn thiếu (ví dụ bảng `feedback` mới).
-3. Vào **Settings → API** → copy **Project URL** và **anon public key**.
+3. Lấy **Project URL** và **anon key** — dashboard Supabase hiện có 2 cách,
+   dùng cách nào cũng ra đúng 2 giá trị cần:
+   - **Nhanh nhất:** mở trang project → bấm nút **Connect** (thường ở góc trên
+     thanh công cụ) → khung hiện ra có sẵn cả **Project URL** và khóa (chọn
+     kiểu kết nối bất kỳ, ví dụ "App Frameworks", 2 giá trị đều hiện kèm nút
+     copy).
+   - **Đầy đủ hơn:** vào **Settings → API Keys** (dashboard mới gộp chung vào
+     đây, không còn trang "Settings → API" riêng như trước) — **Project URL**
+     hiện ở đầu trang, còn khóa nằm ở tab **Legacy API Keys**, dòng **anon**
+     **public** (dự án Supabase mới có thể chỉ hiện "publishable key" thay vì
+     "anon key" — 2 tên gọi khác nhau cho cùng 1 loại khóa công khai, dùng
+     được như nhau ở đây).
 4. Mở file `config.js` trong repo, dán vào:
    ```js
    window.DGA_CONFIG = {
@@ -146,7 +157,7 @@ thể điền sẵn cả 2 mà không lo "song song" theo nghĩa ghi cùng lúc 
 KHÔNG hỗ trợ tự động đồng bộ 2 chiều Gsheet ⇄ Supabase).
 
 1. Làm đúng bước 1–3 ở mục 2b bên trên (tạo project Supabase, chạy
-   `supabase-schema.sql`, copy Project URL + anon key) — **chưa cần đổi
+   `supabase/supabase-schema.sql`, copy Project URL + anon key) — **chưa cần đổi
    `config.js` vội**.
 2. Mở `config.js`, điền thêm `SUPABASE_URL`/`SUPABASE_ANON_KEY` **bên cạnh**
    `GSHEET_WEBAPP_URL` đang có sẵn (giữ nguyên, không xóa):
@@ -205,7 +216,7 @@ lưu trữ dữ liệu là gọi ra Google Sheets hoặc Supabase (nếu đã c�
 Private trên GitHub (GitHub Pages vẫn chạy được với repo private nếu tài khoản
 là GitHub Pro/Team/Enterprise; với tài khoản Free, Pages công khai theo repo
 Public — nếu cần giữ kín, cân nhắc thêm xác thực ở tầng Supabase Auth thay vì
-policy "cho phép tất cả" trong `supabase-schema.sql`).
+policy "cho phép tất cả" trong `supabase/supabase-schema.sql`).
 
 ## 4. Cấu trúc file
 
@@ -217,7 +228,7 @@ policy "cho phép tất cả" trong `supabase-schema.sql`).
 | `storage.js` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
 | `config.js` | Nơi dán URL Apps Script (Google Sheets) hoặc URL/anon key Supabase (để trống hết = chạy chế độ thử nghiệm) |
 | `app.js` | Nối giao diện với `dga-logic.js` + `storage.js` |
-| `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
+| `supabase/supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
 | `gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
 
 ## 5. Giới hạn / lưu ý

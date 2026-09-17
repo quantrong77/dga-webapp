@@ -1736,7 +1736,7 @@
        app.js bên dưới (script thường, chạy ngay khi gặp). app.js chỉ gọi tới
        window.BbtnImport khi người dùng chọn file, nên không cần chờ module này xong
        trước — nó luôn sẵn sàng từ trước khi có tương tác đầu tiên của người dùng. -->
-  <script type="module" src="bbtn-import.js"></script>
+  <script type="module" src="bbtn/bbtn-import.js"></script>
   <!-- PizZip + docxtemplater (MIT) — dùng để điền số liệu vào mẫu Biên bản thí nghiệm
        (.docx) ngay trong trình duyệt khi bấm "Xuất BBTN (docx)", xem bbtn-export.js.
        Đóng gói sẵn trong vendor/ (không phụ thuộc CDN ngoài) cùng lý do như vendor/pdfjs/
@@ -1751,19 +1751,19 @@
        file này KHÔNG dùng ES module — chúng chia sẻ chung 1 scope toàn cục giống hệt
        như khi còn 1 file (xem ghi chú kiến trúc ở đầu ui-auth.js) — nên thứ tự nạp
        không quan trọng, TRỪ app-core.js phải nạp SAU CÙNG (xem ghi chú trong file đó). -->
-  <script src="ui-auth.js"></script>
-  <script src="ui-guides.js"></script>
-  <script src="ui-dga.js"></script>
-  <script src="bbtn-export.js"></script>
-  <script src="tech-report-export.js"></script>
-  <script src="bbtn-batch-import.js"></script>
-  <script src="ui-standards.js"></script>
-  <script src="ui-admin.js"></script>
-  <script src="ui-oil.js"></script>
-  <script src="ui-oltc.js"></script>
-  <script src="ui-history.js"></script>
-  <script src="ui-trend.js"></script>
-  <script src="ui-feedback.js"></script>
+  <script src="ui/ui-auth.js"></script>
+  <script src="ui/ui-guides.js"></script>
+  <script src="ui/ui-dga.js"></script>
+  <script src="bbtn/bbtn-export.js"></script>
+  <script src="bbtn/tech-report-export.js"></script>
+  <script src="bbtn/bbtn-batch-import.js"></script>
+  <script src="ui/ui-standards.js"></script>
+  <script src="ui/ui-admin.js"></script>
+  <script src="ui/ui-oil.js"></script>
+  <script src="ui/ui-oltc.js"></script>
+  <script src="ui/ui-history.js"></script>
+  <script src="ui/ui-trend.js"></script>
+  <script src="ui/ui-feedback.js"></script>
   <script src="app-core.js"></script>
 </body>
 </html>

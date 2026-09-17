@@ -26,9 +26,9 @@
 // cho <script type="module"> nên sẽ CHẶN, không chạy file, và lỗi này chỉ hiện trong
 // Console (F12) chứ không có thông báo gì trên giao diện. Đuôi ".js" thì hầu như mọi
 // server đều tự nhận đúng loại JavaScript nên không gặp lỗi này.
-import * as pdfjsLib from "./vendor/pdfjs/pdf.min.js";
+import * as pdfjsLib from "../vendor/pdfjs/pdf.min.js";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("./vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
 
 // ---------------------------------------------------------------------------
 // 1) PDF -> danh sách "dòng" văn bản theo đúng thứ tự trình bày (trên->dưới,
