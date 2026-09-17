@@ -10,12 +10,19 @@
    Ngày thí nghiệm, Lý do thí nghiệm, Điều kiện môi trường (nhiệt độ/độ ẩm), 7 khí hòa
    tan + TCG, tốc độ sinh khí %/tháng của từng khí + TCG nếu có lần đo trước liền kề để
    so sánh (xem computeRateOfChange()/computeTcgRateOfChange() ở dga-logic.js, tính ở
-   onAnalyze()), Ghi chú, Kết luận) — các trường khác (Năm SX, Điện áp định mức, Công
-   suất, Số chế tạo, Năm vận hành, Loại dầu, N2, O2, Tổng hàm lượng khí, chữ ký) vẫn giữ
-   NGUYÊN trống như mẫu gốc vì webapp không thu thập số liệu này — người dùng tự bổ sung
-   trong Word trước khi ký ban hành (xem tag_template.py đã dùng để chèn placeholder vào
-   mẫu, không đi kèm trong webapp — các tag {ly_do_thi_nghiem}/{nhiet_do}/{do_am}/
-   {tcg_toc} chèn thêm sau này bằng script riêng, không qua tag_template.py). */
+   onAnalyze()), N2/O2 (mục 8/9, tùy chọn) + Tổng hàm lượng khí hòa tan (mục 11, Bảng 63
+   Điều 54 QĐ1901 — chỉ điền khi đã nhập cả N2 lẫn O2, xem computeTotalDissolvedGasPercent()
+   ở dga-logic.js), Ghi chú, Kết luận) — các trường khác (Năm SX, Điện áp định mức, Công
+   suất, Số chế tạo, Năm vận hành, Loại dầu, chữ ký) vẫn giữ NGUYÊN trống như mẫu gốc vì
+   webapp không thu thập số liệu này — người dùng tự bổ sung trong Word trước khi ký ban
+   hành (xem tag_template.py đã dùng để chèn placeholder vào mẫu, không đi kèm trong
+   webapp — các tag {ly_do_thi_nghiem}/{nhiet_do}/{do_am}/{tcg_toc} chèn thêm sau này
+   bằng script riêng, không qua tag_template.py; {n2_kq}/{o2_kq}/{tonghamluongkhi_kq}/
+   {tonghamluongkhi_tc}/{tonghamluongkhi_dg} cũng vậy — 3 tag đầu còn THAY THẾ 2 số liệu
+   mẫu cứng "14766"/"5833.79" (N2/O2) để sót lại từ tài liệu gốc dùng làm mẫu, trước đây
+   in ra y nguyên ở MỌI bản BBTN xuất ra bất kể số liệu thực tế; 2 tag {tonghamluongkhi_tc}/
+   {tonghamluongkhi_dg} lấp ô "Tiêu chuẩn"/"Đánh giá" của dòng 11 (Tổng hàm lượng khí)
+   vốn để trống hoàn toàn trong mẫu gốc dù Bảng 63 CÓ ngưỡng cụ thể theo cấp điện áp. */
 
 const BBTN_TEMPLATE_URL = "template/template-bbtn-dga.docx";
 
@@ -80,6 +87,23 @@ function buildBbtnExportData(a) {
     // có lần đo trước hoặc TCG lần trước = 0 (không chia được), giống hệt cách 7 khí
     // riêng lẻ xử lý _toc bên dưới.
     tcg_toc: a.tcgRate && a.tcgRate.ratePerMonth !== null ? bbtnFormatNum(a.tcgRate.ratePerMonth) + "%" : "",
+    // N2, O2 (tùy chọn — mục 8/9 bảng KẾT QUẢ THÍ NGHIỆM) + Tổng hàm lượng khí hòa tan
+    // (mục 11, Bảng 63 Điều 54 QĐ1901 — cộng CẢ 9 khí kể cả N2/O2, xem
+    // computeTotalDissolvedGasPercent() ở dga-logic.js, tính ở onAnalyze()). Để trống nếu
+    // chưa nhập N2/O2 (a.bang63.value = null) — KHÔNG tự bịa số như 2 giá trị mẫu cũ
+    // (14766/5833.79) từng để cứng trong mẫu gốc trước khi có 3 tag này.
+    n2_kq: m.n2 !== null && m.n2 !== undefined ? bbtnFormatNum(m.n2) : "",
+    o2_kq: m.o2 !== null && m.o2 !== undefined ? bbtnFormatNum(m.o2) : "",
+    tonghamluongkhi_kq:
+      a.bang63 && a.bang63.value !== null && a.bang63.value !== undefined ? bbtnFormatNum(a.bang63.value.toFixed(3)) + "%" : "",
+    // Ngưỡng Bảng 63 (cột "Tiêu chuẩn") — hiện theo cấp điện áp đã chọn (a.bang63.limit)
+    // BẤT KỂ đã nhập N2/O2 hay chưa, vì ngưỡng chỉ phụ thuộc cấp điện áp, không phụ thuộc
+    // số liệu đo. Cột "Đánh giá" (Đạt/Không đạt) CHỈ điền khi Bảng 63 thật sự áp dụng
+    // (a.bang63.applicable — đã tick "dầu mới/sau sửa chữa thay dầu hoặc lọc dầu") — để
+    // trống khi không áp dụng, KHÔNG tự kết luận Đạt/Không đạt cho dầu đang vận hành định
+    // kỳ thông thường (giống hệt logic hiển thị ở renderResults(), ui-dga.js).
+    tonghamluongkhi_tc: a.bang63 && a.bang63.limit !== null && a.bang63.limit !== undefined ? "< " + bbtnFormatNum(a.bang63.limit) + "%" : "",
+    tonghamluongkhi_dg: a.bang63 && a.bang63.applicable && a.bang63.verdict ? a.bang63.verdict : "",
   };
 
   Object.keys(BBTN_GAS_TAG_KEYS).forEach((gas) => {

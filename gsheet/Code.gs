@@ -23,7 +23,7 @@
  *  - Mọi người dùng phải Đăng ký (email + mật khẩu) rồi Đăng nhập mới xem được
  *    dữ liệu. Mật khẩu được băm (SHA-256 + salt ngẫu nhiên riêng từng user)
  *    trước khi lưu vào sheet "users" — KHÔNG lưu mật khẩu gốc.
- *  - Email trong Script Property "ADMIN_EMAIL" (xem getAdminEmail() bên dưới) sẽ TỰ ĐỘNG được cấp quyền "admin"
+ *  - Email trong hằng số ADMIN_EMAIL bên dưới sẽ TỰ ĐỘNG được cấp quyền "admin"
  *    ngay khi đăng ký (chỉ áp dụng đúng email đó). Mọi email khác mặc định là
  *    "user" — Admin có thể nâng quyền cho người khác sau trong tab "Quản trị"
  *    của web app.
@@ -80,6 +80,14 @@ const MEASUREMENT_HEADERS = [
   // điều kiện môi trường có thể khác nhau giữa các lần đo cùng thiết bị). Bản ghi lưu
   // trước khi có 4 cột này sẽ để trống — không suy diễn ngược.
   "ngay_thi_nghiem", "ly_do_thi_nghiem", "nhiet_do", "do_am",
+  // N2, O2 (ppm, tùy chọn) + điều kiện áp dụng Bảng 63 — thêm ở CUỐI (xem lưu ý ngay
+  // trên). Dùng cho "Đánh giá các tỷ lệ bổ sung" (tỷ lệ O2/N2) và Tổng hàm lượng khí
+  // hòa tan (Bảng 63, Điều 54 QĐ1901 — cộng CẢ 9 khí kể cả N2/O2, KHÔNG dùng để tính
+  // TCG/đánh giá tuyệt đối/Bảng 66 như 7 khí chính), xem dga-logic.js. Để trống (N2/O2
+  // rỗng) thì 2 mục này tự ẩn/bỏ qua ở webapp, không ảnh hưởng các đánh giá khác.
+  // bang63_voltage_class: "110-220" hoặc "500". bang63_applicable: boolean — cùng cách
+  // lưu true/false trực tiếp đã dùng cho has_membrane_n2 (OILTEST_HEADERS) ở trên.
+  "n2", "o2", "bang63_voltage_class", "bang63_applicable",
 ];
 
 // QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —
@@ -165,25 +173,15 @@ const FEEDBACK_HEADERS = [
 ];
 
 // Email này TỰ ĐỘNG được cấp quyền "admin" ngay khi đăng ký (dù đăng ký bằng mật khẩu
-// hay bằng Google) — mọi email khác mặc định là "user" (tự nhập/sửa được bản ghi của
-// chính mình — xem prepareOwnedRecord()).
-//
-// KHÔNG hardcode email thật ở đây nữa (file này đã public trên GitHub — hardcode coi
-// như công khai luôn tài khoản có toàn quyền admin cho bất kỳ ai đọc được source).
-// Đọc từ Script Property thay thế — thiết lập 1 lần: trong Apps Script Editor, bấm
-// biểu tượng bánh răng "Project Settings" (menu bên trái) > kéo xuống "Script
-// Properties" > "Add script property" > Property = "ADMIN_EMAIL", Value = email admin
-// thật của bạn > Save. Đổi email admin sau này chỉ cần sửa lại giá trị này, KHÔNG cần
-// sửa code/Deploy lại.
-function getAdminEmail() {
-  return String(PropertiesService.getScriptProperties().getProperty("ADMIN_EMAIL") || "").trim();
-}
+// hay bằng Google) — đổi thành email Admin thật của bạn nếu khác. Mọi email khác mặc
+// định là "user" (tự nhập/sửa được bản ghi của chính mình — xem prepareOwnedRecord()).
+const ADMIN_EMAIL = "quantrong77@gmail.com";
 
 // OAuth 2.0 Client ID cho "Đăng nhập bằng Google" (Google Identity Services) — tạo tại
 // https://console.cloud.google.com/apis/credentials (loại "OAuth client ID" > "Web
 // application"). Để TRỐNG ("") thì nút "Đăng nhập bằng Google" sẽ tự ẩn ở giao diện,
 // mọi thứ khác hoạt động bình thường như trước (chỉ đăng nhập email/mật khẩu).
-const GOOGLE_CLIENT_ID = "162684736346-spsmoiqgk6sp3k5d8l24h85p1mcd5cja.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = "";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // phiên đăng nhập hết hạn sau 30 ngày
 
@@ -294,7 +292,7 @@ function actionRegister(body) {
   if (findUserByEmail(email)) return { error: "Email này đã được đăng ký." };
 
   const salt = randomHex(16);
-  const role = email === normalizeEmail(getAdminEmail()) ? "admin" : "user";
+  const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
   const record = {
     id: "u_" + Utilities.getUuid(),
     email: email,
@@ -361,7 +359,7 @@ function actionGoogleLogin(body) {
   const now = new Date().toISOString();
   let user = findUserByEmail(email);
   if (!user) {
-    const role = email === normalizeEmail(getAdminEmail()) ? "admin" : "user";
+    const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
     user = {
       id: "u_" + Utilities.getUuid(),
       email: email,

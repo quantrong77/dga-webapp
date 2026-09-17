@@ -548,12 +548,102 @@ function computeTcgRateOfChange(prevTcg, currTcg, deltaDays) {
 }
 
 // ---------------------------------------------------------------------------
+// 7bis) "Đánh giá các tỷ lệ bổ sung" (Điều 54 QĐ1901, ngay sau Bảng 66) + Tổng hàm
+//   lượng khí hòa tan (Bảng 63) — CẢ HAI đều KHÁC bộ 3 tỷ lệ chính (computeRatios()/
+//   diagnoseRatios() ở trên, dùng để tra mã khiếm khuyết Bảng 66): đây là 2 chỉ tiêu
+//   PHỤ, chỉ mang tính tham khảo bổ sung, KHÔNG dùng để tra mã PD/D1/D2/T1/T2/T3.
+// ---------------------------------------------------------------------------
+
+// Bảng 63, Điều 54 — ngưỡng tổng hàm lượng khí hòa tan (%) trong dầu MBA. CHỈ áp dụng
+// chính thức cho dầu MỚI đưa vào vận hành lần đầu, sau sửa chữa có thay dầu, hoặc sau
+// sửa chữa không thay dầu có lọc dầu — QĐ1901 KHÔNG nêu ngưỡng nào cho dầu đang vận
+// hành định kỳ thông thường (xem evaluateBang63()).
+const QD1901_BANG63_TDGC = { "110-220": 1.0, "500": 0.5 };
+
+/**
+ * Tổng hàm lượng khí hòa tan (%) theo Bảng 63 — CỘNG DỒN CẢ N2, O2, khác hẳn TCG ở
+ * computeTCG() (chỉ cộng 6 khí cháy, không có CO2 lẫn N2/O2). Quy đổi ppm -> %: 1% =
+ * 10.000 ppm (cùng đơn vị nồng độ thể tích khí/dầu, μL/L). Bắt buộc có CẢ N2 LẪN O2 vì
+ * N2 thường chiếm tỷ trọng lớn nhất trong tổng khí hòa tan (hàng chục nghìn ppm ở thiết
+ * bị thở tự do với khí quyển) — thiếu 1 trong 2 sẽ làm tổng bị tính thấp giả tạo, không
+ * dùng để so Bảng 63 được.
+ * @param {object} gases 7 khí GASES (ppm)
+ * @param {number|null} n2, {number|null} o2  ppm, hoặc null nếu chưa nhập
+ * @returns {number|null} % (null nếu thiếu N2 hoặc O2)
+ */
+function computeTotalDissolvedGasPercent(gases, n2, o2) {
+  if (n2 === null || n2 === undefined || o2 === null || o2 === undefined) return null;
+  const sum = GASES.reduce((s, g) => s + num(gases[g]), 0) + num(n2) + num(o2);
+  return sum / 10000;
+}
+
+/**
+ * Đánh giá Bảng 63 — CHỈ trả verdict Đạt/Không đạt khi applicable=true (đúng điều kiện
+ * áp dụng của Bảng 63: dầu mới/sau sửa chữa thay dầu hoặc lọc dầu). Khi applicable=false
+ * (dầu đang vận hành định kỳ thông thường) vẫn trả limit để tham khảo nhưng verdict=null
+ * — không tự kết luận đạt/không đạt cho trường hợp Bảng 63 không áp dụng chính thức.
+ * @param {number|null} totalPercent kết quả computeTotalDissolvedGasPercent()
+ * @param {"110-220"|"500"} voltageClass
+ * @param {boolean} applicable
+ */
+function evaluateBang63(totalPercent, voltageClass, applicable) {
+  const limit = QD1901_BANG63_TDGC[voltageClass] ?? null;
+  if (totalPercent === null || limit === null) return { limit, verdict: null, applicable: !!applicable };
+  const verdict = applicable ? (totalPercent < limit ? "Đạt" : "Không đạt") : null;
+  return { limit, verdict, applicable: !!applicable };
+}
+
+/**
+ * "Đánh giá các tỷ lệ bổ sung", Điều 54 QĐ1901 (đoạn ngay sau Bảng 66):
+ *  - CO2/CO: luôn tính được (CO, CO2 là 2 trong 7 khí bắt buộc).
+ *  - O2/N2: chỉ tính được khi có CẢ N2 VÀ O2 (tùy chọn — xem computeTotalDissolvedGasPercent()).
+ * CHỈ dùng đúng các mốc/điều kiện QĐ1901 nêu rõ để kết luận; giá trị nằm ngoài các mốc
+ * đó chỉ hiển thị con số kèm ghi chú giới hạn, không tự suy diễn thêm ngưỡng ngoài văn
+ * bản gốc (văn bản chỉ cho 1 mốc tham khảo O2/N2 ~ 0,5 "bình thường", không có thang đầy đủ).
+ * @param {object} gases 7 khí GASES (ppm)
+ * @param {number|null} n2, {number|null} o2  ppm, hoặc null nếu chưa nhập
+ */
+function diagnoseAdditionalRatios(gases, n2, o2) {
+  const co = num(gases.CO), co2 = num(gases.CO2);
+  const co2_co = co === 0 ? (co2 === 0 ? null : 999) : co2 / co;
+  let co2coNote;
+  if (co2_co === null) {
+    co2coNote = "Không đủ dữ liệu để tính (CO và CO2 đều bằng 0).";
+  } else if (co2_co < 3 && co > 1000) {
+    co2coNote = "CO2/CO < 3 và CO > 1000 ppm — có khả năng liên quan đến giấy cách điện bị carbon hóa, cần xác nhận bằng phân tích furanic hoặc đo độ trùng hợp giấy.";
+  } else if (co2_co > 10 && co2 > 10000) {
+    co2coNote = "CO2/CO > 10 và CO2 > 10.000 ppm — có thể do quá nhiệt nhẹ (<160°C) hoặc oxy hóa dầu, đặc biệt ở máy biến áp hở.";
+  } else {
+    co2coNote = "Không rơi vào 2 điều kiện cảnh báo bổ sung của Điều 54 (CO2/CO<3 và CO>1000 ppm; hoặc CO2/CO>10 và CO2>10.000 ppm).";
+  }
+
+  const hasN2O2 = n2 !== null && n2 !== undefined && o2 !== null && o2 !== undefined && num(n2) > 0;
+  let o2_n2 = null;
+  let o2n2Note = "Chưa nhập đủ N2/O2 — bỏ qua tỷ lệ O2/N2.";
+  if (hasN2O2) {
+    o2_n2 = num(o2) / num(n2);
+    if (o2_n2 < 0.3) {
+      o2n2Note = "O2/N2 < 0,3 — tiêu thụ oxy quá mức do oxy hóa dầu hoặc lão hóa giấy cách điện.";
+    } else {
+      o2n2Note = "QĐ1901 chỉ nêu mốc tham khảo O2/N2 ~ 0,5 là bình thường ở thiết bị có tiếp xúc với không khí; văn bản không có thang đầy đủ để phân loại chính xác các giá trị khác — cần đối chiếu thêm kết cấu bình dầu phụ (có màng ngăn hay không) và thực tế vận hành trước khi kết luận.";
+    }
+  }
+
+  return {
+    co2_co: co2_co === null ? null : round1(co2_co),
+    co2coNote,
+    o2_n2: o2_n2 === null ? null : round1(o2_n2),
+    o2n2Note,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // 8) Khuyến cáo tổng hợp — tổng hợp kết luận tuyệt đối + chẩn đoán tỷ lệ (Bảng 66) +
 //    chẩn đoán Tam giác Duval + tốc độ sinh khí.
 //    Chỉ mang tính hỗ trợ; không thay thế nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901.
 // ---------------------------------------------------------------------------
 
-function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRows, condemningRows }) {
+function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63 }) {
   const recs = [];
   const rateWarnings = (rateRows || []).filter((r) => r.verdict && r.verdict.startsWith("⚠"));
   const condemnExceeded = condemningExceededRows(condemningRows);
@@ -591,6 +681,24 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
   }
   if (exceedCount === 0 && diagnosis) {
     recs.push("Chưa đủ điều kiện áp dụng chính thức tỷ lệ khí (chưa có khí vượt giá trị điển hình) — mã chẩn đoán Bảng 66/Tam giác Duval ở trên chỉ mang tính tham khảo.");
+  }
+  // Tỷ lệ bổ sung (Điều 54) — chỉ đưa vào khuyến cáo khi rơi vào 1 trong các điều kiện
+  // cảnh báo mà QĐ1901 nêu rõ, tránh lặp lại ghi chú "bình thường"/"chưa đủ dữ liệu"
+  // ở đây vì đã hiển thị đầy đủ trong bảng kết quả riêng.
+  if (additionalRatios) {
+    if (additionalRatios.co2_co !== null && additionalRatios.co2coNote && additionalRatios.co2coNote.startsWith("CO2/CO")) {
+      recs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
+    }
+    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
+      recs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
+    }
+  }
+  if (bang63 && bang63.verdict === "Không đạt") {
+    recs.push(
+      `⚠ Tổng hàm lượng khí hòa tan vượt ngưỡng Bảng 63 (cấp điện áp áp dụng: <${bang63.limit}%) — áp dụng cho dầu mới/sau ` +
+      `sửa chữa có thay dầu hoặc lọc dầu; khuyến cáo kiểm tra lại quy trình xử lý dầu (chân không hóa/lọc khí) trước khi ` +
+      `đưa thiết bị vào vận hành chính thức.`
+    );
   }
   return recs;
 }
@@ -929,6 +1037,7 @@ const DGA = {
   countExceedTypical, computeRatios, diagnoseRatios, ratioApplicability, computeRateOfChange,
   computeTcgRateOfChange,
   normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
+  QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
   buildRecommendations, computeOverallStatus,
   OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
   OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest,

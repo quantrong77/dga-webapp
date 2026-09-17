@@ -42,6 +42,12 @@ function clearForm() {
   // Checkbox "Ngăn OLTC (thông dầu/khí với thùng chính?)" — về mặc định KHÔNG tick.
   $("f_mbasubtype").checked = false;
   DGA.GASES.forEach((g) => ($("g_" + g).value = ""));
+  // N2, O2 (tùy chọn) + điều kiện áp dụng Bảng 63 — KHÔNG thuộc DGA.GASES nên phải xóa
+  // riêng (xem ghi chú "KHÍ BỔ SUNG N2, O2" ở index.html).
+  $("g_N2").value = "";
+  $("g_O2").value = "";
+  $("f_bang63_voltage").value = "110-220";
+  $("f_bang63_applicable").checked = false;
   $("f_landocount").value = 1;
   $("f_bbtn").value = "";
   renderBbtnDropzoneLabel();
@@ -322,6 +328,10 @@ function onEditMeasurement(rec) {
   $("f_doam").value = rec.do_am ?? "";
   const gasesRec = recordGases(rec);
   DGA.GASES.forEach((g) => { $("g_" + g).value = gasesRec[g] ?? ""; });
+  $("g_N2").value = rec.n2 ?? "";
+  $("g_O2").value = rec.o2 ?? "";
+  $("f_bang63_voltage").value = rec.bang63_voltage_class || "110-220";
+  $("f_bang63_applicable").checked = !!rec.bang63_applicable;
   $("editingMeasurementNote").classList.remove("hidden");
   $("btnCancelEditMeasurement").classList.remove("hidden");
   $("btnAnalyze").textContent = "Cập nhật & Lưu";
@@ -411,6 +421,14 @@ function drawDuvalPoint(xyMath) {
 async function onAnalyze() {
   const gases = {};
   DGA.GASES.forEach((g) => (gases[g] = $("g_" + g).value === "" ? 0 : Number($("g_" + g).value)));
+  // N2, O2 (tùy chọn) — KHÔNG thuộc DGA.GASES, giữ null khi để trống (khác 7 khí chính
+  // luôn mặc định 0) vì computeTotalDissolvedGasPercent()/diagnoseAdditionalRatios()
+  // (dga-logic.js) cần phân biệt "chưa nhập" với "đo được 0 ppm" để biết có tính được
+  // tỷ lệ O2/N2 và Tổng hàm lượng khí hòa tan (Bảng 63) hay không.
+  const n2 = $("g_N2").value === "" ? null : Number($("g_N2").value);
+  const o2 = $("g_O2").value === "" ? null : Number($("g_O2").value);
+  const bang63VoltageClass = $("f_bang63_voltage").value;
+  const bang63Applicable = $("f_bang63_applicable").checked;
 
   const equipmentType = $("f_loai").value;
   // Checkbox tick = OLTC thông dầu/khí với thùng chính (COMM_OLTC, ngưỡng C2H2 tham
@@ -446,6 +464,10 @@ async function onAnalyze() {
     ly_do_thi_nghiem: $("f_lydothinghiem").value.trim(),
     nhiet_do: $("f_nhietdo").value !== "" ? Number($("f_nhietdo").value) : null,
     do_am: $("f_doam").value !== "" ? Number($("f_doam").value) : null,
+    // N2, O2 (tùy chọn) + điều kiện áp dụng Bảng 63 — xem ghi chú ở đầu hàm này.
+    n2, o2,
+    bang63_voltage_class: bang63VoltageClass,
+    bang63_applicable: bang63Applicable,
     ...gases,
   };
 
@@ -478,6 +500,15 @@ async function onAnalyze() {
   // 3ter) Ngưỡng LOẠI BỎ riêng của nhà sản xuất (nếu có cấu hình) — cảnh báo nghiêm
   //    trọng hơn mức "không đạt" thông thường, độc lập với ngưỡng tuyệt đối ở trên.
   const condemningRows = DGA.evaluateCondemning(gases, standard.condemning);
+
+  // 3quat) "Đánh giá các tỷ lệ bổ sung" (Điều 54, ngay sau Bảng 66) + Tổng hàm lượng
+  //    khí hòa tan (Bảng 63) — xem diagnoseAdditionalRatios()/computeTotalDissolvedGasPercent()/
+  //    evaluateBang63() ở dga-logic.js. Cả 2 đều tùy chọn/tham khảo, không ảnh hưởng
+  //    overallStatus (chỉ đưa vào recs khi rơi vào điều kiện cảnh báo, xem buildRecommendations()).
+  const additionalRatios = DGA.diagnoseAdditionalRatios(gases, n2, o2);
+  const bang63Percent = DGA.computeTotalDissolvedGasPercent(gases, n2, o2);
+  const bang63 = DGA.evaluateBang63(bang63Percent, bang63VoltageClass, bang63Applicable);
+  bang63.value = bang63Percent;
 
   // 4) Tốc độ sinh khí — tìm lần đo gần nhất trước đó cùng Trạm+Thiết bị+Pha
   let all;
@@ -516,7 +547,7 @@ async function onAnalyze() {
   }
 
   // 5) Khuyến cáo tổng hợp
-  const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows });
+  const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63 });
 
   // 5bis) Trạng thái tổng thể (Bình thường/Cảnh báo/Báo động) — số hóa lưu đồ Hình 1
   //    IEC 60599:1999; xem giải thích đầy đủ ở tab "Quy trình đánh giá".
@@ -524,8 +555,8 @@ async function onAnalyze() {
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
-  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus };
-  renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus });
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 };
+  renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -596,7 +627,7 @@ function verdictPill(v) {
   return `<span class="pill bad">Không đạt</span>`;
 }
 
-function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus }) {
+function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 }) {
   $("resultsPanel").classList.remove("hidden");
 
   if (overallStatus) {
@@ -659,6 +690,30 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   $("r_ratio3").textContent = ratios.c2h4_c2h6.toFixed(3);
   $("r_pdthreshold").textContent = "< " + standard.pdThreshold;
   $("r_applicability").textContent = applicability;
+
+  // "Đánh giá các tỷ lệ bổ sung" (Điều 54 QĐ1901) — chỉ mang tính tham khảo, không tra
+  // mã PD/D1/D2/T1/T2/T3 (khác Ba tỷ số khí cơ bản ở trên) — xem diagnoseAdditionalRatios().
+  if (additionalRatios) {
+    $("r_co2co").textContent = additionalRatios.co2_co === null ? "—" : additionalRatios.co2_co;
+    $("r_co2conote").textContent = additionalRatios.co2coNote;
+    $("r_o2n2").textContent = additionalRatios.o2_n2 === null ? "—" : additionalRatios.o2_n2;
+    $("r_o2n2note").textContent = additionalRatios.o2n2Note;
+  }
+
+  // Tổng hàm lượng khí hòa tan (Bảng 63) — xem computeTotalDissolvedGasPercent()/
+  // evaluateBang63() ở dga-logic.js. Chỉ ra verdict Đạt/Không đạt khi bang63.applicable
+  // (đã tick điều kiện áp dụng); còn lại chỉ hiển thị số liệu tham khảo, không tự kết luận.
+  if (bang63) {
+    $("r_bang63value").textContent = bang63.value === null || bang63.value === undefined ? "—" : bang63.value.toFixed(3) + "%";
+    $("r_bang63limit").textContent = bang63.limit === null ? "—" : "< " + bang63.limit + "%";
+    if (bang63.value === null || bang63.value === undefined) {
+      $("r_bang63verdict").innerHTML = `<span class="pill muted">Chưa đủ dữ liệu — cần nhập N2, O2</span>`;
+    } else if (!bang63.applicable) {
+      $("r_bang63verdict").innerHTML = `<span class="pill muted">Tham khảo — chưa tick điều kiện áp dụng Bảng 63</span>`;
+    } else {
+      $("r_bang63verdict").innerHTML = verdictPill(bang63.verdict);
+    }
+  }
 
   if (duval) {
     $("r_pctch4").textContent = duval.pctCH4.toFixed(1) + "%";

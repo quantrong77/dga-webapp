@@ -295,6 +295,30 @@
           <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="g_CO2" type="number" step="0.01" /></label>
         </div>
 
+        <!-- ===================== KHÍ BỔ SUNG N2, O2 (tùy chọn) =====================
+             Không thuộc DGA.GASES (7 khí cháy/phân hủy chính) — N2, O2 là khí hòa tan từ
+             KHÔNG KHÍ, không phải sản phẩm phân hủy dầu/giấy, nên KHÔNG dùng để tính TCG/
+             đánh giá tuyệt đối/tỷ số Bảng 66 như 7 khí trên. Dùng riêng cho: (1) tỷ lệ O2/N2
+             ở "Đánh giá các tỷ lệ bổ sung" (Điều 54 QĐ1901, xem diagnoseAdditionalRatios() ở
+             dga-logic.js), và (2) Tổng hàm lượng khí hòa tan (Bảng 63) — cộng CẢ 9 khí (7 khí
+             chính + N2 + O2), quy đổi ppm -> % (xem computeTotalDissolvedGasPercent()). Để
+             trống thì 2 mục này tự ẩn/bỏ qua, không ảnh hưởng các đánh giá khác. -->
+        <div class="section-title">Khí bổ sung N2, O2 (tùy chọn — dùng cho tỷ lệ O2/N2 và Tổng hàm lượng khí hòa tan Bảng 63)</div>
+        <div class="grid gases">
+          <label class="field">N2 (ppm) <input id="g_N2" type="number" step="0.01" /></label>
+          <label class="field">O2 (ppm) <input id="g_O2" type="number" step="0.01" /></label>
+          <label class="field">Cấp điện áp (áp dụng Bảng 63)
+            <select id="f_bang63_voltage">
+              <option value="110-220">110 – 220 kV</option>
+              <option value="500">500 kV</option>
+            </select>
+          </label>
+        </div>
+        <label class="field" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
+          <input id="f_bang63_applicable" type="checkbox" style="width:auto; margin-top:4px;" />
+          <span>Dầu mới đưa vào vận hành lần đầu / sau sửa chữa có thay dầu hoặc lọc dầu (điều kiện áp dụng Bảng 63)</span>
+        </label>
+
         <!-- ===================== THÔNG TIN THÍ NGHIỆM BỔ SUNG (tùy chọn) =====================
              4 trường tự động đọc được từ BBTN (xem bbtn-import.js) HOẶC nhập tay — khác "Ngày
              lấy mẫu" (Ngày thí nghiệm có thể khác ngày lấy mẫu nếu gửi mẫu đi phân tích sau).
@@ -456,6 +480,26 @@
           <thead><tr><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th><th>Ngưỡng PD (CH4/H2)</th><th>Điều kiện áp dụng</th></tr></thead>
           <tbody><tr>
             <td id="r_ratio1">—</td><td id="r_ratio2">—</td><td id="r_ratio3">—</td><td id="r_pdthreshold">—</td><td id="r_applicability">—</td>
+          </tr></tbody>
+        </table></div>
+
+        <div class="section-title">Tỷ lệ bổ sung (Điều 54 QĐ1901)</div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Tỷ lệ</th><th>Giá trị</th><th>Nhận định theo Điều 54 QĐ1901</th></tr></thead>
+          <tbody>
+            <tr><td>CO2/CO</td><td id="r_co2co">—</td><td id="r_co2conote">—</td></tr>
+            <tr><td>O2/N2</td><td id="r_o2n2">—</td><td id="r_o2n2note">—</td></tr>
+          </tbody>
+        </table></div>
+
+        <div class="section-title">Tổng hàm lượng khí hòa tan (Bảng 63, Điều 54 QĐ1901)</div>
+        <p class="note">Bảng 63 CHỈ áp dụng chính thức cho dầu mới đưa vào vận hành lần đầu, sau sửa chữa có thay dầu, hoặc
+          sau sửa chữa không thay dầu có lọc dầu (tick ô tương ứng ở mục nhập liệu) — không áp dụng cho dầu đang vận hành
+          định kỳ thông thường. Cần nhập đủ N2, O2 ở trên để tính (cộng cả 9 khí, quy đổi ppm → %).</p>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Tổng hàm lượng khí hòa tan (%)</th><th>Ngưỡng cho phép (Bảng 63)</th><th>Đánh giá</th></tr></thead>
+          <tbody><tr>
+            <td id="r_bang63value">—</td><td id="r_bang63limit">—</td><td id="r_bang63verdict">—</td>
           </tr></tbody>
         </table></div>
 
