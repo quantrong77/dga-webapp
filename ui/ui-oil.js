@@ -15,6 +15,21 @@ function populateOilVoltageClasses() {
   ).join("");
   $("o_voltage_class").innerHTML = optionsHtml;
   $("s_oil_voltage_class").innerHTML = optionsHtml;
+  $("o_samplepoint").innerHTML = DGA.OIL_SAMPLE_POINTS.map(
+    (p) => `<option value="${p.value}">${escapeHtml(p.label)}</option>`
+  ).join("");
+}
+
+// Pha (A/B/C) chỉ có ý nghĩa khi MBA/Kháng lấy mẫu kiểu "pharieng" (3 pha rời, mỗi
+// pha 1 thùng dầu/1 mẫu riêng, thường gặp ở 500kV) — "chung" là 1 mẫu đại diện cho
+// cả 3 pha nên ẩn hẳn ô chọn Pha, giống hệt toggleOltcPhaseField() ở dầu OLTC.
+function toggleOilPhaseField() {
+  $("o_phase_wrap").classList.toggle("hidden", $("o_samplepoint").value !== "pharieng");
+}
+
+function oilSamplePointLabel(sp) {
+  const found = DGA.OIL_SAMPLE_POINTS.find((p) => p.value === sp);
+  return found ? found.label : sp || "—";
 }
 
 // "Có bảo vệ màng/nitơ" chỉ có ý nghĩa với các cấp điện áp mà Bảng 58 phân biệt
@@ -36,6 +51,8 @@ function clearOilForm() {
   ["o_tram", "o_thietbi", "o_ghichu", "o_moisture", "o_tgd90", "o_bdv"].forEach((id) => ($(id).value = ""));
   $("o_membrane").checked = false;
   $("o_nsx").value = "";
+  $("o_samplepoint").value = "chung";
+  toggleOilPhaseField();
   $("oilResultsPanel").classList.add("hidden");
   resetOilTestEditState();
 }
@@ -53,6 +70,9 @@ function onEditOilTest(rec) {
   _editingOilTestId = rec.id;
   $("o_tram").value = rec.tram || "";
   $("o_thietbi").value = rec.thiet_bi || "";
+  $("o_samplepoint").value = rec.oil_sample_point || "chung";
+  toggleOilPhaseField();
+  if (rec.oil_sample_point === "pharieng") $("o_phase").value = rec.phase || "A";
   $("o_voltage_class").value = rec.voltage_class || "";
   toggleOilMembraneField();
   $("o_oilstate").value = rec.oil_state || "inservice";
@@ -71,6 +91,8 @@ function onEditOilTest(rec) {
 }
 
 async function onAnalyzeOil() {
+  const oilSamplePoint = $("o_samplepoint").value || "chung";
+  const phase = oilSamplePoint === "pharieng" ? $("o_phase").value : "";
   const voltageClass = $("o_voltage_class").value;
   const oilState = $("o_oilstate").value;
   const hasMembraneN2 = !$("o_membrane_wrap").classList.contains("hidden") && $("o_membrane").checked;
@@ -80,6 +102,8 @@ async function onAnalyzeOil() {
     id: _editingOilTestId || undefined,
     tram: $("o_tram").value.trim(),
     thiet_bi: $("o_thietbi").value.trim(),
+    oil_sample_point: oilSamplePoint,
+    phase,
     voltage_class: voltageClass,
     oil_state: oilState,
     has_membrane_n2: hasMembraneN2,
@@ -172,6 +196,8 @@ async function refreshOilTestsUI() {
       <td>${rec.sample_date}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
+      <td>${escapeHtml(oilSamplePointLabel(rec.oil_sample_point || "chung"))}</td>
+      <td>${rec.phase ? escapeHtml(rec.phase) : "—"}</td>
       <td>${escapeHtml(oilVoltageClassLabel(rec.voltage_class))}</td>
       <td>${rec.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}</td>
       <td>${rec.moisture_ppm ?? "—"}</td>

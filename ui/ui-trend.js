@@ -341,13 +341,15 @@ function trendPoints(records, valueOf) {
 
 function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
   const canvas = $("trendChart");
-  if (typeof Chart === "undefined") {
-    $("trChartNoLib").classList.remove("hidden");
-    $("trChartEmpty").classList.add("hidden");
-    canvas.classList.add("hidden");
-    return;
-  }
-  $("trChartNoLib").classList.add("hidden");
+  // Bảng "Dự báo xu hướng" (renderTrendForecastTable()) chỉ cần các hàm tính toán thuần ở
+  // dga-logic.js (forecastGasTrend()) và DOM bảng — KHÔNG phụ thuộc Chart.js — nên vẫn phải
+  // tính/hiện được ngay cả khi thư viện vẽ đồ thị chưa tải xong/bị chặn mạng (chartLibAvailable
+  // = false): chỉ riêng phần VẼ đồ thị (canvas, `new Chart(...)`) mới cần gate theo điều kiện
+  // này, gate ở CUỐI hàm (return sớm ngay trước đoạn dựng Chart). Trước đây gate này nằm ở
+  // ĐẦU hàm nên lỗi mạng/CDN chặn Chart.js sẽ vô tình làm mất luôn cả bảng dự báo, dù bảng đó
+  // không cần Chart.js.
+  const chartLibAvailable = typeof Chart !== "undefined";
+  $("trChartNoLib").classList.toggle("hidden", chartLibAvailable);
 
   const hasGas = gasRecords.length > 0;
   const hasOil = oilRecords.length > 0;
@@ -378,6 +380,13 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     const def = TREND_PARAM_DEFS[key];
     const source = key.split(":")[0];
 
+    // gasField: chỉ gắn cho 1 trong 7 khí chính (DGA.GASES) — dùng để tra ngưỡng đang áp
+    // dụng (resolveStandard().limits) và tính dự báo xu hướng bên dưới (renderTrendChart()
+    // tiếp tục ở phần build "datasets"). TCG/N2/O2/Bảng 63 KHÔNG có ngưỡng tuyệt đối theo
+    // cùng cách này nên không đưa vào dự báo đạt-ngưỡng (xem ghi chú ở forecastGasTrend(),
+    // dga-logic.js) — vẫn vẽ đường xu hướng bình thường, chỉ không có phần ngoại suy.
+    const gasField = source === "gas" && DGA.GASES.includes(def.field) ? def.field : null;
+
     if (source === "gas" && phaseFilterActive) {
       tickedPhases.forEach((p) => {
         const recs = gasRecords.filter((r) => (r.pha || "").trim() === p);
@@ -385,6 +394,8 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
           label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`,
           axis: def.axis,
           points: trendPoints(recs, (r) => gasValueOf(r, def.field)),
+          gasField,
+          gasLabel: def.label,
         });
       });
       return;
@@ -411,16 +422,27 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     // Không tách theo pha (thiết bị không có ≥2 pha, hoặc là dầu MBA chính — không có
     // khái niệm pha): gộp toàn bộ bản ghi của nguồn dữ liệu này thành 1 đường như trước.
     const valueOf = source === "gas" ? (r) => gasValueOf(r, def.field) : (r) => r[def.field];
-    seriesSpecs.push({ label: `${def.label} (${def.unit})`, axis: def.axis, points: trendPoints(recordsBySource[source], valueOf) });
+    seriesSpecs.push({
+      label: `${def.label} (${def.unit})`,
+      axis: def.axis,
+      points: trendPoints(recordsBySource[source], valueOf),
+      gasField,
+      gasLabel: def.label,
+    });
   });
 
   if (seriesSpecs.length === 0) {
-    $("trChartEmpty").classList.remove("hidden");
-    canvas.classList.add("hidden");
+    if (chartLibAvailable) {
+      $("trChartEmpty").classList.remove("hidden");
+      canvas.classList.add("hidden");
+    }
+    renderTrendForecastTable([], 0);
     return;
   }
-  $("trChartEmpty").classList.add("hidden");
-  canvas.classList.remove("hidden");
+  if (chartLibAvailable) {
+    $("trChartEmpty").classList.add("hidden");
+    canvas.classList.remove("hidden");
+  }
 
   const datasets = seriesSpecs.map((spec, idx) => {
     const color = TREND_COLORS[idx % TREND_COLORS.length];
@@ -436,6 +458,77 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       pointHoverRadius: 5,
     };
   });
+
+  // Dự báo xu hướng (ngoại suy tuyến tính, xem forecastGasTrend() ở dga-logic.js) — chỉ
+  // áp dụng cho các đường ứng với 1 trong 7 khí chính (spec.gasField, gắn ở phần build
+  // seriesSpecs phía trên). Thêm 1 ĐƯỜNG NÉT ĐỨT (cùng màu, nhạt hơn) nối từ điểm đo GẦN
+  // NHẤT tới điểm dự báo ở cuối khoảng "Số năm dự báo" (#tr_forecastYears) đang chọn, và
+  // gom kết quả (tốc độ/giá trị dự báo/ngưỡng/mốc đạt ngưỡng) vào bảng bên dưới đồ thị
+  // (renderTrendForecastTable()). Ngưỡng dùng để so là ngưỡng ĐANG ÁP DỤNG cho thiết bị
+  // (resolveStandard() — NSX nếu có cấu hình đủ 7 khí, ngược lại QĐ1901/IEC theo loại
+  // thiết bị), lấy theo lần đo GẦN NHẤT của thiết bị (gasRecords đã sort tăng dần theo
+  // ngày ở trendRecordsForDevice() — xem ui-trend.js phía trên).
+  //
+  // #tr_forecastEnabled (checkbox "Hiện dự báo xu hướng tương lai") cho phép TẮT HẲN cả
+  // đường nét đứt lẫn bảng dự báo — hữu ích khi người dùng chỉ muốn xem SỐ LIỆU ĐÃ ĐO
+  // thực tế, không muốn đồ thị/bảng bị thêm phần ngoại suy. Mặc định BẬT (checked trong
+  // index.html) — trạng thái tick được nhớ qua localStorage (xem setupTrendForecastToggle()
+  // ở app-core.js), không phải dữ liệu nghiệp vụ nên không lưu qua Storage.
+  const forecastEnabled = !$("tr_forecastEnabled") || $("tr_forecastEnabled").checked;
+  if (!forecastEnabled) {
+    renderTrendForecastTable([], 0);
+  } else {
+    const forecastYearsInput = $("tr_forecastYears");
+    const forecastYears = forecastYearsInput ? Math.max(1, Math.min(30, Number(forecastYearsInput.value) || 3)) : 3;
+    const standard = gasRecords.length > 0
+      ? DGA.resolveStandard(
+          {
+            equipmentType: gasRecords[gasRecords.length - 1].equipment_type,
+            manufacturer: gasRecords[gasRecords.length - 1].manufacturer,
+            mbaSubtype: gasRecords[gasRecords.length - 1].mba_subtype ?? gasRecords[gasRecords.length - 1].mbaSubtype ?? null,
+          },
+          toManufacturerStandardsForLogic(_allStandards)
+        )
+      : null;
+
+    const forecastRows = [];
+    seriesSpecs.forEach((spec, idx) => {
+      if (!spec.gasField) return;
+      const limit = standard ? standard.limits[spec.gasField] : null;
+      const history = spec.points.map((p) => ({ date: new Date(p.x), value: p.y }));
+      const forecast = DGA.forecastGasTrend(history, forecastYears, limit);
+      forecastRows.push({ label: spec.label, gasLabel: spec.gasLabel, forecast });
+      // Chỉ vẽ 1 đường nét đứt trên đồ thị — dùng kết quả "Trung bình 3 thuật toán"
+      // (methods.average) làm đại diện, để đồ thị không bị rối khi có nhiều khí/pha đang
+      // chọn cùng lúc. Chi tiết đầy đủ của TỪNG thuật toán (OLS/Theil-Sen/liền kề) xem ở
+      // bảng "Dự báo xu hướng" bên dưới (renderTrendForecastTable()).
+      if (!forecast.ok || !forecast.methods.average) return;
+      const avg = forecast.methods.average;
+      const lastPoint = spec.points[spec.points.length - 1];
+      const color = TREND_COLORS[idx % TREND_COLORS.length];
+      datasets.push({
+        label: `${spec.label} — dự báo (TB 3 thuật toán)`,
+        data: [
+          { x: lastPoint.x, y: lastPoint.y },
+          { x: new Date(avg.forecastDate).getTime(), y: avg.forecastValue },
+        ],
+        borderColor: color,
+        backgroundColor: color,
+        yAxisID: spec.axis,
+        borderDash: [6, 4],
+        borderWidth: 1.5,
+        pointRadius: [0, 4],
+        pointStyle: "rectRot",
+        tension: 0,
+      });
+    });
+    renderTrendForecastTable(forecastRows, forecastYears);
+  }
+
+  // Phần còn lại chỉ dựng ĐỒ THỊ (Chart.js) — bảng dự báo ở trên đã xong, không phụ thuộc
+  // đoạn này, nên dừng ở đây nếu thư viện chưa sẵn sàng (xem ghi chú chartLibAvailable ở
+  // đầu hàm).
+  if (!chartLibAvailable) return;
 
   const usedAxes = new Set(datasets.map((d) => d.yAxisID));
   const scales = {
@@ -475,4 +568,82 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       scales,
     },
   });
+}
+
+/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody) bên dưới đồ thị — 1 dòng cho mỗi đường
+ *  khí (trong 7 khí chính) đang chọn trên đồ thị, xem forecastGasTrend()/renderTrendChart()
+ *  ở trên. Ẩn hẳn khối #trForecastWrap khi không có dòng nào (không có khí chính nào
+ *  đang chọn) để đỡ hiện 1 bảng trống gây rối mắt. */
+/** Render 1 dòng <tr> cho 1 THUẬT TOÁN của 1 khí (dùng chung cho cả 3 thuật toán lẫn
+ *  dòng "Trung bình") — tách riêng khỏi renderTrendForecastTable() vì cấu trúc lặp lại
+ *  y hệt nhau, chỉ khác dữ liệu vào. isAverage=true tô đậm dòng để nổi bật kết quả tổng
+ *  hợp so với 3 dòng thuật toán riêng lẻ phía trên nó. gasCellHtml=null nghĩa là dòng này
+ *  KHÔNG mở đầu 1 khí mới (rowspan gộp từ dòng đầu tiên của khí đó — xem forecastYears ở
+ *  renderTrendForecastTable()). */
+function trendForecastMethodRowHtml(method, { forecastYears, gasCellHtml, isAverage }) {
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
+  const rateText = `${method.ratePerYear >= 0 ? "+" : ""}${method.ratePerYear.toFixed(2)} ppm/năm`;
+  const r2Text = method.r2 === null ? "—" : method.r2.toFixed(3);
+  let crossingHtml = `<span class="pill muted">Không có ngưỡng để so sánh</span>`;
+  if (method.crossing) {
+    if (method.crossing.status === "already_exceeded") {
+      crossingHtml = `<span class="pill bad">Đã vượt ngưỡng ở lần đo gần nhất</span>`;
+    } else if (method.crossing.status === "not_increasing") {
+      crossingHtml = `<span class="pill ok">Ổn định/giảm — không dự báo vượt ngưỡng</span>`;
+    } else {
+      const withinNote = method.crossing.withinHorizon ? "" : ` (ngoài ${forecastYears} năm đã chọn)`;
+      crossingHtml = `<span class="pill ${method.crossing.yearsFromLast <= forecastYears ? "bad" : "warn"}">` +
+        `~${fmtDate(method.crossing.date)} (còn ~${method.crossing.yearsFromLast.toFixed(1)} năm)${withinNote}</span>`;
+    }
+  }
+  return `<tr${isAverage ? ' style="background:var(--gray-50); font-weight:600;"' : ""}>
+    ${gasCellHtml !== null ? gasCellHtml : ""}
+    <td>${escapeHtml(method.label)}</td>
+    <td>${rateText}</td>
+    <td>${method.forecastValue.toFixed(1)} ppm</td>
+    <td>${r2Text}</td>
+    <td>${crossingHtml}</td>
+  </tr>`;
+}
+
+/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody) bên dưới đồ thị — mỗi khí (trong 7 khí
+ *  chính) đang chọn trên đồ thị chiếm 4 dòng: 3 dòng ứng với 3 thuật toán độc lập (OLS,
+ *  Theil-Sen, trung bình liền kề — xem forecastGasTrend()/FORECAST_METHOD_LABELS ở
+ *  dga-logic.js) rồi 1 dòng "Trung bình 3 thuật toán" tô đậm để dễ so sánh nhanh — cột
+ *  "Khí" và "Giá trị gần nhất" dùng rowspan gộp chung cho cả nhóm 4 dòng vì đó là dữ liệu
+ *  ĐO ĐƯỢC, giống nhau cho mọi thuật toán, chỉ có "Tốc độ"/"Dự báo"/"R²"/"Đạt ngưỡng" là
+ *  khác nhau theo thuật toán. Ẩn hẳn khối #trForecastWrap khi không có dòng nào (không có
+ *  khí chính nào đang chọn) để đỡ hiện 1 bảng trống gây rối mắt. */
+function renderTrendForecastTable(forecastRows, forecastYears) {
+  const wrap = $("trForecastWrap");
+  if (!wrap) return;
+  if (!forecastRows || forecastRows.length === 0) {
+    wrap.classList.add("hidden");
+    return;
+  }
+  wrap.classList.remove("hidden");
+  $("trForecastYearsLabel").textContent = forecastYears;
+
+  const rowsHtml = forecastRows.map(({ label, forecast }) => {
+    if (!forecast.ok) {
+      const reasonText = forecast.reason === "not_enough_data"
+        ? `Chưa đủ dữ liệu (cần ≥ 2 lần đo, hiện có ${forecast.n})`
+        : "Không tính được (các lần đo cùng 1 ngày)";
+      return `<tr><td>${escapeHtml(label)}</td><td colspan="4" class="pill muted">${reasonText}</td></tr>`;
+    }
+    const methodKeys = ["ols", "theilsen", "consecutive", "average"];
+    const gasHeaderCell = `<td rowspan="${methodKeys.length}">${escapeHtml(label)}<br /><span class="pill muted" ` +
+      `style="margin-top:4px;">Gần nhất: ${forecast.lastValue} ppm • Ngưỡng: ${forecast.limit === null ? "—" : forecast.limit + " ppm"}</span></td>`;
+    return methodKeys.map((key, i) => {
+      const method = forecast.methods[key];
+      if (!method) return "";
+      return trendForecastMethodRowHtml(method, {
+        forecastYears,
+        gasCellHtml: i === 0 ? gasHeaderCell : null,
+        isAverage: key === "average",
+      });
+    }).join("");
+  }).join("");
+
+  $("trForecastBody").innerHTML = rowsHtml;
 }

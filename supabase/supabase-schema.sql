@@ -117,6 +117,12 @@ create table if not exists oil_tests (
   id text primary key,
   tram text,
   thiet_bi text not null,
+  -- Điểm lấy mẫu: "chung" (mặc định, đa số MBA/Kháng ≤220kV dùng 1 thùng dầu chung 3
+  -- pha) hoặc "pharieng" (MBA/Kháng 3 pha RỜI, mỗi pha 1 thùng dầu/1 mẫu riêng — thường
+  -- gặp ở 500kV, xem OIL_SAMPLE_POINTS trong dga-logic.js).
+  oil_sample_point text default 'chung',
+  -- Pha: "A"/"B"/"C" khi oil_sample_point='pharieng', null khi 'chung'.
+  phase text,
   -- Cấp điện áp MBA: duoi15 | 15den35 | tren35duoi110 | 110 | 220 | 500 (xem OIL_VOLTAGE_CLASSES trong dga-logic.js)
   voltage_class text not null,
   -- Trạng thái dầu: "new" (dầu mới, sau lắp đặt/sau sửa chữa) hoặc "inservice" (dầu vận hành)
@@ -242,6 +248,13 @@ create table if not exists feedback (
 -- alter table measurements add column if not exists edited_fields text;
 -- alter table measurements add column if not exists edited_at timestamptz;
 -- alter table measurements add column if not exists edit_log text;
+
+-- Nếu bạn đã tạo bảng oil_tests từ trước (chưa có cột oil_sample_point/phase — tính
+-- năng phân biệt MBA/Kháng dùng 1 thùng dầu CHUNG 3 pha hay 3 pha RỜI, mỗi pha 1 thùng
+-- dầu/1 mẫu riêng, thường gặp ở 500kV), chạy 2 dòng sau để nâng cấp (an toàn, không ảnh
+-- hưởng dữ liệu cũ — các dòng đã có sẽ tự hiểu là oil_sample_point = "chung"):
+-- alter table oil_tests add column if not exists oil_sample_point text;
+-- alter table oil_tests add column if not exists phase text;
 
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.

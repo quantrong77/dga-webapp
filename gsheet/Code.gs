@@ -135,6 +135,14 @@ const OILTEST_HEADERS = [
   "manufacturer", "created_at",
   // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
   "created_by", "updated_by", "updated_at",
+  // "oil_sample_point"/"phase": thêm ở CUỐI (xem lưu ý ở STANDARD_HEADERS) — điểm lấy
+  // mẫu dầu cách điện THÙNG DẦU CHÍNH: "chung" (mặc định, đa số MBA/Kháng ≤220kV dùng
+  // 1 thùng dầu chung 3 pha) hoặc "pharieng" (MBA/Kháng 3 pha RỜI, mỗi pha 1 thùng dầu/
+  // 1 mẫu riêng — thường gặp ở 500kV, xem OIL_SAMPLE_POINTS ở dga-logic.js). "phase":
+  // "A"/"B"/"C" khi oil_sample_point="pharieng", để trống khi "chung". Bản ghi lưu
+  // trước khi có 2 cột này để trống — web app mặc định coi là "chung" (xem
+  // oilPhaseIdentity()/oilSamplePointLabel() ở ui-oil.js/ui-alerts.js — || "chung").
+  "oil_sample_point", "phase",
 ];
 
 // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49. Sheet TÁCH RIÊNG

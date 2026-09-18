@@ -710,6 +710,35 @@
           thiết bị có nhiều pha, cũng cần tick ít nhất 1 pha ở mục "Lọc theo pha".</p>
         <p class="note hidden" id="trChartNoLib" style="margin-top:10px;">Không tải được thư viện vẽ đồ thị (Chart.js) — có
           thể do mất mạng khi tải trang. Kiểm tra kết nối rồi tải lại trang; các bảng lịch sử bên dưới vẫn xem được bình thường.</p>
+
+        <label class="field" style="margin-top:18px; align-items:center; flex-direction:row; gap:8px; display:flex; font-weight:600;">
+          <input id="tr_forecastEnabled" type="checkbox" style="width:auto;" checked />
+          Hiện dự báo xu hướng tương lai (ngoại suy tuyến tính)
+        </label>
+
+        <div id="trForecastWrap" class="hidden" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--gray-300);">
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Dự báo xu hướng (ngoại suy tuyến tính)</h2>
+          <p class="note">Ước lượng tốc độ sinh khí trung bình từ lịch sử đo (hồi quy tuyến tính bình phương tối thiểu) rồi
+            ngoại suy ra tương lai — đường nét đứt trên đồ thị. <strong>Chỉ mang tính tham khảo thống kê</strong>, giả định
+            tốc độ sinh khí không đổi trong tương lai — KHÔNG thay thế nguyên tắc đánh giá tổng hợp tại Điều 3 QĐ1901 (còn
+            phải xét tiêu chuẩn áp dụng, các pha/thiết bị cùng loại, hướng dẫn nhà sản xuất, diễn biến thực tế vận hành...).
+            Cần tối thiểu 2 lần đo mỗi khí để dự báo được (khuyến nghị ≥ 4 lần đo để có độ tin cậy tốt hơn — xem cột R²).
+            Chỉ dự báo mốc đạt ngưỡng cho 7 khí chính (so với ngưỡng tuyệt đối đang áp dụng cho thiết bị); TCG/N2/O2/Tổng
+            hàm lượng khí hòa tan vẫn vẽ được đường xu hướng nhưng chưa có ngưỡng để dự báo mốc đạt ngưỡng.</p>
+          <label class="field" style="max-width:220px;">Số năm dự báo
+            <input id="tr_forecastYears" type="number" min="1" max="30" step="1" value="3" />
+          </label>
+          <div class="table-scroll" style="margin-top:12px;">
+            <table>
+              <thead><tr>
+                <th>Khí</th><th>Thuật toán</th><th>Tốc độ thay đổi</th>
+                <th>Dự báo sau <span id="trForecastYearsLabel">3</span> năm</th><th>R²</th>
+                <th>Dự kiến đạt ngưỡng</th>
+              </tr></thead>
+              <tbody id="trForecastBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div class="panel hidden" id="trHistGasWrap">
@@ -1588,6 +1617,24 @@
               <div id="o_thietbi_list" class="combo-list hidden"></div>
             </div>
           </label>
+          <label class="field">
+            <span class="field-label-row"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Điểm lấy mẫu
+              <button type="button" class="info-icon-btn" aria-controls="o_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu" title="Giải thích Điểm lấy mẫu">i</button>
+            </span>
+            <select id="o_samplepoint"></select>
+          </label>
+          <div class="info-popover field-wide hidden" id="o_samplepoint_info">
+            <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
+            <p><strong>Thùng dầu chung 3 pha:</strong> đa số MBA/Kháng dầu (nhất là ≤220kV) có kết cấu 1 thùng dầu DÙNG CHUNG cho cả 3 pha — chỉ cần 1 mẫu dầu đại diện cho cả thiết bị.</p>
+            <p><strong>Thùng dầu riêng từng pha:</strong> một số MBA/Kháng 500kV kết cấu 3 pha RỜI (mỗi pha 1 máy/1 thùng dầu vật lý riêng) — khi đó cần lấy mẫu và nhập kết quả RIÊNG cho từng pha A/B/C, tương tự cách khí hòa tan (DGA) đã tách theo pha.</p>
+          </div>
+          <label class="field hidden" id="o_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+            <select id="o_phase">
+              <option value="A">Pha A</option>
+              <option value="B">Pha B</option>
+              <option value="C">Pha C</option>
+            </select>
+          </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
             <select id="o_voltage_class"></select>
           </label>
@@ -1644,7 +1691,7 @@
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu đã lưu</h2>
         <div class="table-scroll"><table>
           <thead><tr>
-            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
             <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
           </tr></thead>
           <tbody id="oilHistoryTable"></tbody>

@@ -95,6 +95,7 @@ async function initApp() {
   $("ot_ngay").value = new Date().toISOString().slice(0, 10);
   populateOilVoltageClasses();
   toggleOilMembraneField();
+  toggleOilPhaseField();
   populateOltcOptions();
   toggleOltcPhaseField();
   toggleOltcMembraneField();
@@ -323,6 +324,7 @@ async function initApp() {
   setupInfoPopovers();
   setupTabLayoutToggle();
   setupSidebarCollapseToggle();
+  setupTrendForecastToggle();
   $("btnExportBbtn").addEventListener("click", onExportBbtn);
   $("btnExportTechReport").addEventListener("click", onExportTechReport);
   // Tùy chọn nhập liệu thứ 2 (bên cạnh nhập rời từng BBTN ở trên): nhập hàng loạt
@@ -351,6 +353,7 @@ async function initApp() {
   $("btnClearOilForm").addEventListener("click", clearOilForm);
   $("btnCancelEditOilTest").addEventListener("click", clearOilForm);
   $("o_voltage_class").addEventListener("change", toggleOilMembraneField);
+  $("o_samplepoint").addEventListener("change", toggleOilPhaseField);
   $("btnAnalyzeOltcOil").addEventListener("click", onAnalyzeOltcOil);
   $("btnClearOltcOilForm").addEventListener("click", clearOltcOilForm);
   $("btnCancelEditOltcOilTest").addEventListener("click", clearOltcOilForm);
@@ -392,6 +395,19 @@ async function initApp() {
     updateTrendEmptyNote();
     onTrendDeviceChange();
   }));
+  // Ô "Số năm dự báo" (khối "Dự báo xu hướng", xem renderTrendChart()/renderTrendForecastTable()
+  // ở ui-trend.js) — đổi số năm phải vẽ lại ngay cả đường ngoại suy trên đồ thị lẫn bảng kết
+  // quả, nên gọi lại onTrendDeviceChange() y hệt cách #tr_station làm ở trên (đơn giản, dữ liệu
+  // nhỏ nên không cần tối ưu chỉ vẽ lại phần dự báo).
+  $("tr_forecastYears").addEventListener("input", onTrendDeviceChange);
+  // Checkbox "Hiện dự báo xu hướng tương lai" (#tr_forecastEnabled) — bật/tắt hẳn cả
+  // đường nét đứt trên đồ thị lẫn bảng dự báo bên dưới (xem renderTrendChart() ở
+  // ui-trend.js); trạng thái tick là SỞ THÍCH GIAO DIỆN, lưu qua setupTrendForecastToggle()
+  // (localStorage, giống TAB_LAYOUT_STORAGE_KEY) chứ không qua onTrendDeviceChange() ở đây.
+  $("tr_forecastEnabled").addEventListener("change", () => {
+    try { localStorage.setItem(TREND_FORECAST_ENABLED_STORAGE_KEY, $("tr_forecastEnabled").checked ? "1" : "0"); } catch (e) {}
+    onTrendDeviceChange();
+  });
   // Tab "Cảnh báo" — combo tự gõ-tìm lọc theo Trạm biến áp (#al_stationFilter), chỉ gợi
   // ý các trạm đang thực sự có cảnh báo (xem alertStationOptions(), ui-alerts.js); để
   // trống = xem tất cả. Gõ/chọn xong gọi lại refreshAlertsUI() để lọc lại bảng + thống kê.
@@ -583,6 +599,24 @@ function applySidebarCollapse(isCollapsed) {
  *  (chỉ còn 1 cột icon hẹp) để "mở rộng màn hình" cho nội dung chính, hoặc mở lại như
  *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem style.css) nên ở
  *  đây chỉ cần lo phần bật/tắt + lưu lựa chọn, không cần kiểm tra thêm điều kiện. */
+/** Khóa localStorage lưu trạng thái tick "Hiện dự báo xu hướng tương lai" ở tab "Xu
+ *  hướng" (#tr_forecastEnabled) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng
+ *  (giống TAB_LAYOUT_STORAGE_KEY ở trên), không phải dữ liệu nghiệp vụ nên KHÔNG lưu
+ *  qua Storage (gsheet/Supabase) — mỗi trình duyệt/máy tự nhớ lựa chọn riêng. */
+const TREND_FORECAST_ENABLED_STORAGE_KEY = "dga_trend_forecast_enabled";
+
+/** Đọc lựa chọn đã lưu (nếu có) và đồng bộ lại checkbox #tr_forecastEnabled cho khớp —
+ *  gọi 1 lần lúc khởi động app (initApp()), TRƯỚC khi tab "Xu hướng" render lần đầu, để
+ *  khỏi phải vẽ lại ngay sau khi đọc xong. Mặc định BẬT (checked="checked" ở index.html)
+ *  nếu người dùng CHƯA từng đổi lựa chọn này bao giờ. */
+function setupTrendForecastToggle() {
+  const checkbox = $("tr_forecastEnabled");
+  if (!checkbox) return;
+  let saved = null;
+  try { saved = localStorage.getItem(TREND_FORECAST_ENABLED_STORAGE_KEY); } catch (e) {}
+  if (saved !== null) checkbox.checked = saved === "1";
+}
+
 function setupSidebarCollapseToggle() {
   const btn = $("btnCollapseSidebar");
   if (!btn) return;

@@ -19,20 +19,63 @@ function setAlertsLoading(isLoading) {
   hint.classList.toggle("hidden", !isLoading);
 }
 
-/** Tổng số thiết bị (Trạm+Thiết bị) THỰC SỰ có ít nhất 1 bản ghi ở 1 trong 3 nguồn
- *  dữ liệu — dùng làm mẫu số cho thống kê "Thiết bị đang có cảnh báo". Có thể giới hạn
- *  về đúng 1 Trạm (tham số "station") để khớp với bộ lọc #al_stationFilter — để trống/
- *  không truyền = đếm TẤT CẢ trạm như trước. */
+/** Khóa ĐỊNH DANH THIẾT BỊ dùng CHUNG cho cả totalTrackedDeviceCount() và các bộ đếm
+ *  "Thiết bị đang có cảnh báo" bên dưới. "normalizedPhase" TRUYỀN VÀO ĐÂY phải đã
+ *  được 1 trong 3 hàm gasPhaseIdentity()/oilPhaseIdentity()/oltcPhaseIdentity() bên
+ *  dưới chuẩn hóa trước — "" nghĩa là bản ghi này KHÔNG tách riêng theo pha (TI/TU/Sứ
+ *  xuyên phần lớn tách riêng theo pha vật lý nên hiếm khi rỗng; MBA/Kháng thì tùy kết
+ *  cấu: đa số dùng CHUNG 1 thùng dầu 3 pha — nhất là ≤220kV — nên thường rỗng, nhưng
+ *  MBA/Kháng 500kV thường 3 PHA RỜI (mỗi pha 1 máy/1 thùng dầu vật lý riêng — cả dầu
+ *  chính LẪN dầu OLTC đều có thể lấy mẫu riêng từng pha, xem OIL_SAMPLE_POINTS/
+ *  OLTC_SAMPLE_POINTS ở dga-logic.js) nên khi đó "A"/"B"/"C" là pha THẬT, ghép đúng
+ *  giữa khí hòa tan + dầu chính + dầu OLTC của CÙNG 1 pha thành CÙNG 1 thiết bị. */
+function deviceIdentityKey(tram, deviceName, normalizedPhase) {
+  return `${(tram || "").trim()}|||${(deviceName || "").trim()}|||${(normalizedPhase || "").trim()}`;
+}
+
+/** Chuẩn hóa Pha của 1 bản ghi KHÍ HÒA TAN (_allMeasurements, trường "pha") thành
+ *  Pha ĐỊNH DANH THIẾT BỊ — "chung3pha" (PHA_CHUNG_3_PHA, xem PHA_OPTIONS ở dga-
+ *  logic.js) nghĩa là "không tách riêng theo pha" nên quy về "", còn "A"/"B"/"C" giữ
+ *  nguyên vì đó là pha vật lý thật (TI/TU/Sứ xuyên gần như luôn vậy; MBA/Kháng 3 pha
+ *  rời thì cũng vậy). */
+function gasPhaseIdentity(pha) {
+  return pha === DGA.PHA_CHUNG_3_PHA ? "" : (pha || "").trim();
+}
+
+/** Chuẩn hóa Pha của 1 bản ghi DẦU CÁCH ĐIỆN MBA CHÍNH (_allOilTests) — chỉ có Pha
+ *  thật khi oil_sample_point="pharieng" (MBA/Kháng 3 pha rời, mỗi pha 1 thùng dầu
+ *  riêng — xem OIL_SAMPLE_POINTS/ui-oil.js); "chung" (mặc định, đa số MBA/Kháng
+ *  ≤220kV dùng 1 thùng dầu chung) quy về "". */
+function oilPhaseIdentity(oilSamplePoint, phase) {
+  return oilSamplePoint === "pharieng" ? (phase || "").trim() : "";
+}
+
+/** Chuẩn hóa Pha của 1 bản ghi DẦU OLTC (_allOltcOilTests) — chỉ có Pha thật khi
+ *  oltc_sample_point="pharieng" (lấy mẫu riêng từng pha); "trungtinh" (điểm cuối
+ *  trung tính, dùng chung 1 mẫu) quy về "". */
+function oltcPhaseIdentity(oltcSamplePoint, phase) {
+  return oltcSamplePoint === "pharieng" ? (phase || "").trim() : "";
+}
+
+/** Tổng số thiết bị (Trạm+Thiết bị+Pha đã chuẩn hóa) THỰC SỰ có ít nhất 1 bản ghi ở
+ *  1 trong 3 nguồn dữ liệu — dùng làm mẫu số cho thống kê "Thiết bị đang có cảnh
+ *  báo". Có thể giới hạn về đúng 1 Trạm (tham số "station") để khớp với bộ lọc
+ *  #al_stationFilter — để trống/không truyền = đếm TẤT CẢ trạm như trước. */
 function totalTrackedDeviceCount(station) {
   const keys = new Set();
   const matchesStation = (r) => !station || (r.tram || "").trim() === station;
-  const add = (r) => {
+  _allMeasurements.forEach((r) => {
     if (!matchesStation(r)) return;
-    keys.add(`${(r.tram || "").trim()}|||${(r.thiet_bi || "").trim()}`);
-  };
-  _allMeasurements.forEach(add);
-  _allOilTests.forEach(add);
-  _allOltcOilTests.forEach(add);
+    keys.add(deviceIdentityKey(r.tram, r.thiet_bi, gasPhaseIdentity(r.pha)));
+  });
+  _allOilTests.forEach((r) => {
+    if (!matchesStation(r)) return;
+    keys.add(deviceIdentityKey(r.tram, r.thiet_bi, oilPhaseIdentity(r.oil_sample_point, r.phase)));
+  });
+  _allOltcOilTests.forEach((r) => {
+    if (!matchesStation(r)) return;
+    keys.add(deviceIdentityKey(r.tram, r.thiet_bi, oltcPhaseIdentity(r.oltc_sample_point, r.phase)));
+  });
   return keys.size;
 }
 
@@ -180,6 +223,9 @@ function computeGasAlerts() {
       // hướng" khi bấm "Xem xu hướng" (xem goToTrendForDevice()), thay vì mặc định tick
       // sẵn cả A/B/C. Rỗng/không có nếu thiết bị không phân pha (vd 1 số MBA nhập gộp).
       phase: latest.pha || null,
+      // Pha ĐỊNH DANH THIẾT BỊ đã chuẩn hóa (xem gasPhaseIdentity() phía trên file) —
+      // dùng ở deviceIdentityKey() cho thống kê "Thiết bị đang theo dõi/cảnh báo".
+      identityPhase: gasPhaseIdentity(latest.pha),
       reasons: effectiveStatus.reasons,
       action: effectiveStatus.action,
       lanDo: latest.lan_do ?? "—",
@@ -199,7 +245,12 @@ function computeGasAlerts() {
 function computeOilAlerts() {
   const groups = new Map();
   _allOilTests.forEach((r) => {
-    const key = `${r.tram || ""}|||${r.thiet_bi || ""}`;
+    // Gộp theo Trạm+Thiết bị+điểm lấy mẫu — MBA/Kháng 3 pha rời (oil_sample_point=
+    // "pharieng", thường gặp ở 500kV) có 3 chuỗi lịch sử dầu ĐỘC LẬP theo từng pha,
+    // không được gộp lẫn khi tìm "lần thí nghiệm gần nhất" (y hệt lý do computeOltcOilAlerts()
+    // gộp theo "sub" bên dưới).
+    const sub = r.oil_sample_point === "pharieng" ? `pha:${r.phase || ""}` : "chung";
+    const key = `${r.tram || ""}|||${r.thiet_bi || ""}|||${sub}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(r);
   });
@@ -217,12 +268,13 @@ function computeOilAlerts() {
     if (evalResult.overall !== "Không đạt") return; // bỏ qua "Đạt"/"Chưa đủ dữ liệu"
 
     const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
+    const phaSuffix = latest.oil_sample_point === "pharieng" && latest.phase ? ` — Pha ${latest.phase}` : "";
     results.push({
       source: "oil",
       sourceLabel: "Dầu MBA chính",
       tram: latest.tram || "",
       deviceName: latest.thiet_bi || "",
-      thietBiLabel: latest.thiet_bi || "?",
+      thietBiLabel: (latest.thiet_bi || "?") + phaSuffix,
       level: "alarm",
       levelLabel: "BÁO ĐỘNG (ALARM)",
       statusHtml: verdictPill("Không đạt"),
@@ -232,7 +284,12 @@ function computeOilAlerts() {
       // "bdv", xem DGA.evaluateOilTest()) — dùng để tự tick đúng thông số dầu đã vượt
       // ngưỡng khi bấm "Xem xu hướng".
       exceededKeys: failing.map((r) => "oil:" + r.key),
-      phase: null, // dầu MBA chính không có khái niệm pha riêng — không giới hạn pha nào ở tab "Xu hướng".
+      // Chỉ có 1 PHA cụ thể khi lấy mẫu riêng từng pha (oil_sample_point = "pharieng",
+      // MBA/Kháng 3 pha rời) — mẫu "chung" đại diện cả 3 pha nên không giới hạn pha nào
+      // ở tab "Xu hướng".
+      phase: latest.oil_sample_point === "pharieng" ? (latest.phase || null) : null,
+      // Pha ĐỊNH DANH THIẾT BỊ đã chuẩn hóa (xem oilPhaseIdentity() phía trên file).
+      identityPhase: oilPhaseIdentity(latest.oil_sample_point, latest.phase),
       reasons: failing.map((r) =>
         `${r.label}: ${r.value} ${r.unit} (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit}, ${r.ref}).`
       ),
@@ -292,6 +349,9 @@ function computeOltcOilAlerts() {
       // Chỉ có 1 PHA cụ thể khi lấy mẫu riêng từng pha (oltc_sample_point = "pharieng")
       // — mẫu "chung" đại diện cả 3 pha nên không giới hạn pha nào ở tab "Xu hướng".
       phase: latest.oltc_sample_point === "pharieng" ? (latest.phase || null) : null,
+      // Pha ĐỊNH DANH THIẾT BỊ đã chuẩn hóa (xem oltcPhaseIdentity() phía trên file) —
+      // ghép đúng với pha tương ứng của khí hòa tan/dầu chính khi MBA/Kháng 3 pha rời.
+      identityPhase: oltcPhaseIdentity(latest.oltc_sample_point, latest.phase),
       reasons: failing.map((r) =>
         `${r.label}: ${r.value} ${r.unit}${r.limit === null ? "" : ` (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit})`}, ${r.ref}.`
       ),
@@ -420,7 +480,10 @@ function refreshAlertsUI() {
   });
 
   const totalDevices = totalTrackedDeviceCount(station);
-  const warnDeviceKeys = new Set(alerts.map((a) => `${(a.tram || "").trim()}|||${(a.deviceName || "").trim()}`));
+  // deviceIdentityKey() gồm cả Pha — nếu chỉ dùng Trạm+Thiết bị, cảnh báo ở TI 174 pha B
+  // và TI 174 pha C (2 thiết bị vật lý khác nhau, cùng tên "thiet_bi") sẽ bị đếm gộp
+  // thành 1, làm số "Thiết bị đang có cảnh báo" thấp hơn thực tế.
+  const warnDeviceKeys = new Set(alerts.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
   const alarmCount = alerts.filter((a) => a.level === "alarm").length;
   const alertCount = alerts.filter((a) => a.level === "alert").length;
   if ($("al_totalDevices")) $("al_totalDevices").textContent = String(totalDevices);
@@ -451,7 +514,9 @@ function onExportAlertsExcel() {
   // gì đang hiển thị, kể cả khi đã lọc về 1 trạm cụ thể.
   const station = $("al_stationFilter") ? $("al_stationFilter").value.trim() : "";
   const totalDevices = totalTrackedDeviceCount(station);
-  const warnDeviceKeys = new Set(_lastAlerts.map((a) => `${(a.tram || "").trim()}|||${(a.deviceName || "").trim()}`));
+  // Xem chú thích ở warnDeviceKeys trong refreshAlertsUI() — phải gồm cả Pha (deviceIdentityKey())
+  // để không gộp nhầm các Pha khác nhau của cùng 1 TI thành 1 thiết bị.
+  const warnDeviceKeys = new Set(_lastAlerts.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
   const alarmCount = _lastAlerts.filter((a) => a.level === "alarm").length;
   const alertCount = _lastAlerts.filter((a) => a.level === "alert").length;
 
