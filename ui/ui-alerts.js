@@ -1,13 +1,14 @@
 /* ui-alerts.js — Tab "Cảnh báo": tự động rà soát LẦN ĐO GẦN NHẤT của TỪNG thiết bị
-   (khí hòa tan/dầu MBA chính/dầu OLTC) và liệt kê thiết bị đang ở mức Cảnh báo/Báo
-   động — tái dùng NGUYÊN các hàm đánh giá đã có (DGA.computeOverallStatus()/
-   DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()), KHÔNG tự đặt thêm ngưỡng nào
-   mới, để luôn nhất quán với kết quả hiện ở tab "DGA"/"Dầu cách điện". Tách từ
-   app.js — xem ui-auth.js đầu file đó để biết quy ước chia sẻ scope giữa các file
-   ui-*.js. Đọc _allMeasurements/_allOilTests/_allOltcOilTests (ui-history.js) và
-   _allStandards (ui-standards.js) — chỉ TÍNH LẠI (không gọi Storage), nên gọi được
-   ngay sau bất kỳ lần nạp/lưu/xóa nào ở 3 tab kia (xem refreshHistoryUI()/
-   refreshOilTestsUI()/refreshOltcOilTestsUI()). */
+   (khí hòa tan/dầu MBA chính/dầu OLTC/dầu TI-TU) và liệt kê thiết bị đang ở mức Cảnh
+   báo/Báo động — tái dùng NGUYÊN các hàm đánh giá đã có (DGA.computeOverallStatus()/
+   DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()/DGA.evaluateInstrumentOilTest()),
+   KHÔNG tự đặt thêm ngưỡng nào mới, để luôn nhất quán với kết quả hiện ở tab "DGA"/
+   "Dầu cách điện". Tách từ app.js — xem ui-auth.js đầu file đó để biết quy ước chia
+   sẻ scope giữa các file ui-*.js. Đọc _allMeasurements/_allOilTests/_allOltcOilTests
+   (ui-history.js), _allTioOilTests (ui-ti-oil.js) và _allStandards (ui-standards.js)
+   — chỉ TÍNH LẠI (không gọi Storage), nên gọi được ngay sau bất kỳ lần nạp/lưu/xóa
+   nào ở 4 tab kia (xem refreshHistoryUI()/refreshOilTestsUI()/refreshOltcOilTestsUI()/
+   refreshTioOilTestsUI()). */
 
 /** Hiện/ẩn thông báo "Vui lòng chờ! Đang nạp dữ liệu..." (#alertsLoadingHint) —
  *  chỉ trong lúc nạp LẦN ĐẦU cả 3 nguồn dữ liệu lúc mở app (xem initApp() ở
@@ -57,6 +58,14 @@ function oltcPhaseIdentity(oltcSamplePoint, phase) {
   return oltcSamplePoint === "pharieng" ? (phase || "").trim() : "";
 }
 
+/** Chuẩn hóa Pha của 1 bản ghi DẦU TI/TU (_allTioOilTests, trường "phase") — đa số
+ *  TI/TU tách riêng từng pha theo kết cấu vật lý nên "A"/"B"/"C" là pha THẬT (giữ
+ *  nguyên); "chung3pha" (PHA_CHUNG_3_PHA, hiếm gặp hơn với TI/TU — xem ghi chú
+ *  PHA_OPTIONS ở dga-logic.js) nghĩa là không tách riêng theo pha nên quy về "". */
+function tioPhaseIdentity(phase) {
+  return phase === DGA.PHA_CHUNG_3_PHA ? "" : (phase || "").trim();
+}
+
 /** Tổng số thiết bị (Trạm+Thiết bị+Pha đã chuẩn hóa) THỰC SỰ có ít nhất 1 bản ghi ở
  *  1 trong 3 nguồn dữ liệu — dùng làm mẫu số cho thống kê "Thiết bị đang có cảnh
  *  báo". Có thể giới hạn về đúng 1 Trạm (tham số "station") để khớp với bộ lọc
@@ -76,6 +85,10 @@ function totalTrackedDeviceCount(station) {
     if (!matchesStation(r)) return;
     keys.add(deviceIdentityKey(r.tram, r.thiet_bi, oltcPhaseIdentity(r.oltc_sample_point, r.phase)));
   });
+  (_allTioOilTests || []).forEach((r) => {
+    if (!matchesStation(r)) return;
+    keys.add(deviceIdentityKey(r.tram, r.thiet_bi, tioPhaseIdentity(r.phase)));
+  });
   return keys.size;
 }
 
@@ -86,7 +99,7 @@ function totalTrackedDeviceCount(station) {
  *  trendStationOptions() ở ui-trend.js. setupCombo() tự gọi lại hàm này mỗi lần mở/gõ
  *  nên danh sách luôn theo đúng dữ liệu mới nhất. */
 function alertStationOptions() {
-  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts()];
+  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
   const names = new Set();
   allAlerts.forEach((a) => { const n = (a.tram || "").trim(); if (n) names.add(n); });
   return Array.from(names)
@@ -125,7 +138,10 @@ function computeGasAlerts() {
     const overall = DGA.overallVerdict(evalRows);
     const exceedCount = DGA.countExceedTypical(gases, latest.equipment_type, logicMeasurement);
     const ratios = DGA.computeRatios(gases);
-    const diagnosis = DGA.diagnoseRatios(ratios, standard.pdThreshold);
+    // DGA.diagnoseGasFault() tự chọn đúng bảng theo loại thiết bị (Table A.10 cho sứ
+    // xuyên, Table 1/Bảng 66 cho các loại còn lại) — xem chú thích đầy đủ ở onAnalyze()
+    // (ui-dga.js), phải dùng giống hệt ở đây để tab "Cảnh báo" ra kết quả nhất quán.
+    const diagnosis = DGA.diagnoseGasFault(gases, latest.equipment_type, standard.pdThreshold);
     const condemningRows = DGA.evaluateCondemning(gases, standard.condemning);
 
     let rateRows = null;
@@ -137,7 +153,7 @@ function computeGasAlerts() {
       const priorGases = recordGases(prior);
       const deltaDays = Math.round((new Date(latest.sample_date) - new Date(prior.sample_date)) / 86400000);
       rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, latest.equipment_type);
-      priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(priorGases), standard.pdThreshold);
+      priorDiagnosis = DGA.diagnoseGasFault(priorGases, latest.equipment_type, standard.pdThreshold);
     }
 
     const overallStatus = DGA.computeOverallStatus({
@@ -365,6 +381,75 @@ function computeOltcOilAlerts() {
   return results;
 }
 
+/** Rà soát dầu TI/TU (_allTioOilTests, nạp bởi refreshTioOilTestsUI() ở ui-ti-oil.js)
+ *  — gộp theo Trạm+Thiết bị+Pha (TI/TU hầu hết lấy mẫu riêng từng pha, xem
+ *  tioPhaseIdentity() phía trên), lấy thí nghiệm GẦN NHẤT của mỗi nhóm, đối chiếu
+ *  DGA.evaluateInstrumentOilTest() y hệt renderTioOilTestRows() (ui-ti-oil.js). KHÁC
+ *  dầu MBA/OLTC (computeOilAlerts()/computeOltcOilAlerts() — nhị phân Đạt/Không đạt,
+ *  "Không đạt" luôn xếp thẳng vào Báo động): dầu TI/TU có mức "Cảnh báo" TRUNG GIAN
+ *  thật sự (2 ngưỡng Bình thường/Loại bỏ của nhà sản xuất, xem
+ *  DGA.evaluateInstrumentOilTest()/verdictTwoTierOil() ở dga-logic.js) nên map
+ *  "Cảnh báo" -> mức "alert", "Không đạt" -> mức "alarm" — giống cách khí hòa tan
+ *  (computeGasAlerts()) có 2 mức. Bỏ qua "Đạt"/"Chưa đủ dữ liệu"/"Chưa có tiêu chuẩn
+ *  nhà sản xuất" (thiết bị CHƯA cấu hình NSX ở tab "Tiêu chuẩn" — không phải lỗi
+ *  thiết bị, không nên liệt vào Cảnh báo). */
+function computeInstrumentOilAlerts() {
+  const groups = new Map();
+  (_allTioOilTests || []).forEach((r) => {
+    const key = `${r.tram || ""}|||${r.thiet_bi || ""}|||${tioPhaseIdentity(r.phase)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(r);
+  });
+
+  const results = [];
+  const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
+
+  groups.forEach((records) => {
+    const latest = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
+    const equipmentType = latest.equipment_type || DGA.EQUIPMENT_TYPES.TI;
+    const evalResult = DGA.evaluateInstrumentOilTest({
+      equipmentType, manufacturer: latest.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
+      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent, bdv: latest.bdv_kv,
+    });
+    if (evalResult.overall !== "Không đạt" && evalResult.overall !== "Cảnh báo") return;
+
+    const level = evalResult.overall === "Không đạt" ? "alarm" : "alert";
+    // Chỉ liệt vào "Chỉ tiêu vượt ngưỡng" đúng những hạng mục cùng mức verdict với
+    // overall vừa xác định ở trên (VD overall="Cảnh báo" thì KHÔNG lẫn hạng mục đã
+    // "Không đạt" — dù trường hợp đó overall đã là "Không đạt" nên không tới đây).
+    const failing = evalResult.rows.filter((r) => r.verdict === evalResult.overall);
+    const phaSuffix = latest.phase && latest.phase !== DGA.PHA_CHUNG_3_PHA ? ` — ${DGA.phaLabelWithPrefix(latest.phase)}` : "";
+    results.push({
+      source: "tio",
+      sourceLabel: `Dầu ${tioEquipmentTypeShort(equipmentType)}`,
+      tram: latest.tram || "",
+      deviceName: latest.thiet_bi || "",
+      thietBiLabel: (latest.thiet_bi || "?") + phaSuffix,
+      level,
+      levelLabel: level === "alarm" ? "BÁO ĐỘNG (ALARM)" : "CẢNH BÁO (ALERT)",
+      statusHtml: tioVerdictPill(evalResult.overall),
+      statusText: evalResult.overall,
+      exceededItems: failing.map((r) => r.label),
+      // Tab "Xu hướng" (TREND_PARAM_DEFS, ui-trend.js) CHƯA hỗ trợ theo dõi dầu TI/TU
+      // theo thời gian — để rỗng, nút "Xem xu hướng" vẫn chuyển đúng Trạm/Thiết bị
+      // nhưng chưa tự tick được thông số nào (khác gas/oil/oltc).
+      exceededKeys: [],
+      phase: latest.phase && latest.phase !== DGA.PHA_CHUNG_3_PHA ? latest.phase : null,
+      identityPhase: tioPhaseIdentity(latest.phase),
+      reasons: failing.map((r) =>
+        `${r.label}: ${r.value} ${r.unit}${r.limit ? ` (${r.limit})` : ""}. ${r.ref}.`
+      ),
+      action: "Lấy mẫu dầu bổ sung xác nhận; đối chiếu hướng dẫn nhà sản xuất (QĐ1901 Điều 10/11 không quy định " +
+        "ngưỡng số mặc định cho dầu TI/TU, chỉ dẫn chiếu \"theo quy định nhà sản xuất\" — bổ sung/kiểm tra lại cấu " +
+        "hình tiêu chuẩn ở tab \"Tiêu chuẩn\" nếu cần); báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
+      lanDo: "—",
+      sampleDate: latest.sample_date,
+    });
+  });
+
+  return results;
+}
+
 function alertLevelPill(level, label) {
   // Cùng quy ước icon theo cấp độ đã dùng ở STATUS_ICON (ui-dga.js)/.status-badge
   // (index.html, banner kết quả phân tích) — alert: tam giác, alarm: bát giác.
@@ -429,7 +514,7 @@ function refreshAlertsUI() {
   // Lọc theo Trạm biến áp (#al_stationFilter, combo tự gõ-tìm — xem alertStationOptions()
   // ở trên) — để trống = xem TẤT CẢ trạm đang có cảnh báo (mặc định, không đổi hành vi cũ).
   const station = $("al_stationFilter") ? $("al_stationFilter").value.trim() : "";
-  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts()];
+  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
   const alerts = station ? allAlerts.filter((a) => (a.tram || "").trim() === station) : allAlerts;
   // Báo động (ALARM) lên trước Cảnh báo (ALERT); trong cùng mức, mới nhất lên trước.
   alerts.sort((a, b) => {

@@ -66,7 +66,7 @@ function onEditOltcOilTest(rec) {
   $("ot_oilstate").value = rec.oil_state || "inservice";
   $("ot_nsx").value = rec.manufacturer || "";
   $("ot_membrane").checked = !!rec.has_membrane_n2;
-  $("ot_ngay").value = rec.sample_date || "";
+  $("ot_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   $("ot_moisture").value = rec.moisture_ppm ?? "";
   $("ot_tgd90").value = rec.tgd_90c_percent ?? "";
   $("ot_bdv").value = rec.bdv_kv ?? "";
@@ -74,6 +74,10 @@ function onEditOltcOilTest(rec) {
   $("editingOltcOilTestNote").classList.remove("hidden");
   $("btnCancelEditOltcOilTest").classList.remove("hidden");
   $("btnAnalyzeOltcOil").textContent = "Cập nhật & Lưu";
+  // Đảm bảo khối "Dầu MBA chính"/OLTC đang HIỆN (không bị #dau_equipmenttype ẩn đi vì
+  // đang để ở loại khác) trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
+  $("dau_equipmenttype").value = DGA.EQUIPMENT_TYPES.MBA;
+  toggleDauEquipmentType();
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   $("ot_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -157,17 +161,19 @@ function renderOltcOilResults(evalResult) {
   }
 }
 
-async function refreshOltcOilTestsUI() {
-  const all = await Storage.listOltcOilTests();
-  _allOltcOilTests = all;
-  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
-
-  const tbody = $("oltcOilHistoryTable");
+/** Vẽ danh sách dòng thí nghiệm dầu OLTC vào 1 bảng bất kỳ — DÙNG CHUNG cho bảng
+ *  "gốc" ở tab "Dầu cách điện" (#oltcOilHistoryTable) LẪN bảng mirror chỉ-để-xem ở tab
+ *  "Lịch sử đo" (#lichsuOltcHistoryTable, xem refreshLichSuOltcTable() ở ui-history.js)
+ *  — xem chú thích y hệt ở renderOilTestRows() (ui-oil.js). */
+function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
+  const tbody = $(tbodyId);
+  if (!tbody) return;
   tbody.innerHTML = "";
-  $("oltcOilHistoryEmpty").classList.toggle("hidden", sorted.length > 0);
+  const emptyEl = $(emptyId);
+  if (emptyEl) emptyEl.classList.toggle("hidden", sortedRecords.length > 0);
 
   const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
-  sorted.forEach((rec) => {
+  sortedRecords.forEach((rec) => {
     const evalResult = DGA.evaluateOltcOilTest({
       oltcSamplePoint: rec.oltc_sample_point, voltageClass: rec.voltage_class, oilState: rec.oil_state,
       hasMembraneN2: rec.has_membrane_n2, manufacturer: rec.manufacturer || null,
@@ -181,7 +187,7 @@ async function refreshOltcOilTestsUI() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${rec.sample_date}</td>
+      <td>${DGA.formatSampleDate(rec.sample_date)}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(oltcSamplePointLabel(rec.oltc_sample_point))}</td>
@@ -214,6 +220,14 @@ async function refreshOltcOilTestsUI() {
     }
     tbody.appendChild(tr);
   });
+}
+
+async function refreshOltcOilTestsUI() {
+  const all = await Storage.listOltcOilTests();
+  _allOltcOilTests = all;
+  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+  renderOltcOilTestRows("oltcOilHistoryTable", "oltcOilHistoryEmpty", sorted);
+  if (typeof refreshLichSuOltcTable === "function") refreshLichSuOltcTable();
 
   refreshTrendDeviceOptions();
   refreshAlertsUI();

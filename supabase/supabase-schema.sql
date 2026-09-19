@@ -1,7 +1,14 @@
 -- supabase-schema.sql
 -- Chạy toàn bộ file này trong Supabase Dashboard > SQL Editor (dự án của bạn) > Run.
--- Tạo 2 bảng: measurements (nhật ký các lần đo DGA) và manufacturer_standards
--- (tiêu chuẩn riêng theo từng nhà sản xuất, dùng thay thế QĐ1901 khi có cấu hình).
+-- Idempotent (mọi "create table"/"create policy" đều có "if not exists"/"drop...if
+-- exists" trước) — nếu bạn đã chạy file này từ trước, chạy lại TOÀN BỘ file vẫn AN
+-- TOÀN, sẽ chỉ tạo thêm bảng/policy MỚI (ví dụ regulation_config bên dưới) mà không
+-- đụng đến dữ liệu các bảng đã có.
+-- Tạo các bảng: measurements (nhật ký các lần đo DGA), manufacturer_standards (tiêu
+-- chuẩn riêng theo từng nhà sản xuất), stations (danh mục Trạm), oil_tests/
+-- oltc_oil_tests/instrument_oil_tests (thí nghiệm dầu), feedback (góp ý người dùng), và
+-- regulation_config (Cấu hình quy định — ghi đè số liệu/tham chiếu nguồn QĐ1901/IEC
+-- 60599 gốc, xem ghi chú ngay tại "create table if not exists regulation_config" bên dưới).
 
 create table if not exists manufacturer_standards (
   id text primary key,
@@ -34,6 +41,14 @@ create table if not exists manufacturer_standards (
   oil_moisture_ppm numeric,
   oil_tgd_90c_percent numeric,
   oil_bdv_kv numeric,
+  -- Ngưỡng LOẠI BỎ (mức 2, tùy chọn) — CHỈ dùng khi equipment_type = TI/TU (dầu TI/TU
+  -- không có oil_voltage_class/oil_state, xem evaluateInstrumentOilTest() ở
+  -- dga-logic.js). QĐ1901 Điều 10/11 không quy định bảng số cho dầu TI/TU (chỉ dẫn
+  -- chiếu "theo quy định nhà sản xuất") — ví dụ tài liệu Haefely Trench cho TI có cả
+  -- 2 mức "normal conditions" và "limits — units to be taken out of service".
+  oil_moisture_loaibo_ppm numeric,
+  oil_tgd_90c_loaibo_percent numeric,
+  oil_bdv_loaibo_kv numeric,
   created_at timestamptz default now()
 );
 
@@ -167,6 +182,36 @@ create table if not exists oltc_oil_tests (
 
 create index if not exists idx_oltc_oiltests_key on oltc_oil_tests (tram, thiet_bi);
 
+-- Thí nghiệm dầu cách điện TI/TU (biến dòng điện/biến điện áp kiểu kín, cách điện
+-- dầu) — QĐ1901 Điều 10 (Bảng 9 mục 12) / Điều 11 (Bảng 14 mục 11) đều chỉ dẫn chiếu
+-- "theo quy định nhà sản xuất", KHÔNG có bảng số mặc định như dầu MBA (Bảng 54/55/58)
+-- — bắt buộc phải có tiêu chuẩn nhà sản xuất (manufacturer_standards, standard_type =
+-- 'dau', equipment_type = TI/TU) mới đánh giá được, xem evaluateInstrumentOilTest() ở
+-- dga-logic.js. Bảng RIÊNG khỏi oil_tests (MBA) — không có voltage_class/oil_state/
+-- oil_sample_point/has_membrane_n2 (không áp dụng, xem ghi chú ở manufacturer_standards).
+create table if not exists instrument_oil_tests (
+  id text primary key,
+  tram text,
+  thiet_bi text not null,
+  -- equipment_type: 'TI (biến dòng điện)' hoặc 'TU (biến điện áp)' (xem EQUIPMENT_TYPES
+  -- trong dga-logic.js).
+  equipment_type text not null,
+  -- Pha: 'A'/'B'/'C' hoặc 'chung3pha' (đa số TI/TU là 1 pha/1 thiết bị vật lý riêng,
+  -- nhưng vẫn cho chọn 'chung3pha' nếu đơn vị gộp chung, giống PHA_OPTIONS ở đo khí DGA).
+  phase text,
+  -- Nhà sản xuất — BẮT BUỘC phải khớp 1 tiêu chuẩn dầu TI/TU đã cấu hình mới đánh giá
+  -- được (khác dầu MBA vốn có QĐ1901 làm mặc định khi không chọn NSX).
+  manufacturer text,
+  sample_date date not null,
+  moisture_ppm numeric,
+  tgd_90c_percent numeric,
+  bdv_kv numeric,
+  ghi_chu text,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_instrument_oiltests_key on instrument_oil_tests (tram, thiet_bi);
+
 -- Góp ý người dùng (tab "Người dùng phản hồi") — nội dung tự do + 1 ảnh minh họa tùy
 -- chọn (image_url/image_name, xem bucket Storage "feedback" ở cuối file này — tách
 -- riêng bucket "bbtn" để không lẫn 2 loại file khác mục đích).
@@ -176,6 +221,23 @@ create table if not exists feedback (
   image_url text,
   image_name text,
   created_at timestamptz default now()
+);
+
+-- "Cấu hình quy định" (tab riêng trên web app, tách khỏi manufacturer_standards ở trên —
+-- xem ui/ui-regulation-config.js + dga-logic.js mục 9, REGULATION_CONFIG_REGISTRY). Mỗi
+-- dòng ứng với ĐÚNG 1 bảng ngưỡng gốc QĐ1901/IEC 60599 (id = key trong registry, VD
+-- 'BANG64_MBA') — cho phép Admin sửa số + tham chiếu nguồn khi 2 quy định này có bản
+-- cập nhật trong tương lai, KHÔNG cần sửa code. "values_json" lưu dạng TEXT (không phải
+-- jsonb) — cố ý để khớp với cách Google Sheets/Code.gs lưu (chuỗi JSON đơn giản), tránh
+-- phải viết logic (de)serialize khác nhau giữa 2 backend; client (storage.js) tự
+-- JSON.parse/JSON.stringify. Không có bản ghi nào cho 1 key = dùng đúng số liệu mặc định
+-- gốc đã tích hợp sẵn trong dga-logic.js (nút "Khôi phục mặc định" ở giao diện chính là
+-- xóa dòng tương ứng ở đây).
+create table if not exists regulation_config (
+  id text primary key,
+  citation text,
+  values_json text,
+  updated_at timestamptz default now()
 );
 
 -- Nếu bạn đã tạo bảng measurements từ trước (chưa có cột mba_subtype), chạy thêm dòng
@@ -256,6 +318,13 @@ create table if not exists feedback (
 -- alter table oil_tests add column if not exists oil_sample_point text;
 -- alter table oil_tests add column if not exists phase text;
 
+-- Nếu bạn đã tạo bảng manufacturer_standards từ trước (chưa có 3 cột "Ngưỡng loại bỏ"
+-- của dầu TI/TU — tính năng đánh giá dầu cách điện TI/TU theo tiêu chuẩn nhà sản xuất),
+-- chạy các dòng sau để nâng cấp (an toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table manufacturer_standards add column if not exists oil_moisture_loaibo_ppm numeric;
+-- alter table manufacturer_standards add column if not exists oil_tgd_90c_loaibo_percent numeric;
+-- alter table manufacturer_standards add column if not exists oil_bdv_loaibo_kv numeric;
+
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.
 -- Nếu cần giới hạn theo tài khoản đăng nhập, thay các policy "using (true)"
@@ -266,7 +335,9 @@ alter table manufacturer_standards enable row level security;
 alter table stations enable row level security;
 alter table oil_tests enable row level security;
 alter table oltc_oil_tests enable row level security;
+alter table instrument_oil_tests enable row level security;
 alter table feedback enable row level security;
+alter table regulation_config enable row level security;
 
 drop policy if exists "measurements_all" on measurements;
 create policy "measurements_all" on measurements for all using (true) with check (true);
@@ -283,8 +354,14 @@ create policy "oiltests_all" on oil_tests for all using (true) with check (true)
 drop policy if exists "oltc_oiltests_all" on oltc_oil_tests;
 create policy "oltc_oiltests_all" on oltc_oil_tests for all using (true) with check (true);
 
+drop policy if exists "instrument_oiltests_all" on instrument_oil_tests;
+create policy "instrument_oiltests_all" on instrument_oil_tests for all using (true) with check (true);
+
 drop policy if exists "feedback_all" on feedback;
 create policy "feedback_all" on feedback for all using (true) with check (true);
+
+drop policy if exists "regulation_config_all" on regulation_config;
+create policy "regulation_config_all" on regulation_config for all using (true) with check (true);
 
 -- ---------------------------------------------------------------------------
 -- Storage bucket "bbtn" — nơi lưu file Biên bản thí nghiệm (PDF) đính kèm 1 lần đo

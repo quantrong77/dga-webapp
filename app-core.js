@@ -93,6 +93,7 @@ async function initApp() {
   $("f_ngay").value = new Date().toISOString().slice(0, 10);
   $("o_ngay").value = new Date().toISOString().slice(0, 10);
   $("ot_ngay").value = new Date().toISOString().slice(0, 10);
+  $("tio_ngay").value = new Date().toISOString().slice(0, 10);
   populateOilVoltageClasses();
   toggleOilMembraneField();
   toggleOilPhaseField();
@@ -123,6 +124,19 @@ async function initApp() {
     await refreshStationsUI();
   } catch (err) {
     console.warn("Không tải được danh mục Trạm:", err);
+  }
+
+  // "Cấu hình quy định" (regulation_config) — PHẢI áp dụng TRƯỚC khi bất kỳ phân tích
+  // DGA/Dầu cách điện nào chạy (kể cả refreshHistoryUI()/refreshOilTestsUI() ngay bên
+  // dưới, vốn tự tính lại chẩn đoán cho lịch sử đã lưu) — nếu không, lần hiển thị ĐẦU
+  // TIÊN sẽ dùng số mặc định gốc rồi mới "nhảy" số khi tab "Cấu hình quy định" được mở.
+  // Cô lập trong try/catch RIÊNG (giống danh mục Trạm) — sheet "regulation_config" là
+  // MỚI, backend (Apps Script/Supabase) có thể chưa deploy/tạo bảng kịp; lỗi ở đây
+  // KHÔNG được chặn các tab khác — ứng dụng vẫn chạy đúng với số liệu mặc định gốc.
+  try {
+    await refreshRegulationConfigUI();
+  } catch (err) {
+    console.warn("Không tải được Cấu hình quy định — dùng mặc định gốc QĐ1901/IEC60599:", err);
   }
 
   try {
@@ -168,11 +182,29 @@ async function initApp() {
     console.warn("Không tải được lịch sử thí nghiệm dầu OLTC:", err);
   }
 
+  // Dầu TI/TU — cô lập trong try/catch RIÊNG, y hệt lý do ở dầu OLTC: sheet
+  // "instrument_oil_tests" là MỚI NHẤT, backend (Apps Script/Supabase) có thể chưa
+  // deploy/tạo bảng kịp.
+  try {
+    await refreshTioOilTestsUI();
+  } catch (err) {
+    console.warn("Không tải được lịch sử thí nghiệm dầu TI/TU:", err);
+  }
+
   // Đến đây cả 4 nguồn dữ liệu mà gợi ý Trạm/Thiết bị dùng tới (stations,
   // measurements, oil_tests, oltc_oil_tests) đều đã thử tải xong (thành công hay
   // lỗi đều tắt thông báo — lỗi đã có console.warn/alert riêng ở từng khối trên).
   setComboLoading(false);
   setAlertsLoading(false);
+  // Bộ chọn Khí hòa tan/Dầu MBA chính/Dầu OLTC ở tab "Lịch sử đo" — gọi SAU khi cả 3
+  // nguồn đã nạp xong để bảng hiện đúng ngay theo lựa chọn đã lưu (thay vì luôn mặc
+  // định "gas" trước rồi mới nhảy bảng, gây chớp giao diện).
+  setupLichSuViewToggle();
+  // Bộ chọn "Loại thiết bị" ở tab "Dầu cách điện" (#dau_equipmenttype) — chỉ ẩn/hiện
+  // DOM (không phụ thuộc dữ liệu đã nạp) nên gọi ở đây cũng được, đặt cạnh
+  // setupLichSuViewToggle() cho dễ tìm (2 bộ chọn "nhớ lựa chọn qua localStorage" duy
+  // nhất trong app hiện có).
+  setupDauEquipmentTypeToggle();
 
   // Tab "Người dùng phản hồi" — cô lập trong try/catch RIÊNG, y hệt lý do ở Dầu OLTC:
   // sheet "feedback" là MỚI, backend có thể chưa deploy/tạo bảng kịp.
@@ -316,6 +348,42 @@ async function initApp() {
     },
   });
 
+  setupCombo({
+    input: $("tio_tram"),
+    toggleBtn: $("tio_tram_toggle"),
+    listEl: $("tio_tram_list"),
+    getOptions: () =>
+      _allStations
+        .slice()
+        .sort((a, b) => (a.ten_tram || "").localeCompare(b.ten_tram || "", "vi"))
+        .map((s) => ({ value: s.ten_tram, label: (s.ma_tram ? s.ma_tram + " — " : "") + s.ten_tram })),
+  });
+  // Ô "Thiết bị" ở dầu TI/TU gợi ý từ cả lịch sử đo DGA lẫn dầu TI/TU đã lưu trước đó
+  // (cùng 1 TI/TU có thể vừa có lịch sử đo khí, vừa có lịch sử dầu) — không gộp
+  // _allOilTests/_allOltcOilTests vì đó là thiết bị MBA/OLTC, khác nhóm thiết bị.
+  setupCombo({
+    input: $("tio_thietbi"),
+    toggleBtn: $("tio_thietbi_toggle"),
+    listEl: $("tio_thietbi_list"),
+    getOptions: () => {
+      const byName = new Map();
+      _allMeasurements.forEach((r) => {
+        if (r.equipment_type !== DGA.EQUIPMENT_TYPES.TI && r.equipment_type !== DGA.EQUIPMENT_TYPES.TU) return;
+        const name = (r.thiet_bi || "").trim();
+        if (!name || byName.has(name)) return;
+        byName.set(name, r.tram || "");
+      });
+      _allTioOilTests.forEach((r) => {
+        const name = (r.thiet_bi || "").trim();
+        if (!name || byName.has(name)) return;
+        byName.set(name, r.tram || "");
+      });
+      return Array.from(byName.entries())
+        .sort((a, b) => a[0].localeCompare(b[0], "vi"))
+        .map(([name, tram]) => ({ value: name, label: tram ? `${name} — ${tram}` : name }));
+    },
+  });
+
   $("btnAnalyze").addEventListener("click", onAnalyze);
   $("btnClearForm").addEventListener("click", clearForm);
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
@@ -359,13 +427,35 @@ async function initApp() {
   $("btnCancelEditOltcOilTest").addEventListener("click", clearOltcOilForm);
   $("ot_voltage_class").addEventListener("change", toggleOltcMembraneField);
   $("ot_samplepoint").addEventListener("change", toggleOltcPhaseField);
+  $("btnAnalyzeTioOil").addEventListener("click", onAnalyzeTioOil);
+  $("btnClearTioOilForm").addEventListener("click", clearTioOilForm);
+  $("btnCancelEditTioOilTest").addEventListener("click", clearTioOilForm);
+  $("tio_equipmenttype").addEventListener("change", onTioEquipmentTypeChange);
   $("fb_image").addEventListener("change", onFeedbackImageSelected);
   $("btnRemoveFbImage").addEventListener("click", clearFeedbackImage);
   $("btnSubmitFeedback").addEventListener("click", onSubmitFeedback);
   $("btnSaveStandard").addEventListener("click", onSaveStandard);
   $("btnCancelEditStandard").addEventListener("click", resetStandardForm);
   $("s_standard_type").addEventListener("change", toggleStandardTypeFields);
-  $("historyFilter").addEventListener("input", () => refreshHistoryUI());
+  // Đổi "Loại thiết bị" khi đang ở tiêu chuẩn DẦU: MBA/Kháng dầu <-> TI/TU cần hiện 2
+  // khối trường KHÁC nhau (Cấp điện áp/Trạng thái dầu vs Ngưỡng loại bỏ) — xem
+  // toggleOilStandardEquipmentFields() ở ui-standards.js.
+  $("s_equipmenttype").addEventListener("change", toggleOilStandardEquipmentFields);
+  // Áp dụng CHUNG cho cả 4 bảng ở tab "Lịch sử đo" (xem lichsuFilterText(), ui-history.js)
+  // — đổi qua lại DGA/Dầu MBA chính/Dầu OLTC/Dầu TI-TU-Sứ xuyên vẫn giữ nguyên bộ lọc đang gõ.
+  $("historyFilter").addEventListener("input", () => {
+    refreshHistoryUI();
+    refreshLichSuOilTable();
+    refreshLichSuOltcTable();
+    refreshLichSuInstrumentOilTable();
+  });
+  // #historyEquipmentFilter dùng CHUNG cho cả 2 view nhưng xử lý khác nhau: view "gas"
+  // cần nạp lại bảng (lọc theo loại thiết bị, xem refreshHistoryUI()); view "oil" chỉ
+  // cần ẩn/hiện 2 bảng con đã tính sẵn (lọc theo nguồn dầu, xem toggleLichSuOilSourceWraps()).
+  $("historyEquipmentFilter").addEventListener("change", () => {
+    if (currentLichSuView() === "gas") refreshHistoryUI();
+    else toggleLichSuOilSourceWraps();
+  });
   $("f_loai").addEventListener("change", () => { refreshManufacturerOptions(); toggleMbaSubtypeField(); });
   $("cmp_device").addEventListener("change", refreshCompareMeasurementOptions);
   $("btnCompareRate").addEventListener("click", onCompareRate);
@@ -617,6 +707,157 @@ function setupTrendForecastToggle() {
   if (saved !== null) checkbox.checked = saved === "1";
 }
 
+/** Bộ chọn xem lịch sử ở tab "Lịch sử đo" (#lichsuTypeToggle: "gas"/"oil" — xem
+ *  #lichsuGasWrap/#lichsuOilWrap, ui-history.js) — SỞ THÍCH GIAO DIỆN riêng trình duyệt
+ *  (giống TAB_LAYOUT_STORAGE_KEY/TREND_FORECAST_ENABLED_STORAGE_KEY ở trên), không phải
+ *  dữ liệu nghiệp vụ nên KHÔNG lưu qua Storage. Đổi class .primary/.ghost trên chính nút
+ *  bấm để hiện rõ đang chọn loại nào (không thêm class CSS mới, tái dùng luôn 2 biến thể
+ *  nút đã có ở toàn app). View "oil" gộp CHUNG "Dầu MBA chính" + "Dầu OLTC" + "Dầu TI/TU/
+ *  Sứ xuyên" (trước đây Dầu MBA chính/Dầu OLTC là 2 nút riêng, còn dầu TI/TU chưa từng
+ *  hiện ở tab này) — phân biệt tiếp bằng #historyEquipmentFilter (xem
+ *  populateHistoryEquipmentFilterOptions()/toggleLichSuOilSourceWraps() bên dưới), CÙNG 1
+ *  ô lọc dùng lại được cho cả 2 view — ở view "gas" lọc theo LOẠI THIẾT BỊ (bảng đó gộp
+ *  chung mọi loại), ở view "oil" lọc theo NGUỒN dầu (Dầu MBA chính/Dầu OLTC/Dầu TI/TU/Sứ
+ *  xuyên — 3 bảng con cột dữ liệu khác hẳn nhau nên vẫn hiện tách riêng, không gộp chung
+ *  1 bảng). */
+const LICHSU_VIEW_STORAGE_KEY = "dga_lichsu_view";
+
+const LICHSU_GAS_EQUIPMENT_OPTIONS = [
+  { value: "", label: "Tất cả loại thiết bị" },
+  { value: "TI (biến dòng điện)", label: "TI (biến dòng điện)" },
+  { value: "TU (biến điện áp)", label: "TU (biến điện áp)" },
+  { value: "Sứ xuyên (Bushing)", label: "Sứ xuyên (Bushing)" },
+  { value: "MBA/Kháng dầu", label: "MBA/Kháng dầu" },
+  { value: "Khác", label: "Khác" },
+];
+const LICHSU_OIL_SOURCE_OPTIONS = [
+  { value: "", label: "Tất cả (MBA chính + OLTC + TI/TU/Sứ xuyên)" },
+  { value: "main", label: "Dầu MBA chính" },
+  { value: "oltc", label: "Dầu OLTC" },
+  { value: DGA.EQUIPMENT_TYPES.TI, label: "Dầu TI (biến dòng điện)" },
+  { value: DGA.EQUIPMENT_TYPES.TU, label: "Dầu TU (biến điện áp)" },
+  { value: DGA.EQUIPMENT_TYPES.BUSHING, label: "Dầu Sứ xuyên (Bushing)" },
+];
+
+/** Nạp lại nội dung <option> của #historyEquipmentFilter theo đúng view đang xem — 2 bộ
+ *  lựa chọn Ý NGHĨA KHÁC NHAU hoàn toàn (loại thiết bị vs nguồn dầu) nên không thể dùng
+ *  chung 1 danh sách <option> tĩnh, phải nạp lại bằng JS mỗi lần đổi view. Luôn reset về
+ *  "" (Tất cả) khi đổi view — đơn giản hơn nhớ riêng từng view, và tránh lẫn giá trị của
+ *  view cũ (VD "oltc" không có nghĩa gì ở view "gas"). */
+function populateHistoryEquipmentFilterOptions(view) {
+  const select = $("historyEquipmentFilter");
+  if (!select) return;
+  const options = view === "oil" ? LICHSU_OIL_SOURCE_OPTIONS : LICHSU_GAS_EQUIPMENT_OPTIONS;
+  select.innerHTML = options.map((o) => `<option value="${o.value}">${o.label}</option>`).join("");
+}
+
+/** Ở view "Dầu": hiện 1 trong 3 (hoặc cả 3, khi #historyEquipmentFilter = "" = "Tất cả")
+ *  bảng con #lichsuOilMainSubWrap/#lichsuOltcSubWrap/#lichsuInstrumentOilSubWrap theo
+ *  đúng lựa chọn. 2 bảng dầu MBA/OLTC luôn được TÍNH SẴN cả 2 (xem
+ *  refreshLichSuOilTable()/refreshLichSuOltcTable(), ui-history.js) nên chỉ cần ẩn/hiện
+ *  DOM — nhưng bảng TI/TU/Sứ xuyên thì NGƯỢC LẠI, gộp CHUNG 1 bảng dữ liệu
+ *  (_allTioOilTests) cho cả 3 loại thiết bị nên phải LỌC LẠI theo đúng loại đang chọn mỗi
+ *  khi đổi lựa chọn (xem refreshLichSuInstrumentOilTable(), ui-history.js) — không thể
+ *  chỉ ẩn/hiện DOM như 2 bảng kia. Gọi được trực tiếp từ sự kiện "change". */
+function toggleLichSuOilSourceWraps() {
+  const value = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
+  const isInstrumentType = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING].includes(value);
+  $("lichsuOilMainSubWrap").classList.toggle("hidden", value !== "" && value !== "main");
+  $("lichsuOltcSubWrap").classList.toggle("hidden", value !== "" && value !== "oltc");
+  $("lichsuInstrumentOilSubWrap").classList.toggle("hidden", value !== "" && !isInstrumentType);
+  refreshLichSuInstrumentOilTable();
+}
+
+function currentLichSuView() {
+  return $("lichsuGasWrap") && !$("lichsuGasWrap").classList.contains("hidden") ? "gas" : "oil";
+}
+
+function setLichSuView(view) {
+  const toggle = $("lichsuTypeToggle");
+  if (!toggle) return;
+  toggle.querySelectorAll("[data-lichsu-type]").forEach((btn) => {
+    const active = btn.dataset.lichsuType === view;
+    btn.classList.toggle("primary", active);
+    btn.classList.toggle("ghost", !active);
+  });
+  const wraps = { gas: $("lichsuGasWrap"), oil: $("lichsuOilWrap") };
+  Object.entries(wraps).forEach(([key, el]) => { if (el) el.classList.toggle("hidden", key !== view); });
+  populateHistoryEquipmentFilterOptions(view);
+  try { localStorage.setItem(LICHSU_VIEW_STORAGE_KEY, view); } catch (e) {}
+  // Đổi bảng đang xem thì nạp lại đúng bảng đó theo bộ lọc #historyFilter hiện tại — cả 3
+  // bảng dầu chỉ tính lại từ dữ liệu ĐÃ CÓ SẴN trong bộ nhớ (_allOilTests/
+  // _allOltcOilTests/_allTioOilTests), không gọi lại Storage nên rất nhẹ.
+  // (toggleLichSuOilSourceWraps() ở cuối tự gọi refreshLichSuInstrumentOilTable().)
+  if (view === "gas") {
+    refreshHistoryUI();
+  } else if (view === "oil") {
+    refreshLichSuOilTable();
+    refreshLichSuOltcTable();
+    toggleLichSuOilSourceWraps();
+  }
+}
+
+/** Bộ chọn "Loại thiết bị" ở tab "Dầu cách điện" (#dau_equipmenttype, giống #f_loai ở
+ *  tab "DGA") — CHỈ ẩn/hiện (các) khối nhập liệu liên quan để đỡ cuộn qua cả 3 khối
+ *  MBA/OLTC/TI-TU cùng lúc, không phải 1 trường dữ liệu của bản ghi nên KHÔNG lưu qua
+ *  Storage — chỉ SỞ THÍCH GIAO DIỆN riêng trình duyệt, cùng quy ước với
+ *  LICHSU_VIEW_STORAGE_KEY ở trên. MBA/Kháng dầu gộp chung với OLTC (#dauMbaWrap, OLTC
+ *  là 1 khoang dầu phụ CỦA chính MBA đó — xem ghi chú ở index.html); TI và TU đều dùng
+ *  chung 1 khối "Dầu cách điện TI/TU" (#dauInstrumentWrap) — chọn TI/TU ở đây thì tự
+ *  đồng bộ luôn #tio_equipmenttype BÊN TRONG khối đó theo đúng lựa chọn, khỏi phải chọn
+ *  lại lần 2 (xem onTioEquipmentTypeChange(), ui-ti-oil.js, lọc lại danh sách Nhà sản
+ *  xuất theo đúng loại). Sứ xuyên/Khác chưa có tính năng nhập dầu ở tab này (QĐ1901
+ *  không có bảng dầu cho sứ xuyên, "Khác" không xác định được tiêu chuẩn nào) nên ẩn cả
+ *  3 khối, chỉ hiện ghi chú #dauNoOilSupportNote. */
+const DAU_EQUIPMENTTYPE_STORAGE_KEY = "dga_dau_equipmenttype";
+
+function toggleDauEquipmentType() {
+  const select = $("dau_equipmenttype");
+  if (!select) return;
+  const value = select.value;
+  const isMba = value === DGA.EQUIPMENT_TYPES.MBA;
+  const isInstrument = value === DGA.EQUIPMENT_TYPES.TI || value === DGA.EQUIPMENT_TYPES.TU;
+
+  $("dauMbaWrap").classList.toggle("hidden", !isMba);
+  $("dauInstrumentWrap").classList.toggle("hidden", !isInstrument);
+  $("dauNoOilSupportNote").classList.toggle("hidden", isMba || isInstrument);
+
+  if (isInstrument && $("tio_equipmenttype").value !== value) {
+    $("tio_equipmenttype").value = value;
+    onTioEquipmentTypeChange();
+  }
+
+  try { localStorage.setItem(DAU_EQUIPMENTTYPE_STORAGE_KEY, value); } catch (e) {}
+}
+
+function setupDauEquipmentTypeToggle() {
+  const select = $("dau_equipmenttype");
+  if (!select) return;
+  select.addEventListener("change", toggleDauEquipmentType);
+  let saved = null;
+  try { saved = localStorage.getItem(DAU_EQUIPMENTTYPE_STORAGE_KEY); } catch (e) {}
+  if (saved && Array.from(select.options).some((o) => o.value === saved)) select.value = saved;
+  toggleDauEquipmentType();
+}
+
+/** Đọc lựa chọn đã lưu (nếu có, mặc định "gas") và gắn sự kiện click cho 2 nút — gọi
+ *  1 lần lúc khởi động app (initApp()), sau khi refreshHistoryUI()/refreshOilTestsUI()/
+ *  refreshOltcOilTestsUI() đã nạp xong dữ liệu lần đầu, để bảng hiện đúng ngay từ đầu
+ *  thay vì luôn mặc định "gas" rồi mới nhảy sang bảng đã lưu. "oltc" là giá trị CŨ (trước
+ *  khi gộp 2 nút Dầu MBA chính/Dầu OLTC thành 1 nút "Dầu") có thể còn sót lại trong
+ *  localStorage của người dùng cũ — coi như "oil" để không bị kẹt ở view không còn tồn
+ *  tại. */
+function setupLichSuViewToggle() {
+  const toggle = $("lichsuTypeToggle");
+  if (!toggle) return;
+  toggle.querySelectorAll("[data-lichsu-type]").forEach((btn) => {
+    btn.addEventListener("click", () => setLichSuView(btn.dataset.lichsuType));
+  });
+  let saved = null;
+  try { saved = localStorage.getItem(LICHSU_VIEW_STORAGE_KEY); } catch (e) {}
+  setLichSuView(saved === "oil" || saved === "oltc" ? "oil" : "gas");
+}
+
 function setupSidebarCollapseToggle() {
   const btn = $("btnCollapseSidebar");
   if (!btn) return;
@@ -722,6 +963,13 @@ function setupTabs() {
       document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
       btn.classList.add("active");
       $("tab-" + btn.dataset.tab).classList.remove("hidden");
+      // Khi cụm nút tab không đủ chỗ (tràn ngang ở chế độ tab NGANG, hoặc tràn dọc ở chế
+      // độ sidebar — xem ghi chú CSS "nav.tabs"/".tabs-inner"), nút vừa bấm có thể đang
+      // nằm ngoài (hoặc chỉ lộ 1 phần trong) vùng nhìn thấy của nav.tabs — ví dụ bấm tab
+      // "Quản trị"/"Cấu hình quy định" ở cuối cụm lúc màn hình hẹp. Cuộn nhẹ (chỉ cuộn
+      // TỐI THIỂU cần thiết nhờ "nearest", không giật cả trang) để nút luôn hiện đầy đủ
+      // sau khi chọn, thay vì vẫn bị che 1 phần như trước khi bấm.
+      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
     });
   });
 }

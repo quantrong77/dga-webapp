@@ -25,8 +25,13 @@ async function refreshHistoryUI() {
   const all = await Storage.listMeasurements();
   _allMeasurements = all;
   const filterText = ($("historyFilter").value || "").toLowerCase();
+  // #historyEquipmentFilter (xem index.html) — lọc riêng theo Loại thiết bị (TI/TU/Sứ
+  // xuyên/MBA/Kháng dầu/Khác) vì bảng này gộp chung tất cả loại thiết bị vào 1 danh
+  // sách; "" (Tất cả loại thiết bị) nghĩa là không lọc theo tiêu chí này.
+  const equipmentTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
   const filtered = all.filter((r) =>
-    !filterText || (r.tram || "").toLowerCase().includes(filterText) || (r.thiet_bi || "").toLowerCase().includes(filterText)
+    (!filterText || (r.tram || "").toLowerCase().includes(filterText) || (r.thiet_bi || "").toLowerCase().includes(filterText)) &&
+    (!equipmentTypeFilter || r.equipment_type === equipmentTypeFilter)
   );
   filtered.sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
 
@@ -41,7 +46,10 @@ async function refreshHistoryUI() {
     const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
     const overall = DGA.overallVerdict(evalRows);
     const ratios = DGA.computeRatios(gases);
-    const diagnosis = DGA.diagnoseRatios(ratios, standard.pdThreshold);
+    // DGA.diagnoseGasFault() tự chọn đúng bảng theo loại thiết bị (Table A.10 cho sứ
+    // xuyên, Table 1/Bảng 66 cho các loại còn lại) — xem chú thích đầy đủ ở onAnalyze()
+    // (ui-dga.js).
+    const diagnosis = DGA.diagnoseGasFault(gases, rec.equipment_type, standard.pdThreshold);
     const duval = DGA.diagnoseDuval1(gases);
     const tcg = DGA.computeTCG(gases);
     const condemnBad = DGA.condemningExceededRows(DGA.evaluateCondemning(gases, standard.condemning)).length > 0;
@@ -62,10 +70,10 @@ async function refreshHistoryUI() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${rec.sample_date}</td>
+      <td>${DGA.formatSampleDate(rec.sample_date)}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
-      <td>${escapeHtml(rec.equipment_type)}</td>
+      <td class="nowrap-cell">${escapeHtml(rec.equipment_type)}</td>
       <td>${escapeHtml(DGA.phaLabel(rec.pha) || "—")}</td>
       <td>${rec.lan_do ?? "—"}</td>
       ${DGA.GASES.map((g) => gasCellHtml(g, gases[g])).join("")}
@@ -108,6 +116,70 @@ async function refreshHistoryUI() {
 }
 
 // ---------------------------------------------------------------------
+// Tab "Lịch sử đo" — bộ chọn xem lịch sử Khí hòa tan (DGA)/Dầu (#lichsuTypeToggle, xem
+// setupLichSuViewToggle() ở app-core.js đổi class active + ẩn/hiện #lichsuGasWrap/
+// #lichsuOilWrap). View "Dầu" gộp CHUNG 2 bảng con #lichsuOilMainSubWrap (Dầu MBA
+// chính)/#lichsuOltcSubWrap (Dầu OLTC) — #historyEquipmentFilter (giá trị "main"/"oltc"/
+// "" khi ở view này) quyết định hiện 1 hay cả 2, xem toggleLichSuOilSourceWraps() ở
+// app-core.js — HÀM RENDER ở đây (refreshLichSuOilTable()/refreshLichSuOltcTable()) vẫn
+// LUÔN tính cả 2 bảng bất kể đang ẩn/hiện, đơn giản hơn và đủ nhẹ (chỉ tính lại từ dữ
+// liệu ĐÃ CÓ SẴN trong bộ nhớ _allOilTests/_allOltcOilTests, không gọi lại Storage). 2
+// bảng dầu ở đây chỉ MIRROR lại dữ liệu đã nạp bởi ui-oil.js/ui-oltc.js — dùng
+// renderOilTestRows()/renderOltcOilTestRows() DÙNG CHUNG với bảng gốc ở tab "Dầu cách
+// điện" để luôn nhất quán 100% cách tính Kết luận, không định nghĩa lại. Áp dụng CHUNG 1
+// ô lọc #historyFilter (Trạm/Thiết bị) cho cả 3 bảng để đổi qua lại giữa DGA/Dầu vẫn giữ
+// nguyên bộ lọc đang gõ, khỏi phải gõ lại.
+// ---------------------------------------------------------------------
+function lichsuFilterText() {
+  return ($("historyFilter").value || "").toLowerCase();
+}
+function lichsuMatchesFilter(rec, filterText) {
+  return !filterText || (rec.tram || "").toLowerCase().includes(filterText) || (rec.thiet_bi || "").toLowerCase().includes(filterText);
+}
+
+function refreshLichSuOilTable() {
+  if (!$("lichsuOilHistoryTable")) return; // phòng khi gọi trước khi DOM sẵn sàng
+  const filterText = lichsuFilterText();
+  const sorted = _allOilTests
+    .filter((r) => lichsuMatchesFilter(r, filterText))
+    .slice()
+    .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+  renderOilTestRows("lichsuOilHistoryTable", "lichsuOilHistoryEmpty", sorted);
+}
+
+function refreshLichSuOltcTable() {
+  if (!$("lichsuOltcHistoryTable")) return;
+  const filterText = lichsuFilterText();
+  const sorted = _allOltcOilTests
+    .filter((r) => lichsuMatchesFilter(r, filterText))
+    .slice()
+    .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+  renderOltcOilTestRows("lichsuOltcHistoryTable", "lichsuOltcHistoryEmpty", sorted);
+}
+
+/** Bảng con "Dầu TI/TU/Sứ xuyên" ở tab "Lịch sử đo" — KHÁC 2 bảng dầu MBA/OLTC ở trên: cả
+ *  3 loại thiết bị (TI/TU/Sứ xuyên) dùng CHUNG 1 nguồn dữ liệu (_allTioOilTests, nạp bởi
+ *  refreshTioOilTestsUI() ở ui-ti-oil.js) nên phải LỌC theo r.equipment_type khi
+ *  #historyEquipmentFilter đang chọn đúng 1 trong 3 giá trị đó — nếu để "" (Tất cả) hoặc
+ *  "main"/"oltc" (không thuộc về bảng này) thì hiện đủ cả TI+TU+Sứ xuyên không lọc thêm
+ *  (ẩn/hiện cả bảng đã do toggleLichSuOilSourceWraps() lo). DÙNG CHUNG
+ *  renderTioOilTestRows() với bảng gốc #tioOilHistoryTable ở tab "Dầu cách điện" để nhất
+ *  quán 100% cách tính Kết luận. */
+function refreshLichSuInstrumentOilTable() {
+  if (!$("lichsuInstrumentOilHistoryTable")) return; // phòng khi gọi trước khi DOM sẵn sàng
+  const filterText = lichsuFilterText();
+  const equipTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
+  const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
+  const isInstrumentType = instrumentTypes.includes(equipTypeFilter);
+  const sorted = (_allTioOilTests || [])
+    .filter((r) => lichsuMatchesFilter(r, filterText))
+    .filter((r) => !isInstrumentType || r.equipment_type === equipTypeFilter)
+    .slice()
+    .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+  renderTioOilTestRows("lichsuInstrumentOilHistoryTable", "lichsuInstrumentOilHistoryEmpty", sorted);
+}
+
+// ---------------------------------------------------------------------
 // So sánh tốc độ gia tăng khí giữa 2 lần đo CHỌN được (không chỉ tự động lấy lần
 // liền trước) — dùng chung DGA.computeRateOfChange()/DGA.resolveStandard().
 // ---------------------------------------------------------------------
@@ -116,7 +188,7 @@ function deviceKey(rec) {
 }
 
 function measurementOptionLabel(rec) {
-  return `${rec.sample_date} (Lần ${rec.lan_do ?? "?"})`;
+  return `${DGA.formatSampleDate(rec.sample_date)} (Lần ${rec.lan_do ?? "?"})`;
 }
 
 function refreshCompareDeviceOptions() {
@@ -204,7 +276,7 @@ function onCompareRate() {
 
   $("cmpResultWrap").classList.remove("hidden");
   $("cmpNote").textContent =
-    `${prevRec.sample_date} → ${currRec.sample_date} (${deltaDays} ngày) — Tiêu chuẩn tốc độ: ` +
+    `${DGA.formatSampleDate(prevRec.sample_date)} → ${DGA.formatSampleDate(currRec.sample_date)} (${deltaDays} ngày) — Tiêu chuẩn tốc độ: ` +
     (usingCustomRate ? "khoảng tốc độ riêng của nhà sản xuất" : "Bảng 65 QĐ1901 (Điều 54, tương ứng mục 8.4 IEC 60599:1999)") + ". " +
     (rateRows[0].officialForEquipment
       ? "Áp dụng CHÍNH THỨC cho MBA/Kháng dầu."

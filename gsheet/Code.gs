@@ -16,7 +16,8 @@
  *     dán vào GSHEET_WEBAPP_URL trong file config.js của web app.
  *
  * Script này TỰ TẠO các sheet (measurements, manufacturer_standards, stations,
- * users, sessions) kèm tiêu đề cột trong chính Google Sheet bạn vừa tạo — không
+ * users, sessions, oil_tests, oltc_oil_tests, instrument_oil_tests, feedback,
+ * regulation_config) kèm tiêu đề cột trong chính Google Sheet bạn vừa tạo — không
  * cần tạo tay.
  *
  * ĐĂNG NHẬP / PHÂN QUYỀN (thêm ở bản này):
@@ -29,7 +30,7 @@
  *    của web app.
  *  - Đăng nhập thành công trả về 1 "token" phiên (lưu 30 ngày). Token này bắt
  *    buộc phải gửi kèm mọi request đọc/ghi dữ liệu sau đó.
- *  - PHÂN QUYỀN GHI cho measurements/oil_tests/oltc_oil_tests (xem prepareOwnedRecord()):
+ *  - PHÂN QUYỀN GHI cho measurements/oil_tests/oltc_oil_tests/instrument_oil_tests (xem prepareOwnedRecord()):
  *    role "user" được TỰ NHẬP bản ghi mới, và SỬA lại bản ghi do chính mình đã
  *    nhập (không sửa được bản ghi của người khác); role "admin" sửa được TẤT
  *    CẢ bản ghi. XÓA (deleteMeasurement/deleteOilTest/deleteOltcOilTest) luôn
@@ -50,6 +51,13 @@
 const SHEET_MEASUREMENTS = "measurements";
 const SHEET_STANDARDS = "manufacturer_standards";
 const SHEET_STATIONS = "stations";
+// "Cấu hình quy định" (tab riêng trên web app, xem ui/ui-regulation-config.js +
+// dga-logic.js mục 9, REGULATION_CONFIG_REGISTRY) — mỗi dòng ứng với ĐÚNG 1 bảng ngưỡng
+// (id = key trong registry, VD "BANG64_MBA"), khác STANDARD_HEADERS (nhiều dòng tự do
+// theo nhà sản xuất). "values_json" là CHUỖI JSON (không phải object) vì Google Sheets
+// lưu theo ô — client (storage.js) tự parse/stringify, Code.gs chỉ lưu/trả nguyên chuỗi.
+const SHEET_REGULATION_CONFIG = "regulation_config";
+const REGULATION_CONFIG_HEADERS = ["id", "citation", "values_json", "updated_at"];
 
 const MEASUREMENT_HEADERS = [
   "id", "tram", "thiet_bi", "equipment_type", "mba_subtype", "manufacturer",
@@ -120,6 +128,11 @@ const STANDARD_HEADERS = [
   // trống, cũng được coi là "khi") hoặc "dau" (dầu cách điện). Thêm ở CUỐI (xem lưu ý trên).
   "standard_type",
   "created_at",
+  // Ngưỡng LOẠI BỎ (mức 2, tùy chọn) của tiêu chuẩn dầu — CHỈ dùng khi equipment_type =
+  // TI/TU (dầu TI/TU không có oil_voltage_class/oil_state — QĐ1901 Điều 10/11 không quy
+  // định bảng số, chỉ dẫn chiếu "theo quy định nhà sản xuất", xem evaluateInstrumentOilTest()
+  // ở dga-logic.js). Thêm ở CUỐI (xem lưu ý trên) — record cũ (MBA) để trống 3 cột này.
+  "oil_moisture_loaibo_ppm", "oil_tgd_90c_loaibo_percent", "oil_bdv_loaibo_kv",
 ];
 
 // Danh mục Trạm (MaTram/TenTram) — dùng để gợi ý/tìm kiếm ở ô "Trạm".
@@ -160,6 +173,28 @@ const OLTC_OILTEST_HEADERS = [
   "voltage_class", "oil_state", "has_membrane_n2",
   "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu",
   "manufacturer", "created_at",
+  // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
+  "created_by", "updated_by", "updated_at",
+];
+
+// Thí nghiệm dầu cách điện TI/TU (biến dòng điện/biến điện áp kiểu kín, cách điện
+// dầu) — QĐ1901 Điều 10 (Bảng 9 mục 12) / Điều 11 (Bảng 14 mục 11) đều chỉ dẫn chiếu
+// "theo quy định nhà sản xuất", KHÔNG có bảng số mặc định như dầu MBA — bắt buộc phải
+// có tiêu chuẩn nhà sản xuất (STANDARD_HEADERS, standard_type="dau", equipment_type=
+// TI/TU) mới đánh giá được, xem evaluateInstrumentOilTest() ở dga-logic.js. Sheet MỚI
+// hoàn toàn nên không có rủi ro lệch cột (xem ghi chú cảnh báo ở STANDARD_HEADERS).
+const SHEET_INSTRUMENT_OILTESTS = "instrument_oil_tests";
+const INSTRUMENT_OILTEST_HEADERS = [
+  "id", "tram", "thiet_bi",
+  // "equipment_type": "TI (biến dòng điện)" hoặc "TU (biến điện áp)".
+  "equipment_type",
+  // "phase": "A"/"B"/"C" hoặc "chung3pha" (đa số TI/TU là 1 pha/1 thiết bị vật lý
+  // riêng, nhưng vẫn cho chọn "chung3pha" nếu đơn vị gộp chung).
+  "phase",
+  // "manufacturer": BẮT BUỘC phải khớp 1 tiêu chuẩn dầu TI/TU đã cấu hình mới đánh giá
+  // được (khác dầu MBA vốn có QĐ1901 làm mặc định khi không chọn NSX).
+  "manufacturer",
+  "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu", "created_at",
   // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
   "created_by", "updated_by", "updated_at",
 ];
@@ -215,7 +250,9 @@ function doGet(e) {
     if (action === "listStations") { requireSession(token); return jsonOut(listRows(SHEET_STATIONS, STATION_HEADERS)); }
     if (action === "listOilTests") { requireSession(token); return jsonOut(listRows(SHEET_OILTESTS, OILTEST_HEADERS)); }
     if (action === "listOltcOilTests") { requireSession(token); return jsonOut(listRows(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS)); }
+    if (action === "listInstrumentOilTests") { requireSession(token); return jsonOut(listRows(SHEET_INSTRUMENT_OILTESTS, INSTRUMENT_OILTEST_HEADERS)); }
     if (action === "listFeedback") { requireSession(token); return jsonOut(listRows(SHEET_FEEDBACK, FEEDBACK_HEADERS)); }
+    if (action === "listRegulationConfig") { requireSession(token); return jsonOut(listRows(SHEET_REGULATION_CONFIG, REGULATION_CONFIG_HEADERS)); }
     // Danh sách user: chỉ Admin xem được (dùng cho tab "Quản trị").
     if (action === "listUsers") { requireAdmin(token); return jsonOut(listPublicUsers()); }
 
@@ -237,7 +274,7 @@ function doPost(e) {
     else if (action === "login") result = actionLogin(body);
     else if (action === "googleLogin") result = actionGoogleLogin(body);
     else if (action === "logout") result = actionLogout(body);
-    // measurements/oil_tests/oltc_oil_tests: NHẬP MỚI cho mọi role đã đăng nhập, SỬA bị
+    // measurements/oil_tests/oltc_oil_tests/instrument_oil_tests: NHẬP MỚI cho mọi role đã đăng nhập, SỬA bị
     // giới hạn theo chủ bản ghi (Admin sửa được tất cả) — xem prepareOwnedRecord(). XÓA
     // vẫn luôn yêu cầu "admin" (requireAdmin), bất kể ai đã tạo bản ghi đó.
     else if (action === "addMeasurement") { result = upsertRow(SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, prepareOwnedRecord(token, SHEET_MEASUREMENTS, MEASUREMENT_HEADERS, body.record)); }
@@ -255,10 +292,16 @@ function doPost(e) {
     else if (action === "deleteOilTest") { requireAdmin(token); result = deleteRow(SHEET_OILTESTS, body.id); }
     else if (action === "addOltcOilTest") { result = upsertRow(SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, prepareOwnedRecord(token, SHEET_OLTC_OILTESTS, OLTC_OILTEST_HEADERS, body.record)); }
     else if (action === "deleteOltcOilTest") { requireAdmin(token); result = deleteRow(SHEET_OLTC_OILTESTS, body.id); }
+    else if (action === "addInstrumentOilTest") { result = upsertRow(SHEET_INSTRUMENT_OILTESTS, INSTRUMENT_OILTEST_HEADERS, prepareOwnedRecord(token, SHEET_INSTRUMENT_OILTESTS, INSTRUMENT_OILTEST_HEADERS, body.record)); }
+    else if (action === "deleteInstrumentOilTest") { requireAdmin(token); result = deleteRow(SHEET_INSTRUMENT_OILTESTS, body.id); }
     // Góp ý: bất kỳ ai đã đăng nhập đều gửi được (giống quyền "tự nhập lần đo mới"); xóa
     // luôn yêu cầu Admin, giống mọi thao tác xóa khác trong app.
     else if (action === "addFeedback") { result = upsertRow(SHEET_FEEDBACK, FEEDBACK_HEADERS, prepareOwnedRecord(token, SHEET_FEEDBACK, FEEDBACK_HEADERS, body.record)); }
     else if (action === "deleteFeedback") { requireAdmin(token); result = deleteRow(SHEET_FEEDBACK, body.id); }
+    // "Cấu hình quy định" — CHỈ Admin sửa được (giống Tiêu chuẩn NSX), mọi người dùng đã
+    // đăng nhập đều ĐỌC được (đã cho phép ở doGet action listRegulationConfig).
+    else if (action === "saveRegulationConfig") { requireAdmin(token); result = upsertRow(SHEET_REGULATION_CONFIG, REGULATION_CONFIG_HEADERS, body.record); }
+    else if (action === "deleteRegulationConfig") { requireAdmin(token); result = deleteRow(SHEET_REGULATION_CONFIG, body.id); }
     else if (action === "setUserRole") { requireAdmin(token); result = actionSetUserRole(body); }
     else if (action === "deleteUser") { requireAdmin(token); result = actionDeleteUser(body); }
     else result = { error: "unknown action: " + action };
@@ -428,7 +471,7 @@ function requireAdmin(token) {
   return user;
 }
 
-/** Chuẩn bị 1 bản ghi measurements/oil_tests/oltc_oil_tests trước khi upsertRow(), áp
+/** Chuẩn bị 1 bản ghi measurements/oil_tests/oltc_oil_tests/instrument_oil_tests trước khi upsertRow(), áp
  *  dụng đúng quy tắc phân quyền + "lưu vết" mô tả ở đầu file: bất kỳ user nào đã đăng
  *  nhập (role "user" hay "admin") đều được NHẬP bản ghi MỚI (record.id chưa có dòng nào
  *  trùng); khi record.id trùng 1 dòng đã có (tức đang SỬA), chỉ Admin hoặc đúng người có
@@ -581,10 +624,23 @@ function listRows(sheetName, headers) {
     .map((row) => rowToObject(headers, row));
 }
 
+/** Google Sheets TỰ ĐỘNG nhận diện 1 ô ghi dạng chuỗi "yyyy-MM-dd" (VD sample_date do
+ *  <input type="date"> gửi lên) là NGÀY THÁNG và âm thầm đổi ô đó thành kiểu Date — lần
+ *  đọc lại sau (getValues()) trả về đối tượng Date (thời điểm 00:00 giờ LOCAL theo múi
+ *  giờ spreadsheet) thay vì chuỗi gốc. JSON.stringify() một Date sẽ tự gọi toISOString()
+ *  → chuyển sang UTC, bị lệch nhiều giờ so với 00:00 local (múi giờ VN UTC+7 → hiện
+ *  "...T17:00:00.000Z" của NGÀY HÔM TRƯỚC) — client hiện nguyên chuỗi đó ra bảng, trông
+ *  như dữ liệu sai/thiếu. Format lại đúng "yyyy-MM-dd" theo múi giờ spreadsheet để khôi
+ *  phục lại ĐÚNG ngày người dùng đã nhập, không lệch ngày. Các trường thời điểm khác
+ *  trong app (created_at/updated_at/...) luôn được ghi bằng new Date().toISOString() —
+ *  chuỗi có "T"/"Z" mà Sheets KHÔNG tự nhận diện là ngày/giờ nên không bị ảnh hưởng. */
 function rowToObject(headers, row) {
   const obj = {};
+  const tz = Session.getScriptTimeZone();
   headers.forEach((h, i) => {
-    obj[h] = row[i] === "" ? null : row[i];
+    let v = row[i];
+    if (v instanceof Date) v = Utilities.formatDate(v, tz, "yyyy-MM-dd");
+    obj[h] = v === "" ? null : v;
   });
   return obj;
 }
@@ -623,7 +679,9 @@ function headersForSheet(sheetName) {
   if (sheetName === SHEET_SESSIONS) return SESSION_HEADERS;
   if (sheetName === SHEET_OILTESTS) return OILTEST_HEADERS;
   if (sheetName === SHEET_OLTC_OILTESTS) return OLTC_OILTEST_HEADERS;
+  if (sheetName === SHEET_INSTRUMENT_OILTESTS) return INSTRUMENT_OILTEST_HEADERS;
   if (sheetName === SHEET_FEEDBACK) return FEEDBACK_HEADERS;
+  if (sheetName === SHEET_REGULATION_CONFIG) return REGULATION_CONFIG_HEADERS;
   return STANDARD_HEADERS;
 }
 

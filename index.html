@@ -196,6 +196,7 @@
       <button class="tab-btn" data-tab="canhbao" title="Cảnh báo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg><span class="tab-label">Cảnh báo</span></button>
       <button class="tab-btn" data-tab="xuhuong" title="Xu hướng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg><span class="tab-label">Xu hướng</span></button>
       <button class="tab-btn" data-tab="tieuchuan" title="Tiêu chuẩn"><svg class="tab-icon" aria-hidden="true"><use href="#icon-ruler"></use></svg><span class="tab-label">Tiêu chuẩn</span></button>
+      <button class="tab-btn" data-tab="quydinh" title="Cấu hình quy định"><svg class="tab-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg><span class="tab-label">Cấu hình quy định</span></button>
       <button class="tab-btn" data-tab="quytrinh" title="Quy trình đánh giá"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg><span class="tab-label">Quy trình đánh giá</span></button>
       <button class="tab-btn" data-tab="quymau" title="Quy trình lấy mẫu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-sample"></use></svg><span class="tab-label">Quy trình lấy mẫu</span></button>
       <button class="tab-btn" data-tab="about" title="Giới thiệu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg><span class="tab-label">Giới thiệu</span></button>
@@ -207,6 +208,27 @@
   <main>
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
     <section id="tab-nhap" class="tab-panel">
+      <!-- Panel "Loại thiết bị" RIÊNG ở đầu tab, dạng ".toolbar" (tiêu đề trái/control
+           phải) — TÁCH KHỎI vùng nhập liệu "Thông tin lần đo" bên dưới, cùng khuôn mẫu
+           đã dùng ở tab "Dầu cách điện" (#dau_equipmenttype) để đồng nhất giao diện
+           giữa 2 tab (và với tab "Lịch sử đo"/"Cảnh báo" vốn đã dùng ".toolbar" kiểu
+           này). #f_loai vẫn chỉ là 1 trường dữ liệu bình thường của bản ghi (khác
+           #dau_equipmenttype chỉ để ẩn/hiện khối nhập liệu, không lưu qua Storage) —
+           chuyển VỊ TRÍ hiển thị thôi, không đổi hành vi/JS liên quan (xem
+           refreshManufacturerOptions()/toggleMbaSubtypeField() ở app-core.js). -->
+      <div class="panel">
+        <div class="toolbar" style="margin-bottom:0;">
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị</h2>
+          <select id="f_loai" title="Chọn loại thiết bị" style="min-width:220px;">
+            <option>TI (biến dòng điện)</option>
+            <option>TU (biến điện áp)</option>
+            <option>MBA/Kháng dầu</option>
+            <option>Sứ xuyên (Bushing)</option>
+            <option>Khác</option>
+          </select>
+        </div>
+      </div>
+
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thông tin lần đo</h2>
         <!-- Đang nạp Trạm/Thiết bị từ database (ẩn khi setComboLoading(false), xem
@@ -229,15 +251,6 @@
               <button type="button" id="f_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
               <div id="f_thietbi_list" class="combo-list hidden"></div>
             </div>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị
-            <select id="f_loai">
-              <option>TI (biến dòng điện)</option>
-              <option>TU (biến điện áp)</option>
-              <option>MBA/Kháng dầu</option>
-              <option>Sứ xuyên (Bushing)</option>
-              <option>Khác</option>
-            </select>
           </label>
           <label class="field" id="f_mbasubtype_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
             <input id="f_mbasubtype" type="checkbox" style="width:auto; margin-top:4px;" />
@@ -462,7 +475,7 @@
         <div class="stat-row">
           <div class="stat-card"><div class="label">Tổng khí cháy (TCG)</div><div class="value" id="r_tcg">—</div><div class="note hidden" id="r_tcgRateNote" style="margin-top:4px;"></div></div>
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="r_overall">—</div></div>
-          <div class="stat-card"><div class="label">Mã chẩn đoán (Bảng 66)</div><div class="value" id="r_diag" style="font-size:15px;">—</div></div>
+          <div class="stat-card"><div class="label">Mã chẩn đoán (tỷ số khí)</div><div class="value" id="r_diag" style="font-size:15px;">—</div></div>
           <div class="stat-card"><div class="label">Mã chẩn đoán (Tam giác Duval)</div><div class="value" id="r_duval" style="font-size:15px;">—</div></div>
         </div>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
@@ -537,67 +550,166 @@
     <section id="tab-lichsu" class="tab-panel hidden">
       <div class="panel">
         <div class="toolbar">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Nhật ký các lần đo đã lưu</h2>
-          <span class="search-input-wrap">
-            <svg class="icon-svg search-input-icon" aria-hidden="true"><use href="#icon-zoom"></use></svg>
-            <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
-          </span>
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</h2>
+          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <!-- Áp dụng cho CẢ 2 view "Khí hòa tan (DGA)"/"Dầu" — nhưng ý nghĩa các lựa
+                 chọn KHÁC NHAU theo từng view nên nội dung <option> được nạp lại bằng JS
+                 mỗi lần đổi view (xem populateHistoryEquipmentFilterOptions(), app-core.js):
+                 ở view DGA lọc theo LOẠI THIẾT BỊ (TI/TU/MBA/Sứ xuyên/Khác, vì bảng đó gộp
+                 chung mọi loại); ở view "Dầu" lọc theo NGUỒN dầu (Dầu MBA chính/Dầu OLTC,
+                 vì 2 bảng đó cột dữ liệu khác hẳn nhau nên vẫn hiện tách riêng, chỉ gộp
+                 chung 1 nút bấm + 1 ô lọc cho gọn). Nội dung <option> bên dưới là mặc định
+                 lúc tải trang (view "gas") — sẽ bị JS ghi đè ngay khi setupLichSuViewToggle()
+                 chạy. -->
+            <select id="historyEquipmentFilter" title="Lọc theo loại thiết bị">
+              <option value="">Tất cả loại thiết bị</option>
+              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
+              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
+              <option value="Khác">Khác</option>
+            </select>
+            <span class="search-input-wrap">
+              <svg class="icon-svg search-input-icon" aria-hidden="true"><use href="#icon-zoom"></use></svg>
+              <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
+            </span>
+          </div>
+        </div>
+        <!-- Chọn xem lịch sử của NGUỒN dữ liệu nào — Khí hòa tan (DGA)/Dầu (gộp chung
+             Dầu MBA chính + Dầu OLTC vào 1 nút, phân biệt tiếp bằng #historyEquipmentFilter
+             bên trên — xem ghi chú ở đó). Lựa chọn được nhớ lại giữa các lần vào app
+             (localStorage, xem setupLichSuViewToggle() ở app-core.js) — cùng quy ước với
+             các tùy chọn hiển thị khác (bố cục tab dọc/ngang, bật/tắt dự báo xu hướng).
+             Cả 2 bảng dầu ở đây CHỈ ĐỂ XEM NHANH — nút "Sửa" nhảy sang đúng tab "Dầu cách
+             điện" để sửa (xem onEditOilTest()/onEditOltcOilTest(), ui-oil.js/ui-oltc.js),
+             không lặp lại form nhập liệu ở đây. -->
+        <div class="btn-row" id="lichsuTypeToggle" style="margin-top:12px;">
+          <button type="button" class="btn primary" data-lichsu-type="gas">
+            <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:5px; vertical-align:-3px;"><use href="#icon-flask"></use></svg>
+            Khí hòa tan (DGA)
+          </button>
+          <button type="button" class="btn ghost" data-lichsu-type="oil">
+            <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:5px; vertical-align:-3px;"><use href="#icon-droplet"></use></svg>
+            Dầu
+          </button>
         </div>
         <!-- Đang nạp lịch sử đo từ database (ẩn khi setHistoryLoading(false), xem
              ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
              dưới trong khi dữ liệu thật vẫn đang tải. -->
-        <div class="loading-hint hidden" id="historyLoadingHint">
+        <div class="loading-hint hidden" id="historyLoadingHint" style="margin-top:14px;">
           <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu...
         </div>
-        <p class="note">Các ô số liệu khí tô <strong style="color:var(--bad);">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
-          gốc — di chuột vào ô để xem giá trị trước khi sửa và thời điểm sửa; cột "Người nhập" có thêm huy hiệu
-          "✎ N lần sửa" hiện đầy đủ log các lần chỉnh sửa số liệu của bản ghi đó (nếu có).</p>
-        <div class="table-scroll"><table>
-          <thead><tr>
-            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
-            <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
-            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
-          </tr></thead>
-          <tbody id="historyTable"></tbody>
-        </table></div>
-        <p class="note hidden" id="historyEmpty">Chưa có lần đo nào được lưu.</p>
       </div>
 
-      <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>So sánh tốc độ gia tăng khí giữa 2 lần đo</h2>
-        <p class="note">Chọn 1 thiết bị (Trạm + Thiết bị + Pha) đã có từ 2 lần đo trở lên, rồi chọn 2 mốc thời gian
-          bất kỳ để so sánh — không bắt buộc phải là 2 lần liền kề. Tốc độ tự động đối chiếu Bảng 65 QĐ1901 (Điều 54,
-          tương ứng mục 8.4 IEC 60599:1999), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
-        <div class="grid">
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
-            <select id="cmp_device"><option value="">— Chọn thiết bị —</option></select>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo thứ nhất
-            <select id="cmp_before"></select>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo thứ hai
-            <select id="cmp_after"></select>
-          </label>
-        </div>
-        <div style="margin-top:14px;">
-          <button class="btn primary" id="btnCompareRate">Tính tốc độ gia tăng</button>
-        </div>
-        <p class="note hidden" id="cmpEmpty">Chưa có thiết bị nào đủ 2 lần đo trở lên để so sánh.</p>
-        <div id="cmpResultWrap" class="hidden" style="margin-top:18px;">
-          <p class="note" id="cmpNote"></p>
+      <div id="lichsuGasWrap">
+        <div class="panel">
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Lịch sử đo khí hòa tan (DGA)</h2>
+          <p class="note">Các ô số liệu khí tô <strong style="color:var(--bad);">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
+            gốc — di chuột vào ô để xem giá trị trước khi sửa và thời điểm sửa; cột "Người nhập" có thêm huy hiệu
+            "✎ N lần sửa" hiện đầy đủ log các lần chỉnh sửa số liệu của bản ghi đó (nếu có).</p>
           <div class="table-scroll"><table>
-            <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
-            <tbody id="cmpTable"></tbody>
+            <thead><tr>
+              <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
+              <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
+              <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+            </tr></thead>
+            <tbody id="historyTable"></tbody>
           </table></div>
+          <p class="note hidden" id="historyEmpty">Chưa có lần đo nào được lưu.</p>
+        </div>
+
+        <div class="panel">
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>So sánh tốc độ gia tăng khí giữa 2 lần đo</h2>
+          <p class="note">Chọn 1 thiết bị (Trạm + Thiết bị + Pha) đã có từ 2 lần đo trở lên, rồi chọn 2 mốc thời gian
+            bất kỳ để so sánh — không bắt buộc phải là 2 lần liền kề. Tốc độ tự động đối chiếu Bảng 65 QĐ1901 (Điều 54,
+            tương ứng mục 8.4 IEC 60599:1999), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
+          <div class="grid">
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
+              <select id="cmp_device"><option value="">— Chọn thiết bị —</option></select>
+            </label>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo thứ nhất
+              <select id="cmp_before"></select>
+            </label>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo thứ hai
+              <select id="cmp_after"></select>
+            </label>
+          </div>
+          <div style="margin-top:14px;">
+            <button class="btn primary" id="btnCompareRate">Tính tốc độ gia tăng</button>
+          </div>
+          <p class="note hidden" id="cmpEmpty">Chưa có thiết bị nào đủ 2 lần đo trở lên để so sánh.</p>
+          <div id="cmpResultWrap" class="hidden" style="margin-top:18px;">
+            <p class="note" id="cmpNote"></p>
+            <div class="table-scroll"><table>
+              <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
+              <tbody id="cmpTable"></tbody>
+            </table></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- #lichsuOilWrap gộp CHUNG view "Dầu" (1 nút bấm) — nhưng vẫn giữ 3 bảng CON
+           riêng (#lichsuOilMainSubWrap/#lichsuOltcSubWrap/#lichsuInstrumentOilSubWrap) vì
+           cột dữ liệu các nguồn khác hẳn nhau (dầu chính có tgδ, OLTC không có QĐ1901 quy
+           định tgδ lúc vận hành, TI/TU lại có thêm cột Loại/Pha riêng theo từng bản ghi).
+           #historyEquipmentFilter ở trên (giá trị "" / "main" / "oltc" / TI / TU / Sứ
+           xuyên khi view="oil", xem populateHistoryEquipmentFilterOptions()/
+           toggleLichSuOilSourceWraps() ở app-core.js) quyết định hiện bảng con nào, hoặc
+           cả 3 (giá trị "" = Tất cả). -->
+      <div id="lichsuOilWrap">
+        <div class="panel" id="lichsuOilMainSubWrap">
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Lịch sử thí nghiệm dầu MBA chính</h2>
+          <div class="table-scroll"><table>
+            <thead><tr>
+              <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            </tr></thead>
+            <tbody id="lichsuOilHistoryTable"></tbody>
+          </table></div>
+          <p class="note hidden" id="lichsuOilHistoryEmpty">Chưa có thí nghiệm dầu MBA chính nào được lưu.</p>
+        </div>
+
+        <div class="panel" id="lichsuOltcSubWrap">
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Lịch sử thí nghiệm dầu OLTC</h2>
+          <div class="table-scroll"><table>
+            <thead><tr>
+              <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
+              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            </tr></thead>
+            <tbody id="lichsuOltcHistoryTable"></tbody>
+          </table></div>
+          <p class="note hidden" id="lichsuOltcHistoryEmpty">Chưa có thí nghiệm dầu OLTC nào được lưu.</p>
+        </div>
+
+        <!-- #lichsuInstrumentOilSubWrap: dầu cách điện TI/TU/Sứ xuyên — DÙNG CHUNG hàm
+             render renderTioOilTestRows() với bảng gốc #tioOilHistoryTable ở tab "Dầu
+             cách điện" (xem ui-ti-oil.js) để luôn nhất quán 100% cách tính Kết luận,
+             không định nghĩa lại. Hiện khi #historyEquipmentFilter = "" (Tất cả) hoặc
+             = 1 trong 3 giá trị TI/TU/Sứ xuyên (xem toggleLichSuOilSourceWraps(),
+             app-core.js) — lưu ý Sứ xuyên (Bushing) QĐ1901 không có bảng dầu quy định
+             (xem #dauNoOilSupportNote ở tab "Dầu cách điện") nên bảng con này với Sứ
+             xuyên sẽ LUÔN rỗng, vẫn giữ trong bộ lọc để nhất quán với danh sách loại
+             thiết bị bên view "Khí hòa tan (DGA)" (LICHSU_GAS_EQUIPMENT_OPTIONS). -->
+        <div class="panel" id="lichsuInstrumentOilSubWrap">
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Lịch sử thí nghiệm dầu TI/TU/Sứ xuyên</h2>
+          <div class="table-scroll"><table>
+            <thead><tr>
+              <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            </tr></thead>
+            <tbody id="lichsuInstrumentOilHistoryTable"></tbody>
+          </table></div>
+          <p class="note hidden" id="lichsuInstrumentOilHistoryEmpty">Chưa có thí nghiệm dầu TI/TU/Sứ xuyên nào được lưu.</p>
         </div>
       </div>
     </section>
 
     <!-- ===================== TAB: CẢNH BÁO ===================== -->
-    <!-- Tự động rà soát LẦN ĐO GẦN NHẤT của TỪNG thiết bị (khí hòa tan/dầu MBA/dầu OLTC)
-         và liệt kê những thiết bị đang ở mức Cảnh báo/Báo động — tái dùng NGUYÊN các hàm
-         đánh giá đã có ở tab "DGA"/"Dầu cách điện" (DGA.computeOverallStatus()/
-         DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()), xem ui/ui-alerts.js. -->
+    <!-- Tự động rà soát LẦN ĐO GẦN NHẤT của TỪNG thiết bị (khí hòa tan/dầu MBA/dầu OLTC/
+         dầu TI-TU) và liệt kê những thiết bị đang ở mức Cảnh báo/Báo động — tái dùng
+         NGUYÊN các hàm đánh giá đã có ở tab "DGA"/"Dầu cách điện" (DGA.computeOverallStatus()/
+         DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()/DGA.evaluateInstrumentOilTest()),
+         xem ui/ui-alerts.js. -->
     <section id="tab-canhbao" class="tab-panel hidden">
       <div class="panel">
         <div class="toolbar">
@@ -607,7 +719,7 @@
             Xuất Excel
           </button>
         </div>
-        <p class="note">Tự động rà soát TOÀN BỘ thiết bị đã có dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC) và
+        <p class="note">Tự động rà soát TOÀN BỘ thiết bị đã có dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và
           liệt kê những thiết bị mà LẦN ĐO GẦN NHẤT đang ở mức Cảnh báo/Báo động — theo đúng nguyên tắc đang dùng ở
           tab "DGA"/"Dầu cách điện" (xem thêm tab "Quy trình đánh giá"). Công cụ hỗ trợ tham khảo, không thay thế
           nguyên tắc đánh giá tổng thể tại Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/diễn biến vận hành...).</p>
@@ -780,9 +892,11 @@
         <h2>Tiêu chuẩn theo nhà sản xuất</h2>
         <p class="note">Chọn loại tiêu chuẩn cần cấu hình bên dưới: <strong>Khí hòa tan (DGA)</strong> — dùng ngưỡng
           của nhà sản xuất thay cho QĐ1901/IEC60599 khi đánh giá giá trị tuyệt đối từng khí; hoặc <strong>Dầu cách
-          điện</strong> — dùng ngưỡng của nhà sản xuất thay cho Bảng 54/55/58 QĐ1901 (theo cấp điện áp + trạng thái
-          dầu) khi đánh giá Độ ẩm/tgδ/Điện áp chọc thủng ở tab "Dầu cách điện". Thiết bị/thí nghiệm không chọn
-          nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định.</p>
+          điện</strong> — với MBA/Kháng dầu, dùng ngưỡng của nhà sản xuất thay cho Bảng 54/55/58 QĐ1901 (theo cấp
+          điện áp + trạng thái dầu); với TI/TU, QĐ1901 không có bảng mặc định (Điều 10/11 chỉ dẫn chiếu "theo quy
+          định nhà sản xuất") nên BẮT BUỘC cấu hình ở đây mới đánh giá được dầu TI/TU. Thiết bị/thí nghiệm không
+          chọn nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định (riêng
+          TI/TU sẽ báo "Chưa có tiêu chuẩn nhà sản xuất").</p>
         <p class="note hidden" id="editingStandardNote" style="color:var(--warn); font-weight:600;">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
 
         <div class="grid" style="margin-top:10px;">
@@ -841,11 +955,16 @@
         </div>
 
         <div id="stdOilFields" class="hidden">
-          <p class="note">Chỉ áp dụng cho MBA/Kháng dầu. Mỗi tiêu chuẩn ứng với 1 cấp điện áp + 1 trạng thái dầu cụ
-            thể (giống cấu trúc Bảng 54/55/58 QĐ1901) — có thể thêm nhiều tiêu chuẩn cho cùng 1 nhà sản xuất nếu cần
+          <p class="note" id="stdOilFieldsNoteMba">MBA/Kháng dầu: mỗi tiêu chuẩn ứng với 1 cấp điện áp + 1 trạng thái dầu
+            cụ thể (giống cấu trúc Bảng 54/55/58 QĐ1901) — có thể thêm nhiều tiêu chuẩn cho cùng 1 nhà sản xuất nếu cần
             phân biệt theo cấp điện áp/trạng thái dầu. Bỏ trống hạng mục nào thì hạng mục đó vẫn dùng QĐ1901 mặc
             định, chỉ các hạng mục có nhập số mới bị nhà sản xuất ghi đè.</p>
-          <div class="grid">
+          <p class="note hidden" id="stdOilFieldsNoteInstrument">TI/TU: QĐ1901 Điều 10/11 (Bảng 9 mục 12, Bảng 14 mục 11)
+            đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục dầu cách điện — KHÔNG có bảng số mặc
+            định, bắt buộc phải cấu hình tiêu chuẩn ở đây mới đánh giá được. Áp dụng chung cho thiết bị (không phân
+            theo cấp điện áp/trạng thái dầu). Có thể nhập 1 hoặc cả 2 mức ngưỡng bên dưới, theo đúng tài liệu nhà sản
+            xuất (ví dụ: Haefely Trench cho TI thường có cả 2 mức "bình thường" và "loại bỏ").</p>
+          <div class="grid" id="s_oil_mba_fields">
             <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
               <select id="s_oil_voltage_class"></select>
             </label>
@@ -856,11 +975,22 @@
               </select>
             </label>
           </div>
-          <div class="section-title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
+          <div class="section-title" id="s_oil_normal_title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
           <div class="grid gases">
             <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" min="0" step="0.1" /></label>
             <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" min="0" step="0.01" /></label>
             <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" min="0" step="0.1" /></label>
+          </div>
+          <div id="s_oil_instrument_fields" class="hidden">
+            <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — mức nghiêm trọng hơn ngưỡng bình thường ở trên)</div>
+            <p class="note">Ví dụ tài liệu Haefely Trench cho TI: tgδ 90°C bình thường &lt; 0,1% / loại bỏ &gt; 0,2% —
+              Điện áp chọc thủng bình thường &gt; 60kV / loại bỏ &lt; 50kV — Độ ẩm bình thường &lt; 10ppm / loại bỏ
+              &gt; 20ppm. Giá trị nằm GIỮA 2 mức sẽ được báo "Cảnh báo" thay vì "Không đạt".</p>
+            <div class="grid gases">
+              <label class="field">Độ ẩm dầu — loại bỏ (ppm) <input id="s_oil_moisture_loaibo" type="number" min="0" step="0.1" /></label>
+              <label class="field">tgδ ở 90°C — loại bỏ (%) <input id="s_oil_tgd90_loaibo" type="number" min="0" step="0.01" /></label>
+              <label class="field">Điện áp chọc thủng — loại bỏ (kV) <input id="s_oil_bdv_loaibo" type="number" min="0" step="0.1" /></label>
+            </div>
           </div>
         </div>
 
@@ -877,6 +1007,21 @@
           <tbody id="standardsTable"></tbody>
         </table></div>
         <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
+      </div>
+    </section>
+
+    <!-- ===================== TAB: CẤU HÌNH QUY ĐỊNH ===================== -->
+    <section id="tab-quydinh" class="tab-panel hidden">
+      <div class="panel">
+        <h2>Cấu hình quy định</h2>
+        <p class="note">Các bảng ngưỡng SỐ HỌC đơn giản trích từ QĐ1901/IEC 60599:2022 (KHÔNG bao gồm logic tra mã
+          Bảng 66/Table A.10 hay ranh giới Tam giác Duval — những phần đó vẫn cố định theo đúng văn bản gốc) được
+          liệt kê bên dưới, nhóm theo loại thiết bị/bối cảnh áp dụng. Sửa số + tham chiếu nguồn rồi bấm "Lưu bảng
+          này" khi QĐ1901/IEC 60599 có bản cập nhật trong tương lai — <strong>không cần sửa code</strong>. Bấm
+          "Khôi phục mặc định" để quay lại đúng số liệu gốc đã tích hợp sẵn trong ứng dụng. Chỉ Admin sửa/lưu được;
+          mọi người dùng đã đăng nhập đều xem được.</p>
+        <p class="note" id="quydinhLoadingHint">Đang tải cấu hình...</p>
+        <div id="regulationConfigContainer"></div>
       </div>
     </section>
 
@@ -958,7 +1103,7 @@
           <div class="status-legend-card alarm">
             <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>BÁO ĐỘNG (ALARM)</div>
             <p>Có khí vượt ngưỡng tuyệt đối ("Không đạt") hoặc vượt ngưỡng loại bỏ nhà sản xuất, hoặc loại sự cố
-              (Bảng 66) thay đổi so với lần đo liền trước.</p>
+              (Bảng 66/A.10) thay đổi so với lần đo liền trước.</p>
             <p class="action">→ Hành động ngay: kiểm tra hiện trường, cân nhắc giám sát trực tuyến/sửa chữa, báo cáo
               cấp có thẩm quyền (Điều 6 QĐ1901).</p>
           </div>
@@ -1591,6 +1736,38 @@
 
     <!-- ===================== TAB: DẦU CÁCH ĐIỆN (MBA/Kháng dầu) ===================== -->
     <section id="tab-dau" class="tab-panel hidden">
+      <!-- Chọn "Loại thiết bị" giống tab "DGA" (#f_loai) — CHỈ ẩn/hiện đúng (các) khối
+           nhập liệu liên quan để đỡ phải cuộn qua cả 3 khối (MBA+OLTC/TI-TU) cùng lúc,
+           KHÔNG phải 1 trường dữ liệu của bản ghi. Lựa chọn được nhớ lại giữa các lần vào
+           app (localStorage, cùng quy ước với LICHSU_VIEW_STORAGE_KEY) — xem
+           setupDauEquipmentTypeToggle()/toggleDauEquipmentType() ở app-core.js. MBA/Kháng
+           dầu gộp CHUNG với OLTC (OLTC là 1 khoang dầu phụ CỦA chính MBA đó, không phải
+           loại thiết bị riêng); chọn TI hoặc TU đều hiện cùng 1 khối "Dầu cách điện
+           TI/TU" (tự đồng bộ #tio_equipmenttype bên trong theo đúng lựa chọn ở đây, khỏi
+           chọn lại lần 2 — nên khối đó ẨN LUÔN #tio_equipmenttype_wrap, xem ghi chú ở
+           đó) — Sứ xuyên/Khác chưa có tính năng nhập dầu ở đây nên chỉ hiện ghi chú.
+           Đặt trong 1 panel RIÊNG ở đầu tab, dạng ".toolbar" (tiêu đề trái/control phải
+           — cùng khuôn mẫu đã dùng ở tab "Lịch sử đo"/"Cảnh báo") để tách hẳn khỏi vùng
+           nhập liệu bên dưới — tab "DGA" (#f_loai) dùng LẠI ĐÚNG khuôn mẫu này cho đồng
+           nhất giao diện giữa 2 tab. -->
+      <div class="panel">
+        <div class="toolbar" style="margin-bottom:0;">
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị</h2>
+          <select id="dau_equipmenttype" title="Chọn loại thiết bị" style="min-width:220px;">
+            <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
+            <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+            <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+            <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
+            <option value="Khác">Khác</option>
+          </select>
+        </div>
+      </div>
+
+      <p class="note hidden" id="dauNoOilSupportNote">Tab "Dầu cách điện" hiện chưa hỗ trợ
+        nhập thí nghiệm dầu cho loại thiết bị này — vui lòng dùng tab "DGA" để nhập kết
+        quả khí hòa tan (áp dụng được cho mọi loại thiết bị, kể cả Sứ xuyên/Khác).</p>
+
+      <div id="dauMbaWrap">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
         <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
@@ -1700,6 +1877,8 @@
       </div>
 
       <!-- ============== DẦU KHOANG ĐIỀU ÁP DƯỚI TẢI (OLTC) — Điều 37/Bảng 49 ============== -->
+      <!-- Gộp chung 1 khối với "Dầu MBA chính" ở trên (#dauMbaWrap) — OLTC là 1 khoang
+           dầu phụ CỦA chính MBA/Kháng dầu đó, không phải loại thiết bị độc lập. -->
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
         <p class="note">Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
@@ -1811,6 +1990,107 @@
         </table></div>
         <p class="note" id="oltcOilHistoryEmpty">Chưa có thí nghiệm dầu OLTC nào được lưu.</p>
       </div>
+      </div><!-- /#dauMbaWrap -->
+
+      <!-- ============== DẦU CÁCH ĐIỆN TI/TU — Điều 10/11 QĐ1901 (theo NSX) ============== -->
+      <div id="dauInstrumentWrap">
+      <div class="panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU</h2>
+        <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
+          thủng dầu (kV) — áp dụng cho TI/TU kiểu kín, cách điện dầu. QĐ1901 Điều 10 (Bảng 9, mục 12) và Điều 11
+          (Bảng 14, mục 11) đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục này — KHÔNG có bảng
+          số mặc định như dầu MBA (Bảng 54/55/58), nên <strong>bắt buộc chọn nhà sản xuất đã cấu hình sẵn</strong>
+          ở tab "Tiêu chuẩn" mới đánh giá được. Hỗ trợ 2 mức ngưỡng (nếu nhà sản xuất có cấu hình): "Bình thường"
+          và "Loại bỏ" — giá trị nằm giữa 2 mức báo "Cảnh báo" thay vì "Không đạt".</p>
+
+        <div class="loading-hint combo-loading-hint hidden" id="tioComboLoadingHint">
+          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+        </div>
+        <div class="grid">
+          <!-- ẨN #tio_equipmenttype (KHÔNG xóa khỏi DOM — onTioEquipmentTypeChange()/
+               onAnalyzeTioOil()/onEditTioOilTest() vẫn đọc/ghi .value trực tiếp) — trước
+               đây hiện SONG SONG với #dau_equipmenttype ở toolbar đầu tab, gây trùng lặp
+               2 ô "Loại thiết bị" cùng lúc trong khi #dauInstrumentWrap CHỈ hiện khi
+               #dau_equipmenttype đã là TI/TU (xem toggleDauEquipmentType(), app-core.js
+               — tự đồng bộ giá trị 2 chiều), nên ô này lúc nào cũng lặp lại đúng giá trị
+               đã chọn ở trên, không còn cần hỏi lại lần 2. -->
+          <label class="field hidden" id="tio_equipmenttype_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị
+            <select id="tio_equipmenttype">
+              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+            </select>
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
+            <div class="combo-wrap">
+              <input id="tio_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+              <button type="button" id="tio_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="tio_tram_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
+            <div class="combo-wrap">
+              <input id="tio_thietbi" type="text" placeholder="VD: TI T1 pha A — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+              <button type="button" id="tio_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+              <div id="tio_thietbi_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+            <select id="tio_phase">
+              <option>A</option><option>B</option><option>C</option>
+              <option value="chung3pha">Chung</option>
+            </select>
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (bắt buộc để đánh giá)
+            <select id="tio_nsx">
+              <option value="">— Chọn nhà sản xuất —</option>
+            </select>
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
+            <input id="tio_ngay" type="date" />
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
+            <input id="tio_ghichu" type="text" placeholder="(không bắt buộc)" />
+          </label>
+        </div>
+
+        <div class="section-title">Kết quả thí nghiệm</div>
+        <div class="grid gases">
+          <label class="field">Độ ẩm dầu (ppm) <input id="tio_moisture" type="number" min="0" step="0.1" /></label>
+          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="tio_tgd90" type="number" min="0" step="0.01" /></label>
+          <label class="field">Điện áp chọc thủng (kV) <input id="tio_bdv" type="number" min="0" step="0.1" /></label>
+        </div>
+
+        <p class="note hidden" id="editingTioOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu TI/TU đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div style="margin-top:18px; display:flex; gap:10px;">
+          <button class="btn primary" id="btnAnalyzeTioOil">Đánh giá &amp; Lưu</button>
+          <button class="btn ghost" id="btnClearTioOilForm">Xóa form</button>
+          <button class="btn ghost hidden" id="btnCancelEditTioOilTest">Hủy sửa</button>
+        </div>
+      </div>
+
+      <div class="panel hidden" id="tioOilResultsPanel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu TI/TU</h2>
+        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+          <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="tio_overall">—</div></div>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
+          <tbody id="tio_resultTable"></tbody>
+        </table></div>
+      </div>
+
+      <div class="panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu TI/TU đã lưu</h2>
+        <div class="table-scroll"><table>
+          <thead><tr>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+          </tr></thead>
+          <tbody id="tioOilHistoryTable"></tbody>
+        </table></div>
+        <p class="note" id="tioOilHistoryEmpty">Chưa có thí nghiệm dầu TI/TU nào được lưu.</p>
+      </div>
+      </div><!-- /#dauInstrumentWrap -->
     </section>
 
     <!-- ===================== TAB: QUẢN TRỊ (chỉ Admin thấy) ===================== -->
@@ -1968,9 +2248,11 @@
   <script src="bbtn/tech-report-export.js"></script>
   <script src="bbtn/bbtn-batch-import.js"></script>
   <script src="ui/ui-standards.js"></script>
+  <script src="ui/ui-regulation-config.js"></script>
   <script src="ui/ui-admin.js"></script>
   <script src="ui/ui-oil.js"></script>
   <script src="ui/ui-oltc.js"></script>
+  <script src="ui/ui-ti-oil.js"></script>
   <script src="ui/ui-history.js"></script>
   <script src="ui/ui-trend.js"></script>
   <script src="ui/ui-alerts.js"></script>

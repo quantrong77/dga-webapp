@@ -78,7 +78,7 @@ function onEditOilTest(rec) {
   $("o_oilstate").value = rec.oil_state || "inservice";
   $("o_nsx").value = rec.manufacturer || "";
   $("o_membrane").checked = !!rec.has_membrane_n2;
-  $("o_ngay").value = rec.sample_date || "";
+  $("o_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   $("o_moisture").value = rec.moisture_ppm ?? "";
   $("o_tgd90").value = rec.tgd_90c_percent ?? "";
   $("o_bdv").value = rec.bdv_kv ?? "";
@@ -86,6 +86,10 @@ function onEditOilTest(rec) {
   $("editingOilTestNote").classList.remove("hidden");
   $("btnCancelEditOilTest").classList.remove("hidden");
   $("btnAnalyzeOil").textContent = "Cập nhật & Lưu";
+  // Đảm bảo khối "Dầu MBA chính" đang HIỆN (không bị #dau_equipmenttype ẩn đi vì đang
+  // để ở loại khác) trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
+  $("dau_equipmenttype").value = DGA.EQUIPMENT_TYPES.MBA;
+  toggleDauEquipmentType();
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   $("o_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -170,17 +174,22 @@ function renderOilResults(evalResult) {
   }
 }
 
-async function refreshOilTestsUI() {
-  const all = await Storage.listOilTests();
-  _allOilTests = all;
-  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
-
-  const tbody = $("oilHistoryTable");
+/** Vẽ danh sách dòng thí nghiệm dầu MBA chính vào 1 bảng bất kỳ (tbody/emptyId truyền
+ *  vào) — tách riêng khỏi refreshOilTestsUI() để DÙNG CHUNG cho cả bảng "gốc" ở tab
+ *  "Dầu cách điện" (#oilHistoryTable) LẪN bảng mirror chỉ-để-xem ở tab "Lịch sử đo"
+ *  (#lichsuOilHistoryTable, xem refreshLichSuOilTable() ở ui-history.js) — tránh lặp
+ *  lại y hệt logic tính evalResult/dựng HTML ở 2 nơi rồi dễ lệch nhau về sau. Nút "Sửa"
+ *  LUÔN nhảy sang tab "Dầu cách điện" (onEditOilTest() đã tự làm việc này) — bảng mirror
+ *  không có form nhập liệu riêng nên không thể sửa tại chỗ. */
+function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
+  const tbody = $(tbodyId);
+  if (!tbody) return;
   tbody.innerHTML = "";
-  $("oilHistoryEmpty").classList.toggle("hidden", sorted.length > 0);
+  const emptyEl = $(emptyId);
+  if (emptyEl) emptyEl.classList.toggle("hidden", sortedRecords.length > 0);
 
   const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
-  sorted.forEach((rec) => {
+  sortedRecords.forEach((rec) => {
     const evalResult = DGA.evaluateOilTest({
       voltageClass: rec.voltage_class, oilState: rec.oil_state, hasMembraneN2: rec.has_membrane_n2,
       manufacturer: rec.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
@@ -193,7 +202,7 @@ async function refreshOilTestsUI() {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${rec.sample_date}</td>
+      <td>${DGA.formatSampleDate(rec.sample_date)}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(oilSamplePointLabel(rec.oil_sample_point || "chung"))}</td>
@@ -227,6 +236,17 @@ async function refreshOilTestsUI() {
     }
     tbody.appendChild(tr);
   });
+}
+
+async function refreshOilTestsUI() {
+  const all = await Storage.listOilTests();
+  _allOilTests = all;
+  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+  renderOilTestRows("oilHistoryTable", "oilHistoryEmpty", sorted);
+  // Mirror ở tab "Lịch sử đo" (xem ui-history.js) — có thể chưa tải xong lúc hàm này
+  // chạy lần đầu (thứ tự <script> tag), nhưng vì initApp() chỉ GỌI hàm này (không
+  // định nghĩa) sau khi mọi script đã tải xong nên luôn tồn tại tới lúc chạy thật.
+  if (typeof refreshLichSuOilTable === "function") refreshLichSuOilTable();
 
   refreshTrendDeviceOptions();
   refreshAlertsUI();

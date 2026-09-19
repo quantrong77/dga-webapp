@@ -50,7 +50,14 @@ function bbtnBuildKetLuan(a) {
   if (a.overallStatus && a.overallStatus.label) parts.push(a.overallStatus.label + ".");
   const standardLabel = (a.standard && a.standard.sourceLabel) || "tiêu chuẩn áp dụng";
   parts.push((a.overall === "Đạt" ? "Các chỉ tiêu khí hòa tan đạt yêu cầu" : a.overall) + " theo " + standardLabel + ".");
-  if (a.diagnosis) parts.push("Chẩn đoán tỷ số khí (Bảng 66): " + a.diagnosis + ".");
+  // Nhãn "Bảng 66" chỉ đúng khi diagnosis dùng Table 1/Bảng 66 — với sứ xuyên,
+  // DGA.diagnoseGasFault() (ui-dga.js) đã tự dùng Table A.10 (Annex A.5.3) khi có mã khớp,
+  // và chuỗi trả về đã tự ghi rõ "Bảng A.10 (sứ xuyên): ..." nên không cần/không nên ghép
+  // thêm nhãn "Bảng 66" phía trước, tránh hiển thị lẫn lộn 2 bảng trong cùng 1 câu.
+  if (a.diagnosis) {
+    const label = a.diagnosis.startsWith("Bảng A.10") ? "Chẩn đoán tỷ số khí: " : "Chẩn đoán tỷ số khí (Bảng 66): ";
+    parts.push(label + a.diagnosis + ".");
+  }
   if (a.duval) parts.push("Tam giác Duval: " + a.duval.zone + " – " + a.duval.label + ".");
   return parts.join(" ");
 }

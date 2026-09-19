@@ -320,7 +320,10 @@ function onEditMeasurement(rec) {
   $("f_nsx").value = rec.manufacturer || "";
   $("f_pha").value = rec.pha || "";
   $("f_landocount").value = rec.lan_do ?? 1;
-  $("f_ngay").value = rec.sample_date || "";
+  // DGA.formatSampleDate(): phòng hờ bản ghi cũ còn dính lỗi Google Sheets trả về
+  // datetime đầy đủ thay vì "yyyy-MM-dd" thuần (xem ghi chú đầy đủ ở dga-logic.js) — nếu
+  // không format lại, <input type="date"> sẽ hiện TRỐNG vì giá trị sai định dạng.
+  $("f_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   $("f_ghichu").value = rec.ghi_chu || "";
   $("f_kieumay").value = rec.kieu_may || "";
   $("f_namsx").value = rec.nam_sx || "";
@@ -544,10 +547,15 @@ async function onAnalyze() {
   const overall = DGA.overallVerdict(evalRows);
   const exceedCount = DGA.countExceedTypical(gases, measurement.equipment_type, logicMeasurement);
 
-  // 3) Ba tỷ số khí cơ bản + chẩn đoán Bảng 66 (ngưỡng PD theo loại thiết bị — 0,1 mặc
-  //    định, 0,2 cho TI/TU theo Annex A.3.3, 0,07 cho sứ xuyên theo Annex A.4.3)
+  // 3) Ba/bốn tỷ số khí cơ bản + chẩn đoán mã khiếm khuyết — DGA.diagnoseGasFault() tự
+  //    chọn ĐÚNG bảng theo loại thiết bị: sứ xuyên dùng Table A.10 (Annex A.5.3, ưu tiên,
+  //    tự rơi về Table 1 nếu không mã nào khớp); MBA/TI/TU/Khác dùng thẳng Table 1/Bảng 66
+  //    (với TI/TU, ngưỡng PD 0,2 theo Annex A.4.3 — standard.pdThreshold đã resolve sẵn).
   const ratios = DGA.computeRatios(gases);
-  const diagnosis = DGA.diagnoseRatios(ratios, standard.pdThreshold);
+  const diagnosis = DGA.diagnoseGasFault(gases, measurement.equipment_type, standard.pdThreshold);
+  const bushingCodes = measurement.equipment_type === DGA.EQUIPMENT_TYPES.BUSHING
+    ? DGA.diagnoseBushingRatios(ratios)
+    : [];
   const applicability = DGA.ratioApplicability(exceedCount);
 
   // 3bis) Chẩn đoán Tam giác Duval 1 (Annex B, Figure B.3)
@@ -592,9 +600,11 @@ async function onAnalyze() {
     const priorGases = recordGases(prior);
     const deltaDays = Math.round((new Date(measurement.sample_date) - new Date(prior.sample_date)) / 86400000);
     rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type);
-    // Chẩn đoán Bảng 66 của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
-    // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()).
-    priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(priorGases), standard.pdThreshold);
+    // Chẩn đoán mã khiếm khuyết của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
+    // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()) — PHẢI dùng
+    // cùng diagnoseGasFault() (cùng bảng theo loại thiết bị) để so sánh cho đúng nghĩa,
+    // không dùng lại diagnoseRatios() trần (sẽ luôn là Table 1 kể cả với sứ xuyên).
+    priorDiagnosis = DGA.diagnoseGasFault(priorGases, measurement.equipment_type, standard.pdThreshold);
     // Tốc độ sinh khí (%/tháng) của TỔNG lượng khí cháy (TCG) — cùng công thức %/tháng
     // dùng cho từng khí ở trên nhưng KHÔNG có khoảng tham chiếu Bảng 65 riêng cho TCG
     // (chỉ tham khảo). Hiện ở stat-card TCG (renderResults()) và điền vào BBTN khi xuất
@@ -603,7 +613,7 @@ async function onAnalyze() {
   }
 
   // 5) Khuyến cáo tổng hợp
-  const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63 });
+  const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType: measurement.equipment_type, bushingCodes });
 
   // 5bis) Trạng thái tổng thể (Bình thường/Cảnh báo/Báo động) — số hóa lưu đồ Hình 1
   //    IEC 60599:1999; xem giải thích đầy đủ ở tab "Quy trình đánh giá".
@@ -611,8 +621,8 @@ async function onAnalyze() {
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
-  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 };
-  renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 });
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 };
+  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -786,7 +796,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
 
   if (rateRows) {
     $("rateSection").classList.remove("hidden");
-    $("rateNote").textContent = `So với lần đo trước (${prior.sample_date}) — ` +
+    $("rateNote").textContent = `So với lần đo trước (${DGA.formatSampleDate(prior.sample_date)}) — ` +
       (rateRows[0].officialForEquipment
         ? "Bảng 65 áp dụng CHÍNH THỨC cho MBA/Kháng dầu."
         : "Bảng 65 chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");

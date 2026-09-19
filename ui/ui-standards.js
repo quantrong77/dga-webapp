@@ -63,11 +63,15 @@ async function refreshManufacturerOptions() {
 }
 
 // Dropdown "Nhà sản xuất" ở tab Dầu cách điện — chỉ liệt kê NSX có tiêu chuẩn
-// DẦU (standard_type = "dau"), không lẫn với tiêu chuẩn khí ở trên. Dùng chung
-// cho cả dầu chính MBA (#o_nsx) và dầu OLTC (#ot_nsx — chỉ áp dụng khi Dầu mới,
-// xem evaluateOltcOilTest(): "vận hành" luôn dùng Bảng 49, không có ưu tiên NSX).
+// DẦU (standard_type = "dau") CHO ĐÚNG MBA/Kháng dầu (loại trừ tiêu chuẩn dầu TI/TU —
+// khác cấu trúc, không có voltage_class/oil_state để khớp, xem toOilStandardsForLogic()).
+// Dùng chung cho cả dầu chính MBA (#o_nsx) và dầu OLTC (#ot_nsx — chỉ áp dụng khi Dầu
+// mới, xem evaluateOltcOilTest(): "vận hành" luôn dùng Bảng 49, không có ưu tiên NSX).
 function refreshOilManufacturerOptions() {
-  const names = Array.from(new Set(_allStandards.filter(isOilStandardRecord).map((s) => s.manufacturer).filter(Boolean)));
+  const names = Array.from(new Set(
+    _allStandards.filter((s) => isOilStandardRecord(s) && (s.equipment_type || s.equipmentType || DGA.EQUIPMENT_TYPES.MBA) === DGA.EQUIPMENT_TYPES.MBA)
+      .map((s) => s.manufacturer).filter(Boolean)
+  ));
   names.sort((a, b) => a.localeCompare(b, "vi"));
   ["o_nsx", "ot_nsx"].forEach((id) => {
     const sel = $(id);
@@ -82,6 +86,30 @@ function refreshOilManufacturerOptions() {
     });
     if (names.includes(currentVal)) sel.value = currentVal;
   });
+}
+
+// Dropdown "Nhà sản xuất" ở form "Dầu cách điện TI/TU" (#tio_nsx, xem ui-ti-oil.js) —
+// chỉ liệt kê NSX đã cấu hình tiêu chuẩn dầu ĐÚNG loại thiết bị đang chọn (TI hoặc TU) —
+// khác dầu MBA (bắt buộc có tiêu chuẩn mới đánh giá được, xem evaluateInstrumentOilTest()),
+// nên KHÔNG có lựa chọn "— Không có / dùng QĐ1901 —" để tránh gây hiểu nhầm là vẫn có
+// ngưỡng mặc định nào đó.
+function refreshInstrumentOilManufacturerOptions(equipmentType) {
+  const sel = $("tio_nsx");
+  if (!sel) return;
+  const names = Array.from(new Set(
+    _allStandards.filter((s) => isOilStandardRecord(s) && (s.equipment_type || s.equipmentType) === equipmentType)
+      .map((s) => s.manufacturer).filter(Boolean)
+  ));
+  names.sort((a, b) => a.localeCompare(b, "vi"));
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">— Chọn nhà sản xuất —</option>';
+  names.forEach((n) => {
+    const opt = document.createElement("option");
+    opt.value = n;
+    opt.textContent = n;
+    sel.appendChild(opt);
+  });
+  if (names.includes(currentVal)) sel.value = currentVal;
 }
 
 function standardRecordToLimits(rec) {
@@ -153,16 +181,23 @@ function toManufacturerStandardsForLogic(list) {
   }));
 }
 
-// Tiêu chuẩn dầu NSX (dùng cho DGA.evaluateOilTest ở tab "Dầu cách điện") — mỗi
-// bản ghi ứng với 1 tổ hợp (manufacturer, cấp điện áp, trạng thái dầu) cụ thể.
+// Tiêu chuẩn dầu NSX (dùng cho DGA.evaluateOilTest ở tab "Dầu cách điện", MBA/OLTC —
+// so khớp theo manufacturer+voltageClass+oilState — VÀ DGA.evaluateInstrumentOilTest()
+// ở tab "Dầu cách điện TI/TU" — so khớp theo manufacturer+equipmentType, xem
+// resolveInstrumentOilLimits() ở dga-logic.js) — mỗi bản ghi ứng với 1 tổ hợp cụ thể.
 function toOilStandardsForLogic(list) {
   return list.filter(isOilStandardRecord).map((rec) => ({
     manufacturer: rec.manufacturer,
+    equipmentType: rec.equipment_type || rec.equipmentType || DGA.EQUIPMENT_TYPES.MBA,
     voltageClass: rec.oil_voltage_class,
     oilState: rec.oil_state === "new" ? "new" : "inservice",
     moisture: rec.oil_moisture_ppm,
     tgd90: rec.oil_tgd_90c_percent,
     bdv: rec.oil_bdv_kv,
+    // Ngưỡng loại bỏ (mức 2) — chỉ TI/TU dùng, xem evaluateInstrumentOilTest().
+    moistureReject: rec.oil_moisture_loaibo_ppm,
+    tgd90Reject: rec.oil_tgd_90c_loaibo_percent,
+    bdvReject: rec.oil_bdv_loaibo_kv,
     source: rec.source,
   }));
 }
@@ -181,13 +216,38 @@ function toggleStandardTypeFields() {
   const isOil = $("s_standard_type").value === "dau";
   $("stdGasFields").classList.toggle("hidden", isOil);
   $("stdOilFields").classList.toggle("hidden", !isOil);
-  $("s_equipmenttype_wrap").classList.toggle("hidden", isOil);
+  // Trước đây tiêu chuẩn dầu ẩn hẳn ô "Loại thiết bị" (mặc định luôn là MBA/Kháng dầu).
+  // Giờ dầu TI/TU cũng cần chọn loại thiết bị (không có bảng chung cho cả 3 loại như
+  // dầu MBA đã có Bảng 54/55/58) nên LUÔN hiện ô này, kể cả ở chế độ "dau".
+  $("s_equipmenttype_wrap").classList.remove("hidden");
+  if (isOil) toggleOilStandardEquipmentFields();
+}
+
+// Trong tiêu chuẩn DẦU: MBA/Kháng dầu dùng Cấp điện áp + Trạng thái dầu (giống Bảng
+// 54/55/58 QĐ1901); TI/TU KHÔNG có 2 trục đó (QĐ1901 Điều 10/11 không đưa ra cấu trúc
+// nào để mô phỏng theo — chỉ dẫn chiếu "theo quy định nhà sản xuất") nên ẩn 2 ô đó đi
+// và thay bằng khối "Ngưỡng loại bỏ" (mức 2, xem evaluateInstrumentOilTest() ở
+// dga-logic.js) — dầu MBA không cần khối này vì đã có QĐ1901 làm mặc định/ngưỡng tuyệt
+// đối duy nhất.
+function toggleOilStandardEquipmentFields() {
+  if ($("s_standard_type").value !== "dau") return;
+  const isMba = $("s_equipmenttype").value === DGA.EQUIPMENT_TYPES.MBA;
+  $("s_oil_mba_fields").classList.toggle("hidden", !isMba);
+  $("s_oil_instrument_fields").classList.toggle("hidden", isMba);
+  $("stdOilFieldsNoteMba").classList.toggle("hidden", !isMba);
+  $("stdOilFieldsNoteInstrument").classList.toggle("hidden", isMba);
+  $("s_oil_normal_title").textContent = isMba
+    ? "Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)"
+    : "Ngưỡng bình thường (tùy chọn — có thể chỉ điền ngưỡng loại bỏ bên dưới)";
 }
 
 async function refreshStandardsUI() {
   _allStandards = await Storage.listStandards();
   refreshManufacturerOptions();
   refreshOilManufacturerOptions();
+  if (typeof refreshInstrumentOilManufacturerOptions === "function" && $("tio_equipmenttype")) {
+    refreshInstrumentOilManufacturerOptions($("tio_equipmenttype").value);
+  }
 
   const tbody = $("standardsTable");
   tbody.innerHTML = "";
@@ -196,12 +256,22 @@ async function refreshStandardsUI() {
     const isOil = isOilStandardRecord(rec);
     let appliesTo, thresholdText;
     if (isOil) {
-      appliesTo = `${oilVoltageClassLabel(rec.oil_voltage_class)} — ${rec.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}`;
+      const equipmentType = rec.equipment_type || rec.equipmentType || DGA.EQUIPMENT_TYPES.MBA;
+      const isMba = equipmentType === DGA.EQUIPMENT_TYPES.MBA;
+      appliesTo = isMba
+        ? `${equipmentType} — ${oilVoltageClassLabel(rec.oil_voltage_class)} — ${rec.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}`
+        : equipmentType;
+      const hasV = (v) => v !== undefined && v !== null && v !== "";
       const parts = [];
-      if (rec.oil_moisture_ppm !== undefined && rec.oil_moisture_ppm !== null && rec.oil_moisture_ppm !== "") parts.push(`Độ ẩm=${rec.oil_moisture_ppm}ppm`);
-      if (rec.oil_tgd_90c_percent !== undefined && rec.oil_tgd_90c_percent !== null && rec.oil_tgd_90c_percent !== "") parts.push(`tgδ=${rec.oil_tgd_90c_percent}%`);
-      if (rec.oil_bdv_kv !== undefined && rec.oil_bdv_kv !== null && rec.oil_bdv_kv !== "") parts.push(`BDV=${rec.oil_bdv_kv}kV`);
-      thresholdText = parts.length > 0 ? parts.join(", ") : "—";
+      if (hasV(rec.oil_moisture_ppm)) parts.push(`Độ ẩm=${rec.oil_moisture_ppm}ppm`);
+      if (hasV(rec.oil_tgd_90c_percent)) parts.push(`tgδ=${rec.oil_tgd_90c_percent}%`);
+      if (hasV(rec.oil_bdv_kv)) parts.push(`BDV=${rec.oil_bdv_kv}kV`);
+      const loaiboParts = [];
+      if (hasV(rec.oil_moisture_loaibo_ppm)) loaiboParts.push(`Độ ẩm=${rec.oil_moisture_loaibo_ppm}ppm`);
+      if (hasV(rec.oil_tgd_90c_loaibo_percent)) loaiboParts.push(`tgδ=${rec.oil_tgd_90c_loaibo_percent}%`);
+      if (hasV(rec.oil_bdv_loaibo_kv)) loaiboParts.push(`BDV=${rec.oil_bdv_loaibo_kv}kV`);
+      const loaiboText = loaiboParts.length > 0 ? " | Loại bỏ: " + loaiboParts.join(", ") : "";
+      thresholdText = (parts.length > 0 ? parts.join(", ") : "—") + loaiboText;
     } else {
       appliesTo = rec.equipment_type || rec.equipmentType;
       const limits = standardRecordToLimits(rec);
@@ -248,14 +318,18 @@ function onEditStandard(rec) {
   const isOil = isOilStandardRecord(rec);
   $("s_standard_type").value = isOil ? "dau" : "khi";
   toggleStandardTypeFields();
+  $("s_equipmenttype").value = rec.equipment_type || rec.equipmentType || DGA.EQUIPMENT_TYPES.MBA;
   if (isOil) {
     $("s_oil_voltage_class").value = rec.oil_voltage_class || "";
     $("s_oil_state").value = rec.oil_state === "new" ? "new" : "inservice";
     $("s_oil_moisture").value = rec.oil_moisture_ppm ?? "";
     $("s_oil_tgd90").value = rec.oil_tgd_90c_percent ?? "";
     $("s_oil_bdv").value = rec.oil_bdv_kv ?? "";
+    $("s_oil_moisture_loaibo").value = rec.oil_moisture_loaibo_ppm ?? "";
+    $("s_oil_tgd90_loaibo").value = rec.oil_tgd_90c_loaibo_percent ?? "";
+    $("s_oil_bdv_loaibo").value = rec.oil_bdv_loaibo_kv ?? "";
+    toggleOilStandardEquipmentFields();
   } else {
-    $("s_equipmenttype").value = rec.equipment_type || rec.equipmentType || "";
     DGA.GASES.forEach((g) => {
       const v = rec[g.toLowerCase()] ?? rec[g];
       $("s_" + g).value = v ?? "";
@@ -271,9 +345,13 @@ function onEditStandard(rec) {
 
 function resetStandardForm() {
   _editingStandardId = null;
-  ["s_manufacturer", "s_source", "s_oil_moisture", "s_oil_tgd90", "s_oil_bdv"].forEach((id) => ($(id).value = ""));
+  [
+    "s_manufacturer", "s_source", "s_oil_moisture", "s_oil_tgd90", "s_oil_bdv",
+    "s_oil_moisture_loaibo", "s_oil_tgd90_loaibo", "s_oil_bdv_loaibo",
+  ].forEach((id) => ($(id).value = ""));
   DGA.GASES.forEach((g) => { $("s_" + g).value = ""; $("s_loaibo_" + g).value = ""; });
   $("s_standard_type").value = "khi";
+  $("s_equipmenttype").value = DGA.EQUIPMENT_TYPES.TI;
   toggleStandardTypeFields();
   $("editingStandardNote").classList.add("hidden");
   $("btnCancelEditStandard").classList.add("hidden");
@@ -289,26 +367,43 @@ async function onSaveStandard() {
 
   let rec;
   if (standardType === "dau") {
+    const equipmentType = $("s_equipmenttype").value;
+    const isMba = equipmentType === DGA.EQUIPMENT_TYPES.MBA;
     const moisture = $("s_oil_moisture").value;
     const tgd90 = $("s_oil_tgd90").value;
     const bdv = $("s_oil_bdv").value;
-    if (moisture === "" && tgd90 === "" && bdv === "") {
-      alert("Vui lòng nhập ít nhất 1 trong 3 ngưỡng: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng.");
+    const moistureLoaibo = isMba ? "" : $("s_oil_moisture_loaibo").value;
+    const tgd90Loaibo = isMba ? "" : $("s_oil_tgd90_loaibo").value;
+    const bdvLoaibo = isMba ? "" : $("s_oil_bdv_loaibo").value;
+    if ([moisture, tgd90, bdv, moistureLoaibo, tgd90Loaibo, bdvLoaibo].every((v) => v === "")) {
+      alert(isMba
+        ? "Vui lòng nhập ít nhất 1 trong 3 ngưỡng: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng."
+        : "Vui lòng nhập ít nhất 1 ngưỡng (bình thường hoặc loại bỏ) cho 1 trong 3 hạng mục: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng.");
       return;
     }
     rec = {
       manufacturer, source, standard_type: "dau",
-      equipment_type: DGA.EQUIPMENT_TYPES.MBA,
-      oil_voltage_class: $("s_oil_voltage_class").value,
-      oil_state: $("s_oil_state").value,
+      equipment_type: equipmentType,
+      // Cấp điện áp/trạng thái dầu CHỈ có ý nghĩa với MBA (Bảng 54/55/58 QĐ1901 phân
+      // theo 2 trục đó) — TI/TU không có cấu trúc này (xem toggleOilStandardEquipmentFields()),
+      // để trống để evaluateInstrumentOilTest() chỉ so khớp theo manufacturer+equipmentType.
+      oil_voltage_class: isMba ? $("s_oil_voltage_class").value : "",
+      oil_state: isMba ? $("s_oil_state").value : "",
       oil_moisture_ppm: moisture === "" ? null : Number(moisture),
       oil_tgd_90c_percent: tgd90 === "" ? null : Number(tgd90),
       oil_bdv_kv: bdv === "" ? null : Number(bdv),
+      // Ngưỡng LOẠI BỎ — chỉ TI/TU dùng (xem evaluateInstrumentOilTest() ở dga-logic.js).
+      oil_moisture_loaibo_ppm: moistureLoaibo === "" ? null : Number(moistureLoaibo),
+      oil_tgd_90c_loaibo_percent: tgd90Loaibo === "" ? null : Number(tgd90Loaibo),
+      oil_bdv_loaibo_kv: bdvLoaibo === "" ? null : Number(bdvLoaibo),
     };
     if (alertIfNegative([
       { label: "Độ ẩm dầu", value: rec.oil_moisture_ppm },
       { label: "tgδ ở 90°C", value: rec.oil_tgd_90c_percent },
       { label: "Điện áp chọc thủng", value: rec.oil_bdv_kv },
+      { label: "Độ ẩm dầu (loại bỏ)", value: rec.oil_moisture_loaibo_ppm },
+      { label: "tgδ ở 90°C (loại bỏ)", value: rec.oil_tgd_90c_loaibo_percent },
+      { label: "Điện áp chọc thủng (loại bỏ)", value: rec.oil_bdv_loaibo_kv },
     ])) return;
   } else {
     const equipmentType = $("s_equipmenttype").value;

@@ -400,13 +400,35 @@ header.app-header p {
 nav.tabs {
   display: flex;
   padding: 10px 24px 0;
-  background: #fff;
   border-bottom: 1px solid var(--gray-300);
   overflow-x: auto;
   position: sticky;
   top: 0;
   z-index: 40;
   box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
+  /* "Bóng cuộn" 2 mép trái/phải — BÁO HIỆU còn tab bị tràn ngoài vùng nhìn thấy khi cụm
+     nút không đủ chỗ (xem ghi chú .tabs-inner ngay dưới: lúc đó margin:auto co về 0,
+     nav.tabs cuộn ngang bình thường từ mép trái, ví dụ tab "Quản trị"/"Cấu hình quy
+     định" cuối cụm bị cắt cụt ở mép phải). Trước đây mép cắt là 1 đường thẳng cứng
+     (button bị chặn giữa chừng, trông giống LỖI hiển thị/che khuất) — kỹ thuật quen
+     thuộc "background-attachment: local/scroll" (Lea Verou) tạo 2 lớp: (a) dải trắng mờ
+     dần (local — DI CHUYỂN THEO nội dung khi cuộn) phủ đúng mép cắt để chữ/icon mờ dần
+     ra thay vì bị chặt cụt, và (b) dải bóng mờ (scroll — ĐỨNG YÊN theo khung nav.tabs)
+     chỉ lộ ra khi mép đó thực sự còn nội dung bị tràn (2 lớp che khít nhau khi đã cuộn
+     hết cỡ về phía đó). Bản chất vẫn phải cuộn để thấy hết, nhưng giao diện giờ thể hiện
+     RÕ RÀNG đây là 1 danh sách có thể cuộn ngang, không phải bị lỗi/che nhầm. Chỉ áp
+     dụng ở chế độ tab NGANG mặc định — chế độ tab DỌC (sidebar) tự đặt lại nền trắng
+     đơn giản, xem "body.tabs-sidebar nav.tabs" bên dưới vì ở đó overflow-x: visible. */
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+  background-position: left center, right center, left center, right center;
+  background-size: 36px 100%, 36px 100%, 14px 100%, 14px 100%;
+  background-image:
+    linear-gradient(to right, #fff, rgba(255, 255, 255, 0)),
+    linear-gradient(to left, #fff, rgba(255, 255, 255, 0)),
+    linear-gradient(to right, rgba(20, 40, 70, 0.16), rgba(20, 40, 70, 0)),
+    linear-gradient(to left, rgba(20, 40, 70, 0.16), rgba(20, 40, 70, 0));
 }
 /* Canh GIỮA cả cụm nút tab trên màn hình rộng — margin:auto trên 1 flex-item (thay vì
    justify-content:center trên chính nav.tabs) để khi cụm nút KHÔNG đủ chỗ (màn hình
@@ -488,18 +510,54 @@ body.tabs-sidebar header.app-header {
 body.tabs-sidebar main {
   grid-column: 2;
   grid-row: 2;
+  /* main{margin:0 auto} ở CSS mặc định (dùng để CĂN GIỮA main lúc bố cục tab ngang, xem
+     luật "main{...}" phía dưới) vô tình "vượt cấp" sang layout Grid này — 1 box có margin
+     ngang auto sẽ KHÔNG tự dãn lấp hết ô lưới (justify-self:stretch mặc định bị auto-margin
+     vô hiệu hóa), mà co theo kiểu "shrink-to-fit" nội dung, giống hệt 1 phần tử nổi/table.
+     Bảng lịch sử đo khí (#historyTable, 21 cột) dù đã bọc trong .table-scroll (overflow-x:
+     auto) vẫn có ĐỘ RỘNG NỘI DUNG TỰ NHIÊN (~1100px, không bị ép xuống dòng) LỚN HƠN cột
+     "1fr" (~1039px khi mở rộng/60px thu gọn) — main dùng "shrink-to-fit" nên PHÌNH RA đúng
+     bằng độ rộng đó thay vì dừng ở cột lưới, kéo theo cả trang cuộn ngang, khiến các tab
+     "Lịch sử đo" (view "Khí hòa tan") rộng hơn hẳn view "Dầu" (không có bảng nhiều cột này)
+     — và ngay trong view "Dầu", đổi ô lọc loại thiết bị (đổi bảng con nào đang hiện) cũng có
+     thể đổi độ rộng khung theo đúng kiểu tương tự nếu 1 bảng con nào đó lỡ cũng rộng hơn cột
+     lưới. Đặt lại margin:0 (bỏ auto) để main LUÔN dãn full-width đúng theo cột lưới ("1fr"),
+     bất kể view/bộ lọc nào đang hiện — bảng nào rộng hơn khung sẽ tự cuộn ngang RIÊNG bên
+     trong .table-scroll của chính nó (đúng ý đồ ban đầu của .table-scroll), không đẩy cả
+     khung nhìn rộng ra nữa. */
+  margin: 0;
+}
+/* footer.app-footer là phần tử THỨ 4 trong <body> (sau header/nav.tabs/main) nhưng
+   grid-template-rows ở trên chỉ khai báo 2 hàng ("auto 1fr") — nếu không chỉ định rõ vị
+   trí, CSS Grid sẽ tự xếp footer vào hàng ẩn (implicit) thứ 3 nhưng VẪN ở cột 1 (cùng cột
+   hẹp với nav.tabs, 230px hoặc 60px lúc thu gọn) theo thuật toán auto-placement mặc định
+   — khiến chữ trong footer bị bó hẹp, xuống dòng liên tục thành từng mảnh chữ rời rạc.
+   Khai báo rõ footer trải hết 2 cột (giống header.app-header) để khớp bố cục full-width
+   như ở chế độ tab ngang mặc định. (Xem thêm ghi chú "max-height" ở nav.tabs ngay dưới —
+   lỗi này còn có 1 nguyên nhân thứ 2 nữa, không chỉ do thiếu grid-row/grid-column.) */
+body.tabs-sidebar footer.app-footer {
+  grid-column: 1 / -1;
+  grid-row: 3;
 }
 body.tabs-sidebar nav.tabs {
   grid-column: 1;
   grid-row: 2;
-  /* height:100vh (không phải 100%) + position:sticky top:0 là cách quen thuộc để 1
-     sidebar LUÔN hiện khi cuộn trang, bất kể nội dung main dài bao nhiêu — xem thêm
-     ghi chú ở nav.tabs (bản ngang) phía trên, cùng cơ chế sticky nhưng đổi hướng
-     "dính" từ đỉnh trang (dưới header) sang dính suốt chiều cao màn hình. */
+  /* max-height:100vh (KHÔNG phải height:100vh cố định) + position:sticky top:0: sidebar
+     dính lên đỉnh màn hình khi cuộn, và tự cuộn riêng bên trong (overflow-y:auto) nếu
+     chính danh sách tab (~10-11 nút) cao hơn 1 màn hình — nhưng vẫn để chiều cao THỰC TẾ
+     co theo đúng nội dung của nó khi ngắn hơn 100vh (trường hợp thường gặp). Trước đây
+     dùng "height:100vh" CỐ ĐỊNH — khiến khối nav LUÔN cao đúng 1 màn hình bất kể track
+     (hàng) của grid đang cao bao nhiêu; CSS Grid không tự cắt (clip) phần tử con tràn quá
+     track của nó, nên khi cuộn xuống gần cuối trang, khối nav (cao 100vh, sticky) tràn
+     xuống đè lên đúng phần footer.app-footer nằm ở hàng dưới (row 3) — vì phần tử có
+     position (sticky) luôn vẽ ĐÈ LÊN phần tử position:static (footer) dù đứng trước
+     trong DOM, che gần hết chữ footer, chỉ còn sót lại vài ký tự bên phải. Đổi sang
+     max-height: nội dung nav (~500-600px, ít hơn 900px) sẽ tự dừng "dính" đúng tại đáy
+     hàng 2 (đáy của main) — không bao giờ tràn sang hàng 3 (footer) nữa. */
   position: sticky;
   top: 0;
   align-self: start;
-  height: 100vh;
+  max-height: 100vh;
   flex-direction: column;
   align-items: stretch;
   padding: 14px 10px;
@@ -508,6 +566,11 @@ body.tabs-sidebar nav.tabs {
   border-bottom: none;
   border-right: 1px solid var(--gray-300);
   box-shadow: 2px 0 10px rgba(20, 40, 70, 0.06);
+  /* "Bóng cuộn" ngang ở nav.tabs (xem ghi chú tại luật "nav.tabs" gốc phía trên) chỉ có ý
+     nghĩa khi cuộn NGANG (overflow-x:auto) — ở đây overflow-x:visible (cuộn DỌC nếu cần,
+     overflow-y:auto) nên đặt lại nền trắng đơn giản, tránh 2 dải mờ/bóng đứng yên vô
+     nghĩa dọc theo 2 cạnh trái/phải của cột sidebar hẹp. */
+  background: #fff;
 }
 body.tabs-sidebar .tabs-inner {
   flex-direction: column;
@@ -1047,6 +1110,9 @@ th, td {
   border-bottom: 1px solid var(--gray-100);
   text-align: left;
 }
+.nowrap-cell {
+  white-space: nowrap;
+}
 
 /* Cột nút hành động (Sửa/Xóa/Xem BBTN...) ở các bảng lịch sử (đo khí, dầu MBA, dầu
    OLTC, tiêu chuẩn NSX) — trước đây ép "white-space:nowrap" nên khi bảng nhiều cột +
@@ -1054,7 +1120,12 @@ th, td {
    còn cuộn được nữa hay không, trông như bị THIẾU nút. Đổi sang flex-wrap: các nút tự
    xuống dòng bên trong ô khi không đủ chỗ — LUÔN thấy đủ nút, không phụ thuộc cuộn ngang. */
 .actions-cell { white-space: normal; }
-.actions-cell .btn-row {
+.actions-cell .btn-row,
+/* Bộ chọn Khí hòa tan (DGA)/Dầu MBA chính/Dầu OLTC ở tab "Lịch sử đo" (xem
+   setupLichSuViewToggle(), app-core.js) — tái dùng class ".btn-row" cho khoảng cách
+   giữa các nút, chỉ khác là KHÔNG nằm trong ".actions-cell" (đó là cột hành động
+   trong bảng) nên phải khai báo riêng ở đây. */
+#lichsuTypeToggle {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1860,4 +1931,48 @@ a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
   .about-hero { flex-direction: column; }
   .about-contact-list li { flex-wrap: wrap; }
   .about-contact-list .about-label { width: auto; }
+}
+
+/* Tab "Cấu hình quy định" (ui/ui-regulation-config.js) — mỗi bảng ngưỡng render thành 1
+   "thẻ" con (.rc-item) bên trong panel, nhóm theo loại thiết bị/bối cảnh (.rc-category). */
+.rc-category {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-900);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 22px 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.rc-category:first-of-type { margin-top: 4px; }
+.rc-item {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.rc-item h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--gray-900);
+}
+.rc-item .rc-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+.rc-item .rc-range-field {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.rc-item .rc-range-field input { width: 0; flex: 1; }
+.rc-item .rc-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
 }

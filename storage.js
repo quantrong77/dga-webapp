@@ -14,7 +14,9 @@ const LS_KEYS = {
   stations: "dga_stations_v1",
   oilTests: "dga_oil_tests_v1",
   oltcOilTests: "dga_oltc_oil_tests_v1",
+  instrumentOilTests: "dga_instrument_oil_tests_v1",
   feedback: "dga_feedback_v1",
+  regulationConfig: "dga_regulation_config_v1",
 };
 
 // Tên các khí — dùng để chuẩn hóa key về chữ thường (h2, ch4, ...) khi lưu, khớp với
@@ -395,6 +397,78 @@ const Storage = {
     lsSet(LS_KEYS.standards, all);
   },
 
+  // -------------------------------------------------------------------
+  // "Cấu hình quy định" (tab riêng, xem ui/ui-regulation-config.js) — cho phép Admin
+  // sửa số liệu/tham chiếu nguồn của các bảng ngưỡng ĐƠN GIẢN trong dga-logic.js (mục 9,
+  // REGULATION_CONFIG_REGISTRY) mà KHÔNG cần sửa code, đáp ứng khi QĐ1901/IEC 60599 có
+  // bản cập nhật trong tương lai. Mỗi bản ghi ứng với ĐÚNG 1 bảng (id = key trong
+  // registry, VD "BANG64_MBA") — không phải danh sách tự do như Tiêu chuẩn NSX.
+  // "values" ở phía gọi (dga-logic.js applyRegulationConfigOverride()) LUÔN là 1 object
+  // JS lồng nhau đúng shape của bảng đó — storage.js CHỈ lo phần (de)serialize thành
+  // chuỗi JSON (values_json) để lưu thống nhất trên CẢ 3 backend (kể cả Supabase — dùng
+  // cột text thay vì jsonb để khỏi phải đổi schema riêng), người gọi không cần biết.
+  // -------------------------------------------------------------------
+  async listRegulationConfig() {
+    let rows;
+    if (this.mode === "gsheet") {
+      rows = await gsheetGet("listRegulationConfig");
+    } else if (this.mode === "supabase") {
+      const { data, error } = await sb().from("regulation_config").select("*");
+      if (error) throw error;
+      rows = data || [];
+    } else {
+      rows = lsGet(LS_KEYS.regulationConfig);
+    }
+    return (rows || []).map((r) => {
+      let values = null;
+      try {
+        values = r.values_json ? JSON.parse(r.values_json) : null;
+      } catch (err) {
+        console.warn("Không đọc được values_json của cấu hình quy định:", r.id, err);
+      }
+      return { id: r.id, citation: r.citation || null, values, updated_by: r.updated_by, updated_at: r.updated_at };
+    });
+  },
+
+  /** @param {{id:string, citation?:string, values?:object}} rec */
+  async saveRegulationConfig(rec) {
+    const wire = {
+      id: rec.id,
+      citation: rec.citation || "",
+      values_json: JSON.stringify(rec.values || {}),
+      updated_at: new Date().toISOString(),
+    };
+    if (this.mode === "gsheet") {
+      await gsheetPost("saveRegulationConfig", { record: wire });
+      return;
+    }
+    if (this.mode === "supabase") {
+      const { error } = await sb().from("regulation_config").upsert(wire);
+      if (error) throw error;
+      return;
+    }
+    const all = lsGet(LS_KEYS.regulationConfig);
+    const idx = all.findIndex((r) => r.id === wire.id);
+    if (idx >= 0) all[idx] = wire; else all.push(wire);
+    lsSet(LS_KEYS.regulationConfig, all);
+  },
+
+  /** Xóa bản ghi ghi đè — dùng cho nút "Khôi phục mặc định" (xóa override thì lần nạp
+   *  sau tự dùng lại hằng số mặc định trong dga-logic.js). */
+  async deleteRegulationConfig(id) {
+    if (this.mode === "gsheet") {
+      await gsheetPost("deleteRegulationConfig", { id });
+      return;
+    }
+    if (this.mode === "supabase") {
+      const { error } = await sb().from("regulation_config").delete().eq("id", id);
+      if (error) throw error;
+      return;
+    }
+    const all = lsGet(LS_KEYS.regulationConfig).filter((r) => r.id !== id);
+    lsSet(LS_KEYS.regulationConfig, all);
+  },
+
   // Danh mục Trạm (MaTram/TenTram) — dùng để gợi ý/tìm kiếm ở ô "Trạm", không bắt buộc.
   async listStations() {
     if (this.mode === "gsheet") {
@@ -524,6 +598,53 @@ const Storage = {
     }
     const all = lsGet(LS_KEYS.oltcOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oltcOilTests, all);
+  },
+
+  // Thí nghiệm dầu cách điện TI/TU (biến dòng điện/biến điện áp kiểu kín, cách điện
+  // dầu) — Điều 10/11 QĐ1901 (chỉ dẫn chiếu "theo quy định nhà sản xuất", không có
+  // bảng số mặc định — xem DGA.evaluateInstrumentOilTest() ở dga-logic.js). Bảng
+  // RIÊNG khỏi oil_tests (MBA) vì khác hẳn cấu trúc (equipment_type TI/TU thay cấp
+  // điện áp/trạng thái dầu, không có has_membrane_n2/oil_sample_point).
+  async listInstrumentOilTests() {
+    if (this.mode === "gsheet") {
+      return await gsheetGet("listInstrumentOilTests");
+    }
+    if (this.mode === "supabase") {
+      const { data, error } = await sb().from("instrument_oil_tests").select("*").order("sample_date", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    }
+    return lsGet(LS_KEYS.instrumentOilTests);
+  },
+
+  async addInstrumentOilTest(t) {
+    const record = { ...t, id: t.id || uid(), created_at: new Date().toISOString() };
+    if (this.mode === "gsheet") {
+      return await gsheetPost("addInstrumentOilTest", { record });
+    }
+    if (this.mode === "supabase") {
+      const { data, error } = await sb().from("instrument_oil_tests").insert(record).select();
+      if (error) throw error;
+      return data[0];
+    }
+    const all = lsGet(LS_KEYS.instrumentOilTests);
+    all.push(record);
+    lsSet(LS_KEYS.instrumentOilTests, all);
+    return record;
+  },
+
+  async deleteInstrumentOilTest(id) {
+    if (this.mode === "gsheet") {
+      await gsheetPost("deleteInstrumentOilTest", { id });
+      return;
+    }
+    if (this.mode === "supabase") {
+      const { error } = await sb().from("instrument_oil_tests").delete().eq("id", id);
+      if (error) throw error;
+      return;
+    }
+    const all = lsGet(LS_KEYS.instrumentOilTests).filter((r) => r.id !== id);
+    lsSet(LS_KEYS.instrumentOilTests, all);
   },
 
   // Góp ý người dùng (tab "Người dùng phản hồi") — nội dung tự do + 1 ảnh minh họa tùy
