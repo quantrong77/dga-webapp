@@ -1,0 +1,59 @@
+/* style-tab-regulation-config.css — Phần 8/8 của style.css. Tab "Cấu hình" — mục "Quy
+   định" (ui/ui-regulation-config.js): mỗi bảng ngưỡng render thành 1 khối .rc-category. */
+
+/* Tab "Cấu hình quy định" (ui/ui-regulation-config.js) — mỗi bảng ngưỡng render thành 1
+   "thẻ" con (.rc-item) bên trong panel, nhóm theo loại thiết bị/bối cảnh (.rc-category). */
+.rc-category {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-900);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 22px 0 10px 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.rc-category:first-of-type { margin-top: 4px; }
+.rc-item {
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+}
+.rc-item h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: var(--gray-900);
+}
+.rc-item .rc-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px 14px;
+  margin-top: 10px;
+}
+/* Nhãn (label.field) mỗi ô dài/ngắn khác nhau rất nhiều tùy bảng (VD Bảng 58 "≤110kV, có
+   màng/N2 — Mới/sau lắp đặt/sau sửa chữa" dài gấp nhiều lần "H2 (ppm)") nên số dòng nhãn
+   bị xuống dòng KHÔNG đều nhau — mỗi ô trong .rc-fields (CSS Grid) đã tự động dãn cao bằng
+   ô cao nhất CÙNG HÀNG (align-items mặc định = stretch), nhưng label.field bên trong lại
+   là flex-column xếp từ TRÊN XUỐNG (justify-content mặc định = flex-start), nên khoảng
+   trống dư ra bị đẩy xuống DƯỚI ô nhập — khiến các ô nhãn ngắn có ô input trồi lên cao,
+   ô nhãn dài (2-3 dòng) có ô input tụt xuống thấp, tạo cảm giác "ô cao, ô thấp" lệch hàng
+   dù chiều cao tổng của cả ô (grid cell) đã bằng nhau. Đổi justify-content: flex-end để
+   đẩy CẢ CỤM (nhãn + ô nhập) dồn xuống đáy — ô nhập luôn nằm sát đáy, thẳng hàng ngang
+   nhau trên cùng 1 hàng bất kể nhãn phía trên dài/ngắn hay xuống mấy dòng. */
+.rc-item .rc-fields > label.field {
+  justify-content: flex-end;
+}
+.rc-item .rc-range-field {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.rc-item .rc-range-field input { width: 0; flex: 1; }
+.rc-item .rc-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}

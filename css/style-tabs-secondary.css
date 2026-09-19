@@ -1,0 +1,633 @@
+/* style-tabs-secondary.css — Phần 7/8 của style.css. Các tab "Quy trình đánh giá" (sơ đồ
+   quy trình + mindmap tương tác), "Xu hướng" (đồ thị theo thời gian), "Quy trình lấy
+   mẫu" (cẩm nang tham khảo/lightbox + Điều 8, dùng lại khung .mm-node/.mm-branches của
+   tab "Quy trình đánh giá" — 2 tab này xen kẽ nhau trong file gốc nên gộp chung 1 file
+   để KHÔNG thay đổi thứ tự cascade), và tab "Giới thiệu" (About). */
+
+/* ===================== Tab "Quy trình đánh giá" ===================== */
+.process-flow {
+  position: relative;
+  margin: 10px 0;
+  padding-left: 12px;
+}
+.process-step {
+  position: relative;
+  padding: 4px 0 20px 40px;
+  border-left: 2px solid var(--blue-100);
+}
+.process-step:last-child { border-left-color: transparent; padding-bottom: 2px; }
+.process-step .step-num {
+  position: absolute;
+  left: -17px;
+  top: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--blue-700);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px var(--blue-100);
+}
+.process-step.branch .step-num { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-bg); }
+.process-step h3 { margin: 2px 0 6px; font-size: 14px; color: var(--blue-900); }
+.process-step p { margin: 0 0 6px; font-size: 13.5px; color: var(--gray-900); line-height: 1.55; }
+.process-step .maps-to { font-size: 12px; color: var(--gray-600); }
+.process-step .maps-to strong { color: var(--blue-700); }
+
+.status-legend {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 4px 0 18px;
+}
+@media (max-width: 800px) { .status-legend { grid-template-columns: minmax(0, 1fr); } }
+.status-legend-card {
+  border-radius: var(--radius);
+  border: 2px solid;
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+}
+.status-legend-card.normal { background: var(--ok-bg); border-color: var(--ok); }
+.status-legend-card.alert { background: var(--warn-bg); border-color: var(--warn); }
+.status-legend-card.alarm { background: var(--bad-bg); border-color: var(--bad); }
+.status-legend-card p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: var(--gray-900); }
+.status-legend-card p.action { margin: 0; font-size: 12.5px; font-weight: 700; }
+.status-legend-card.normal p.action { color: var(--ok); }
+.status-legend-card.alert p.action { color: var(--warn); }
+.status-legend-card.alarm p.action { color: var(--bad); }
+
+.rec-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rec-list li {
+  padding: 10px 14px;
+  background: var(--blue-100);
+  border-left: 4px solid var(--blue-700);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 13.5px;
+}
+
+.note {
+  font-size: 12.5px;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.hidden { display: none !important; }
+
+.condemn-banner {
+  background: var(--bad-bg);
+  border: 2px solid var(--bad);
+  color: var(--bad);
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.duval-wrap {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.duval-tri-line { stroke: var(--gray-300); stroke-width: 0.4; fill: none; }
+.duval-grid-line { stroke: var(--gray-100); stroke-width: 0.25; fill: none; }
+.duval-zone-line { stroke: var(--blue-700); stroke-width: 0.5; fill: none; stroke-dasharray: 1.5,1; }
+.duval-label { font-size: 4px; fill: var(--gray-600); }
+.duval-point {
+  fill: var(--bad);
+  stroke: #fff;
+  stroke-width: 0.6;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: dga-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes dga-pop-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-900);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 18px 0 8px;
+}
+
+footer.app-footer {
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray-600);
+  padding: 20px;
+}
+
+/* ===================== Tab "Xu hướng" — đồ thị xu hướng theo thời gian ===================== */
+.trend-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+}
+.trend-checks label.chk {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--gray-900);
+  background: var(--gray-50);
+  border: 1px solid var(--gray-300);
+  border-radius: 999px;
+  padding: 5px 12px 5px 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.trend-checks label.chk:has(input:checked) {
+  background: var(--blue-100);
+  border-color: var(--blue-700);
+  color: var(--blue-900);
+}
+.trend-checks input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+.trend-chart-wrap {
+  position: relative;
+  height: 420px;
+  margin-top: 8px;
+}
+@media (max-width: 800px) {
+  .trend-chart-wrap { height: 320px; }
+}
+
+/* ===================== Cẩm nang tham khảo (ảnh + lightbox phóng to) — tab "Quy
+   trình đánh giá" ===================== */
+.handbook-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+.handbook-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.handbook-caption {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-600);
+  text-align: center;
+}
+.handbook-thumb {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: zoom-in;
+  background: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.handbook-thumb:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+.handbook-thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.35s ease;
+}
+.handbook-thumb:hover img { transform: scale(1.015); }
+.handbook-zoom-hint {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(15, 30, 50, 0.75);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 6px 13px;
+  border-radius: 999px;
+}
+.handbook-zoom-hint .icon-svg { margin-right: 5px; }
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 16, 28, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  z-index: 300;
+  animation: dga-fade-up 0.2s ease;
+}
+.lightbox.hidden { display: none; }
+.lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+}
+.lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.lightbox-close:hover { background: rgba(255, 255, 255, 0.28); transform: scale(1.06); }
+
+/* ===== Mindmap tương tác (tab "Quy trình đánh giá") ===== */
+.mindmap { margin-top: 4px; }
+
+.mm-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-900));
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 14px;
+}
+.mm-root svg { width: 18px; height: 18px; flex: none; }
+
+.mindmap-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.mindmap-controls .btn { padding: 6px 12px; font-size: 12.5px; }
+
+.mm-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mm-node {
+  --mm-accent: #2e75b6;
+  --mm-accent-bg: rgba(46, 117, 182, 0.08);
+  border: 1px solid var(--gray-300);
+  border-left: 4px solid var(--mm-accent);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.mm-node[open] { box-shadow: var(--shadow-sm); }
+
+.mm-branches > .mm-node:nth-child(1) { --mm-accent: #2e75b6; --mm-accent-bg: rgba(46, 117, 182, 0.08); }
+.mm-branches > .mm-node:nth-child(2) { --mm-accent: #0a8f8a; --mm-accent-bg: rgba(10, 143, 138, 0.08); }
+.mm-branches > .mm-node:nth-child(3) { --mm-accent: #b45309; --mm-accent-bg: rgba(180, 83, 9, 0.08); }
+.mm-branches > .mm-node:nth-child(4) { --mm-accent: #7c3aed; --mm-accent-bg: rgba(124, 58, 237, 0.08); }
+.mm-branches > .mm-node:nth-child(5) { --mm-accent: #be185d; --mm-accent-bg: rgba(190, 24, 93, 0.08); }
+.mm-branches > .mm-node:nth-child(6) { --mm-accent: #15803d; --mm-accent-bg: rgba(21, 128, 61, 0.08); }
+.mm-branches > .mm-node:nth-child(7) { --mm-accent: #475569; --mm-accent-bg: rgba(71, 85, 105, 0.08); }
+
+.mm-node > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--gray-900);
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+.mm-node > summary::-webkit-details-marker { display: none; }
+.mm-node > summary::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  flex: none;
+  box-shadow: 0 0 0 3px var(--mm-accent-bg);
+}
+.mm-node > summary:hover { background: var(--mm-accent-bg); }
+.mm-node > summary .mm-chevron {
+  margin-left: auto;
+  width: 15px;
+  height: 15px;
+  color: var(--gray-600);
+  flex: none;
+  transition: transform 0.2s ease;
+}
+.mm-node[open] > summary .mm-chevron { transform: rotate(90deg); color: var(--mm-accent); }
+
+.mm-leaves {
+  margin: 0;
+  padding: 4px 18px 14px 33px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mm-leaves li {
+  position: relative;
+  padding-left: 15px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--gray-900);
+}
+.mm-leaves li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  opacity: 0.7;
+}
+
+.mm-sub {
+  padding: 2px 14px 14px 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mm-node-sm {
+  --mm-accent-bg: rgba(0, 0, 0, 0.03);
+  border: 1px dashed var(--gray-300);
+  border-left: 3px solid var(--mm-accent);
+  border-radius: 8px;
+  background: var(--gray-50);
+}
+.mm-node-sm > summary {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.mm-node-sm > summary::before { width: 7px; height: 7px; }
+.mm-node-sm .mm-leaves { padding: 2px 14px 10px 26px; }
+.mm-node-sm .mm-leaves li { font-size: 12.5px; }
+
+.mm-node[open] > .mm-leaves,
+.mm-node[open] > .mm-sub {
+  animation: dga-fade-up 0.25s ease;
+}
+
+@media (max-width: 560px) {
+  .mm-leaves, .mm-sub { padding-left: 22px; }
+}
+
+/* ===== Tab "Quy trình lấy mẫu" — Điều 8 dùng lại khung .mm-node/.mm-branches ở trên,
+   chỉ thêm phần nội dung bên trong (.sm-*) và thư viện ảnh (.sm-gallery) ===== */
+.sm-body {
+  padding: 4px 18px 16px 33px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.sm-body > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gray-900);
+}
+
+.sm-steps {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  counter-reset: sm-step;
+}
+.sm-steps li {
+  position: relative;
+  padding-left: 32px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--gray-900);
+  counter-increment: sm-step;
+}
+.sm-steps li::before {
+  content: counter(sm-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 21px;
+  height: 21px;
+  border-radius: 50%;
+  background: var(--mm-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.sm-steps li strong { color: var(--mm-accent); }
+
+.sm-note {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--gray-700);
+  background: var(--mm-accent-bg);
+  border-left: 3px solid var(--mm-accent);
+  padding: 9px 12px;
+  border-radius: 6px;
+}
+
+.sm-figure {
+  align-self: flex-start;
+  max-width: 420px;
+  width: 100%;
+  margin: 0;
+}
+.sm-figure figcaption {
+  font-size: 12px;
+  color: var(--gray-600);
+  margin-top: 6px;
+  text-align: center;
+}
+
+.qt-img-btn {
+  display: block;
+  position: relative;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: zoom-in;
+  background: #fff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.qt-img-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--accent);
+}
+.qt-img-btn img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: transform 0.35s ease;
+}
+.qt-img-btn:hover img { transform: scale(1.02); }
+
+.mm-node[open] > .sm-body { animation: dga-fade-up 0.25s ease; }
+
+.sm-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 14px;
+}
+.sm-gallery figure { margin: 0; }
+.sm-gallery .qt-img-btn img { height: 130px; object-fit: cover; }
+.sm-gallery figcaption {
+  font-size: 12px;
+  color: var(--gray-700);
+  margin-top: 6px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+#qtLightbox .lightbox-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 18px;
+  text-align: center;
+  color: #fff;
+  font-size: 12.5px;
+  padding: 0 46px;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .sm-body { padding-left: 22px; }
+  .sm-figure { max-width: 100%; }
+}
+
+/* ===== Tab "Giới thiệu" (About) ===== */
+.about-panel { max-width: 640px; }
+
+.about-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.about-logo {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.about-logo img { width: 100%; height: 100%; display: block; object-fit: cover; }
+.about-hero h2 { margin: 2px 0 6px; font-size: 20px; color: var(--blue-900); letter-spacing: 0.01em; }
+.about-hero .note { margin: 0; }
+
+.about-contact h3 {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gray-600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.about-contact-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.about-contact-list li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.about-contact-list li:last-child { border-bottom: none; }
+.about-contact-list .icon-svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+  background: var(--accent-bg);
+  border-radius: 50%;
+  padding: 7px;
+  box-sizing: content-box;
+}
+.about-contact-list .about-label {
+  font-size: 12.5px;
+  color: var(--gray-600);
+  width: 90px;
+  flex: none;
+}
+.about-contact-list .about-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-900);
+  text-decoration: none;
+}
+a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
+
+@media (max-width: 480px) {
+  .about-hero { flex-direction: column; }
+  .about-contact-list li { flex-wrap: wrap; }
+  .about-contact-list .about-label { width: auto; }
+}
+

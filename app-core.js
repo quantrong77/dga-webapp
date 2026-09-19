@@ -82,6 +82,8 @@ async function initApp() {
   setupStorageBadgeLink();
 
   setupTabs();
+  setupCauHinhSubtabs();
+  setupQuyTrinhSubtabs();
   setupHandbookLightbox();
   setupMindmap();
   setupOverviewMindmap();
@@ -129,7 +131,7 @@ async function initApp() {
   // "Cấu hình quy định" (regulation_config) — PHẢI áp dụng TRƯỚC khi bất kỳ phân tích
   // DGA/Dầu cách điện nào chạy (kể cả refreshHistoryUI()/refreshOilTestsUI() ngay bên
   // dưới, vốn tự tính lại chẩn đoán cho lịch sử đã lưu) — nếu không, lần hiển thị ĐẦU
-  // TIÊN sẽ dùng số mặc định gốc rồi mới "nhảy" số khi tab "Cấu hình quy định" được mở.
+  // TIÊN sẽ dùng số mặc định gốc rồi mới "nhảy" số khi mục "Quy định" (tab "Cấu hình") được mở.
   // Cô lập trong try/catch RIÊNG (giống danh mục Trạm) — sheet "regulation_config" là
   // MỚI, backend (Apps Script/Supabase) có thể chưa deploy/tạo bảng kịp; lỗi ở đây
   // KHÔNG được chặn các tab khác — ứng dụng vẫn chạy đúng với số liệu mặc định gốc.
@@ -653,7 +655,7 @@ function applyTabLayout(isSidebar) {
 
 /** Gắn sự kiện cho nút #btnToggleTabLayout ở header — đổi thanh tab giữa "ngang"
  *  (mặc định, phía trên) và "dọc" (sidebar bên trái, xem khối CSS "body.tabs-sidebar"
- *  ở style.css), lưu lại lựa chọn vào localStorage để lần sau mở lại vẫn giữ nguyên.
+ *  ở css/style-nav-layout.css), lưu lại lựa chọn vào localStorage để lần sau mở lại vẫn giữ nguyên.
  *  Lựa chọn đã lưu được áp dụng SỚM ở ngay đầu <body> (xem index.html) để tránh nháy
  *  layout lúc tải trang — hàm này chỉ cần đồng bộ lại nút cho khớp trạng thái đó rồi
  *  gắn sự kiện bấm. */
@@ -669,7 +671,7 @@ function setupTabLayoutToggle() {
 }
 
 /** Khóa localStorage lưu trạng thái thu gọn sidebar — chỉ có tác dụng hiển thị khi
- *  đang ở bố cục dọc (xem CSS "body.tabs-sidebar.sidebar-collapsed" ở style.css), lưu
+ *  đang ở bố cục dọc (xem CSS "body.tabs-sidebar.sidebar-collapsed" ở css/style-nav-layout.css), lưu
  *  riêng khóa với TAB_LAYOUT_STORAGE_KEY vì đây là 2 lựa chọn độc lập nhau (người dùng
  *  có thể chọn dọc nhưng không thu gọn, hoặc từng thu gọn rồi tạm quay về ngang mà vẫn
  *  muốn nhớ trạng thái thu gọn cho lần sau bật lại "dọc"). */
@@ -687,7 +689,7 @@ function applySidebarCollapse(isCollapsed) {
 
 /** Gắn sự kiện cho nút #btnCollapseSidebar trong <nav class="tabs"> — thu gọn sidebar
  *  (chỉ còn 1 cột icon hẹp) để "mở rộng màn hình" cho nội dung chính, hoặc mở lại như
- *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem style.css) nên ở
+ *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem css/style-nav-layout.css) nên ở
  *  đây chỉ cần lo phần bật/tắt + lưu lựa chọn, không cần kiểm tra thêm điều kiện. */
 /** Khóa localStorage lưu trạng thái tick "Hiện dự báo xu hướng tương lai" ở tab "Xu
  *  hướng" (#tr_forecastEnabled) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng
@@ -966,10 +968,63 @@ function setupTabs() {
       // Khi cụm nút tab không đủ chỗ (tràn ngang ở chế độ tab NGANG, hoặc tràn dọc ở chế
       // độ sidebar — xem ghi chú CSS "nav.tabs"/".tabs-inner"), nút vừa bấm có thể đang
       // nằm ngoài (hoặc chỉ lộ 1 phần trong) vùng nhìn thấy của nav.tabs — ví dụ bấm tab
-      // "Quản trị"/"Cấu hình quy định" ở cuối cụm lúc màn hình hẹp. Cuộn nhẹ (chỉ cuộn
+      // "Quản trị"/"Cấu hình" ở cuối cụm lúc màn hình hẹp. Cuộn nhẹ (chỉ cuộn
       // TỐI THIỂU cần thiết nhờ "nearest", không giật cả trang) để nút luôn hiện đầy đủ
       // sau khi chọn, thay vì vẫn bị che 1 phần như trước khi bấm.
       btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    });
+  });
+}
+
+/** Tab "Cấu hình" gộp 2 nội dung cũ ("Tiêu chuẩn theo nhà sản xuất" + "Cấu hình quy định")
+ *  vào 1 tab duy nhất trên nav.tabs để thu gọn thanh tab — chọn nội dung nào hiện bằng
+ *  cụm nút .cauhinh-subtab-btn (data-subtab="tieuchuan"|"quydinh") ngay trong tab, khớp
+ *  với .cauhinh-subpanel có id="cauhinh-"+subtab tương ứng (xem index.html). Đây là lựa
+ *  chọn NỘI DUNG CON bên trong 1 tab — độc lập hoàn toàn với setupTabs() (điều hướng giữa
+ *  CÁC TAB với nhau) — nên không đụng gì đến .tab-btn/.tab-panel/nav.tabs, và hoạt động
+ *  giống hệt nhau dù đang ở bố cục tab NGANG hay SIDEBAR (chỉ nav.tabs đổi bố cục, còn nội
+ *  dung bên trong 1 tab — kể cả cụm subtab này — nằm trong <main>, không phụ thuộc bố cục
+ *  nav.tabs đang chọn). Mặc định luôn mở "Tiêu chuẩn" trước mỗi lần tải lại trang (đúng
+ *  thứ tự tab cũ: Tiêu chuẩn đứng trước Quy định) — không cần nhớ lựa chọn qua
+ *  localStorage vì đây chỉ là điều hướng trong phiên xem hiện tại. */
+function setupCauHinhSubtabs() {
+  const btns = document.querySelectorAll(".cauhinh-subtab-btn");
+  if (!btns.length) return;
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.subtab;
+      document.querySelectorAll(".cauhinh-subtab-btn").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-selected", b === btn ? "true" : "false");
+      });
+      document.querySelectorAll(".cauhinh-subpanel").forEach((p) => {
+        p.classList.toggle("hidden", p.id !== "cauhinh-" + key);
+      });
+    });
+  });
+}
+
+/** Tab "Quy trình" gộp 2 nội dung cũ ("Quy trình lấy mẫu" + "Quy trình đánh giá") vào 1
+ *  tab duy nhất trên nav.tabs để thu gọn thanh tab — CÙNG CƠ CHẾ với setupCauHinhSubtabs()
+ *  ở trên (chọn nội dung con bằng cụm nút dạng "segmented control" ngay trong tab, độc lập
+ *  hoàn toàn với setupTabs() điều hướng giữa CÁC TAB với nhau), chỉ dùng riêng lớp
+ *  .quytrinh-subtab-btn/.quytrinh-subpanel (thay vì .cauhinh-*) để 2 cụm subtab của 2 tab
+ *  khác nhau không lẫn vào nhau. Mặc định luôn mở "Lấy mẫu dầu" trước mỗi lần tải lại
+ *  trang (đúng thứ tự tab cũ trên thanh tab: quymau đứng trước quytrinh) — không cần nhớ
+ *  lựa chọn qua localStorage vì chỉ là điều hướng trong phiên xem hiện tại. */
+function setupQuyTrinhSubtabs() {
+  const btns = document.querySelectorAll(".quytrinh-subtab-btn");
+  if (!btns.length) return;
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.subtab;
+      document.querySelectorAll(".quytrinh-subtab-btn").forEach((b) => {
+        b.classList.toggle("active", b === btn);
+        b.setAttribute("aria-selected", b === btn ? "true" : "false");
+      });
+      document.querySelectorAll(".quytrinh-subpanel").forEach((p) => {
+        p.classList.toggle("hidden", p.id !== "quytrinh-" + key);
+      });
     });
   });
 }

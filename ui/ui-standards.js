@@ -1,5 +1,7 @@
-/* ui-standards.js — Danh mục Trạm + Tiêu chuẩn riêng theo Nhà sản xuất (tab "Tiêu
-   chuẩn"): CRUD tiêu chuẩn, các hàm chuyển đổi bản ghi Storage <-> định dạng
+/* ui-standards.js — Danh mục Trạm + Tiêu chuẩn riêng theo Nhà sản xuất (mục "Tiêu chuẩn"
+   trong tab "Cấu hình" — 2 mục "Tiêu chuẩn"/"Quy định" gộp chung 1 tab, chọn bằng
+   .cauhinh-subtab-btn, xem setupCauHinhSubtabs() ở app-core.js): CRUD tiêu chuẩn, các hàm
+   chuyển đổi bản ghi Storage <-> định dạng
    DGA.evaluate*() cần (dga-logic.js). Tách từ app.js — xem ui-auth.js đầu file đó
    để biết quy ước chia sẻ scope giữa các file ui-*.js. */
 

@@ -1,0 +1,420 @@
+/* style-nav-layout.css — Phần 3/8 của style.css. Khung điều hướng/bố cục chung: thanh
+   tab ngang dính đầu trang khi cuộn, bố cục thanh tab dọc (sidebar thu gọn được),
+   footer, icon màu riêng từng tab, tiêu đề tab "Cấu hình" (gộp 2 tab cũ), và hiệu ứng
+   mờ dần khi chuyển tab/panel. */
+
+/* Cố định thanh tab ở đầu trang khi cuộn xuống nội dung dài (header phía trên
+   vẫn cuộn đi bình thường) — để người dùng luôn chuyển tab được mà không phải
+   cuộn ngược lên đầu. z-index: 40 — thấp hơn danh sách gợi ý combobox không cần
+   (30 < 40 là đúng ý, gợi ý vẫn hiện dưới tab khi cần), và thấp hơn toast/overlay/
+   lightbox (100–300) để các lớp đó luôn nổi trên cùng. */
+nav.tabs {
+  display: flex;
+  padding: 10px 24px 0;
+  border-bottom: 1px solid var(--gray-300);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
+  /* "Bóng cuộn" 2 mép trái/phải — BÁO HIỆU còn tab bị tràn ngoài vùng nhìn thấy khi cụm
+     nút không đủ chỗ (xem ghi chú .tabs-inner ngay dưới: lúc đó margin:auto co về 0,
+     nav.tabs cuộn ngang bình thường từ mép trái, ví dụ tab "Quản trị"/"Cấu hình quy
+     định" cuối cụm bị cắt cụt ở mép phải). Trước đây mép cắt là 1 đường thẳng cứng
+     (button bị chặn giữa chừng, trông giống LỖI hiển thị/che khuất) — kỹ thuật quen
+     thuộc "background-attachment: local/scroll" (Lea Verou) tạo 2 lớp: (a) dải trắng mờ
+     dần (local — DI CHUYỂN THEO nội dung khi cuộn) phủ đúng mép cắt để chữ/icon mờ dần
+     ra thay vì bị chặt cụt, và (b) dải bóng mờ (scroll — ĐỨNG YÊN theo khung nav.tabs)
+     chỉ lộ ra khi mép đó thực sự còn nội dung bị tràn (2 lớp che khít nhau khi đã cuộn
+     hết cỡ về phía đó). Bản chất vẫn phải cuộn để thấy hết, nhưng giao diện giờ thể hiện
+     RÕ RÀNG đây là 1 danh sách có thể cuộn ngang, không phải bị lỗi/che nhầm. Chỉ áp
+     dụng ở chế độ tab NGANG mặc định — chế độ tab DỌC (sidebar) tự đặt lại nền trắng
+     đơn giản, xem "body.tabs-sidebar nav.tabs" bên dưới vì ở đó overflow-x: visible. */
+  background-color: #fff;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
+  background-position: left center, right center, left center, right center;
+  background-size: 36px 100%, 36px 100%, 14px 100%, 14px 100%;
+  background-image:
+    linear-gradient(to right, #fff, rgba(255, 255, 255, 0)),
+    linear-gradient(to left, #fff, rgba(255, 255, 255, 0)),
+    linear-gradient(to right, rgba(20, 40, 70, 0.16), rgba(20, 40, 70, 0)),
+    linear-gradient(to left, rgba(20, 40, 70, 0.16), rgba(20, 40, 70, 0));
+}
+/* Canh GIỮA cả cụm nút tab trên màn hình rộng — margin:auto trên 1 flex-item (thay vì
+   justify-content:center trên chính nav.tabs) để khi cụm nút KHÔNG đủ chỗ (màn hình
+   hẹp/nhiều tab như lúc thêm tab "Quản trị" cho Admin), margin tự co về 0 và nav.tabs
+   cuộn ngang bình thường từ mép trái — dùng justify-content:center trực tiếp sẽ làm
+   phần đầu cụm nút bị che khuất, phải cuộn cả 2 hướng mới thấy hết. */
+.tabs-inner {
+  display: flex;
+  gap: 4px;
+  margin: 0 auto;
+  flex: none;
+}
+
+nav.tabs button {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-600);
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+nav.tabs button:hover {
+  background: var(--blue-100);
+  color: var(--blue-900);
+}
+nav.tabs button.active {
+  color: var(--blue-900);
+  border-bottom-color: var(--blue-700);
+  background: var(--blue-100);
+}
+nav.tabs button .tab-icon { opacity: 0.82; }
+nav.tabs button:hover .tab-icon,
+nav.tabs button.active .tab-icon { opacity: 1; }
+
+/* Mỗi tab 1 màu icon riêng (icon dùng stroke="currentColor" nên chỉ cần đổi "color"
+   ngay trên .tab-icon — chữ nhãn tab KHÔNG đổi màu theo, vẫn dùng
+   var(--gray-600)/var(--blue-900) như cũ ở trên, để giữ hàng chữ đồng nhất, chỉ icon
+   là điểm nhấn màu sắc giúp nhận diện nhanh + đỡ đơn điệu). Màu chọn dàn trải quanh
+   vòng màu, không trùng tông 2 tab cạnh nhau, và có liên hệ chủ đề khi hợp lý (dầu =
+   hổ phách như màu dầu thật, quản trị = đỏ như --bad để gợi ý "khu vực nhạy cảm"). */
+nav.tabs button[data-tab="nhap"] .tab-icon { color: #0e9488; }       /* DGA — xanh ngọc (lab/phân tích) */
+nav.tabs button[data-tab="dau"] .tab-icon { color: #b8791a; }        /* Dầu cách điện — hổ phách (màu dầu) */
+nav.tabs button[data-tab="lichsu"] .tab-icon { color: #7457c7; }     /* Lịch sử đo — tím */
+nav.tabs button[data-tab="xuhuong"] .tab-icon { color: #2f9e52; }    /* Xu hướng — xanh lá (tăng trưởng) */
+nav.tabs button[data-tab="cauhinh"] .tab-icon { color: #2e75b6; }    /* Cấu hình (Tiêu chuẩn/Quy định) — xanh dương (màu chủ đạo) */
+nav.tabs button[data-tab="quytrinh"] .tab-icon { color: #d9631d; }   /* Quy trình (gộp Lấy mẫu + Đánh giá) — cam */
+nav.tabs button[data-tab="about"] .tab-icon { color: #5b7a8c; }      /* Giới thiệu — xanh xám trầm */
+nav.tabs button[data-tab="phanhoi"] .tab-icon { color: #4338ca; }    /* Người dùng phản hồi — chàm (tương tác/hỗ trợ) */
+nav.tabs button[data-tab="quantri"] .tab-icon { color: #c1121f; }    /* Quản trị — đỏ (khu vực nhạy cảm) */
+
+/* ===================== Bố cục thanh tab DỌC (sidebar bên trái) =====================
+   Tùy chọn thay thế cho thanh tab ngang mặc định phía trên — bật/tắt bằng nút
+   #btnToggleTabLayout ở header (thêm/bỏ class "tabs-sidebar" trên <body>, xem
+   setupTabLayoutToggle() ở app-core.js). <body> chỉ có 3 phần tử "trong luồng"
+   (header.app-header, nav.tabs, main — các phần khác như #authOverlay/#toastContainer
+   đều position:fixed nên không tham gia layout), nên dùng CSS Grid ngay trên <body>:
+   header trải hết hàng đầu, nav.tabs (cột trái, cố định bề rộng) và main (phần còn
+   lại) cùng nằm hàng dưới. Trên màn hình hẹp (≤800px) TỰ ĐỘNG quay lại thanh tab
+   ngang như mặc định (xem media query cuối khối này) — sidebar cố định không hợp
+   với màn hình điện thoại dù người dùng đã chọn chế độ dọc trên máy tính. */
+body.tabs-sidebar {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+}
+body.tabs-sidebar header.app-header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+body.tabs-sidebar main {
+  grid-column: 2;
+  grid-row: 2;
+  /* main{margin:0 auto} ở CSS mặc định (dùng để CĂN GIỮA main lúc bố cục tab ngang, xem
+     luật "main{...}" phía dưới) vô tình "vượt cấp" sang layout Grid này — 1 box có margin
+     ngang auto sẽ KHÔNG tự dãn lấp hết ô lưới (justify-self:stretch mặc định bị auto-margin
+     vô hiệu hóa), mà co theo kiểu "shrink-to-fit" nội dung, giống hệt 1 phần tử nổi/table.
+     Bảng lịch sử đo khí (#historyTable, 21 cột) dù đã bọc trong .table-scroll (overflow-x:
+     auto) vẫn có ĐỘ RỘNG NỘI DUNG TỰ NHIÊN (~1100px, không bị ép xuống dòng) LỚN HƠN cột
+     "1fr" (~1039px khi mở rộng/60px thu gọn) — main dùng "shrink-to-fit" nên PHÌNH RA đúng
+     bằng độ rộng đó thay vì dừng ở cột lưới, kéo theo cả trang cuộn ngang, khiến các tab
+     "Lịch sử đo" (view "Khí hòa tan") rộng hơn hẳn view "Dầu" (không có bảng nhiều cột này)
+     — và ngay trong view "Dầu", đổi ô lọc loại thiết bị (đổi bảng con nào đang hiện) cũng có
+     thể đổi độ rộng khung theo đúng kiểu tương tự nếu 1 bảng con nào đó lỡ cũng rộng hơn cột
+     lưới. Đặt lại margin:0 (bỏ auto) để main LUÔN dãn full-width đúng theo cột lưới ("1fr"),
+     bất kể view/bộ lọc nào đang hiện — bảng nào rộng hơn khung sẽ tự cuộn ngang RIÊNG bên
+     trong .table-scroll của chính nó (đúng ý đồ ban đầu của .table-scroll), không đẩy cả
+     khung nhìn rộng ra nữa. */
+  margin: 0;
+}
+/* footer.app-footer là phần tử THỨ 4 trong <body> (sau header/nav.tabs/main) nhưng
+   grid-template-rows ở trên chỉ khai báo 2 hàng ("auto 1fr") — nếu không chỉ định rõ vị
+   trí, CSS Grid sẽ tự xếp footer vào hàng ẩn (implicit) thứ 3 nhưng VẪN ở cột 1 (cùng cột
+   hẹp với nav.tabs, 230px hoặc 60px lúc thu gọn) theo thuật toán auto-placement mặc định
+   — khiến chữ trong footer bị bó hẹp, xuống dòng liên tục thành từng mảnh chữ rời rạc.
+   Khai báo rõ footer trải hết 2 cột (giống header.app-header) để khớp bố cục full-width
+   như ở chế độ tab ngang mặc định. (Xem thêm ghi chú "max-height" ở nav.tabs ngay dưới —
+   lỗi này còn có 1 nguyên nhân thứ 2 nữa, không chỉ do thiếu grid-row/grid-column.) */
+body.tabs-sidebar footer.app-footer {
+  grid-column: 1 / -1;
+  grid-row: 3;
+}
+body.tabs-sidebar nav.tabs {
+  grid-column: 1;
+  grid-row: 2;
+  /* max-height:100vh (KHÔNG phải height:100vh cố định) + position:sticky top:0: sidebar
+     dính lên đỉnh màn hình khi cuộn, và tự cuộn riêng bên trong (overflow-y:auto) nếu
+     chính danh sách tab (~10-11 nút) cao hơn 1 màn hình — nhưng vẫn để chiều cao THỰC TẾ
+     co theo đúng nội dung của nó khi ngắn hơn 100vh (trường hợp thường gặp). Trước đây
+     dùng "height:100vh" CỐ ĐỊNH — khiến khối nav LUÔN cao đúng 1 màn hình bất kể track
+     (hàng) của grid đang cao bao nhiêu; CSS Grid không tự cắt (clip) phần tử con tràn quá
+     track của nó, nên khi cuộn xuống gần cuối trang, khối nav (cao 100vh, sticky) tràn
+     xuống đè lên đúng phần footer.app-footer nằm ở hàng dưới (row 3) — vì phần tử có
+     position (sticky) luôn vẽ ĐÈ LÊN phần tử position:static (footer) dù đứng trước
+     trong DOM, che gần hết chữ footer, chỉ còn sót lại vài ký tự bên phải. Đổi sang
+     max-height: nội dung nav (~500-600px, ít hơn 900px) sẽ tự dừng "dính" đúng tại đáy
+     hàng 2 (đáy của main) — không bao giờ tràn sang hàng 3 (footer) nữa. */
+  position: sticky;
+  top: 0;
+  align-self: start;
+  max-height: 100vh;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 14px 10px;
+  overflow-x: visible;
+  overflow-y: auto;
+  border-bottom: none;
+  border-right: 1px solid var(--gray-300);
+  box-shadow: 2px 0 10px rgba(20, 40, 70, 0.06);
+  /* "Bóng cuộn" ngang ở nav.tabs (xem ghi chú tại luật "nav.tabs" gốc phía trên) chỉ có ý
+     nghĩa khi cuộn NGANG (overflow-x:auto) — ở đây overflow-x:visible (cuộn DỌC nếu cần,
+     overflow-y:auto) nên đặt lại nền trắng đơn giản, tránh 2 dải mờ/bóng đứng yên vô
+     nghĩa dọc theo 2 cạnh trái/phải của cột sidebar hẹp. */
+  background: #fff;
+}
+body.tabs-sidebar .tabs-inner {
+  flex-direction: column;
+  margin: 0;
+  width: 100%;
+  gap: 2px;
+}
+body.tabs-sidebar nav.tabs button {
+  width: 100%;
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+  border-bottom: none;
+  border-left: 3px solid transparent;
+  border-radius: 0 8px 8px 0;
+}
+body.tabs-sidebar nav.tabs button.active {
+  border-bottom-color: transparent;
+  border-left-color: var(--blue-700);
+}
+
+/* Nút thu gọn/mở rộng sidebar (#btnCollapseSidebar, xem index.html + app-core.js) —
+   ẩn hoàn toàn ở bố cục ngang mặc định, chỉ hiện khi body.tabs-sidebar đang bật, và tự
+   ẩn lại ở màn hình hẹp (khối media query bên dưới) vì lúc đó sidebar đã tự chuyển về
+   thanh ngang, nút thu gọn không còn ý nghĩa. */
+.sidebar-collapse-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-end;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 8px;
+  padding: 0;
+  border: 1px solid var(--gray-300);
+  border-radius: 7px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.2s ease, color 0.15s ease;
+}
+.sidebar-collapse-btn:hover {
+  background: var(--gray-200);
+  color: var(--blue-800);
+}
+.sidebar-collapse-btn .icon-svg {
+  width: 16px;
+  height: 16px;
+  transform: rotate(180deg);
+  transition: transform 0.2s ease;
+}
+body.tabs-sidebar .sidebar-collapse-btn { display: flex; }
+/* Nút xoay chiều theo trạng thái: mặc định (sidebar mở rộng) mũi tên chỉ SANG TRÁI
+   (gợi ý bấm để thu gọn); khi đã thu gọn thì xoay lại chỉ SANG PHẢI (gợi ý bấm để mở
+   rộng lại). */
+body.tabs-sidebar.sidebar-collapsed .sidebar-collapse-btn .icon-svg { transform: rotate(0deg); }
+
+/* Trạng thái sidebar đã THU GỌN — chỉ còn 1 cột icon hẹp, nhường bề ngang cho nội dung
+   chính (main) — đúng yêu cầu "bật tắt sidebar để mở rộng màn hình". Tên tab vẫn xem
+   được qua tooltip (title= trên từng nút, xem index.html) khi rê chuột vào icon. */
+body.tabs-sidebar.sidebar-collapsed {
+  grid-template-columns: 60px minmax(0, 1fr);
+}
+body.tabs-sidebar.sidebar-collapsed nav.tabs {
+  padding: 14px 8px;
+}
+body.tabs-sidebar.sidebar-collapsed .sidebar-collapse-btn {
+  align-self: center;
+}
+body.tabs-sidebar.sidebar-collapsed .tab-label {
+  display: none;
+}
+body.tabs-sidebar.sidebar-collapsed nav.tabs button {
+  justify-content: center;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+@media (max-width: 800px) {
+  /* Điện thoại/màn hình hẹp: bỏ hẳn bố cục cột (dù người dùng đã bật "dọc" trên máy
+     tính) — quay lại thanh tab ngang cuộn được như mặc định, để không chiếm hết bề
+     ngang vốn đã chật. */
+  body.tabs-sidebar {
+    display: block;
+    min-height: 0;
+  }
+  body.tabs-sidebar nav.tabs {
+    position: sticky;
+    top: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 24px 0;
+    overflow-x: auto;
+    overflow-y: visible;
+    border-right: none;
+    border-bottom: 1px solid var(--gray-300);
+    box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
+  }
+  body.tabs-sidebar .tabs-inner {
+    flex-direction: row;
+    margin: 0 auto;
+    width: auto;
+    gap: 4px;
+  }
+  body.tabs-sidebar nav.tabs button {
+    width: auto;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 8px 8px 0 0;
+  }
+  body.tabs-sidebar nav.tabs button.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--blue-700);
+  }
+  /* Màn hình hẹp: sidebar đã tự quay về thanh ngang ở trên nên nút thu gọn (và trạng
+     thái đã thu gọn lỡ lưu từ trước trên máy tính) không còn ý nghĩa — luôn ẩn nút,
+     luôn hiện đủ tên tab, bất kể class "sidebar-collapsed" trên <body>. */
+  .sidebar-collapse-btn {
+    display: none !important;
+  }
+  body.tabs-sidebar.sidebar-collapsed .tab-label {
+    display: inline;
+  }
+  body.tabs-sidebar.sidebar-collapsed nav.tabs button {
+    justify-content: flex-start;
+  }
+}
+
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+body.tabs-sidebar main { max-width: none; }
+
+.panel {
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.panel h2 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--blue-900);
+  margin: 0 0 14px 0;
+  display: flex;
+  align-items: center;
+}
+/* Icon "i" giải thích đặt ngay trong <h2> (VD tab "Cấu hình quy định"/"Cấu hình tiêu
+   chuẩn" — nội dung mô tả dài được gom vào khung .info-popover, bấm icon mới hiện, xem
+   setupInfoPopovers() ở app-core.js) — .icon-svg đã tự có margin-right riêng nên chỉ cần
+   thêm khoảng cách cho icon "i" (không dùng gap chung trên .panel h2 để tránh cộng dồn
+   khoảng cách với các h2 khác đang dùng .icon-svg). */
+.panel h2 .info-icon-btn { margin-left: 8px; }
+
+/* Tab "Cấu hình" — gộp 2 tab cũ "Tiêu chuẩn theo nhà sản xuất" + "Cấu hình quy định" vào
+   chung 1 mục trên thanh tab (thu gọn thanh tab ngang bớt 1 nút), chọn nội dung nào hiện
+   bằng cụm nút .cauhinh-subtab-btn (kiểu "segmented control") ngay đầu panel — xem
+   setupCauHinhSubtabs() ở app-core.js: bấm nút nào thì show đúng .cauhinh-subpanel khớp
+   data-subtab, các nút/panel còn lại ẩn đi. KHÔNG dùng lại .tab-btn/.tab-panel (cơ chế
+   nav.tabs chính) vì đây chỉ là lựa chọn NỘI DUNG con bên trong 1 tab, không phải điều
+   hướng sang tab khác — tránh nhầm lẫn 2 tầng điều hướng cùng 1 kiểu nút. */
+.cauhinh-subtabs {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.cauhinh-subtab-btn {
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 7px 18px;
+  border-radius: calc(var(--radius) - 3px);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.cauhinh-subtab-btn:hover { color: var(--blue-900); }
+.cauhinh-subtab-btn.active {
+  background: #fff;
+  color: var(--blue-900);
+  box-shadow: var(--shadow-sm);
+}
+.cauhinh-subpanel.hidden { display: none; }
+
+/* Tab "Quy trình" — gộp 2 tab cũ "Quy trình lấy mẫu" + "Quy trình đánh giá" vào chung 1
+   mục trên thanh tab, CÙNG KIỂU "segmented control" với .cauhinh-subtabs ở trên (xem ghi
+   chú đầy đủ ngay trên) — tách riêng lớp .quytrinh-* (thay vì dùng chung .cauhinh-*) để 2
+   cụm subtab của 2 tab khác nhau không lẫn vào nhau, xem setupQuyTrinhSubtabs() ở
+   app-core.js. */
+.quytrinh-subtabs {
+  display: inline-flex;
+  gap: 3px;
+  padding: 3px;
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+}
+.quytrinh-subtab-btn {
+  border: none;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 7px 18px;
+  border-radius: calc(var(--radius) - 3px);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.quytrinh-subtab-btn:hover { color: var(--blue-900); }
+.quytrinh-subtab-btn.active {
+  background: #fff;
+  color: var(--blue-900);
+  box-shadow: var(--shadow-sm);
+}
+.quytrinh-subpanel.hidden { display: none; }
+
+/* Hiệu ứng mờ dần + trượt nhẹ khi 1 tab/panel được hiện ra (chuyển tab, hoặc kết
+   quả phân tích xuất hiện) — CSS animation tự chạy lại mỗi lần phần tử chuyển từ
+   display:none sang hiển thị, không cần JS can thiệp. */
+@keyframes dga-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.tab-panel:not(.hidden) { animation: dga-fade-up 0.3s ease; }
+#resultsPanel:not(.hidden) { animation: dga-fade-up 0.35s ease; }
+

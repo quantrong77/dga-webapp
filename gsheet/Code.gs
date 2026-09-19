@@ -237,6 +237,17 @@ const GOOGLE_CLIENT_ID = "";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // phiên đăng nhập hết hạn sau 30 ngày
 
+// Cache CHỈ áp dụng cho listRows() (đọc toàn bộ 1 sheet) — mỗi lần đọc trực tiếp từ
+// Google Sheets tốn ~200-500ms, trong khi đọc từ CacheService (bộ nhớ đệm cấp script,
+// dùng CHUNG cho mọi lượt gọi web app, không phân biệt user) chỉ ~50-100ms. 20 phút là
+// "lưới an toàn" tối đa nếu lỡ có chỗ ghi nào quên gọi clearSheetCache() — trên thực tế
+// cache luôn được xóa NGAY khi có ghi thành công (xem clearSheetCache(), gọi từ
+// upsertRow()/deleteRow()/createSession() — KHÔNG map thủ công theo tên action trong
+// doPost() như 1 cách làm khác đã cân nhắc, vì cách đó rất dễ quên khi thêm action ghi
+// mới về sau, dẫn đến cache "sessions"/"users" không được xóa và làm SAI luôn cả luồng
+// đăng nhập — xem cảnh báo chi tiết ở clearSheetCache()).
+const LIST_CACHE_TTL_SECONDS = 1200;
+
 function doGet(e) {
   try {
     const action = e.parameter.action;
@@ -451,6 +462,10 @@ function createSession(email, role) {
   const expires = new Date(now.getTime() + SESSION_TTL_MS);
   const sh = getOrCreateSheet(SHEET_SESSIONS, SESSION_HEADERS);
   sh.appendRow([token, email, now.toISOString(), expires.toISOString()]);
+  // Ghi trực tiếp bằng appendRow() (KHÔNG qua upsertRow()) nên phải tự xóa cache ở đây —
+  // BẮT BUỘC, nếu không token vừa cấp sẽ "vô hình" với requireSession() cho tới khi cache
+  // hết hạn (xem cảnh báo chi tiết ở clearSheetCache()).
+  clearSheetCache(SHEET_SESSIONS);
   return { token: token, email: email, role: role };
 }
 
@@ -614,14 +629,61 @@ function getOrCreateSheet(name, headers) {
   return sh;
 }
 
+/** Đọc toàn bộ 1 sheet, có cache (xem LIST_CACHE_TTL_SECONDS + clearSheetCache() ở trên).
+ *  Cache HIT: bỏ qua luôn cả getOrCreateSheet() (kể cả bước tự nâng cấp hàng tiêu đề) vì
+ *  chỉ ảnh hưởng hàng tiêu đề hiển thị trực tiếp trên Google Sheet, KHÔNG ảnh hưởng dữ
+ *  liệu trả về (rowToObject() dùng đúng mảng `headers` truyền vào, không đọc lại hàng
+ *  tiêu đề thật trên sheet) — an toàn để bỏ qua khi có cache. */
 function listRows(sheetName, headers) {
+  const cache = CacheService.getScriptCache();
+  const cacheKey = "cache_" + sheetName;
+  const cachedData = cache.get(cacheKey);
+  if (cachedData !== null) {
+    try {
+      return JSON.parse(cachedData);
+    } catch (e) {
+      Logger.log("Lỗi parse cache của " + sheetName + ", tiến hành đọc lại từ Sheet.");
+    }
+  }
+
   const sh = getOrCreateSheet(sheetName, headers);
   const lastRow = sh.getLastRow();
-  if (lastRow < 2) return [];
-  const values = sh.getRange(2, 1, lastRow - 1, headers.length).getValues();
-  return values
-    .filter((row) => row[0] !== "" && row[0] !== null) // bỏ dòng trống (id rỗng)
-    .map((row) => rowToObject(headers, row));
+  const freshData =
+    lastRow < 2
+      ? []
+      : sh
+          .getRange(2, 1, lastRow - 1, headers.length)
+          .getValues()
+          .filter((row) => row[0] !== "" && row[0] !== null) // bỏ dòng trống (id rỗng)
+          .map((row) => rowToObject(headers, row));
+
+  try {
+    cache.put(cacheKey, JSON.stringify(freshData), LIST_CACHE_TTL_SECONDS);
+  } catch (e) {
+    // Mỗi giá trị cache tối đa 100KB (giới hạn CacheService) — sheet càng nhiều dòng
+    // (vd measurements có edit_log tích lũy nhiều lần sửa) càng dễ vượt mức này theo
+    // thời gian. Bỏ qua an toàn: request này vẫn trả đúng dữ liệu tươi, chỉ là lần đọc
+    // KẾ TIẾP sẽ lại phải đọc thẳng từ Sheet (không cache được sheet đó nữa cho đến khi
+    // dữ liệu gọn lại) — không có gì bị mất/sai.
+    Logger.log("Vượt hạn mức dung lượng cache 100KB tại sheet: " + sheetName);
+  }
+  return freshData;
+}
+
+/** Xóa cache của 1 sheet — gọi NGAY sau khi ghi/xóa thành công (upsertRow()/deleteRow()/
+ *  createSession() bên dưới), KHÔNG suy ra sheet cần xóa từ tên action trong doPost().
+ *  Lý do: từng cân nhắc cách map "tên action" → "sheet cần xóa cache" ngay trong doPost(),
+ *  nhưng cách đó bắt buộc phải nhớ cập nhật danh sách map mỗi khi thêm 1 action ghi mới —
+ *  quên 1 trường hợp là đủ gây lỗi khó phát hiện. Nguy hiểm nhất là sheet "sessions": mỗi
+ *  lượt đăng nhập/đăng ký tạo 1 dòng session MỚI qua sh.appendRow() (createSession(), TÁCH
+ *  RIÊNG khỏi upsertRow()) — nếu quên xóa cache "sessions" đúng lúc, token vừa cấp sẽ
+ *  KHÔNG xuất hiện trong danh sách session đã cache, khiến requireSession() báo "Phiên
+ *  đăng nhập không hợp lệ" ngay sau khi vừa đăng nhập thành công, cho đến khi cache tự hết
+ *  hạn (tối đa LIST_CACHE_TTL_SECONDS). Gắn việc xóa cache NGAY tại nơi ghi dữ liệu (thay
+ *  vì tại nơi định tuyến action) đảm bảo mọi đường ghi — kể cả các action ghi mới thêm sau
+ *  này — tự động đúng mà không cần nhớ cập nhật thêm chỗ nào khác. */
+function clearSheetCache(sheetName) {
+  CacheService.getScriptCache().remove("cache_" + sheetName);
 }
 
 /** Google Sheets TỰ ĐỘNG nhận diện 1 ô ghi dạng chuỗi "yyyy-MM-dd" (VD sample_date do
@@ -669,6 +731,7 @@ function upsertRow(sheetName, headers, record) {
   } else {
     sh.appendRow(rowValues);
   }
+  clearSheetCache(sheetName); // xem lưu ý an toàn ở clearSheetCache()
   return record;
 }
 
@@ -691,6 +754,9 @@ function deleteRow(sheetName, id) {
   const headers = headersForSheet(sheetName);
   const sh = getOrCreateSheet(sheetName, headers);
   const idx = findRowIndexById(sh, id);
-  if (idx > 0) sh.deleteRow(idx);
+  if (idx > 0) {
+    sh.deleteRow(idx);
+    clearSheetCache(sheetName); // xem lưu ý an toàn ở clearSheetCache()
+  }
   return { deleted: idx > 0, id: id };
 }

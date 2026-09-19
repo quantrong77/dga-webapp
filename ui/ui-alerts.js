@@ -391,8 +391,8 @@ function computeOltcOilAlerts() {
  *  DGA.evaluateInstrumentOilTest()/verdictTwoTierOil() ở dga-logic.js) nên map
  *  "Cảnh báo" -> mức "alert", "Không đạt" -> mức "alarm" — giống cách khí hòa tan
  *  (computeGasAlerts()) có 2 mức. Bỏ qua "Đạt"/"Chưa đủ dữ liệu"/"Chưa có tiêu chuẩn
- *  nhà sản xuất" (thiết bị CHƯA cấu hình NSX ở tab "Tiêu chuẩn" — không phải lỗi
- *  thiết bị, không nên liệt vào Cảnh báo). */
+ *  nhà sản xuất" (thiết bị CHƯA cấu hình NSX ở tab "Cấu hình" — mục "Tiêu chuẩn" — không
+ *  phải lỗi thiết bị, không nên liệt vào Cảnh báo). */
 function computeInstrumentOilAlerts() {
   const groups = new Map();
   (_allTioOilTests || []).forEach((r) => {
@@ -441,7 +441,7 @@ function computeInstrumentOilAlerts() {
       ),
       action: "Lấy mẫu dầu bổ sung xác nhận; đối chiếu hướng dẫn nhà sản xuất (QĐ1901 Điều 10/11 không quy định " +
         "ngưỡng số mặc định cho dầu TI/TU, chỉ dẫn chiếu \"theo quy định nhà sản xuất\" — bổ sung/kiểm tra lại cấu " +
-        "hình tiêu chuẩn ở tab \"Tiêu chuẩn\" nếu cần); báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
+        "hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" nếu cần); báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
       lanDo: "—",
       sampleDate: latest.sample_date,
     });

@@ -1,12 +1,14 @@
-/* ui-regulation-config.js — Tab "Cấu hình quy định": cho phép Admin xem/sửa số liệu +
-   tham chiếu nguồn của các bảng ngưỡng ĐƠN GIẢN (không có logic rẽ nhánh phức tạp — xem
-   REGULATION_CONFIG_REGISTRY ở dga-logic.js, mục 9) trích từ QĐ1901/IEC 60599:2022,
-   KHÔNG cần sửa code khi 2 quy định này có bản cập nhật trong tương lai.
+/* ui-regulation-config.js — Mục "Quy định" trong tab "Cấu hình" (2 mục "Tiêu chuẩn"/"Quy
+   định" gộp chung 1 tab, chọn bằng .cauhinh-subtab-btn — xem setupCauHinhSubtabs() ở
+   app-core.js): cho phép Admin xem/sửa số liệu + tham chiếu nguồn của các bảng ngưỡng ĐƠN
+   GIẢN (không có logic rẽ nhánh phức tạp — xem REGULATION_CONFIG_REGISTRY ở dga-logic.js,
+   mục 9) trích từ QĐ1901/IEC 60599:2022, KHÔNG cần sửa code khi 2 quy định này có bản cập
+   nhật trong tương lai.
 
-   Tách RIÊNG khỏi tab "Tiêu chuẩn" (ui-standards.js — tiêu chuẩn NHÀ SẢN XUẤT, override
-   theo TỪNG manufacturer) — ở đây là bảng QUY ĐỊNH GỐC (QĐ1901/IEC) áp dụng khi KHÔNG có
-   tiêu chuẩn nhà sản xuất nào khớp, nên chỉ có ĐÚNG 1 bộ giá trị cho mỗi bảng (không phải
-   danh sách tự do nhiều dòng như Tiêu chuẩn).
+   Tách RIÊNG khỏi mục "Tiêu chuẩn" cùng tab (ui-standards.js — tiêu chuẩn NHÀ SẢN XUẤT,
+   override theo TỪNG manufacturer) — ở đây là bảng QUY ĐỊNH GỐC (QĐ1901/IEC) áp dụng khi
+   KHÔNG có tiêu chuẩn nhà sản xuất nào khớp, nên chỉ có ĐÚNG 1 bộ giá trị cho mỗi bảng
+   (không phải danh sách tự do nhiều dòng như mục Tiêu chuẩn).
 
    Cơ chế: mỗi bảng đăng ký trong DGA.getRegulationConfigRegistry() có 1 "target" là
    CHÍNH object hằng số dùng trực tiếp trong resolveStandard()/computeRateOfChange()/
@@ -20,7 +22,7 @@
  *  đúng bảng hằng số tương ứng trong dga-logic.js. Gọi ở initApp() TRƯỚC khi bất kỳ tab
  *  nào dùng đến resolveStandard()/evaluateOilTest()... để đảm bảo mọi phân tích DGA/Dầu
  *  cách điện ngay từ lần đầu tiên đã dùng đúng số đã cấu hình (không phải mặc định gốc
- *  rồi mới "nhảy" số sau khi tab "Cấu hình quy định" được mở lần đầu).
+ *  rồi mới "nhảy" số sau khi mục "Quy định" trong tab "Cấu hình" được mở lần đầu).
  *  @returns {Array} danh sách bản ghi vừa nạp (để refreshRegulationConfigUI() biết bảng
  *    nào đã có override, hiển thị đúng trạng thái "Đã tùy chỉnh"/"Mặc định").
  */

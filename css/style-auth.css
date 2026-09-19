@@ -1,0 +1,154 @@
+/* style-auth.css — Phần 2/8 của style.css. Màn hình đăng nhập/đăng ký, overlay xoay khi
+   đang xác thực, thông báo "đang nạp dữ liệu", toast góc trên bên phải, và badge
+   Database khi mất kết nối. */
+
+/* ===================== Màn hình đăng nhập / đăng ký ===================== */
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.auth-overlay.hidden { display: none; }
+.auth-card {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.auth-card h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: var(--blue-900);
+}
+.auth-card .note { margin-top: 0; margin-bottom: 16px; }
+.auth-card .field { margin-bottom: 12px; }
+.auth-error {
+  color: var(--bad);
+  background: var(--bad-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  margin-top: 10px;
+}
+.auth-error.hidden { display: none; }
+.auth-switch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray-600);
+  margin-top: 14px;
+  margin-bottom: 0;
+}
+.auth-switch a { color: var(--blue-700); font-weight: 600; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }
+
+.google-signin-wrap { margin-bottom: 14px; }
+.google-signin-wrap #googleSignInBtn { display: flex; justify-content: center; }
+.auth-divider {
+  display: flex;
+  align-items: center;
+  color: var(--gray-600);
+  font-size: 12px;
+  margin: 14px 0;
+}
+.auth-divider::before, .auth-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--gray-300);
+}
+.auth-divider span { padding: 0 10px; }
+
+/* Overlay xoay/loading khi đang đăng nhập/đăng ký/xác thực Google — phủ kín .auth-card */
+.auth-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 5;
+}
+.auth-loading.hidden { display: none; }
+.auth-loading p { margin: 0; font-size: 13px; color: var(--blue-900); font-weight: 600; }
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid var(--blue-100);
+  border-top-color: var(--blue-700);
+  animation: dga-spin 0.8s linear infinite;
+}
+@keyframes dga-spin { to { transform: rotate(360deg); } }
+
+/* Thông báo "Vui lòng chờ! Đang nạp dữ liệu..." — khung Trạm/Thiết bị (DGA, Dầu cách
+   điện MBA/OLTC, class dùng chung "combo-loading-hint") và bảng Lịch sử đo
+   (#historyLoadingHint) trong lúc chờ dữ liệu ban đầu từ database, xem
+   setComboLoading()/setHistoryLoading() ở app-core.js/ui-history.js. */
+.loading-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  background: var(--blue-100);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--blue-900);
+  font-weight: 600;
+}
+.loading-hint.hidden { display: none; }
+.spinner-sm {
+  width: 15px;
+  height: 15px;
+  flex: none;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.65);
+  border-top-color: var(--blue-900);
+  animation: dga-spin 0.8s linear infinite;
+}
+
+/* Thông báo "toast" góc trên bên phải (vd: "Đăng nhập thành công!") */
+.toast-container {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(90vw, 340px);
+}
+.toast {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  font-size: 13px;
+  font-weight: 600;
+  border-left: 4px solid var(--ok);
+  color: var(--ok);
+  animation: dga-toast-in 0.25s ease-out;
+}
+.toast.error { border-left-color: var(--bad); color: var(--bad); }
+.toast.fade-out { animation: dga-toast-out 0.3s ease-in forwards; }
+@keyframes dga-toast-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes dga-toast-out { to { opacity: 0; transform: translateX(24px); } }
+
+.role-select { font-size: 12px; padding: 4px 6px; }
+.badge.supabase { background: #d7f5df; color: #10692f; }
+/* Badge "Database" (#storageBadge) khi MẤT kết nối — dùng khi tải Tiêu chuẩn/Lịch sử
+   đo lúc khởi động bị lỗi (xem initApp() ở app-core.js), thay cho màu xanh
+   .badge.supabase ở trên để báo ngay tình trạng mất kết nối thay vì vẫn hiện xanh gây
+   hiểu lầm là đang hoạt động bình thường. Rê chuột vào badge (title=) xem chi tiết lỗi. */
+.badge.error { background: #fde2e1; color: #b42318; }
+

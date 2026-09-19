@@ -1,0 +1,250 @@
+/* style-base.css — Phần 1/8 của style.css sau khi tách theo tab/khu vực (xem index.html).
+   Biến CSS dùng chung (:root), reset cơ bản, lưới an toàn chống tràn ngang, thanh cuộn
+   tùy biến, và phần header/app-bar (logo, badge trạng thái kết nối/đăng nhập, nút đổi
+   bố cục thanh tab). File này PHẢI nạp ĐẦU TIÊN vì mọi file css khác đều dùng biến
+   var(--blue-900), var(--radius)... khai báo ở :root bên dưới. */
+
+:root {
+  --blue-900: #1f4e78;
+  --blue-700: #2e75b6;
+  --blue-100: #eaf2fa;
+  --gray-50: #f7f8fa;
+  --gray-100: #eef0f3;
+  --gray-300: #d6dae0;
+  --gray-600: #5b6472;
+  --gray-900: #1c222b;
+  --ok: #1a7f37;
+  --ok-bg: #e6f4ea;
+  --bad: #c1121f;
+  --bad-bg: #fdecec;
+  --warn: #b45309;
+  --warn-bg: #fef3e2;
+  /* Màu nhấn phụ (KHÔNG mang ý nghĩa trạng thái đạt/cảnh báo/lỗi — chỉ dùng trang
+     trí/điểm nhấn, ví dụ viền khi hover, để tránh đơn điệu chỉ có 1 tông xanh) */
+  --accent: #0a8f8a;
+  --accent-bg: #e3f6f5;
+  --radius: 10px;
+  --shadow-sm: 0 1px 2px rgba(20, 40, 70, 0.05);
+  --shadow-md: 0 4px 14px rgba(20, 40, 70, 0.08);
+  --shadow-lg: 0 20px 60px rgba(10, 20, 35, 0.35);
+  font-size: 15px;
+}
+
+* { box-sizing: border-box; }
+
+/* Lưới an toàn chống tràn ngang trên màn hình hẹp: ảnh/svg không tự vượt quá
+   bề rộng khối chứa (trừ khi cố ý ghi đè max-width lớn hơn ở nơi khác — CSS
+   sau trong file vẫn được ưu tiên nếu specificity cao hơn). */
+img, svg { max-width: 100%; }
+
+/* Luôn chừa sẵn chỗ cho thanh cuộn dọc (kể cả khi tab hiện tại không cần cuộn) —
+   nếu không, mỗi lần chuyển tab mà nội dung ngắn/dài khác nhau, thanh cuộn sẽ tự
+   ẩn/hiện, làm bề rộng khả dụng thay đổi vài pixel, khiến khối header (do có
+   flex-wrap) ngắt dòng khác đi và đổi chiều cao. */
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  margin: 0;
+  font-family: "Be Vietnam Pro", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+}
+
+/* Thanh cuộn tùy biến (Chrome/Edge) — chi tiết nhỏ giúp giao diện đỡ mặc định/đơn điệu */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--gray-50); }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 999px; border: 2px solid var(--gray-50); }
+::-webkit-scrollbar-thumb:hover { background: var(--blue-700); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+header.app-header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  color: #fff;
+  padding: 18px 28px;
+  display: grid;
+  /* minmax(0, 1fr) (thay vì 1fr) để 2 cột trái/phải luôn bằng nhau và cột giữa
+     (tên ứng dụng + ghi chú) thực sự canh giữa trang, bất kể nội dung 2 bên
+     (badge kết nối vs. thông tin người dùng) rộng khác nhau. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  box-shadow: 0 4px 18px rgba(20, 40, 70, 0.22);
+}
+
+/* Họa tiết lưới chấm mờ phía sau header — gợi liên tưởng mạch/lưới điện, rất nhẹ
+   để không ảnh hưởng độ đọc của chữ phía trên. */
+header.app-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.14) 1px, transparent 1.4px);
+  background-size: 24px 24px;
+  pointer-events: none;
+}
+header.app-header > * { position: relative; z-index: 1; }
+
+/* Trái: trạng thái kết nối database. Giữa: tên ứng dụng + ghi chú (canh giữa
+   trang). Phải: thông tin người đăng nhập + nút đăng xuất. */
+header.app-header .header-left {
+  justify-self: start;
+  /* PHẢI có display:flex + align-items:center ở đây (giống .header-right bên dưới) —
+     nếu không, nút icon #btnToggleTabLayout (display:inline-flex, canh theo baseline
+     mặc định) và badge #storageBadge (display:inline-block, vertical-align:middle) là
+     2 phần tử inline-level nằm cạnh nhau sẽ bị lệch cao/thấp so với nhau (baseline vs
+     middle khác nhau), dù cả 2 đều "cao 30px"/"canh middle" riêng lẻ. */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+header.app-header .header-center {
+  justify-self: center;
+  text-align: center;
+  /* Giới hạn bề rộng cột giữa: nếu không, dòng ghi chú (khá dài) sẽ chiếm gần
+     hết chiều ngang header, đè lên vùng bên phải (email người dùng + nút
+     Đăng xuất) mỗi khi 1 trong 2 bên phải xuống dòng. */
+  max-width: 640px;
+}
+
+.app-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin-bottom: 2px;
+}
+
+.app-logo-icon {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  box-shadow: 0 2px 8px rgba(8, 16, 28, 0.35);
+}
+
+header.app-header h1 {
+  font-size: 19px;
+  margin: 0;
+}
+
+header.app-header p {
+  margin: 0;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-self: end;
+}
+
+@media (max-width: 800px) {
+  header.app-header {
+    /* minmax(0, 1fr), không phải "1fr" trơn — nếu không, cột đơn này sẽ bị ép
+       rộng ra bằng nội dung dài nhất bên trong (badge email người dùng), gây
+       tràn ngang toàn trang trên điện thoại ("grid blowout"). */
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+  }
+  header.app-header .header-left,
+  header.app-header .header-center,
+  .header-right {
+    justify-self: center;
+    max-width: 100%;
+  }
+}
+
+.badge {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Chặn badge (nhất là badge email người dùng, có thể rất dài) tự nới rộng
+     quá khổ màn hình hẹp — hiện "…" thay vì tràn ngang trang. */
+  max-width: min(100%, 320px);
+  box-shadow: var(--shadow-sm);
+}
+.badge.local { background: #fff3cd; color: #7a5b00; }
+/* #storageBadge giờ là <button> (có thể bấm mở Google Sheet/Supabase Dashboard khi đã
+   cấu hình link quản lý, xem databaseManagementUrl() ở storage.js) — reset kiểu mặc
+   định của <button> (font/border), giữ nguyên nền/màu theo trạng thái
+   (.badge.local/.badge.supabase/.badge.error ở trên/dưới) như khi còn là <span>. Con
+   trỏ chuột CHỈ đổi thành pointer khi thật sự có link (class "has-link", gắn ở
+   setupStorageBadgeLink() ở app-core.js) — không thì vẫn "default" như badge tĩnh
+   thông thường, tránh gợi ý bấm được trong khi không có gì xảy ra. */
+#storageBadge {
+  font: inherit;
+  border: none;
+  cursor: default;
+}
+#storageBadge.has-link { cursor: pointer; }
+#storageBadge.has-link:hover { filter: brightness(0.94); }
+/* #userBadge giờ là <button> (tích hợp luôn đăng xuất — bấm vào hiện xác nhận rồi mới
+   đăng xuất, xem ui-auth.js), nên cần reset kiểu mặc định của <button> (font/border/
+   cursor) — phần còn lại (nền mờ trắng/viền, hợp nền header gradient tối) giữ nguyên
+   như .badge.local ở trên. */
+.badge.user-badge {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.badge.user-badge:hover {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Nút icon đổi bố cục thanh tab (ngang ⇄ dọc) ở header — #btnToggleTabLayout. Kiểu
+   riêng (không dùng .btn.ghost) vì nằm trên nền header gradient tối, cần viền/nền mờ
+   trắng như .badge.user-badge ở trên mới đủ tương phản, thay vì màu --blue-700 gần
+   như biến mất trên nền đó. aria-pressed="true" (đang ở chế độ dọc) đảo màu nền/chữ
+   để nhận biết nhanh trạng thái đang bật — xem setupTabLayoutToggle() ở app-core.js. */
+.header-icon-btn {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.header-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
+.header-icon-btn[aria-pressed="true"] {
+  background: #fff;
+  color: var(--blue-900);
+  border-color: #fff;
+}
+.header-icon-btn .icon-svg { width: 16px; height: 16px; margin-right: 0; }
+

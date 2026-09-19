@@ -92,7 +92,7 @@ async function onAnalyzeTioOil() {
     return;
   }
   if (!manufacturer) {
-    alert("QĐ1901 Điều 10/11 không có bảng số mặc định cho dầu TI/TU — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Tiêu chuẩn\" trước.");
+    alert("QĐ1901 Điều 10/11 không có bảng số mặc định cho dầu TI/TU — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" trước.");
     return;
   }
   if (alertIfNegative([

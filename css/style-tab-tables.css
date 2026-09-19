@@ -1,0 +1,304 @@
+/* style-tab-tables.css — Phần 6/8 của style.css. Combo box tự viết (Trạm/Thiết bị),
+   nút chỉ-icon, khung cuộn ngang cho bảng + ghim cột hành động, các kiểu riêng cho tab
+   "Lịch sử đo" (ô đã sửa, icon nhãn trường/tên khí, ô lọc tìm kiếm) và trạng thái tổng
+   thể/pill cấp độ dùng ở tab "Cảnh báo". */
+
+/* Combo box tự viết (thay cho <datalist> gốc — hỗ trợ tìm kiếm bỏ dấu, danh sách
+   đầy đủ có thể cuộn, và 1 nút mũi tên để xổ toàn bộ danh sách) — dùng cho ô Trạm
+   và ô Nhà sản xuất. */
+.combo-wrap {
+  position: relative;
+  display: flex;
+}
+.combo-wrap input {
+  flex: 1;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.combo-toggle {
+  flex: 0 0 auto;
+  width: 34px;
+  border: 1px solid var(--gray-300);
+  border-left: none;
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  background: var(--gray-100);
+  color: var(--gray-600);
+  cursor: pointer;
+  font-size: 11px;
+}
+.combo-toggle:hover { background: var(--gray-300); }
+.combo-list {
+  position: absolute;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  z-index: 30;
+}
+.combo-list.hidden { display: none; }
+.combo-item {
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--gray-900);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.combo-item:hover, .combo-item.active { background: var(--blue-100); }
+.combo-empty {
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease, filter 0.15s ease;
+}
+.btn.primary {
+  background: linear-gradient(135deg, var(--blue-700), var(--blue-900));
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(31, 78, 120, 0.28);
+}
+.btn.primary:hover { filter: brightness(1.08); box-shadow: 0 5px 14px rgba(31, 78, 120, 0.34); transform: translateY(-1px); }
+.btn.primary:active { transform: translateY(0); filter: brightness(0.98); box-shadow: 0 1px 4px rgba(31, 78, 120, 0.28); }
+.btn.ghost { background: transparent; color: var(--blue-700); border: 1px solid var(--blue-700); }
+.btn.ghost:hover { background: var(--blue-100); transform: translateY(-1px); }
+.btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--bad); padding: 5px 10px; font-size: 12px; }
+.btn.danger:hover { background: var(--bad-bg); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; filter: none !important; }
+/* Nút chỉ có icon, không chữ (vd. "Xem xu hướng" ở bảng tab "Cảnh báo") — vuông,
+   canh giữa icon, vẫn giữ .btn/.ghost để đồng bộ màu/hover với các nút khác; LUÔN
+   kèm title/aria-label ở HTML vì không còn chữ hiển thị cho biết chức năng. */
+.btn.icon-only { padding: 6px; display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+.btn.icon-only .icon-svg { width: 16px; height: 16px; margin-right: 0; }
+
+/* Bọc mỗi bảng trong 1 khung cuộn ngang riêng — nếu không, trên màn hình hẹp
+   (điện thoại) bảng nhiều cột sẽ đẩy tràn ngang toàn bộ trang thay vì chỉ cuộn
+   trong phạm vi bảng. */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--gray-100);
+  text-align: left;
+}
+.nowrap-cell {
+  white-space: nowrap;
+}
+
+/* Cột nút hành động (Sửa/Xóa/Xem BBTN...) ở các bảng lịch sử (đo khí, dầu MBA, dầu
+   OLTC, tiêu chuẩn NSX) — trước đây ép "white-space:nowrap" nên khi bảng nhiều cột +
+   cửa sổ hẹp, nút cuối (thường là "Xóa") bị .table-scroll cuộn ngang che mất mà không rõ
+   còn cuộn được nữa hay không, trông như bị THIẾU nút. Đổi sang flex-wrap: các nút tự
+   xuống dòng bên trong ô khi không đủ chỗ — LUÔN thấy đủ nút, không phụ thuộc cuộn ngang. */
+.actions-cell { white-space: normal; }
+.actions-cell .btn-row,
+/* Bộ chọn Khí hòa tan (DGA)/Dầu MBA chính/Dầu OLTC ở tab "Lịch sử đo" (xem
+   setupLichSuViewToggle(), app-core.js) — tái dùng class ".btn-row" cho khoảng cách
+   giữa các nút, chỉ khác là KHÔNG nằm trong ".actions-cell" (đó là cột hành động
+   trong bảng) nên phải khai báo riêng ở đây. */
+#lichsuTypeToggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+/* GHIM cột hành động ở mép PHẢI của khung cuộn ngang (.table-scroll) — bảng có nhiều
+   cột (Ngày/Trạm/Thiết bị/.../Người nhập...) nên ở màn hình hẹp phải cuộn ngang khá xa
+   mới tới được nút "Xóa"; thanh cuộn ngang trên Windows/trình duyệt hiện đại lại rất
+   mảnh/gần như vô hình nên người dùng dễ tưởng bảng bị THIẾU nút chứ không phải CẦN
+   CUỘN THÊM. position:sticky theo khung .table-scroll khiến cột này luôn hiện sẵn ở mép
+   phải, không cần cuộn tới cùng mới thấy. */
+.actions-col-header, .actions-cell {
+  position: sticky;
+  right: 0;
+}
+.actions-col-header { z-index: 2; background: var(--gray-100); }
+.actions-cell {
+  z-index: 1;
+  background: #fff;
+  box-shadow: -8px 0 8px -8px rgba(20, 40, 70, 0.18);
+}
+tbody tr:nth-child(even) .actions-cell { background: var(--gray-50); }
+tbody tr:hover .actions-cell { background: var(--blue-100); }
+th {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+tbody tr:nth-child(even) { background: var(--gray-50); }
+tbody tr { transition: background-color 0.1s ease; }
+tbody tr:hover { background: var(--blue-100); }
+
+.pill {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+.pill.ok { background: var(--ok-bg); color: var(--ok); border-color: rgba(26, 127, 55, 0.22); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); border-color: rgba(193, 18, 31, 0.22); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); border-color: rgba(180, 83, 9, 0.22); }
+.pill.muted { background: var(--gray-100); color: var(--gray-600); }
+
+/* Tab "Lịch sử đo" — ô số liệu khí đã bị SỬA so với lần lưu gốc (xem
+   diffTrackedGasFields() ở app-core.js, refreshHistoryUI() ở ui-history.js). */
+.cell-edited-warn {
+  background: var(--bad-bg);
+  color: var(--bad);
+  font-weight: 600;
+  cursor: help;
+}
+.edit-log-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--bad-bg);
+  color: var(--bad);
+  border: 1px solid rgba(193, 18, 31, 0.22);
+  cursor: help;
+  white-space: nowrap;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+@media (max-width: 800px) { .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 420px) { .stat-row { grid-template-columns: minmax(0, 1fr); } }
+
+.stat-card {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-100);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--blue-100);
+}
+.stat-card .label { display: flex; align-items: center; font-size: 12px; color: var(--gray-600); font-weight: 600; }
+.stat-card .label .icon-svg { width: 13px; height: 13px; margin-right: 5px; }
+
+/* Icon nhỏ trước NHÃN các trường nhập liệu lặp lại (Trạm, Thiết bị, Loại thiết bị,
+   Nhà sản xuất, Pha, Ngày, Lần đo, Ghi chú...) ở tab "DGA"/"Dầu cách điện"/"Lịch sử
+   đo"/"Xu hướng" — dùng class riêng (không phải .icon-svg mặc định 17px) vì cỡ chữ
+   nhãn (13px) nhỏ hơn nhiều nơi khác đang dùng .icon-svg (nút, dropzone...). */
+.field-label-icon { width: 14px; height: 14px; margin-right: 5px; vertical-align: -2px; flex: none; color: var(--blue-700); }
+
+/* Icon nhỏ cạnh TÊN từng khí hòa tan cụ thể (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) — ở ô
+   nhập, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox chọn thông số (tab "Xu hướng")
+   và pill "Chỉ tiêu vượt ngưỡng" (tab "Cảnh báo"). KHÔNG ép màu (khác .field-label-icon)
+   để tự nhận màu chữ hiện tại của từng nơi (bảng: chữ thường; pill: đỏ...) — xem
+   gasLabelIcon() ở app-core.js. */
+.gas-icon { width: 13px; height: 13px; margin-right: 4px; vertical-align: -2px; flex: none; }
+
+/* Ô lọc dạng "tìm kiếm" (vd #historyFilter, tab "Lịch sử đo") — icon kính lúp đặt đè
+   lên input bằng position:absolute thay vì đứng trước như nhãn field thường, giống
+   UX thanh tìm kiếm phổ biến. */
+.search-input-wrap { position: relative; display: inline-flex; align-items: center; }
+.search-input-wrap .search-input-icon {
+  position: absolute;
+  left: 10px;
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  color: var(--gray-600);
+  pointer-events: none;
+}
+.search-input-wrap input { padding-left: 30px; }
+.stat-card .value { font-size: 22px; font-weight: 800; color: var(--blue-900); margin-top: 4px; }
+
+/* ===================== Trạng thái tổng thể (Bình thường/Cảnh báo/Báo động) —
+   dùng chung giữa banner kết quả phân tích (tab "DGA") và bảng chú giải ở tab
+   "Quy trình đánh giá" ===================== */
+.status-banner {
+  border-radius: var(--radius);
+  border: 2px solid;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.status-banner.status-normal { background: var(--ok-bg); border-color: var(--ok); }
+.status-banner.status-alert { background: var(--warn-bg); border-color: var(--warn); }
+.status-banner.status-alarm { background: var(--bad-bg); border-color: var(--bad); }
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  color: #fff;
+  margin-bottom: 8px;
+  box-shadow: var(--shadow-sm);
+}
+.status-normal .status-badge, .status-legend-card.normal .status-badge { background: var(--ok); }
+.status-alert .status-badge, .status-legend-card.alert .status-badge { background: var(--warn); }
+.status-alarm .status-badge, .status-legend-card.alarm .status-badge { background: var(--bad); }
+
+.status-reasons { margin: 6px 0 8px 18px; padding: 0; font-size: 13.5px; }
+.status-reasons li { margin-bottom: 3px; }
+
+.status-action { margin: 0; font-size: 13.5px; font-weight: 700; }
+.status-normal .status-action { color: var(--ok); }
+.status-alert .status-action { color: var(--warn); }
+.status-alarm .status-action { color: var(--bad); }
+
+/* Pill gọn cấp độ Cảnh báo/Báo động cho bảng ở tab "Cảnh báo" — không cần bọc trong
+   .status-normal/.status-alert/.status-alarm như .status-badge ở trên vì mỗi ô bảng
+   là 1 dòng độc lập, không có banner cha để tựa màu vào. */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 3px 11px;
+  border-radius: 999px;
+  color: #fff;
+  white-space: nowrap;
+}
+.status-pill.status-alert { background: var(--warn); }
+.status-pill.status-alarm { background: var(--bad); }
+/* icon bên trong .status-pill dùng chung màu chữ trắng (currentColor), gap đã có
+   sẵn ở .status-pill nên bỏ margin-right mặc định của .icon-svg để khỏi bị dư. */
+.status-pill .icon-svg { width: 13px; height: 13px; margin-right: 0; }
+
