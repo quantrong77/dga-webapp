@@ -57,6 +57,10 @@ function clearForm() {
   $("f_landocount").value = 1;
   $("f_bbtn").value = "";
   renderBbtnDropzoneLabel();
+  $("f_nameplate").value = "";
+  renderNameplateDropzoneLabel();
+  $("nameplateImportNote").classList.add("hidden");
+  $("nameplateRawTextNote").classList.add("hidden");
   $("resultsPanel").classList.add("hidden");
   resetMeasurementEditState();
 }
@@ -187,15 +191,26 @@ async function onBbtnFileSelected(e) {
   note.classList.remove("hidden");
   let data;
   try {
-    data = await window.BbtnImport.extract(file);
+    data = await window.BbtnImport.extract(file, (m) => {
+      // m = { status, progress } từ Tesseract.js — chỉ bắn khi file không có lớp text
+      // thật và đang chạy OCR dự phòng (xem bbtn-import.js), nên phần lớn file BBTN
+      // (có lớp text) sẽ KHÔNG bao giờ thấy thông báo này, chỉ thấy dòng ở trên.
+      if (m && m.status === "recognizing text") {
+        note.textContent =
+          "File có vẻ là ảnh scan — đang nhận diện chữ (OCR), có thể mất vài chục giây" +
+          (typeof m.progress === "number" ? " (" + Math.round(m.progress * 100) + "%)" : "") + "...";
+      } else if (m && m.status) {
+        note.textContent = "Đang chuẩn bị đọc ảnh scan (OCR)... (" + m.status + ")";
+      }
+    });
   } catch (err) {
     note.textContent =
-      "Không đọc được nội dung file này để tự động điền (có thể file là ảnh scan, chưa hỗ trợ OCR) — " +
+      "Không đọc được nội dung file này để tự động điền — " +
       "vui lòng nhập tay các trường bên dưới. (" + ((err && err.message) || err) + ")";
     return;
   }
   if (!data || !data.matchedCount) {
-    note.textContent = "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
+    note.textContent = "Không nhận diện được thông tin nào từ file này (kể cả đã thử đọc bằng OCR nếu là ảnh scan) — vui lòng nhập tay các trường bên dưới.";
     return;
   }
 
@@ -287,9 +302,101 @@ async function onBbtnFileSelected(e) {
   // lịch sử đã lưu, đúng tinh thần của tính năng này (nhập bổ sung lần đo LỊCH SỬ).
   updateLanDoSuggestion();
 
+  if (!filled.length) {
+    note.textContent = "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
+  } else if (data.viaOCR) {
+    note.textContent =
+      "Đã tự động điền từ BBTN qua OCR (ảnh scan): " + filled.join(", ") +
+      " — đây là nhận diện chữ từ ảnh nên ĐỘ TIN CẬY THẤP HƠN đọc trực tiếp, vui lòng kiểm tra kỹ lại từng số liệu trước khi lưu.";
+  } else {
+    note.textContent = "Đã tự động điền từ BBTN: " + filled.join(", ") + " — vui lòng kiểm tra lại số liệu trước khi lưu.";
+  }
+}
+
+/** Cập nhật nhãn hiển thị trong ô kéo-thả ảnh nameplate #nameplateDropzone — cùng cơ
+ *  chế với renderBbtnDropzoneLabel() ở trên. */
+function renderNameplateDropzoneLabel() {
+  const zone = $("nameplateDropzone");
+  const label = $("nameplateDropzoneText");
+  if (!zone || !label) return;
+  const file = $("f_nameplate").files && $("f_nameplate").files[0];
+  if (file) {
+    label.textContent = file.name;
+    zone.classList.add("has-file");
+  } else {
+    label.innerHTML = 'Kéo thả ảnh chụp nhãn máy vào đây, hoặc <span class="file-dropzone-link">bấm để chọn ảnh</span>';
+    zone.classList.remove("has-file");
+  }
+}
+
+/** Khi người dùng CHỌN ảnh chụp TẤM NHÃN THIẾT BỊ (nameplate) ở khối "Thông số kỹ
+ *  thuật thiết bị" — đọc bằng OCR (bbtn/nameplate-import.js, KHÔNG gửi ảnh lên server
+ *  nào để "đọc") và gợi ý điền Kiểu máy/Số chế tạo/Năm sản xuất/Điện áp định mức/Loại
+ *  dầu cách điện + Nhà sản xuất (khớp mờ với danh sách ở #f_nsx, cùng cách BBTN import
+ *  đã làm với data.hangSanXuat — khác chỗ ở đây không có 1 chuỗi trích riêng nên kiểm
+ *  tra trực tiếp trên toàn bộ chữ đã đọc được). KHÔNG có mẫu nhãn chung (mỗi hãng trình
+ *  bày khác nhau) nên độ tin cậy THẤP HƠN đọc BBTN (xem nameplate-import.js) — luôn hiện
+ *  kèm toàn bộ chữ OCR đọc được (#nameplateRawTextNote) để người dùng tự đối chiếu/gõ
+ *  tay phần đọc sai hoặc không nhận diện được. Mọi trường vẫn xem/sửa tay bình thường
+ *  trước khi lưu, không có gì bị khóa. */
+async function onNameplateFileSelected(e) {
+  const file = e.target.files && e.target.files[0];
+  renderNameplateDropzoneLabel();
+  const note = $("nameplateImportNote");
+  const rawNote = $("nameplateRawTextNote");
+  rawNote.classList.add("hidden");
+  if (!file) {
+    note.classList.add("hidden");
+    return;
+  }
+  if (!window.NameplateImport) {
+    note.textContent = "Không tự động đọc được ảnh nhãn (thư viện OCR chưa tải xong) — vui lòng nhập tay các trường bên dưới.";
+    note.classList.remove("hidden");
+    return;
+  }
+  note.textContent = "Đang nhận diện chữ từ ảnh nhãn thiết bị (OCR), có thể mất vài chục giây...";
+  note.classList.remove("hidden");
+  let data;
+  try {
+    data = await window.NameplateImport.extract(file, (m) => {
+      if (m && m.status) {
+        note.textContent =
+          "Đang nhận diện chữ từ ảnh nhãn thiết bị (OCR)... (" + m.status +
+          (typeof m.progress === "number" ? " " + Math.round(m.progress * 100) + "%" : "") + ")";
+      }
+    });
+  } catch (err) {
+    note.textContent =
+      "Không đọc được ảnh này — vui lòng thử ảnh rõ nét hơn hoặc nhập tay các trường bên dưới. (" +
+      ((err && err.message) || err) + ")";
+    return;
+  }
+
+  const filled = [];
+  if (data.kieuMay) { $("f_kieumay").value = data.kieuMay; filled.push("Kiểu máy"); }
+  if (data.soCheTao) { $("f_sochetao").value = data.soCheTao; filled.push("Số chế tạo"); }
+  if (data.namSx) { $("f_namsx").value = data.namSx; filled.push("Năm sản xuất"); }
+  if (data.dienApDm) { $("f_dienapdm").value = data.dienApDm; filled.push("Điện áp định mức"); }
+  if (data.loaiDau) { $("f_loaidau").value = data.loaiDau; filled.push("Loại dầu cách điện"); }
+  if (data.rawText) {
+    const rawLower = data.rawText.toLowerCase();
+    const match = Array.from($("f_nsx").options).find((o) => o.value && rawLower.includes(o.value.toLowerCase()));
+    if (match) { $("f_nsx").value = match.value; filled.push("Nhà sản xuất"); }
+  }
+
+  // Luôn hiện toàn bộ chữ OCR đọc được — nameplate không có mẫu chung nên rất có thể bỏ
+  // sót trường (VD nhãn hãng khác cách trình bày), người dùng cần xem trực tiếp để tự
+  // gõ tay phần còn thiếu thay vì chỉ biết "không đọc được" mà không có gì đối chiếu.
+  if (data.rawText) {
+    rawNote.textContent = "Toàn bộ chữ đọc được từ ảnh (để đối chiếu/gõ tay phần còn thiếu):\n" + data.rawText;
+    rawNote.classList.remove("hidden");
+  }
+
   note.textContent = filled.length
-    ? "Đã tự động điền từ BBTN: " + filled.join(", ") + " — vui lòng kiểm tra lại số liệu trước khi lưu."
-    : "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
+    ? "Đã gợi ý điền từ ảnh nhãn thiết bị (OCR): " + filled.join(", ") +
+      " — nhãn thiết bị không có mẫu chung nên ĐỘ TIN CẬY THẤP, vui lòng đối chiếu kỹ với ảnh gốc trước khi lưu. " +
+      "\"Năm đưa vào vận hành\"/\"Kết cấu cách điện dầu\"/\"Hiện trạng vận hành\" là thông tin vận hành, không in trên nhãn máy — vẫn cần nhập tay."
+    : "Không nhận diện được trường nào theo các nhãn thường gặp — xem phần chữ đọc được bên dưới để tự gõ tay.";
 }
 
 /** Nạp 1 lần đo đã lưu lên form tab "DGA" để sửa — bấm "Cập nhật & Lưu" sẽ
@@ -352,7 +459,7 @@ function onEditMeasurement(rec) {
 
 // ---------------------------------------------------------------------
 // Tam giác Duval — vẽ khung tam giác + đường phân vùng (theo bảng "Limits of
-// zones", Annex B, Figure B.3, IEC 60599:1999) và điểm chẩn đoán bằng SVG.
+// zones", Annex B, Figure B.3, IEC 60599:2022) và điểm chẩn đoán bằng SVG.
 // Hệ tọa độ: đỉnh CH4 ở trên (50, 0 khi lật trục y), C2H2 dưới-trái (0, H),
 // C2H4 dưới-phải (100, H), với H = 100*sqrt(3)/2 ≈ 86,6. viewBox lật trục y
 // (y_svg = H - y_toan_hoc) để đỉnh CH4 hiển thị ở trên.
@@ -384,23 +491,30 @@ function drawDuvalTriangleBase() {
     s += `<line class="duval-grid-line" x1="${xL}" y1="${y}" x2="${xR}" y2="${y}" />`;
   }
 
-  // Đường phân vùng chính theo bảng "Limits of zones" gốc (Annex B, Figure B.3):
+  // Đường phân vùng chính theo bảng "Limits of zones" gốc (Annex B, Figure B.3,
+  // đối chiếu trực tiếp với IEC 60599-2022.pdf trang 37 do người dùng cung cấp):
   const P = (m, e, a) => duvalEdgePoint({ pctCH4: m, pctC2H4: e, pctC2H2: a });
   const zoneLines = [
     // PD: %CH4 = 98 (đường song song đáy gần đỉnh)
     [P(98, 2, 0), P(98, 0, 2)],
-    // T1/T2 biên trên C2H2=4: đoạn từ C2H4=0..~96
+    // Dải T1/T2/T3 — biên ngoài %C2H2 = 4, từ %C2H4=0 đến %C2H4=50
     [P(96, 0, 4), P(46, 50, 4)],
-    // T1/T2 biên C2H4=10 (trong dải C2H2<=4)
-    [P(90, 10, 0), P(86, 10, 4)],
-    // T2/T3 biên C2H4=50 (trong dải C2H2<=4)
+    // T1/T2 biên %C2H4 = 20 (trong dải %C2H2<=4)
+    [P(80, 20, 0), P(76, 20, 4)],
+    // T2/T3 biên %C2H4 = 50 (trong dải %C2H2<=4)
     [P(50, 50, 0), P(46, 50, 4)],
-    // D1/D2 biên C2H4=23 (trong dải C2H2>=13)
-    [P(64, 23, 13), P(0, 23, 77)],
-    // D1/T1 & D2 biên C2H2=13
-    [P(64, 23, 13), P(87, 0, 13)],
-    // D2/T3(vùng cao C2H4) biên C2H4=38 (trong dải C2H2>=13)
-    [P(49, 38, 13), P(0, 38, 62)],
+    // D1/D2 biên %C2H2 = 13 (phần %C2H4 0-23), từ cạnh CH4-C2H2 tới góc (23,13)
+    [P(87, 0, 13), P(64, 23, 13)],
+    // D1/D2 biên %C2H4 = 23 (phần %C2H2 13-29), từ góc (23,13) tới góc (23,29)
+    [P(64, 23, 13), P(48, 23, 29)],
+    // D2/D+T biên %C2H2 = 13 (phần %C2H4 23-40), từ góc (23,13) tới góc (40,13)
+    [P(64, 23, 13), P(47, 40, 13)],
+    // D2/D+T biên %C2H4 = 40 (phần %C2H2 13-29), từ góc (40,13) tới góc (40,29)
+    [P(47, 40, 13), P(31, 40, 29)],
+    // D2/D+T biên %C2H2 = 29 (phần %C2H4 23-40), từ góc (23,29) tới góc (40,29)
+    [P(48, 23, 29), P(31, 40, 29)],
+    // T3(mở rộng)/D+T biên %C2H2 = 15 (từ %C2H4=50 tới cạnh đáy)
+    [P(35, 50, 15), P(0, 85, 15)],
   ];
   zoneLines.forEach(([a, b]) => {
     s += `<line class="duval-zone-line" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" />`;
@@ -412,6 +526,7 @@ function drawDuvalTriangleBase() {
   s += `<text class="duval-label" x="102" y="${h + 4}" text-anchor="end">C2H4</text>`;
   s += `<text class="duval-label" x="50" y="${h * 0.35}" text-anchor="middle">D1</text>`;
   s += `<text class="duval-label" x="30" y="${h * 0.6}" text-anchor="middle">D2</text>`;
+  s += `<text class="duval-label" x="55" y="${duvalToSvgY(34)}" text-anchor="middle">D+T</text>`;
   s += `<text class="duval-label" x="70" y="${h * 0.85}" text-anchor="middle">T3</text>`;
   s += `<text class="duval-label" x="35" y="${h * 0.92}" text-anchor="middle">T2</text>`;
   s += `<text class="duval-label" x="15" y="${h * 0.97}" text-anchor="middle">T1</text>`;
@@ -536,7 +651,7 @@ async function onAnalyze() {
   warnIfEmptyMainGas();
 
   // 1) Xác định tiêu chuẩn áp dụng: NSX nếu có cấu hình đầy đủ; ngược lại, tiêu chuẩn
-  //    CHẶT HƠN giữa QĐ1901 và bảng tham khảo tương ứng của IEC 60599:1999 Annex A
+  //    CHẶT HƠN giữa QĐ1901 và bảng tham khảo tương ứng của IEC 60599:2022 Annex A
   //    (hoặc trực tiếp IEC Annex A khi QĐ1901 chưa có bảng riêng — sứ xuyên).
   const logicMeasurement = { equipmentType: measurement.equipment_type, manufacturer: measurement.manufacturer, mbaSubtype };
   const standard = DGA.resolveStandard(logicMeasurement, toManufacturerStandardsForLogic(_allStandards));
@@ -612,17 +727,41 @@ async function onAnalyze() {
     tcgRate = DGA.computeTcgRateOfChange(DGA.computeTCG(priorGases), tcg, deltaDays);
   }
 
+  // 4bis) "So với đàn" (đề xuất #2) — phát hiện thiết bị lệch khỏi số đông trong nhóm
+  //    thiết bị TƯƠNG TỰ (cùng loại/cấp điện áp/hãng SX, nới dần nếu thiếu dữ liệu),
+  //    dùng LẠI đúng `all` vừa gọi ở bước 4 (KHÔNG gọi thêm Storage lần nào nữa). Đây
+  //    là THAM KHẢO THỐNG KÊ bổ sung — hoàn toàn tách biệt khỏi overallStatus/recs
+  //    (không được lẫn với kết quả Đạt/Không đạt theo QĐ1901/IEC), xem giải thích đầy
+  //    đủ ở evaluatePeerAnomaly() (logic/dga-logic-peer.js).
+  const peerAnomaly = DGA.evaluatePeerAnomaly(measurement, gases, all);
+
+  // 4ter) "Ca tương tự trong lịch sử đo" (đề xuất #3, case-based reasoning) — tìm trong
+  //    TOÀN BỘ Lịch sử đo (không giới hạn cùng loại/hãng như 4bis ở trên) những lần đo
+  //    có vector 7 khí gần giống nhất (cosine similarity, xem findSimilarCases() ở
+  //    logic/dga-logic-case.js) — cũng dùng lại `all`, không gọi thêm Storage. Kết luận
+  //    của từng ca tìm được sẽ được TÍNH LẠI ngay dưới đây (không lưu sẵn) bằng đúng
+  //    logic đánh giá hiện có, theo tiêu chuẩn áp dụng cho CHÍNH thiết bị/hãng của ca đó.
+  const similarCasesRaw = DGA.findSimilarCases(measurement, gases, all);
+  const similarCases = {
+    ...similarCasesRaw,
+    cases: similarCasesRaw.cases.map(({ record, similarity }) => ({
+      record,
+      similarity,
+      evaluation: evaluateHistoricalCase(record),
+    })),
+  };
+
   // 5) Khuyến cáo tổng hợp
   const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType: measurement.equipment_type, bushingCodes });
 
   // 5bis) Trạng thái tổng thể (Bình thường/Cảnh báo/Báo động) — số hóa lưu đồ Hình 1
-  //    IEC 60599:1999; xem giải thích đầy đủ ở tab "Quy trình đánh giá".
+  //    IEC 60599:2022; xem giải thích đầy đủ ở tab "Quy trình đánh giá".
   const overallStatus = DGA.computeOverallStatus({
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
-  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 };
-  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 });
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases };
+  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -693,7 +832,30 @@ function verdictPill(v) {
   return `<span class="pill bad">Không đạt</span>`;
 }
 
-function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63 }) {
+/** Tính lại (KHÔNG đọc từ dữ liệu lưu sẵn nào) kết luận Đạt/Không đạt + mã chẩn đoán
+ *  của 1 BẢN GHI LỊCH SỬ — dùng cho khối "Ca tương tự trong lịch sử đo" (đề xuất #3) VÀ
+ *  đúng kỹ thuật đã dùng cho `prior` (lần đo liền trước) ở onAnalyzeAndSave() phía trên:
+ *  resolveStandard() theo ĐÚNG loại thiết bị/hãng/mba_subtype LƯU TRÊN CHÍNH bản ghi đó
+ *  (không phải theo form đang nhập) rồi evaluateAbsolute()/overallVerdict()/
+ *  diagnoseGasFault() như bình thường. Tính lại tại chỗ thay vì lưu sẵn 1 "kết luận"
+ *  tĩnh vào bản ghi — kết luận luôn khớp đúng logic đánh giá hiện hành (kể cả khi sau
+ *  này tiêu chuẩn/logic được cập nhật), không sợ đọc phải kết luận đã lỗi thời. */
+function evaluateHistoricalCase(record) {
+  const gases = recordGases(record);
+  const logicMeasurement = {
+    equipmentType: record.equipment_type,
+    manufacturer: record.manufacturer,
+    mbaSubtype: record.mba_subtype || null,
+  };
+  const standard = DGA.resolveStandard(logicMeasurement, toManufacturerStandardsForLogic(_allStandards));
+  const tcg = DGA.computeTCG(gases);
+  const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
+  const overall = DGA.overallVerdict(evalRows);
+  const diagnosis = DGA.diagnoseGasFault(gases, record.equipment_type, standard.pdThreshold);
+  return { gases, tcg, overall, diagnosis };
+}
+
+function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases }) {
   $("resultsPanel").classList.remove("hidden");
 
   if (overallStatus) {
@@ -811,10 +973,128 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
     $("rateSection").classList.add("hidden");
   }
 
+  renderPeerAnomaly(peerAnomaly);
+  renderSimilarCases(similarCases);
+
   $("r_recs").innerHTML = recs.map((r) => `<li>${r}</li>`).join("");
   if (typeof $("resultsPanel").scrollIntoView === "function") {
     $("resultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
   }
+}
+
+/** Hiện khối "So sánh với nhóm thiết bị tương tự" (đề xuất #2, DGA.evaluatePeerAnomaly()
+ *  ở logic/dga-logic-peer.js) — LUÔN gắn nhãn rõ đây là THAM KHẢO THỐNG KÊ, KHÔNG phải
+ *  ngưỡng quy định QĐ1901/IEC, để không bị hiểu nhầm là 1 tiêu chí Đạt/Không đạt chính
+ *  thức như các bảng ở trên. peerAnomaly có thể undefined nếu không tính được (VD lần
+ *  đo chưa xác định Loại thiết bị). */
+function renderPeerAnomaly(peerAnomaly) {
+  const section = $("peerAnomalySection");
+  if (!section) return;
+  if (!peerAnomaly) {
+    section.classList.add("hidden");
+    return;
+  }
+  section.classList.remove("hidden");
+  $("peerAnomalyIntro").textContent =
+    "Đối chiếu lần đo này với các lần đo KHÁC (cùng thiết bị hoặc thiết bị khác) trong nhóm thiết bị " +
+    "tương tự đã có trong Lịch sử đo — chỉ mang tính CẢNH BÁO SỚM tham khảo (thiết bị đang \"lệch khỏi số " +
+    "đông\" dù chưa vượt ngưỡng), KHÔNG thay thế đánh giá theo Bảng 64/66/Annex A ở trên.";
+
+  const peerLevelPill = (level) => {
+    if (level === "alert") return `<span class="pill bad">Lệch rõ rệt</span>`;
+    if (level === "warn") return `<span class="pill warn">Hơi lệch</span>`;
+    return `<span class="pill ok">Bình thường</span>`;
+  };
+
+  if (!peerAnomaly.sufficient) {
+    $("peerAnomalyInsufficient").style.display = "";
+    $("peerAnomalyInsufficient").textContent = peerAnomaly.groupLabel
+      ? `Chưa đủ dữ liệu để so sánh — nhóm "${peerAnomaly.groupLabel}" hiện chỉ có ${peerAnomaly.groupSize} lần đo khác ` +
+        `trong Lịch sử đo (cần tối thiểu ${peerAnomaly.minSamples}). Sẽ tự tính lại khi có thêm dữ liệu.`
+      : `Chưa đủ dữ liệu để so sánh — lần đo này chưa xác định được Loại thiết bị hoặc Lịch sử đo chưa có lần đo nào khác.`;
+    $("peerAnomalyContent").classList.add("hidden");
+    return;
+  }
+  $("peerAnomalyInsufficient").style.display = "none";
+  $("peerAnomalyContent").classList.remove("hidden");
+
+  $("r_peerZTable").innerHTML = peerAnomaly.gasRows.map((r) => `
+    <tr>
+      <td>${gasLabelIcon(r.gas)}${r.gas}</td>
+      <td>${r.value}</td>
+      <td>${r.peerMean.toFixed(2)}</td>
+      <td>${r.z >= 0 ? "+" : ""}${r.z.toFixed(2)}</td>
+      <td>${peerLevelPill(r.level)}</td>
+    </tr>
+  `).join("");
+
+  const groupNote = `Nhóm so sánh: ${escapeHtml(peerAnomaly.groupLabel)} — ${peerAnomaly.groupSize} lần đo khác.`;
+  if (peerAnomaly.isolationScore === null) {
+    $("r_peerIsolation").innerHTML = `${groupNote} Không đủ dữ liệu để tính Isolation Forest.`;
+  } else {
+    $("r_peerIsolation").innerHTML =
+      `${groupNote} Điểm: <strong>${peerAnomaly.isolationScore.toFixed(2)}</strong> (thang 0–1, càng gần 1 càng bất ` +
+      `thường so với nhóm) — ${peerLevelPill(peerAnomaly.isolationLevel)}`;
+  }
+  if (peerAnomaly.flaggedGases.length) {
+    $("r_peerIsolation").innerHTML += `<br>Khí lệch khỏi số đông theo z-score: ${peerAnomaly.flaggedGases.map((g) => escapeHtml(g)).join(", ")}.`;
+  }
+}
+
+/** Hiện khối "Ca tương tự trong lịch sử đo" (đề xuất #3, DGA.findSimilarCases() ở
+ *  logic/dga-logic-case.js + evaluateHistoricalCase() ở trên) — LUÔN gắn nhãn rõ đây
+ *  là THAM KHẢO (kết luận hiện ra là của CHÍNH lần đo lịch sử đó, KHÔNG áp dụng cho lần
+ *  đo đang phân tích). similarCases có thể undefined nếu không tính được. */
+function renderSimilarCases(similarCases) {
+  const section = $("caseSection");
+  if (!section) return;
+  if (!similarCases) {
+    section.classList.add("hidden");
+    return;
+  }
+  section.classList.remove("hidden");
+  $("caseIntro").textContent =
+    "Tìm trong TOÀN BỘ Lịch sử đo (không giới hạn cùng loại/hãng thiết bị như khối \"So sánh với nhóm thiết bị " +
+    "tương tự\" ở trên) những lần đo có tỷ lệ 7 khí hòa tan GẦN GIỐNG NHẤT với lần đo này (cosine similarity) " +
+    "— hiện lại kết luận CỦA CHÍNH lần đo lịch sử đó để tham khảo hỗ trợ ra quyết định, KHÔNG phải kết luận " +
+    "áp dụng cho lần đo đang phân tích.";
+
+  if (similarCases.insufficient || !similarCases.cases.length) {
+    $("caseInsufficient").style.display = "";
+    $("caseInsufficient").textContent =
+      similarCases.insufficient && similarCases.reason === "empty-target"
+        ? "Lần đo này chưa có số liệu khí nào để tìm ca tương tự."
+        : "Chưa tìm thấy lần đo nào trong Lịch sử đo đủ giống lần đo này (tỷ lệ các khí khác biệt quá nhiều, hoặc Lịch sử đo còn ít dữ liệu).";
+    $("caseCards").innerHTML = "";
+    return;
+  }
+  $("caseInsufficient").style.display = "none";
+
+  $("caseCards").innerHTML = similarCases.cases.map(({ record, similarity, evaluation }) => {
+    const gasCells = DGA.GASES.map((g) => {
+      const v = evaluation.gases[g];
+      return `<span style="margin-right:12px; white-space:nowrap;">${gasLabelIcon(g)}${g}: <strong>${v ?? 0}</strong></span>`;
+    }).join("");
+    const phaText = record.pha ? " (pha " + escapeHtml(DGA.phaLabel(record.pha)) + ")" : "";
+    return `
+      <div class="stat-card" style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:8px;">
+          <div style="font-weight:700;">${escapeHtml(record.tram || "—")} — ${escapeHtml(record.thiet_bi || "—")}${phaText}</div>
+          <div style="font-size:13px; color:var(--gray-600);">Độ giống: <strong>${(similarity * 100).toFixed(0)}%</strong> · ${escapeHtml(DGA.formatSampleDate(record.sample_date) || "—")}</div>
+        </div>
+        <div style="margin-top:4px; font-size:13px; color:var(--gray-600);">
+          ${escapeHtml(record.equipment_type || "—")}${record.manufacturer ? " — hãng " + escapeHtml(record.manufacturer) : ""}
+        </div>
+        <div style="margin-top:8px; font-size:13px; line-height:1.9;">${gasCells}</div>
+        <div style="margin-top:8px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; font-size:13px;">
+          <span>TCG: <strong>${evaluation.tcg.toFixed(1)} ppm</strong></span>
+          <span>Kết luận (tính lại theo tiêu chuẩn của chính ca này): ${verdictPill(evaluation.overall)}</span>
+          <span>Mã chẩn đoán: <strong>${escapeHtml(evaluation.diagnosis)}</strong></span>
+        </div>
+        ${record.ghi_chu ? `<p class="note" style="margin-top:6px; margin-bottom:0;">Ghi chú đã nhập lúc đó: "${escapeHtml(record.ghi_chu)}"</p>` : ""}
+      </div>
+    `;
+  }).join("");
 }
 
 // ---------------------------------------------------------------------

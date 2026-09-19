@@ -376,6 +376,24 @@
              để nguyên nếu form chưa xóa) mỗi lần — xem addEventListener 3 ô Trạm/Thiết bị/Pha ở
              app-core.js KHÔNG tự nhớ nhóm trường này giữa các thiết bị khác nhau. -->
         <div class="section-title">Thông số kỹ thuật thiết bị (tùy chọn — dùng khi xuất Báo cáo phân tích kỹ thuật)</div>
+        <!-- Ô kéo-thả ảnh chụp TẤM NHÃN THIẾT BỊ (nameplate) — đọc bằng OCR (xem
+             bbtn/nameplate-import.js) để gợi ý điền 1 phần các ô bên dưới (Kiểu máy/Số
+             chế tạo/Năm sản xuất/Điện áp định mức/Loại dầu + Nhà sản xuất ở khối phía
+             trên). KHÔNG có mẫu nhãn chung (mỗi hãng trình bày khác nhau) nên độ tin cậy
+             THẤP HƠN đọc BBTN — luôn cần xem lại toàn bộ, xem onNameplateFileSelected()
+             ở ui/ui-dga.js. Cùng cơ chế kéo-thả với ô BBTN ở trên, xem
+             setupNameplateDropzone() ở app-core.js. -->
+        <label class="field field-wide" style="margin-bottom:14px;">
+          <svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+          Ảnh chụp tấm nhãn thiết bị (nameplate — JPG/PNG, tùy chọn)
+          <div class="file-dropzone" id="nameplateDropzone">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="nameplateDropzoneText">Kéo thả ảnh chụp nhãn máy vào đây, hoặc <span class="file-dropzone-link">bấm để chọn ảnh</span></span>
+            <input id="f_nameplate" type="file" accept="image/*,application/pdf,.pdf" />
+          </div>
+          <p class="note hidden" id="nameplateImportNote"></p>
+          <p class="note hidden" id="nameplateRawTextNote" style="max-height:120px; overflow-y:auto; white-space:pre-wrap; font-family:monospace; font-size:11px;"></p>
+        </label>
         <div class="grid">
           <label class="field">Kiểu máy
             <input id="f_kieumay" type="text" placeholder="(không bắt buộc)" />
@@ -501,7 +519,7 @@
           <tbody id="r_gasTable"></tbody>
         </table></div>
 
-        <div class="section-title">Ba tỷ số khí cơ bản (Bảng 66, Điều 54 QĐ1901 = Table 2, IEC 60599:1999)</div>
+        <div class="section-title">Ba tỷ số khí cơ bản (Bảng 66, Điều 54 QĐ1901 = Table 2, IEC 60599:2022)</div>
         <div class="table-scroll"><table>
           <thead><tr><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th><th>Ngưỡng PD (CH4/H2)</th><th>Điều kiện áp dụng</th></tr></thead>
           <tbody><tr>
@@ -529,7 +547,7 @@
           </tr></tbody>
         </table></div>
 
-        <div class="section-title">Tam giác Duval 1 (Annex B, Figure B.3, IEC 60599:1999)</div>
+        <div class="section-title">Tam giác Duval 1 (Annex B, Figure B.3, IEC 60599:2022)</div>
         <div class="duval-wrap">
           <svg id="duvalSvg" viewBox="-8 -8 116 102" style="width:280px; max-width:100%; height:auto; flex:0 0 auto;"></svg>
           <div style="flex:1; min-width:220px;">
@@ -540,7 +558,7 @@
               </tr></tbody>
             </table></div>
             <p class="note">Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
-              điện/tăng nhiệt mà chính hình vẽ gốc IEC 60599:1999 Annex B cũng không phân định rạch ròi — nên đối
+              điện/tăng nhiệt mà chính hình vẽ gốc IEC 60599:2022 Annex B cũng không phân định rạch ròi — nên đối
               chiếu thêm Bảng 66 và dữ liệu vận hành trước khi kết luận.</p>
           </div>
         </div>
@@ -552,6 +570,28 @@
             <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
             <tbody id="r_rateTable"></tbody>
           </table></div>
+        </div>
+
+        <div id="peerAnomalySection" class="hidden">
+          <div class="section-title">So sánh với nhóm thiết bị tương tự (thống kê tham khảo — KHÔNG phải ngưỡng quy định QĐ1901/IEC)</div>
+          <p class="note" id="peerAnomalyIntro"></p>
+          <p class="note" id="peerAnomalyInsufficient" style="display:none;"></p>
+          <div id="peerAnomalyContent" class="hidden">
+            <div class="table-scroll"><table>
+              <thead><tr><th>Khí</th><th>Giá trị (ppm)</th><th>Trung bình nhóm (ppm)</th><th>Z-score (thang log)</th><th>Nhận định</th></tr></thead>
+              <tbody id="r_peerZTable"></tbody>
+            </table></div>
+            <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+              <div class="stat-card"><div class="label">Điểm bất thường tổng hợp (Isolation Forest, xét đồng thời cả 7 khí)</div><div class="value" id="r_peerIsolation" style="font-size:15px;">—</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="caseSection" class="hidden">
+          <div class="section-title">Ca tương tự trong lịch sử đo (case-based reasoning — tham khảo, KHÔNG phải kết luận cho lần đo này)</div>
+          <p class="note" id="caseIntro"></p>
+          <p class="note" id="caseInsufficient" style="display:none;"></p>
+          <div id="caseCards"></div>
         </div>
 
         <div class="section-title">Khuyến cáo</div>
@@ -635,7 +675,7 @@
           <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>So sánh tốc độ gia tăng khí giữa 2 lần đo</h2>
           <p class="note">Chọn 1 thiết bị (Trạm + Thiết bị + Pha) đã có từ 2 lần đo trở lên, rồi chọn 2 mốc thời gian
             bất kỳ để so sánh — không bắt buộc phải là 2 lần liền kề. Tốc độ tự động đối chiếu Bảng 65 QĐ1901 (Điều 54,
-            tương ứng mục 8.4 IEC 60599:1999), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
+            tương ứng mục 8.3 IEC 60599:2022), hoặc khoảng tốc độ riêng nếu nhà sản xuất của thiết bị đó có cấu hình.</p>
           <div class="grid">
             <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
               <select id="cmp_device"><option value="">— Chọn thiết bị —</option></select>
@@ -1408,7 +1448,7 @@
       <div class="quytrinh-subpanel hidden" id="quytrinh-danhgia" role="tabpanel">
       <div class="panel">
         <h2>Quy trình nghiệp vụ đánh giá DGA</h2>
-        <p class="note">Chuyển thể từ lưu đồ đánh giá kết quả DGA (Hình 1 — Flow chart, mục 6, IEC 60599:1999) kết
+        <p class="note">Chuyển thể từ lưu đồ đánh giá kết quả DGA (Hình 1 — Flow chart, mục 9, IEC 60599:2022) kết
           hợp nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/QĐ-EVNNPT. Đây chính là thuật toán mà công cụ này áp
           dụng để tính khối "Trạng thái tổng thể" hiển thị đầu mục 2 "Kết quả đánh giá" ở tab "DGA" cho mỗi lần đo.
           Thuật toán CHỈ mang tính hỗ trợ tự động — KHÔNG thay thế đánh giá tổng thể của kỹ sư có thẩm quyền theo
@@ -1430,7 +1470,7 @@
             <div class="step-num">2</div>
             <h3>So sánh với giá trị điển hình &amp; lần đo liền trước</h3>
             <p>Hệ thống tự đối chiếu từng khí với "giá trị điển hình" theo đúng loại thiết bị (Bảng 64 QĐ1901/Điều
-              54, hoặc Annex A IEC 60599:1999), đồng thời tự tìm lần đo gần nhất liền trước (cùng Trạm + Thiết bị +
+              54, hoặc Annex A IEC 60599:2022), đồng thời tự tìm lần đo gần nhất liền trước (cùng Trạm + Thiết bị +
               Pha) để tính tốc độ tăng khí (ppm/năm) và đối chiếu Bảng 65 QĐ1901.</p>
             <p class="maps-to">Thực hiện tự động khi bấm <strong>"Phân tích &amp; Lưu"</strong>; xem lại các lần đo
               trước ở <strong>Tab "Lịch sử đo"</strong>.</p>
@@ -1775,7 +1815,7 @@
 
       <div class="panel">
         <h2>Căn cứ</h2>
-        <p class="note">IEC 60599:1999, Hình 1 (Flow chart, mục 6) và mục 5.3/6.1(c)/8.4 — QĐ1901/QĐ-EVNNPT Điều 3
+        <p class="note">IEC 60599:2022, Hình 1 (Flow chart, mục 9) và mục 5.3/6.1(c)/8.3 — QĐ1901/QĐ-EVNNPT Điều 3
           (nguyên tắc đánh giá tổng thể), Điều 54 (Bảng 63-66, phân tích khí hòa tan dầu MBA), Điều 10 (Bảng 12,
           TI). Thuật toán "Trạng thái tổng thể" ở trên do công cụ này tự xây dựng để số hóa lưu đồ gốc — không phải
           một bảng/điều khoản trích dẫn trực tiếp từ QĐ1901; luôn đối chiếu lại với đánh giá của kỹ sư có thẩm quyền
@@ -1822,7 +1862,7 @@
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
         <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
           thủng dầu (kV) — theo Bảng 58/55/54, Điều 50/47/46 QĐ1901, phân theo cấp điện áp MBA. Chỉ áp dụng cho
-          MBA/Kháng dầu — QĐ1901 không có bảng riêng cho dầu TI/TU (theo quy định nhà sản xuất). IEC 60599:1999
+          MBA/Kháng dầu — QĐ1901 không có bảng riêng cho dầu TI/TU (theo quy định nhà sản xuất). IEC 60599:2022
           không tự quy định giới hạn cho 3 hạng mục này (thuộc phạm vi IEC 60422) nên công cụ chỉ đối chiếu theo
           đúng bảng số liệu của QĐ1901.</p>
 
@@ -2154,9 +2194,9 @@
           <div>
             <h2>DGAOil</h2>
             <p class="note">Công cụ hỗ trợ đánh giá phân tích khí hòa tan (DGA) và dầu cách điện trong thiết bị điện,
-              tham chiếu QĐ1901/QĐ-EVNNPT và IEC 60599:1999 — dùng để tra cứu, đối chiếu nhanh, không thay thế
+              tham chiếu QĐ1901/QĐ-EVNNPT và IEC 60599:2022 — dùng để tra cứu, đối chiếu nhanh, không thay thế
               nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.</p>
-            <p class="note">QĐ1901/EVNNPT (Điều 10 – TI, Điều 54 – MBA) + IEC 60599:1999 Annex A (TU, Sứ xuyên, và tiêu chuẩn chặt hơn cho MBA) ·
+            <p class="note">QĐ1901/EVNNPT (Điều 10 – TI, Điều 54 – MBA) + IEC 60599:2022 Annex A (TU, Sứ xuyên, và tiêu chuẩn chặt hơn cho MBA) ·
               Bảng 66 (Ba tỷ số khí) &amp; Tam giác Duval (Annex B) · có thể cấu hình tiêu chuẩn riêng theo nhà sản xuất</p>
           </div>
         </div>
@@ -2277,6 +2317,11 @@
        window.BbtnImport khi người dùng chọn file, nên không cần chờ module này xong
        trước — nó luôn sẵn sàng từ trước khi có tương tác đầu tiên của người dùng. -->
   <script type="module" src="bbtn/bbtn-import.js"></script>
+  <!-- Đọc ẢNH CHỤP TẤM NHÃN THIẾT BỊ (nameplate — khác BBTN ở trên) để gợi ý điền khối
+       "Thông số kỹ thuật thiết bị" — xem bbtn/nameplate-import.js. Cùng cơ chế tải như
+       bbtn-import.js ngay phía trên (type="module", luôn sẵn sàng trước tương tác đầu
+       tiên của người dùng). -->
+  <script type="module" src="bbtn/nameplate-import.js"></script>
   <!-- PizZip + docxtemplater (MIT) — dùng để điền số liệu vào mẫu Biên bản thí nghiệm
        (.docx) ngay trong trình duyệt khi bấm "Xuất BBTN (docx)", xem bbtn-export.js.
        Đóng gói sẵn trong vendor/ (không phụ thuộc CDN ngoài) cùng lý do như vendor/pdfjs/
@@ -2284,10 +2329,10 @@
   <script src="vendor/docxtemplater/pizzip.min.js"></script>
   <script src="vendor/docxtemplater/docxtemplater.min.js"></script>
   <script src="config.js"></script>
-  <!-- dga-logic.js (lớp logic nghiệp vụ) đã được tách thành 6 file theo miền, nạp bằng
+  <!-- dga-logic.js (lớp logic nghiệp vụ) đã được tách thành 8 file theo miền, nạp bằng
        <script> thường (KHÔNG phải module) NGAY TRƯỚC dga-logic.js bên dưới — chia sẻ
        chung 1 scope toàn cục giống hệt các file ui-*.js. dga-logic-core.js là "hub" mà
-       5 file còn lại phụ thuộc vào nên phải nạp đầu tiên; thứ tự giữa 5 file sau không
+       7 file còn lại phụ thuộc vào nên phải nạp đầu tiên; thứ tự giữa 7 file sau không
        quan trọng. dga-logic.js chỉ còn nhiệm vụ lắp ráp (gom lại thành object window.DGA)
        + hỗ trợ require() từ Node khi chạy test (xem đầu file dga-logic.js). -->
   <script src="logic/dga-logic-core.js"></script>
@@ -2296,6 +2341,8 @@
   <script src="logic/dga-logic-instrument-oil.js"></script>
   <script src="logic/dga-logic-forecast.js"></script>
   <script src="logic/dga-logic-regulation-config.js"></script>
+  <script src="logic/dga-logic-peer.js"></script>
+  <script src="logic/dga-logic-case.js"></script>
   <script src="dga-logic.js"></script>
   <script src="storage.js"></script>
   <!-- app.js cũ (2548 dòng, mọi tab gộp 1 file) đã được tách theo tab/tính năng

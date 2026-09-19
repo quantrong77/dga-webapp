@@ -38,12 +38,14 @@ if (typeof module !== "undefined" && module.exports) {
 
   const LOGIC_DIR = path.join(__dirname, "logic");
   const LOGIC_FILES = [
-    "dga-logic-core.js", // phải nạp đầu tiên — là hub mà 5 file còn lại phụ thuộc vào
+    "dga-logic-core.js", // phải nạp đầu tiên — là hub mà các file còn lại phụ thuộc vào
     "dga-logic-gas.js",
     "dga-logic-oil.js",
     "dga-logic-instrument-oil.js",
     "dga-logic-forecast.js",
     "dga-logic-regulation-config.js",
+    "dga-logic-peer.js",
+    "dga-logic-case.js",
   ];
 
   const sandbox = {
@@ -93,6 +95,8 @@ if (typeof module !== "undefined" && module.exports) {
       REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
       resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues,
       getValueAtPath, setValueAtPath,
+      PEER_MIN_SAMPLES, PEER_Z_WARN, PEER_Z_ALERT, PEER_IF_WARN, PEER_IF_ALERT, evaluatePeerAnomaly,
+      CASE_TOP_N, CASE_MIN_SIMILARITY, findSimilarCases,
     })`,
     context
   );
@@ -125,6 +129,8 @@ if (typeof module !== "undefined" && module.exports) {
     REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
     resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues,
     getValueAtPath, setValueAtPath,
+    PEER_MIN_SAMPLES, PEER_Z_WARN, PEER_Z_ALERT, PEER_IF_WARN, PEER_IF_ALERT, evaluatePeerAnomaly,
+    CASE_TOP_N, CASE_MIN_SIMILARITY, findSimilarCases,
   };
 
   window.DGA = DGA;

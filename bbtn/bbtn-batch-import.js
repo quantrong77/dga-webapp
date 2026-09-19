@@ -111,7 +111,7 @@ async function handleBatchFileList(fileList) {
  *  ô nhập RỜI TỪNG LẦN ở form phía trên để gõ tay chính xác hơn). */
 function recomputeRowStatus(row) {
   if (row.parseError) {
-    row.status = "✗ Không đọc được file (có thể là ảnh scan, chưa hỗ trợ OCR) — bỏ qua";
+    row.status = "✗ Không đọc được file (kể cả đã thử OCR nếu là ảnh scan) — bỏ qua";
     row.statusKind = "bad";
     row.include = false;
     return;
@@ -142,6 +142,14 @@ function recomputeRowStatus(row) {
   }
   if (!row.parsed.pha) {
     row.status = "⚠ Không đọc được Pha — mặc định A, kiểm tra lại cột Pha";
+    row.statusKind = "warn";
+    row.include = true;
+    return;
+  }
+  if (row.parsed.viaOCR) {
+    // Đọc được bằng OCR (ảnh scan) thay vì lớp text thật — vẫn cho nhập nhưng cảnh báo
+    // độ tin cậy thấp hơn, xem bbtn-import.js.
+    row.status = "⚠ Đọc bằng OCR (ảnh scan) — độ tin cậy thấp hơn, kiểm tra kỹ số liệu trước khi nhập";
     row.statusKind = "warn";
     row.include = true;
     return;

@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------
 // Tab "Dầu cách điện" — Độ ẩm dầu (ppm), tgδ ở 90°C (%), Điện áp chọc thủng
 // dầu (kV), theo Bảng 58/55/54 QĐ1901 (Điều 50/47/46), phân theo cấp điện áp
-// MBA. Chỉ áp dụng MBA/Kháng dầu. IEC 60599:1999 không tự quy định 3 hạng mục
+// MBA. Chỉ áp dụng MBA/Kháng dầu. IEC 60599:2022 không tự quy định 3 hạng mục
 // này (thuộc phạm vi IEC 60422) nên chỉ đối chiếu theo đúng bảng của QĐ1901 —
 // xem DGA.evaluateOilTest() trong dga-logic.js.
 // ---------------------------------------------------------------------

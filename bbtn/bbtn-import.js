@@ -30,6 +30,85 @@ import * as pdfjsLib from "../vendor/pdfjs/pdf.min.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
 
+// OCR (nhận diện chữ từ ảnh) cho trường hợp BBTN là ảnh scan/chụp — không có lớp text
+// nào để pdf.js đọc trực tiếp (pdfFileToLines() ở dưới trả về rỗng/gần rỗng). Dùng
+// Tesseract.js (Apache-2.0, WASM, chạy 100% trong trình duyệt qua Web Worker riêng —
+// KHÔNG gửi ảnh lên bất kỳ server/API OCR nào, giữ đúng nguyên tắc "100% phía client"
+// nêu ở đầu file) được vendor sẵn trong vendor/tesseract/ (core LSTM-only + dữ liệu
+// ngôn ngữ Việt/Anh bản "best_int" đã nén gzip, ~8MB tổng — không phụ thuộc CDN ngoài,
+// giống hệt cách pdf.js đã được đóng gói sẵn ở trên) — hoạt động cả khi mạng của người
+// dùng chặn CDN hoặc chạy offline. Đây là hướng đọc DỰ PHÒNG (chỉ chạy khi đọc trực
+// tiếp thất bại) và kết quả kém tin cậy hơn đọc trực tiếp từ lớp text thật của PDF, nên
+// mọi kết quả qua OCR đều được đánh dấu viaOCR=true để giao diện nhắc người dùng kiểm
+// tra kỹ hơn — xem onBbtnFileSelected() ở ui/ui-dga.js.
+// Bản ESM của Tesseract.js chỉ có 1 export mặc định (gói nguyên module.exports kiểu
+// CommonJS gốc thành 1 object) — không có named export createWorker/OEM riêng.
+import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
+const { createWorker, OEM, PSM } = Tesseract;
+
+const TESS_WORKER_PATH = new URL("../vendor/tesseract/worker.min.js", import.meta.url).href;
+const TESS_CORE_PATH = new URL("../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
+const TESS_LANG_PATH = new URL("../vendor/tesseract/lang-data", import.meta.url).href;
+// Dưới ngưỡng này (ký tự), coi như pdf.js không đọc được lớp text thật (file toàn ảnh,
+// hoặc chỉ có vài ký tự rác như số trang) — đủ thấp để không bỏ sót biên bản thật (BBTN
+// PTC3/BM.15 điền đủ luôn có hàng nghìn ký tự), đủ cao để không kích hoạt OCR (chậm hơn
+// đọc trực tiếp nhiều lần) một cách không cần thiết.
+const MIN_TEXT_LEN_FOR_DIRECT_READ = 40;
+// Độ phân giải dựng trang PDF thành ảnh trước khi đưa qua OCR — chữ trong biên bản scan
+// thường nhỏ (bảng số liệu), cần phóng to hơn kích thước gốc (scale 1 ≈ 72 DPI) để
+// Tesseract nhận diện chính xác hơn, đổi lại chậm hơn — chấp nhận được vì đây là đường
+// dự phòng, không chạy cho mọi file.
+const OCR_RENDER_SCALE = 3;
+
+// ---------------------------------------------------------------------------
+// 0) Dự phòng OCR: dựng từng trang PDF thành ảnh (canvas) rồi nhận diện chữ bằng
+//    Tesseract.js, trả về danh sách "dòng" cùng định dạng với pdfFileToLines() để tái
+//    sử dụng nguyên vẹn toàn bộ các hàm trích trường/khí ở dưới (chỉ khác nguồn chữ).
+// ---------------------------------------------------------------------------
+async function pdfFileToLinesViaOCR(file, onProgress) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const worker = await createWorker("vie+eng", OEM.LSTM_ONLY, {
+    workerPath: TESS_WORKER_PATH,
+    corePath: TESS_CORE_PATH,
+    langPath: TESS_LANG_PATH,
+    gzip: true,
+    logger: (m) => {
+      if (typeof onProgress === "function") onProgress(m);
+    },
+  });
+  // QUAN TRỌNG: ép lại PSM.AUTO (phân đoạn trang tự động — vốn dĩ ĐÃ LÀ giá trị mặc
+  // định theo tài liệu Tesseract) một cách TƯỜNG MINH ngay sau khi tạo worker. Đã kiểm
+  // chứng thực tế: nếu KHÔNG gọi dòng này, engine cư xử khác với "mặc định" thật của nó
+  // — với biên bản dạng bảng (nhiều ô kẻ khung dọc+ngang như khối thông tin chung ở đầu
+  // BBTN), toàn bộ khối đó bị BỎ QUA hoàn toàn (không lỗi, không cảnh báo, chỉ đơn giản
+  // là mất trắng đoạn văn bản đó) — trong khi ép lại đúng giá trị PSM.AUTO này thì đọc
+  // đúng/đủ. Rất có thể là quirk/bug của tesseract.js — nhưng dòng này rẻ, an toàn, và
+  // khắc phục triệt để nên cứ gọi tường minh thay vì trông chờ vào mặc định ngầm.
+  await worker.setParameters({ tessedit_pageseg_mode: PSM.AUTO });
+  try {
+    const lines = [];
+    for (let p = 1; p <= pdf.numPages; p++) {
+      const page = await pdf.getPage(p);
+      const viewport = page.getViewport({ scale: OCR_RENDER_SCALE });
+      const canvas = document.createElement("canvas");
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      const ctx = canvas.getContext("2d");
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const { data } = await worker.recognize(canvas);
+      (data.text || "")
+        .split("\n")
+        .map((s) => s.replace(/\s+/g, " ").trim())
+        .filter(Boolean)
+        .forEach((s) => lines.push(s));
+    }
+    return lines;
+  } finally {
+    await worker.terminate();
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 1) PDF -> danh sách "dòng" văn bản theo đúng thứ tự trình bày (trên->dưới,
 //    trái->phải), gộp các mảnh text cùng một hàng dựa vào tọa độ y — mô phỏng lại
@@ -69,13 +148,43 @@ async function pdfFileToLines(file) {
 // ---------------------------------------------------------------------------
 // 2) Trích các trường thông tin chung (trạm, vị trí lắp đặt, pha, ngày, NSX...)
 // ---------------------------------------------------------------------------
-function extractLabelValue(lines, labelRe, stopRe) {
-  for (const line of lines) {
-    const m = line.match(labelRe);
+// Bỏ dấu tiếng Việt (không đổi độ dài chuỗi — thay TỪNG KÝ TỰ có dấu bằng đúng 1 ký tự
+// không dấu, khác NFD decompose vốn TÁCH 1 ký tự có dấu thành 2 ký tự nên sẽ làm lệch
+// vị trí match). Dùng để so khớp nhãn "chịu được" lỗi OCR (mất dấu, đọc nhầm dấu, hoặc
+// — ít gặp hơn nhưng vẫn xảy ra thực tế — rụng mất 1 ký tự đầu nhãn do nét chữ dính vào
+// đường kẻ khung bảng) MÀ VẪN CẮT ĐÚNG VỊ TRÍ trên dòng gốc (giữ nguyên dấu) để lấy value
+// hiển thị cho người dùng xem lại — không hiển thị bản đã bỏ dấu ra form.
+const VN_DIACRITICS_RE =
+  /[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]/gi;
+const VN_DIACRITICS_MAP = {
+  a: "àáảãạăằắẳẵặâầấẩẫậ", e: "èéẻẽẹêềếểễệ", i: "ìíỉĩị", o: "òóỏõọôồốổỗộơờớởỡợ",
+  u: "ùúủũụưừứửữự", y: "ỳýỷỹỵ", d: "đ",
+};
+const VN_DIACRITICS_REVERSE = {};
+for (const [base, accented] of Object.entries(VN_DIACRITICS_MAP)) {
+  for (const ch of accented) {
+    VN_DIACRITICS_REVERSE[ch] = base;
+    VN_DIACRITICS_REVERSE[ch.toUpperCase()] = base.toUpperCase();
+  }
+}
+function stripVnDiacritics(s) {
+  return s.replace(VN_DIACRITICS_RE, (c) => VN_DIACRITICS_REVERSE[c] || c);
+}
+
+// labelRe/stopRe của MỌI hàm bên dưới đây từ nay viết bằng bản KHÔNG DẤU (VD "Ten du
+// an" thay vì "Tên dự án") và luôn so khớp với BẢN ĐÃ BỎ DẤU của dòng/văn bản (foldedLine/
+// foldedFullText) — vì OCR (Tesseract.js, xem pdfFileToLinesViaOCR ở trên) thường đọc sai
+// hoặc mất hẳn dấu tiếng Việt (ví dụ "Hãng sản xuất" → "Hang sản xuất"/"ang sản xuất").
+// Việc này AN TOÀN cho cả nhánh đọc trực tiếp (pdf.js, dấu chuẩn xác) vì bỏ dấu 1 chuỗi
+// đã chuẩn rồi so khớp bản không dấu vẫn tìm đúng, chỉ RỘNG RÃI hơn — không có rủi ro
+// nhận nhầm vì các nhãn này đủ đặc trưng ngay cả khi không dấu.
+function extractLabelValue(lines, foldedLines, labelRe, stopRe) {
+  for (let i = 0; i < lines.length; i++) {
+    const m = foldedLines[i].match(labelRe);
     if (!m) continue;
-    let rest = line.slice(m.index + m[0].length).trim();
+    let rest = lines[i].slice(m.index + m[0].length).trim();
     if (stopRe) {
-      const stopMatch = rest.match(stopRe);
+      const stopMatch = stripVnDiacritics(rest).match(stopRe);
       if (stopMatch) rest = rest.slice(0, stopMatch.index).trim();
     }
     if (rest) return rest;
@@ -83,11 +192,11 @@ function extractLabelValue(lines, labelRe, stopRe) {
   return null;
 }
 
-function guessEquipmentType(fullText) {
-  if (/biến dòng điện|current transformer/i.test(fullText)) return "TI (biến dòng điện)";
-  if (/biến điện áp|voltage transformer|potential transformer/i.test(fullText)) return "TU (biến điện áp)";
-  if (/máy biến áp|kháng dầu|kháng điện|power transformer|shunt reactor/i.test(fullText)) return "MBA/Kháng dầu";
-  if (/sứ xuyên|bushing/i.test(fullText)) return "Sứ xuyên (Bushing)";
+function guessEquipmentType(foldedFullText) {
+  if (/bien dong dien|current transformer/i.test(foldedFullText)) return "TI (biến dòng điện)";
+  if (/bien dien ap|voltage transformer|potential transformer/i.test(foldedFullText)) return "TU (biến điện áp)";
+  if (/may bien ap|khang dau|khang dien|power transformer|shunt reactor/i.test(foldedFullText)) return "MBA/Kháng dầu";
+  if (/su xuyen|bushing/i.test(foldedFullText)) return "Sứ xuyên (Bushing)";
   return null;
 }
 
@@ -99,13 +208,13 @@ function guessDeviceCode(siteText) {
   return m ? m[1] : null;
 }
 
-function guessPhase(fullText) {
-  const m = fullText.match(/\bpha\s*([ABC])\b/i);
+function guessPhase(foldedFullText) {
+  const m = foldedFullText.match(/\bpha\s*([ABC])\b/i);
   return m ? m[1].toUpperCase() : null;
 }
 
-function guessSampleDateISO(fullText) {
-  const m = fullText.match(/Ngày lấy mẫu[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
+function guessSampleDateISO(foldedFullText) {
+  const m = foldedFullText.match(/Ngay lay mau[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
   if (!m) return null;
   const [, dd, mm, yyyy] = m;
   return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
@@ -116,8 +225,8 @@ function guessSampleDateISO(fullText) {
 // ở đâu trong app, xem bbtnFormatDateVN() ở bbtn-export.js chỉ định dạng dd/mm/yyyy).
 // Khác "Ngày lấy mẫu" (guessSampleDateISO) vì 2 mốc có thể lệch nhau nếu gửi mẫu đi
 // phân tích sau ngày lấy mẫu thực tế ngoài hiện trường.
-function guessTestDateISO(fullText) {
-  const m = fullText.match(/Ngày thí nghiệm[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
+function guessTestDateISO(foldedFullText) {
+  const m = foldedFullText.match(/Ngay thi nghiem[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
   if (!m) return null;
   const [, dd, mm, yyyy] = m;
   return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
@@ -126,13 +235,15 @@ function guessTestDateISO(fullText) {
 // "Điều kiện môi trường (Ambient condition): t (Temp.) = 29 ºC , Độ ẩm (Humidity) = 78 %"
 // — 2 giá trị số (nhiệt độ/độ ẩm) nằm chung 1 dòng, tách bằng 2 regex riêng dựa vào
 // nhãn tiếng Anh trong ngoặc (ổn định hơn nhãn tiếng Việt vì không dấu/không viết tắt).
-function guessNhietDo(fullText) {
-  const m = fullText.match(/(?:t\s*\(Temp\.?\)|Nhiệt độ)\s*=\s*(-?\d+(?:[.,]\d+)?)\s*º?C/i);
+function guessNhietDo(foldedFullText) {
+  // Chấp nhận cả "º" (ordinal masculine — ký tự đúng trong font PDF gốc) lẫn "°" (dấu độ
+  // Unicode chuẩn — Tesseract OCR luôn chuẩn hóa về ký tự này bất kể font gốc dùng gì).
+  const m = foldedFullText.match(/(?:t\s*\(Temp\.?\)|Nhiet do)\s*=\s*(-?\d+(?:[.,]\d+)?)\s*[º°]?C/i);
   return m ? parseFloat(m[1].replace(",", ".")) : null;
 }
 
-function guessDoAm(fullText) {
-  const m = fullText.match(/Độ ẩm[^=]*=\s*(\d+(?:[.,]\d+)?)\s*%/i);
+function guessDoAm(foldedFullText) {
+  const m = foldedFullText.match(/Do am[^=]*=\s*(\d+(?:[.,]\d+)?)\s*%/i);
   return m ? parseFloat(m[1].replace(",", ".")) : null;
 }
 
@@ -185,28 +296,59 @@ function extractYearAfterLabel(fullText, labelRe) {
 // ---------------------------------------------------------------------------
 // 4) Hàm chính — trả về { tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao,
 //    dienApDm, namSx, namVanHanh, loaiDau, ngayThiNghiem, lyDoThiNghiem, nhietDo,
-//    doAm, gases, matchedCount } — mọi trường có thể null nếu không nhận diện được.
+//    doAm, gases, matchedCount, viaOCR } — mọi trường có thể null nếu không nhận diện
+//    được. viaOCR=true nghĩa là dữ liệu đến từ đường dự phòng OCR (file không có lớp
+//    text thật, ví dụ ảnh scan/chụp) — độ tin cậy thấp hơn đọc trực tiếp, người gọi
+//    (ui/ui-dga.js, bbtn-batch-import.js) nên nhắc người dùng kiểm tra kỹ hơn.
+//    onProgress (tuỳ chọn) nhận các sự kiện tiến trình OCR dạng { status, progress }
+//    (progress từ 0 đến 1) để hiển thị "Đang nhận diện chữ..." — chỉ được gọi khi thật
+//    sự có chạy OCR (file đọc trực tiếp được thì không có gì để báo tiến trình).
 // ---------------------------------------------------------------------------
-async function extract(file) {
-  const lines = await pdfFileToLines(file);
+async function extract(file, onProgress) {
+  let lines = await pdfFileToLines(file);
+  let viaOCR = false;
+  if (lines.join("\n").trim().length < MIN_TEXT_LEN_FOR_DIRECT_READ) {
+    // Không đọc được lớp text thật (nhiều khả năng là ảnh scan/chụp) — thử OCR. Nếu
+    // OCR cũng không ra dòng nào (ảnh quá mờ, hoặc lỗi tải thư viện/dữ liệu ngôn ngữ),
+    // GIỮ NGUYÊN kết quả rỗng từ pdf.js thay vì ném lỗi — extract() vẫn trả về bình
+    // thường với matchedCount=0, để người gọi hiện đúng thông báo "không nhận diện
+    // được" thay vì lỗi kỹ thuật khó hiểu.
+    try {
+      const ocrLines = await pdfFileToLinesViaOCR(file, onProgress);
+      if (ocrLines.length) {
+        lines = ocrLines;
+        viaOCR = true;
+      }
+    } catch (err) {
+      // Bỏ qua lỗi OCR (VD trình duyệt quá cũ không hỗ trợ WASM) — coi như không đọc
+      // được, KHÔNG làm hỏng luồng đọc trực tiếp (lines rỗng từ pdf.js vẫn được dùng).
+    }
+  }
   const fullText = lines.join("\n");
+  const foldedLines = lines.map(stripVnDiacritics);
+  const foldedFullText = foldedLines.join("\n");
 
-  const tram = extractLabelValue(lines, /Tên dự án\/tên trạm[^:]*:/i, /\s{2,}\S/);
-  const viTri = extractLabelValue(lines, /Vị trí lắp đặt[^:]*:/i, /\s{2,}\S/);
-  const hangSanXuat = extractLabelValue(lines, /Hãng sản xuất[^:]*:/i, /Năm sản xuất/i);
-  const soCheTao = extractLabelValue(lines, /Số chế tạo[^:]*:/i, /Năm vận hành/i);
-  const dienApDm = extractLabelValue(lines, /Điện áp định mức[^:]*:/i, /Công suất/i);
-  const loaiDau = extractLabelValue(lines, /Loại dầu[^:]*:/i, /Ngày lấy mẫu/i);
-  const namSx = extractYearAfterLabel(fullText, /Năm sản xuất[^:]*:\s*(\d{4})/i);
-  const namVanHanh = extractYearAfterLabel(fullText, /Năm (?:vận hành|đưa vào vận hành)[^:]*:\s*(\d{4})/i);
-  const lyDoThiNghiem = extractLabelValue(lines, /Lý do thí nghiệm[^:]*:/i, /\s{2,}\S/);
-  const loai = guessEquipmentType(fullText);
+  // Chữ cái ĐẦU mỗi nhãn để "?" (tuỳ chọn) vì thực tế đã kiểm chứng: khi đọc bằng OCR,
+  // ký tự đầu tiên của 1 ô bảng (sát viền kẻ khung bên trái) thỉnh thoảng bị rụng mất
+  // HOÀN TOÀN (không phải lỗi dấu — mất hẳn 1 ký tự, VD "Tên dự án" → "ên dự án", "Điện
+  // áp" → "iện áp") — tuỳ dòng, không phải lúc nào cũng xảy ra. Không ảnh hưởng nhánh đọc
+  // trực tiếp (pdf.js không rụng ký tự) vì "?" vẫn khớp bình thường khi ký tự đó CÓ mặt.
+  const tram = extractLabelValue(lines, foldedLines, /T?en du an\/t?en tram[^:]*:/i, /\s{2,}\S/);
+  const viTri = extractLabelValue(lines, foldedLines, /V?i tri lap dat[^:]*:/i, /\s{2,}\S/);
+  const hangSanXuat = extractLabelValue(lines, foldedLines, /H?ang san xuat[^:]*:/i, /Nam san xuat/i);
+  const soCheTao = extractLabelValue(lines, foldedLines, /S?o che tao[^:]*:/i, /Nam van hanh/i);
+  const dienApDm = extractLabelValue(lines, foldedLines, /D?ien ap dinh muc[^:]*:/i, /Cong suat/i);
+  const loaiDau = extractLabelValue(lines, foldedLines, /L?oai dau[^:]*:/i, /Ngay lay mau/i);
+  const namSx = extractYearAfterLabel(foldedFullText, /Nam san xuat[^:]*:\s*(\d{4})/i);
+  const namVanHanh = extractYearAfterLabel(foldedFullText, /Nam (?:van hanh|dua vao van hanh)[^:]*:\s*(\d{4})/i);
+  const lyDoThiNghiem = extractLabelValue(lines, foldedLines, /L?y do thi nghiem[^:]*:/i, /\s{2,}\S/);
+  const loai = guessEquipmentType(foldedFullText);
   const thietbi = guessDeviceCode(viTri) || guessDeviceCode(fullText);
-  const pha = guessPhase(fullText);
-  const ngay = guessSampleDateISO(fullText);
-  const ngayThiNghiem = guessTestDateISO(fullText);
-  const nhietDo = guessNhietDo(fullText);
-  const doAm = guessDoAm(fullText);
+  const pha = guessPhase(foldedFullText);
+  const ngay = guessSampleDateISO(foldedFullText);
+  const ngayThiNghiem = guessTestDateISO(foldedFullText);
+  const nhietDo = guessNhietDo(foldedFullText);
+  const doAm = guessDoAm(foldedFullText);
   const gases = extractGasValues(lines);
 
   const matchedCount =
@@ -214,7 +356,7 @@ async function extract(file) {
 
   return {
     tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, namSx, namVanHanh, loaiDau,
-    ngayThiNghiem, lyDoThiNghiem, nhietDo, doAm, gases, matchedCount,
+    ngayThiNghiem, lyDoThiNghiem, nhietDo, doAm, gases, matchedCount, viaOCR,
   };
 }
 

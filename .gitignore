@@ -9,3 +9,5 @@ node_modules/
 # File biên bản/ghi chú tạm bạn tự lưu, không cần đưa lên GitHub
 *_saoluu.txt
 *.bak
+# Playwright CLI output (may contain credentials)
+.playwright-cli/

@@ -277,7 +277,7 @@ function onCompareRate() {
   $("cmpResultWrap").classList.remove("hidden");
   $("cmpNote").textContent =
     `${DGA.formatSampleDate(prevRec.sample_date)} → ${DGA.formatSampleDate(currRec.sample_date)} (${deltaDays} ngày) — Tiêu chuẩn tốc độ: ` +
-    (usingCustomRate ? "khoảng tốc độ riêng của nhà sản xuất" : "Bảng 65 QĐ1901 (Điều 54, tương ứng mục 8.4 IEC 60599:1999)") + ". " +
+    (usingCustomRate ? "khoảng tốc độ riêng của nhà sản xuất" : "Bảng 65 QĐ1901 (Điều 54, tương ứng mục 8.3 IEC 60599:2022)") + ". " +
     (rateRows[0].officialForEquipment
       ? "Áp dụng CHÍNH THỨC cho MBA/Kháng dầu."
       : "Chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");

@@ -5,7 +5,7 @@ Web app đánh giá phân tích khí hòa tan trong dầu (DGA) cho thiết bị
 
 Tiêu chuẩn mặc định (khi thiết bị chưa gán nhà sản xuất, hoặc nhà sản xuất chưa
 cấu hình đầy đủ ngưỡng) lấy **CHẶT HƠN** giữa **Quyết định 1901/QĐ-EVNNPT** và
-**IEC 60599:1999 Annex A** (bảng nồng độ khí theo từng loại thiết bị):
+**IEC 60599:2022 Annex A** (bảng nồng độ khí theo từng loại thiết bị):
 
 | Loại thiết bị | Nguồn ngưỡng tuyệt đối | Ngưỡng PD (CH4/H2) |
 |---|---|---|
@@ -23,9 +23,9 @@ Tính năng:
 - Đánh giá giá trị tuyệt đối từng khí so với tiêu chuẩn áp dụng (NSX, hoặc
   QĐ1901/IEC — xem bảng trên).
 - **Chẩn đoán dạng sự cố bằng 2 phương pháp:**
-  - *Ba tỷ số khí cơ bản* (Bảng 66 QĐ1901 = Table 2, IEC 60599:1999) → mã
+  - *Ba tỷ số khí cơ bản* (Bảng 66 QĐ1901 = Table 2, IEC 60599:2022) → mã
     PD/D1/D2/T1/T2/T3, ngưỡng PD (CH4/H2) tự điều chỉnh theo loại thiết bị.
-  - *Tam giác Duval 1* (Annex B, Figure B.3, IEC 60599:1999) — dùng %CH4,
+  - *Tam giác Duval 1* (Annex B, Figure B.3, IEC 60599:2022) — dùng %CH4,
     %C2H4, %C2H2 (quy về tổng 100%), có hình vẽ tam giác trực quan kèm điểm
     chẩn đoán. Vùng "D+T" là vùng chồng lấn phóng điện/tăng nhiệt mà chính
     hình vẽ gốc IEC cũng không phân định rạch ròi.
@@ -41,7 +41,7 @@ Tính năng:
 
 > **Lưu ý về nguồn dữ liệu IEC**: các bảng Annex A (A.2, A.6, A.9) và bảng ranh
 > giới vùng của Tam giác Duval (Annex B, Figure B.3) được trích trực tiếp và
-> chính xác theo số liệu trong bản IEC 60599:1999 do bạn cung cấp. Vùng "D+T"
+> chính xác theo số liệu trong bản IEC 60599:2022 do bạn cung cấp. Vùng "D+T"
 > nêu trên phản ánh đúng việc chính tài liệu gốc cũng để ngỏ ranh giới này
 > (nhãn "D+T" xuất hiện ngay trên hình vẽ gốc) — không phải do công cụ suy
 > diễn thêm.
@@ -114,7 +114,7 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 
 1. Tạo tài khoản tại https://supabase.com → **New project** (chọn khu vực gần
    Việt Nam, ví dụ Singapore).
-2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase/supabase-schema.sql`](./supabase/supabase-schema.sql)
+2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase-schema.sql`](./supabase-schema.sql)
    → **Run**. Lệnh này tạo các bảng (`measurements`, `manufacturer_standards`,
    `feedback`...) và bật Row Level Security cho phép đọc/ghi bằng anon key (phù
    hợp 1 nhóm nhỏ dùng chung 1 link nội bộ). Đã chạy file này từ trước? Chạy lại
@@ -157,7 +157,7 @@ thể điền sẵn cả 2 mà không lo "song song" theo nghĩa ghi cùng lúc 
 KHÔNG hỗ trợ tự động đồng bộ 2 chiều Gsheet ⇄ Supabase).
 
 1. Làm đúng bước 1–3 ở mục 2b bên trên (tạo project Supabase, chạy
-   `supabase/supabase-schema.sql`, copy Project URL + anon key) — **chưa cần đổi
+   `supabase-schema.sql`, copy Project URL + anon key) — **chưa cần đổi
    `config.js` vội**.
 2. Mở `config.js`, điền thêm `SUPABASE_URL`/`SUPABASE_ANON_KEY` **bên cạnh**
    `GSHEET_WEBAPP_URL` đang có sẵn (giữ nguyên, không xóa):
@@ -216,7 +216,7 @@ lưu trữ dữ liệu là gọi ra Google Sheets hoặc Supabase (nếu đã c�
 Private trên GitHub (GitHub Pages vẫn chạy được với repo private nếu tài khoản
 là GitHub Pro/Team/Enterprise; với tài khoản Free, Pages công khai theo repo
 Public — nếu cần giữ kín, cân nhắc thêm xác thực ở tầng Supabase Auth thay vì
-policy "cho phép tất cả" trong `supabase/supabase-schema.sql`).
+policy "cho phép tất cả" trong `supabase-schema.sql`).
 
 ## 4. Cấu trúc file
 
@@ -228,7 +228,7 @@ policy "cho phép tất cả" trong `supabase/supabase-schema.sql`).
 | `storage.js` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
 | `config.js` | Nơi dán URL Apps Script (Google Sheets) hoặc URL/anon key Supabase (để trống hết = chạy chế độ thử nghiệm) |
 | `app.js` | Nối giao diện với `dga-logic.js` + `storage.js` |
-| `supabase/supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
+| `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
 | `gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
 
 ## 5. Giới hạn / lưu ý
@@ -240,7 +240,7 @@ policy "cho phép tất cả" trong `supabase/supabase-schema.sql`).
   dầu; với TI/thiết bị khác, công cụ vẫn tính nhưng chỉ nên dùng tham khảo,
   trừ khi bạn cấu hình khoảng tốc độ riêng theo nhà sản xuất.
 - Tỷ lệ khí (Bảng 66) chỉ có ý nghĩa chẩn đoán khi có ít nhất 1 khí vượt giá
-  trị điển hình (Điều 54 QĐ1901/mục 6.1(c) IEC 60599:1999) — công cụ tự ghi
+  trị điển hình (Điều 54 QĐ1901/mục 6.1(c) IEC 60599:2022) — công cụ tự ghi
   chú "Điều kiện áp dụng" nhưng vẫn hiển thị mã chẩn đoán để tham khảo.
 - Với MBA/Kháng dầu, nhớ tick đúng checkbox **"Ngăn OLTC (thông dầu/khí với
   thùng chính?)"** nếu thiết bị có OLTC và ngăn OLTC đó thông dầu/khí với thùng

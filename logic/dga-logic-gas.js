@@ -353,17 +353,24 @@ function ratioApplicability(exceedCount) {
 // 6) Tam giác Duval (Duval Triangle 1) — IEC 60599:2022 Annex B, Figure B.3 (số Annex B
 //    và Figure B.3 không đổi giữa 2 bản 1999/2022 — chỉ Annex A bị dịch số)
 //    Chẩn đoán dạng sự cố bằng %CH4, %C2H4, %C2H2 (quy về tổng = 100%).
-//    Ranh giới vùng lấy đúng theo bảng "Limits of zones" gốc trong Annex B:
+//    Ranh giới vùng lấy đúng theo bảng "Limits of zones" gốc trong Annex B, Figure B.3
+//    (đã đối chiếu trực tiếp với file IEC 60599-2022.pdf do người dùng cung cấp — xem
+//    ảnh chụp trang 37 của bản PDF gốc — phát hiện và sửa 2024-xx: bản cũ trong code
+//    dùng nhầm 10%/38% thay vì đúng 20%/40% theo bảng gốc, và thiếu hẳn ràng buộc trên
+//    của D2 theo %C2H2 (29%) cũng như vùng T3 mở rộng theo %C2H2 (15%)):
 //      PD: %CH4 ≥ 98
-//      D1: %C2H4 ≤ 23  và %C2H2 ≥ 13
-//      D2: 23 < %C2H4 ≤ 38  và %C2H2 ≥ 13
-//      T1: %C2H2 ≤ 4  và %C2H4 ≤ 10
-//      T2: %C2H2 ≤ 4  và 10 < %C2H4 ≤ 50
-//      T3: %C2H4 > 50 (khi %C2H2 ≤ 4); hoặc %C2H2 ≥ 13 và %C2H4 > 38
-//    Phần diện tích còn lại (khoảng 4% < %C2H2 < 13%, không thuộc T3 nêu trên) là
-//    vùng ranh giới "D+T" mà chính hình vẽ gốc IEC 60599:2022 (Figure B.3) cũng ghi
-//    chú là chồng lấn/không phân định rõ giữa phóng điện và tăng nhiệt — công cụ trả
-//    về nhãn riêng cho vùng này thay vì gán cứng vào D2 hoặc T3.
+//      D1: %C2H4 ≤ 23  và %C2H2 ≥ 13                (không giới hạn trên của %C2H2)
+//      D2: 23 < %C2H4 ≤ 40  và  13 ≤ %C2H2 ≤ 29
+//      T1: %C2H2 ≤ 4  và %C2H4 ≤ 20
+//      T2: %C2H2 ≤ 4  và 20 < %C2H4 ≤ 50
+//      T3: (%C2H2 ≤ 4 và %C2H4 > 50) — dải hẹp sát cạnh %C2H2=0 —
+//          hoặc (%C2H2 ≤ 15 và %C2H4 > 50) — vùng mở rộng của T3 theo đúng dòng T3
+//          trong bảng "Limits of zones" (15 % C2H2, 50 % C2H4)
+//    Phần diện tích còn lại (vượt khỏi D1/D2 nhưng %C2H4 ≤ 50, hoặc %C2H2 > 15 với
+//    %C2H4 > 50) là vùng ranh giới "D+T" mà chính hình vẽ gốc IEC 60599:2022
+//    (Figure B.3) cũng ghi chú là chồng lấn/không phân định rõ giữa phóng điện và
+//    tăng nhiệt — công cụ trả về nhãn riêng cho vùng này thay vì gán cứng vào D2
+//    hoặc T3.
 // ---------------------------------------------------------------------------
 
 /**
@@ -392,18 +399,21 @@ function classifyDuval1(pct) {
   if (m >= 98) return { zone: "PD", label: "PD - Phóng điện cục bộ (Tam giác Duval)" };
 
   if (a <= 4) {
-    if (e <= 10) return { zone: "T1", label: "T1 - Tăng nhiệt, t<300°C (Tam giác Duval)" };
+    if (e <= 20) return { zone: "T1", label: "T1 - Tăng nhiệt, t<300°C (Tam giác Duval)" };
     if (e <= 50) return { zone: "T2", label: "T2 - Tăng nhiệt, 300-700°C (Tam giác Duval)" };
     return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval)" };
   }
 
-  if (a >= 13) {
-    if (e <= 23) return { zone: "D1", label: "D1 - Phóng điện năng lượng thấp (Tam giác Duval)" };
-    if (e <= 38) return { zone: "D2", label: "D2 - Phóng điện năng lượng cao (Tam giác Duval)" };
-    return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval, vùng %C2H4 cao)" };
+  if (a >= 13 && a <= 29 && e > 23 && e <= 40) {
+    return { zone: "D2", label: "D2 - Phóng điện năng lượng cao (Tam giác Duval)" };
+  }
+  if (a >= 13 && e <= 23) {
+    return { zone: "D1", label: "D1 - Phóng điện năng lượng thấp (Tam giác Duval)" };
   }
 
-  if (e > 50) return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval)" };
+  if (a <= 15 && e > 50) {
+    return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval, vùng %C2H4 cao)" };
+  }
 
   return {
     zone: "D+T",
@@ -688,8 +698,8 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
 
 
 // ---------------------------------------------------------------------------
-// 8bis) Trạng thái tổng thể — số hóa lưu đồ đánh giá DGA (Hình 1, mục 6, IEC
-//    60599:1999) thành 1 thuật toán 3 mức duy nhất, hiển thị nổi bật ở đầu kết quả
+// 8bis) Trạng thái tổng thể — số hóa lưu đồ đánh giá DGA (Hình 1, mục 9, IEC
+//    60599:2022) thành 1 thuật toán 3 mức duy nhất, hiển thị nổi bật ở đầu kết quả
 //    phân tích và giải thích chi tiết ở tab "Quy trình đánh giá":
 //      - "normal" (Bình thường): tất cả khí dưới giá trị điển hình VÀ tốc độ tăng khí
 //        bình thường — nhánh phải của lưu đồ gốc ("Report as typical DGA/healthy

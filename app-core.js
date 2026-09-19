@@ -391,6 +391,8 @@ async function initApp() {
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
   setupBbtnDropzone();
+  $("f_nameplate").addEventListener("change", onNameplateFileSelected);
+  setupNameplateDropzone();
   setupInfoPopovers();
   setupTabLayoutToggle();
   setupSidebarCollapseToggle();
@@ -913,6 +915,50 @@ function setupBbtnDropzone() {
     // DataTransfer: cách chuẩn để gán 1 File (lấy từ sự kiện "drop") vào lại 1
     // input[type=file] thật — input.files chỉ đọc (readonly) nên không gán trực tiếp
     // được, phải đi qua DataTransfer.items.add() rồi gán .files của nó.
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
+/** Kéo-thả ẢNH CHỤP TẤM NHÃN THIẾT BỊ (nameplate) vào ô #nameplateDropzone — cùng cơ
+ *  chế với setupBbtnDropzone() ở trên, khác chỗ: chấp nhận ảnh (JPG/PNG/...) hoặc PDF
+ *  thay vì chỉ PDF, xem accept="image/*,application/pdf" ở input#f_nameplate trong
+ *  index.html. Khi thả file: gán vào input thật rồi tự bắn "change" — tái dùng đúng luồng
+ *  xử lý sẵn có (onNameplateFileSelected() ở ui-dga.js). */
+function setupNameplateDropzone() {
+  const zone = $("nameplateDropzone");
+  const input = $("f_nameplate");
+  if (!zone || !input) return;
+
+  ["dragenter", "dragover"].forEach((evt) => {
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.add("dragover");
+    });
+  });
+  ["dragleave", "dragend"].forEach((evt) => {
+    zone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      zone.classList.remove("dragover");
+    });
+  });
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    zone.classList.remove("dragover");
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    const isImageOrPdf = /^image\//.test(file.type) || file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    if (!isImageOrPdf) {
+      const note = $("nameplateImportNote");
+      note.textContent = `Chỉ nhận ảnh (JPG/PNG...) hoặc PDF — "${file.name}" không đúng định dạng, vui lòng kéo-thả lại đúng ảnh chụp tấm nhãn thiết bị.`;
+      note.classList.remove("hidden");
+      return;
+    }
     const dt = new DataTransfer();
     dt.items.add(file);
     input.files = dt.files;
