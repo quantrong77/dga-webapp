@@ -88,7 +88,7 @@ function isOwnRecord(rec) {
 }
 
 function canSaveEntry() {
-  return !Auth.enabled || !!Auth.current;
+  return !Auth.enabled || (!!Auth.current && !Auth.isViewer());
 }
 
 function canEditRecord(rec) {
@@ -293,8 +293,10 @@ function showToast(message, type) {
   el.className = "toast " + (type || "success");
   el.textContent = message;
   container.appendChild(el);
+  // Toast lỗi hiện lâu hơn toast thành công để kịp đọc (lỗi thường có gợi ý xử lý đi kèm).
+  const visibleMs = type === "error" ? 6500 : 2400;
   setTimeout(() => {
     el.classList.add("fade-out");
     setTimeout(() => el.remove(), 320);
-  }, 2400);
+  }, visibleMs);
 }

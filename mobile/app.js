@@ -655,7 +655,11 @@ async function onAnalyze() {
     const exceedCount = DGA.countExceedTypical(gases, measurement.equipment_type, logicMeasurement);
 
     const ratios = DGA.computeRatios(gases);
-    const diagnosis = DGA.diagnoseRatios(ratios, standard.pdThreshold);
+    // Điểm vào duy nhất như bản web (ui/ui-dga.js): tự chọn Bảng 66 hoặc Table A.10 (sứ xuyên).
+    const diagnosis = DGA.diagnoseGasFault(gases, measurement.equipment_type, standard.pdThreshold);
+    const bushingCodes = measurement.equipment_type === DGA.EQUIPMENT_TYPES.BUSHING
+      ? DGA.diagnoseBushingRatios(ratios)
+      : [];
     const applicability = DGA.ratioApplicability(exceedCount);
     const duval = DGA.diagnoseDuval1(gases);
     const condemningRows = DGA.evaluateCondemning(gases, standard.condemning);
@@ -679,10 +683,10 @@ async function onAnalyze() {
       const priorGases = recordGases(prior);
       const deltaDays = Math.round((new Date(measurement.sample_date) - new Date(prior.sample_date)) / 86400000);
       rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type);
-      priorDiagnosis = DGA.diagnoseRatios(DGA.computeRatios(priorGases), standard.pdThreshold);
+      priorDiagnosis = DGA.diagnoseGasFault(priorGases, measurement.equipment_type, standard.pdThreshold);
     }
 
-    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows });
+    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, equipmentType: measurement.equipment_type, bushingCodes });
     const overallStatus = DGA.computeOverallStatus({ overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows });
 
     _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus };
@@ -1647,8 +1651,26 @@ function setupBbtnAttachUI() {
 // ---------------------------------------------------------------------
 // Khởi động
 // ---------------------------------------------------------------------
+/** Áp dụng "Cấu hình quy định" do Admin chỉnh ở bản web lên các bảng ngưỡng trong logic dùng chung
+ *  (dga-logic.js) — giống applyAllRegulationConfigOverrides() ở ui/ui-regulation-config.js của bản web,
+ *  để cùng số liệu cho cùng kết luận trên cả 2 bản. Không đọc được (backend chưa hỗ trợ/mất mạng) thì
+ *  dùng số liệu mặc định gốc, không chặn app. */
+async function applyRegulationOverrides() {
+  try {
+    const records = await Storage.listRegulationConfig();
+    (records || []).forEach((r) => {
+      if (r && r.id && (r.citation || r.values)) {
+        DGA.applyRegulationConfigOverride(r.id, { citation: r.citation, values: r.values });
+      }
+    });
+  } catch (err) {
+    console.warn("Không tải được Cấu hình quy định — dùng số liệu mặc định:", err);
+  }
+}
+
 async function loadApp() {
   showScreen("screenEntry");
+  await applyRegulationOverrides();
   try {
     await loadLists();
   } catch (err) {

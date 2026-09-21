@@ -108,11 +108,11 @@ async function onAnalyzeOltcOil() {
   };
 
   if (!oltcOilTest.thiet_bi || !oltcOilTest.sample_date) {
-    alert("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
+    notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
     return;
   }
   if (oltcOilTest.moisture_ppm === null && oltcOilTest.tgd_90c_percent === null && oltcOilTest.bdv_kv === null) {
-    alert("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
+    notifyError("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
     return;
   }
   if (alertIfNegative([
@@ -138,7 +138,7 @@ async function onAnalyzeOltcOil() {
     await refreshOltcOilTestsUI();
     if (wasEditing) showToast("Đã cập nhật thí nghiệm dầu OLTC.");
   } catch (err) {
-    alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
+    notifyError("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
   }
 }
 
@@ -213,7 +213,7 @@ function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
             await Storage.deleteOltcOilTest(rec.id);
             await refreshOltcOilTestsUI();
           } catch (err) {
-            alert(storageErrorMessage(err));
+            notifyError(storageErrorMessage(err));
           }
         }
       });

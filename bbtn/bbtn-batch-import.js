@@ -63,7 +63,7 @@ async function handleBatchFileList(fileList) {
     return;
   }
   if (!window.BbtnImport) {
-    alert("Không đọc được BBTN (thư viện đọc PDF chưa tải xong) — thử lại sau vài giây.");
+    notifyError("Không đọc được BBTN (thư viện đọc PDF chưa tải xong) — thử lại sau vài giây.");
     return;
   }
 
@@ -233,18 +233,18 @@ function onBatchSelectNone() {
  *  danh sách "existing" ngay để dòng tiếp theo CÙNG Trạm+Thiết bị+Pha tính đúng số kế tiếp. */
 async function onBatchSave() {
   if (!canSaveEntry()) {
-    alert("Bạn cần đăng nhập để lưu lần đo.");
+    notifyError("Bạn cần đăng nhập để lưu lần đo.");
     return;
   }
   const toSave = _batchRows.filter((r) => r.include);
   if (!toSave.length) {
-    alert("Chưa có dòng nào được chọn để lưu — tick vào cột đầu bảng preview.");
+    notifyError("Chưa có dòng nào được chọn để lưu — tick vào cột đầu bảng preview.");
     return;
   }
   const tram = $("f_tram").value.trim();
   const thietbi = $("f_thietbi").value.trim();
   if (!thietbi) {
-    alert('Vui lòng nhập ít nhất "Thiết bị" ở form "1. Thông tin lần đo" phía trên trước khi lưu hàng loạt (áp dụng chung cho cả đợt).');
+    notifyError('Vui lòng nhập ít nhất "Thiết bị" ở form "1. Thông tin lần đo" phía trên trước khi lưu hàng loạt (áp dụng chung cho cả đợt).');
     return;
   }
   const equipmentType = $("f_loai").value;

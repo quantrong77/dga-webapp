@@ -34,7 +34,7 @@ async function refreshUsersUI() {
           await Auth.setUserRole(u.email, sel.value);
           await refreshUsersUI();
         } catch (err) {
-          alert("Đổi quyền thất bại: " + ((err && err.message) || err));
+          notifyError("Đổi quyền thất bại: " + ((err && err.message) || err));
           await refreshUsersUI();
         }
       });
@@ -51,7 +51,7 @@ async function refreshUsersUI() {
               await Auth.deleteUser(u.email);
               await refreshUsersUI();
             } catch (err) {
-              alert("Xóa user thất bại: " + ((err && err.message) || err));
+              notifyError("Xóa user thất bại: " + ((err && err.message) || err));
             }
           }
         });

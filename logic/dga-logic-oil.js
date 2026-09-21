@@ -61,7 +61,8 @@ function evaluateOltcOilTest({ oltcSamplePoint, voltageClass, oilState, hasMembr
  * bảng QĐ1901 mặc định. Cho phép ghi đè TỪNG hạng mục riêng lẻ (khác với tiêu chuẩn
  * khí — vốn yêu cầu đủ 7 khí mới coi là "tiêu chuẩn nhà sản xuất") vì 1 lần thử
  * nghiệm dầu có thể chỉ đo 1-2 trong 3 hạng mục.
- * @param {object} manufacturerOilStandards { manufacturer, voltageClass, oilState, moisture, tgd90, bdv, source }
+ * @param {{voltageClass: string, oilState?: string, hasMembraneN2?: boolean, manufacturer?: string|null}} input
+ * @param {ManufacturerOilStandard[]|null|undefined} manufacturerOilStandards { manufacturer, voltageClass, oilState, moisture, tgd90, bdv, source }
  */
 function resolveOilLimits({ voltageClass, oilState, hasMembraneN2, manufacturer }, manufacturerOilStandards) {
   const state = oilState === "new" ? "new" : "inservice";

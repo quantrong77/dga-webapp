@@ -105,6 +105,27 @@ function setupSampleMethods() {
   }
 }
 
+/** 19 mục của tab "Hướng dẫn sử dụng" (chuyển thể từ user_manual.md) — cùng cơ
+ *  chế "Mở tất cả"/"Thu gọn tất cả" như setupMindmap()/setupSampleMethods() ở trên,
+ *  áp dụng cho khối #userGuideRoot. */
+function setupUserGuideExpandCollapse() {
+  const root = $("userGuideRoot");
+  const btnExpand = $("btnGuideExpandAll");
+  const btnCollapse = $("btnGuideCollapseAll");
+  if (!root) return;
+  const allNodes = () => root.querySelectorAll("details.mm-node");
+  if (btnExpand) {
+    btnExpand.addEventListener("click", () => {
+      allNodes().forEach((d) => (d.open = true));
+    });
+  }
+  if (btnCollapse) {
+    btnCollapse.addEventListener("click", () => {
+      allNodes().forEach((d) => (d.open = false));
+    });
+  }
+}
+
 /** Lightbox phóng to ảnh hướng dẫn (tab "Quy trình lấy mẫu") — dùng chung 1 lightbox
  *  cho mọi ảnh (5 sơ đồ Hình 2-5 + thư viện ảnh thực tế): mỗi nút ".qt-img-btn" khai
  *  báo ảnh gốc/chú thích qua data-full/data-caption, bấm vào sẽ nạp động lên lightbox. */

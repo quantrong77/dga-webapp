@@ -51,8 +51,9 @@ function resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOil
 }
 
 /**
- * @param {"TI (biến dòng điện)"|"TU (biến điện áp)"} equipmentType EQUIPMENT_TYPES.TI/TU
- * @param {object} manufacturerOilStandards xem toOilStandardsForLogic() — cần thêm equipmentType/*Reject
+ * @param {InstrumentOilTestInput} input  equipmentType là EQUIPMENT_TYPES.TI/TU; manufacturerOilStandards
+ *   xem toOilStandardsForLogic() ở ui-standards.js — cần thêm equipmentType/*Reject
+ * @returns {OilTestResult}
  */
 function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOilStandards, moisture, tgd90, bdv }) {
   const match = resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOilStandards);

@@ -84,15 +84,15 @@ async function onAnalyzeTioOil() {
   };
 
   if (!tioOilTest.thiet_bi || !tioOilTest.sample_date) {
-    alert("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
+    notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
     return;
   }
   if (tioOilTest.moisture_ppm === null && tioOilTest.tgd_90c_percent === null && tioOilTest.bdv_kv === null) {
-    alert("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
+    notifyError("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
     return;
   }
   if (!manufacturer) {
-    alert("QĐ1901 Điều 10/11 không có bảng số mặc định cho dầu TI/TU — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" trước.");
+    notifyError("QĐ1901 Điều 10/11 không có bảng số mặc định cho dầu TI/TU — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" trước.");
     return;
   }
   if (alertIfNegative([
@@ -118,7 +118,7 @@ async function onAnalyzeTioOil() {
     await refreshTioOilTestsUI();
     if (wasEditing) showToast("Đã cập nhật thí nghiệm dầu TI/TU.");
   } catch (err) {
-    alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
+    notifyError("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
   }
 }
 
@@ -182,7 +182,7 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
             await Storage.deleteInstrumentOilTest(rec.id);
             await refreshTioOilTestsUI();
           } catch (err) {
-            alert(storageErrorMessage(err));
+            notifyError(storageErrorMessage(err));
           }
         }
       });

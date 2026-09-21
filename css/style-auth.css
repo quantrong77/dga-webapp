@@ -139,10 +139,77 @@
   color: var(--ok);
   animation: dga-toast-in 0.25s ease-out;
 }
-.toast.error { border-left-color: var(--bad); color: var(--bad); }
+.toast.error { border-left-color: var(--bad); color: var(--bad); white-space: pre-line; overflow-wrap: anywhere; }
 .toast.fade-out { animation: dga-toast-out 0.3s ease-in forwards; }
 @keyframes dga-toast-in { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes dga-toast-out { to { opacity: 0; transform: translateX(24px); } }
+
+/* ===================== Modal nhỏ dùng chung (Đổi mật khẩu / Mật khẩu tạm) =====================
+   Cùng ngôn ngữ hình ảnh với .auth-overlay/.auth-card ở trên nhưng NHỎ HƠN và không choán hết
+   1 quy trình đăng nhập (chỉ 1 việc ngắn: đổi mật khẩu, hoặc xem 1 kết quả rồi đóng) — xem
+   #changePasswordOverlay (index.html, ui-auth.js) và #tempPasswordOverlay (ui-admin.js). */
+.mini-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+  padding: 20px;
+}
+.mini-modal-overlay.hidden { display: none; }
+.mini-modal-card {
+  position: relative;
+  background: #fff;
+  border-radius: 14px;
+  padding: 26px 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.mini-modal-card h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  color: var(--blue-900);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mini-modal-card .field { margin-bottom: 12px; }
+.mini-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--gray-600);
+  cursor: pointer;
+  padding: 2px 6px;
+}
+.mini-modal-close:hover { color: var(--gray-900); }
+
+/* Hộp hiển thị mật khẩu tạm (#tempPasswordOverlay) — chỉ hiện đúng 1 lần, cần dễ đọc/copy */
+.temp-password-box {
+  background: var(--blue-100);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.temp-password-label { font-weight: 600; color: var(--blue-900); margin-right: 4px; }
+.temp-password-box code {
+  background: #fff;
+  border-radius: 5px;
+  padding: 3px 8px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--gray-300);
+}
 
 .role-select { font-size: 12px; padding: 4px 6px; }
 .badge.supabase { background: #d7f5df; color: #10692f; }

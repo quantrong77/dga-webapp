@@ -20,7 +20,7 @@
  * regulation_config) kèm tiêu đề cột trong chính Google Sheet bạn vừa tạo — không
  * cần tạo tay.
  *
- * ĐĂNG NHẬP / PHÂN QUYỀN (thêm ở bản này):
+ * ĐĂNG NHẬP / PHÂN QUYỀN (3 vai trò — admin/user/viewer, xem VALID_ROLES):
  *  - Mọi người dùng phải Đăng ký (email + mật khẩu) rồi Đăng nhập mới xem được
  *    dữ liệu. Mật khẩu được băm (SHA-256 + salt ngẫu nhiên riêng từng user)
  *    trước khi lưu vào sheet "users" — KHÔNG lưu mật khẩu gốc.
@@ -28,17 +28,32 @@
  *    ngay khi đăng ký (chỉ áp dụng đúng email đó). Mọi email khác mặc định là
  *    "user" — Admin có thể nâng quyền cho người khác sau trong tab "Quản trị"
  *    của web app.
+ *  - CHẾ ĐỘ ĐĂNG KÝ (REGISTRATION_MODE bên dưới) quyết định ai tự đăng ký được:
+ *    "open" (mặc định, ai cũng đăng ký được), "domain" (chỉ email đúng
+ *    ALLOWED_EMAIL_DOMAIN), hoặc "closed" (không ai tự đăng ký được nữa — Admin
+ *    phải tạo tài khoản qua tab "Quản trị", xem actionAdminCreateUser()). Áp
+ *    dụng cho cả đăng ký bằng mật khẩu VÀ lần đầu đăng nhập Google (xem
+ *    checkRegistrationAllowed()) — riêng ADMIN_EMAIL luôn được phép, tránh tự
+ *    khóa chính Admin ra khỏi hệ thống lúc mới cài đặt.
+ *  - QUÊN MẬT KHẨU: người dùng đã đăng nhập tự đổi được mật khẩu (actionChangePassword,
+ *    cần biết mật khẩu cũ); nếu quên hẳn, Admin đặt lại mật khẩu TẠM cho họ qua tab
+ *    "Quản trị" (actionAdminResetPassword) — cả 2 thao tác đều hủy MỌI phiên đăng
+ *    nhập cũ của tài khoản đó (đăng xuất khỏi mọi thiết bị), phòng trường hợp lý do
+ *    đổi/đặt lại mật khẩu là thiết bị bị mất hoặc mật khẩu bị lộ.
  *  - Đăng nhập thành công trả về 1 "token" phiên (lưu 30 ngày). Token này bắt
  *    buộc phải gửi kèm mọi request đọc/ghi dữ liệu sau đó.
  *  - PHÂN QUYỀN GHI cho measurements/oil_tests/oltc_oil_tests/instrument_oil_tests (xem prepareOwnedRecord()):
  *    role "user" được TỰ NHẬP bản ghi mới, và SỬA lại bản ghi do chính mình đã
  *    nhập (không sửa được bản ghi của người khác); role "admin" sửa được TẤT
- *    CẢ bản ghi. XÓA (deleteMeasurement/deleteOilTest/deleteOltcOilTest) luôn
- *    yêu cầu "admin", bất kể ai đã tạo bản ghi đó. Mỗi bản ghi được "lưu vết":
- *    cột created_by (người nhập, không đổi sau khi tạo), updated_by/updated_at
- *    (người sửa gần nhất, lúc nào) — hiển thị ở cột "Người nhập" trong bảng
- *    lịch sử trên web app. Các thao tác GHI khác (Tiêu chuẩn, Trạm, Quản trị
- *    user) vẫn yêu cầu "admin" như cũ (requireAdmin).
+ *    CẢ bản ghi; role "viewer" CHỈ ĐỌC — không nhập/sửa được gì (xem requireWriter(),
+ *    chặn ngay trong prepareOwnedRecord() trước khi role "user"/"admin" được xét
+ *    tới), vẫn gửi góp ý được ở tab "Người dùng phản hồi" (addFeedback không gọi
+ *    requireWriter, coi góp ý là vô hại). XÓA (deleteMeasurement/deleteOilTest/
+ *    deleteOltcOilTest) luôn yêu cầu "admin", bất kể ai đã tạo bản ghi đó. Mỗi bản
+ *    ghi được "lưu vết": cột created_by (người nhập, không đổi sau khi tạo),
+ *    updated_by/updated_at (người sửa gần nhất, lúc nào) — hiển thị ở cột "Người
+ *    nhập" trong bảng lịch sử trên web app. Các thao tác GHI khác (Tiêu chuẩn, Trạm,
+ *    Quản trị user) vẫn yêu cầu "admin" như cũ (requireAdmin).
  *
  * LƯU Ý BẢO MẬT: vì "Who has access" phải để "Anyone" để web app gọi được từ
  * trình duyệt, ai có URL này về lý thuyết vẫn gọi được API thô (giống cơ chế
@@ -229,6 +244,21 @@ const FEEDBACK_HEADERS = [
 // định là "user" (tự nhập/sửa được bản ghi của chính mình — xem prepareOwnedRecord()).
 const ADMIN_EMAIL = "quantrong77@gmail.com";
 
+// 3 vai trò hợp lệ — "viewer" chỉ đọc được dữ liệu (xem requireWriter()), không nhập/sửa
+// đo khí/dầu; vẫn gửi góp ý được. Dùng ở actionSetUserRole()/actionAdminCreateUser() để
+// không lỡ lưu 1 giá trị role rác nào đó gửi lên từ client.
+const VALID_ROLES = ["admin", "user", "viewer"];
+
+// Chế độ đăng ký tài khoản mới — đổi giá trị này rồi Deploy lại (không cần sửa gì khác):
+//  - "open"   : ai cũng tự đăng ký được (mặc định, hành vi trước đây).
+//  - "domain" : chỉ email đúng ALLOWED_EMAIL_DOMAIN bên dưới mới tự đăng ký được
+//               (vd "evn.com.vn" — không gõ dấu "@").
+//  - "closed" : không ai tự đăng ký được nữa (kể cả đăng nhập Google lần đầu) — Admin
+//               phải chủ động tạo tài khoản qua tab "Quản trị" (actionAdminCreateUser()).
+// ADMIN_EMAIL LUÔN được phép đăng ký/đăng nhập bất kể chế độ này (xem checkRegistrationAllowed()).
+const REGISTRATION_MODE = "open";
+const ALLOWED_EMAIL_DOMAIN = ""; // chỉ dùng khi REGISTRATION_MODE = "domain", vd "evn.com.vn"
+
 // OAuth 2.0 Client ID cho "Đăng nhập bằng Google" (Google Identity Services) — tạo tại
 // https://console.cloud.google.com/apis/credentials (loại "OAuth client ID" > "Web
 // application"). Để TRỐNG ("") thì nút "Đăng nhập bằng Google" sẽ tự ẩn ở giao diện,
@@ -252,6 +282,11 @@ function doGet(e) {
   try {
     const action = e.parameter.action;
     const token = e.parameter.token;
+
+    // Công khai, KHÔNG cần token — màn hình đăng nhập gọi TRƯỚC khi biết đăng ký còn mở
+    // hay không, để ẩn/hiện link "Đăng ký" và gợi ý domain cho phép (xem setupAuthForms(),
+    // ui-auth.js).
+    if (action === "registrationInfo") return jsonOut({ mode: REGISTRATION_MODE, domain: ALLOWED_EMAIL_DOMAIN });
 
     if (action === "me") return jsonOut(actionMe(token));
 
@@ -305,9 +340,10 @@ function doPost(e) {
     else if (action === "deleteOltcOilTest") { requireAdmin(token); result = deleteRow(SHEET_OLTC_OILTESTS, body.id); }
     else if (action === "addInstrumentOilTest") { result = upsertRow(SHEET_INSTRUMENT_OILTESTS, INSTRUMENT_OILTEST_HEADERS, prepareOwnedRecord(token, SHEET_INSTRUMENT_OILTESTS, INSTRUMENT_OILTEST_HEADERS, body.record)); }
     else if (action === "deleteInstrumentOilTest") { requireAdmin(token); result = deleteRow(SHEET_INSTRUMENT_OILTESTS, body.id); }
-    // Góp ý: bất kỳ ai đã đăng nhập đều gửi được (giống quyền "tự nhập lần đo mới"); xóa
-    // luôn yêu cầu Admin, giống mọi thao tác xóa khác trong app.
-    else if (action === "addFeedback") { result = upsertRow(SHEET_FEEDBACK, FEEDBACK_HEADERS, prepareOwnedRecord(token, SHEET_FEEDBACK, FEEDBACK_HEADERS, body.record)); }
+    // Góp ý: bất kỳ ai đã đăng nhập đều gửi được — KỂ CẢ role "viewer" (khác dữ liệu thiết
+    // bị, xem requireFn=requireSession thay vì mặc định requireWriter); xóa luôn yêu cầu
+    // Admin, giống mọi thao tác xóa khác trong app.
+    else if (action === "addFeedback") { result = upsertRow(SHEET_FEEDBACK, FEEDBACK_HEADERS, prepareOwnedRecord(token, SHEET_FEEDBACK, FEEDBACK_HEADERS, body.record, requireSession)); }
     else if (action === "deleteFeedback") { requireAdmin(token); result = deleteRow(SHEET_FEEDBACK, body.id); }
     // "Cấu hình quy định" — CHỈ Admin sửa được (giống Tiêu chuẩn NSX), mọi người dùng đã
     // đăng nhập đều ĐỌC được (đã cho phép ở doGet action listRegulationConfig).
@@ -315,6 +351,12 @@ function doPost(e) {
     else if (action === "deleteRegulationConfig") { requireAdmin(token); result = deleteRow(SHEET_REGULATION_CONFIG, body.id); }
     else if (action === "setUserRole") { requireAdmin(token); result = actionSetUserRole(body); }
     else if (action === "deleteUser") { requireAdmin(token); result = actionDeleteUser(body); }
+    // Đổi mật khẩu tự phục vụ (cần biết mật khẩu cũ — xác thực bên trong actionChangePassword())
+    // và 2 thao tác chỉ Admin làm được (đặt lại mật khẩu quên/tạo tài khoản mới trực tiếp) —
+    // xem chú thích đầy đủ ở đầu file (mục "QUÊN MẬT KHẨU") và 3 hàm bên dưới.
+    else if (action === "changePassword") result = actionChangePassword(token, body);
+    else if (action === "adminResetPassword") { requireAdmin(token); result = actionAdminResetPassword(body); }
+    else if (action === "adminCreateUser") { requireAdmin(token); result = actionAdminCreateUser(body); }
     else result = { error: "unknown action: " + action };
     return jsonOut(result);
   } catch (err) {
@@ -355,12 +397,32 @@ function listPublicUsers() {
   }));
 }
 
+/** Kiểm tra REGISTRATION_MODE — trả về null nếu được phép tự đăng ký/tự tạo tài khoản qua
+ *  Google lần đầu, hoặc 1 chuỗi lỗi (tiếng Việt, hiện thẳng cho người dùng) nếu bị chặn.
+ *  ADMIN_EMAIL luôn được phép bất kể chế độ, để không tự khóa Admin ra khỏi hệ thống. */
+function checkRegistrationAllowed(email) {
+  if (normalizeEmail(email) === normalizeEmail(ADMIN_EMAIL)) return null;
+  if (REGISTRATION_MODE === "closed") {
+    return "Đăng ký tài khoản mới hiện đang ĐÓNG — liên hệ Admin để được cấp tài khoản (tab \"Quản trị\").";
+  }
+  if (REGISTRATION_MODE === "domain") {
+    const domain = normalizeEmail(ALLOWED_EMAIL_DOMAIN);
+    if (!domain || !normalizeEmail(email).endsWith("@" + domain)) {
+      return "Chỉ email thuộc domain @" + (ALLOWED_EMAIL_DOMAIN || "?") +
+        " mới tự đăng ký được — liên hệ Admin nếu bạn dùng email khác.";
+    }
+  }
+  return null;
+}
+
 function actionRegister(body) {
   const email = normalizeEmail(body.email);
   const password = String(body.password || "");
   if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Email không hợp lệ." };
   if (password.length < 6) return { error: "Mật khẩu phải có ít nhất 6 ký tự." };
   if (findUserByEmail(email)) return { error: "Email này đã được đăng ký." };
+  const gate = checkRegistrationAllowed(email);
+  if (gate) return { error: gate };
 
   const salt = randomHex(16);
   const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
@@ -430,6 +492,10 @@ function actionGoogleLogin(body) {
   const now = new Date().toISOString();
   let user = findUserByEmail(email);
   if (!user) {
+    // Chỉ chặn ở lần TẠO tài khoản mới (đăng nhập Google lần đầu) — người đã có tài
+    // khoản từ trước vẫn đăng nhập lại bình thường dù sau này đổi REGISTRATION_MODE.
+    const gate = checkRegistrationAllowed(email);
+    if (gate) return { error: gate };
     const role = email === normalizeEmail(ADMIN_EMAIL) ? "admin" : "user";
     user = {
       id: "u_" + Utilities.getUuid(),
@@ -486,16 +552,30 @@ function requireAdmin(token) {
   return user;
 }
 
-/** Chuẩn bị 1 bản ghi measurements/oil_tests/oltc_oil_tests/instrument_oil_tests trước khi upsertRow(), áp
- *  dụng đúng quy tắc phân quyền + "lưu vết" mô tả ở đầu file: bất kỳ user nào đã đăng
- *  nhập (role "user" hay "admin") đều được NHẬP bản ghi MỚI (record.id chưa có dòng nào
- *  trùng); khi record.id trùng 1 dòng đã có (tức đang SỬA), chỉ Admin hoặc đúng người có
- *  email trùng created_by của dòng đó mới được phép — nếu không, ném lỗi (client hiển thị
- *  nguyên văn qua storageErrorMessage()). created_by luôn giữ nguyên giá trị gốc khi sửa
- *  (không cho "đổi chủ" bản ghi); updated_by/updated_at luôn được ghi đè bằng người/lúc
- *  đang thực hiện lần lưu này — kể cả lần tạo mới (updated_by = updated_at = như lúc tạo). */
-function prepareOwnedRecord(token, sheetName, headers, record) {
+/** Như requireSession(), nhưng còn chặn role "viewer" — dùng cho các action GHI dữ liệu
+ *  thiết bị (đo khí hòa tan/dầu MBA/dầu OLTC/dầu TI-TU, xem prepareOwnedRecord() ngay dưới).
+ *  Viewer vẫn ĐỌC được mọi dữ liệu (mọi action list* vẫn chỉ gọi requireSession) và vẫn
+ *  gửi góp ý được (addFeedback KHÔNG gọi hàm này, xem doPost) — chỉ dữ liệu thiết bị mới
+ *  bị chặn, đúng nghĩa "chỉ xem" của vai trò này. */
+function requireWriter(token) {
   const user = requireSession(token);
+  if (user.role === "viewer") throw new Error("Tài khoản của bạn chỉ có quyền xem, không nhập/sửa được dữ liệu.");
+  return user;
+}
+
+/** Chuẩn bị 1 bản ghi measurements/oil_tests/oltc_oil_tests/instrument_oil_tests/feedback
+ *  trước khi upsertRow(), áp dụng đúng quy tắc phân quyền + "lưu vết" mô tả ở đầu file: bất
+ *  kỳ user nào đã đăng nhập (role "user" hay "admin") đều được NHẬP bản ghi MỚI (record.id
+ *  chưa có dòng nào trùng); khi record.id trùng 1 dòng đã có (tức đang SỬA), chỉ Admin hoặc
+ *  đúng người có email trùng created_by của dòng đó mới được phép — nếu không, ném lỗi
+ *  (client hiển thị nguyên văn qua storageErrorMessage()). created_by luôn giữ nguyên giá
+ *  trị gốc khi sửa (không cho "đổi chủ" bản ghi); updated_by/updated_at luôn được ghi đè
+ *  bằng người/lúc đang thực hiện lần lưu này — kể cả lần tạo mới.
+ *  @param {function} requireFn requireWriter (mặc định, chặn viewer — dùng cho dữ liệu
+ *    thiết bị) hoặc requireSession (cho phép cả viewer — dùng cho addFeedback ở doPost,
+ *    coi góp ý là vô hại, xem chú thích "viewer" ở đầu file). */
+function prepareOwnedRecord(token, sheetName, headers, record, requireFn) {
+  const user = (requireFn || requireWriter)(token);
   if (!record || !record.id) throw new Error("Thiếu id bản ghi.");
   const sh = getOrCreateSheet(sheetName, headers);
   const idx = findRowIndexById(sh, record.id);
@@ -528,7 +608,7 @@ function actionMe(token) {
 
 function actionSetUserRole(body) {
   const email = normalizeEmail(body.email);
-  const role = body.role === "admin" ? "admin" : "user";
+  const role = VALID_ROLES.indexOf(body.role) >= 0 ? body.role : "user";
   const user = findUserByEmail(email);
   if (!user) return { error: "Không tìm thấy user." };
   upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { role: role }));
@@ -540,6 +620,98 @@ function actionDeleteUser(body) {
   const user = findUserByEmail(email);
   if (!user) return { error: "Không tìm thấy user." };
   return deleteRow(SHEET_USERS, user.id);
+}
+
+const MIN_PASSWORD_LENGTH = 6; // giống ngưỡng đã dùng ở actionRegister()
+
+/** Mật khẩu TẠM ngẫu nhiên (10 ký tự hex) — dùng cho actionAdminResetPassword()/
+ *  actionAdminCreateUser(), CHỈ trả về ĐÚNG 1 LẦN trong response cho Admin copy gửi cho
+ *  người dùng qua kênh khác (app không có email server để tự gửi) — KHÔNG lưu lại ở đâu
+ *  ngoài password_hash (đã băm) của tài khoản đó. */
+function generateTempPassword() {
+  return randomHex(5);
+}
+
+/** Hủy TOÀN BỘ phiên đăng nhập đang có của 1 email (đăng xuất khỏi mọi thiết bị) — gọi
+ *  sau khi đổi/đặt lại mật khẩu, phòng trường hợp lý do đổi mật khẩu là thiết bị bị mất
+ *  hoặc mật khẩu cũ đã bị lộ (phiên cũ dùng mật khẩu cũ không còn ý nghĩa bảo vệ). */
+function deleteAllSessionsForEmail(email) {
+  const norm = normalizeEmail(email);
+  listRows(SHEET_SESSIONS, SESSION_HEADERS)
+    .filter((s) => normalizeEmail(s.email) === norm)
+    .forEach((s) => deleteRow(SHEET_SESSIONS, s.token));
+}
+
+/** Tự đổi mật khẩu (user ĐÃ đăng nhập, phải biết đúng mật khẩu cũ). Tài khoản trước giờ
+ *  chỉ đăng nhập Google (chưa từng có mật khẩu, password_hash rỗng) KHÔNG tự đặt mật khẩu
+ *  lần đầu qua đây được (không có "mật khẩu cũ" nào để xác thực) — nhờ Admin dùng
+ *  actionAdminResetPassword() để mở thêm lối vào bằng mật khẩu cho tài khoản đó. Hủy mọi
+ *  phiên KHÁC rồi cấp lại 1 phiên MỚI ngay (không đăng xuất người vừa đổi) — client PHẢI
+ *  thay token đang lưu bằng token mới trả về (xem Auth.changePassword(), storage.js). */
+function actionChangePassword(token, body) {
+  const user = requireSession(token);
+  const oldPassword = String(body.oldPassword || "");
+  const newPassword = String(body.newPassword || "");
+  if (!user.password_hash || hashPassword(oldPassword, user.password_salt) !== user.password_hash) {
+    return { error: "Mật khẩu hiện tại không đúng." };
+  }
+  if (newPassword.length < MIN_PASSWORD_LENGTH) {
+    return { error: "Mật khẩu mới phải có ít nhất " + MIN_PASSWORD_LENGTH + " ký tự." };
+  }
+  const salt = randomHex(16);
+  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, {
+    password_hash: hashPassword(newPassword, salt),
+    password_salt: salt,
+  }));
+  deleteAllSessionsForEmail(user.email);
+  return createSession(user.email, user.role);
+}
+
+/** Admin đặt lại mật khẩu cho 1 tài khoản (quên mật khẩu, không tự đổi được — xem
+ *  actionChangePassword()) — sinh 1 mật khẩu TẠM (generateTempPassword()), trả về trong
+ *  response để Admin relay cho người dùng, và hủy mọi phiên cũ của tài khoản đó (đăng
+ *  xuất khỏi mọi thiết bị). Dùng được cả cho tài khoản trước đó chỉ đăng nhập Google
+ *  (auth_provider chuyển thành "password" từ đây — Admin đặt lại luôn mở thêm lối vào
+ *  bằng mật khẩu, không xóa mất khả năng đăng nhập Google cũ). */
+function actionAdminResetPassword(body) {
+  const email = normalizeEmail(body.email);
+  const user = findUserByEmail(email);
+  if (!user) return { error: "Không tìm thấy user." };
+  const tempPassword = generateTempPassword();
+  const salt = randomHex(16);
+  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, {
+    password_hash: hashPassword(tempPassword, salt),
+    password_salt: salt,
+    auth_provider: "password",
+  }));
+  deleteAllSessionsForEmail(email);
+  return { email: email, tempPassword: tempPassword };
+}
+
+/** Admin tạo tài khoản mới trực tiếp (không qua form "Đăng ký") — dùng khi
+ *  REGISTRATION_MODE không phải "open" (bắt buộc phải làm vậy để cấp tài khoản), hoặc
+ *  đơn giản Admin muốn chủ động cấp trước cho người dùng. Trả về mật khẩu TẠM giống
+ *  actionAdminResetPassword() ở trên. */
+function actionAdminCreateUser(body) {
+  const email = normalizeEmail(body.email);
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { error: "Email không hợp lệ." };
+  if (findUserByEmail(email)) return { error: "Email này đã có tài khoản." };
+  const role = VALID_ROLES.indexOf(body.role) >= 0 ? body.role : "user";
+  const tempPassword = generateTempPassword();
+  const salt = randomHex(16);
+  const now = new Date().toISOString();
+  const record = {
+    id: "u_" + Utilities.getUuid(),
+    email: email,
+    password_hash: hashPassword(tempPassword, salt),
+    password_salt: salt,
+    role: role,
+    created_at: now,
+    last_login: "",
+    auth_provider: "password",
+  };
+  upsertRow(SHEET_USERS, USER_HEADERS, record);
+  return { email: email, role: role, tempPassword: tempPassword };
 }
 
 // ---------------------------------------------------------------------------

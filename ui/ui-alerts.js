@@ -585,11 +585,11 @@ function refreshAlertsUI() {
  *  không gửi dữ liệu lên server nào khác. */
 function onExportAlertsExcel() {
   if (typeof XLSX === "undefined") {
-    alert("Không tải được thư viện xuất Excel (có thể do mất mạng khi tải trang) — kiểm tra kết nối mạng rồi tải lại trang.");
+    notifyError("Không tải được thư viện xuất Excel (có thể do mất mạng khi tải trang) — kiểm tra kết nối mạng rồi tải lại trang.");
     return;
   }
   if (_lastAlerts.length === 0) {
-    alert("Chưa có thiết bị nào đang ở mức Cảnh báo/Báo động để xuất.");
+    notifyError("Chưa có thiết bị nào đang ở mức Cảnh báo/Báo động để xuất.");
     return;
   }
 

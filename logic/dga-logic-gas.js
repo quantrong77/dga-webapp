@@ -83,8 +83,8 @@ function resolveCondemningLimits(measurement, manufacturerStandards) {
 }
 
 /**
- * @param {object} measurement { equipmentType, manufacturer, mbaSubtype?, instrumentSubtype? }
- * @param {Array}  manufacturerStandards danh sách { manufacturer, equipmentType, limits, rate, condemning, source } do người dùng cấu hình
+ * @param {LogicMeasurement} measurement { equipmentType, manufacturer, mbaSubtype?, instrumentSubtype? }
+ * @param {ManufacturerGasStandard[]|null|undefined} manufacturerStandards danh sách { manufacturer, equipmentType, limits, rate, condemning, source } do người dùng cấu hình
  * @returns {{ limits: object, rate: object, sourceLabel: string, isManufacturer: boolean, pdThreshold: number, typical: object, condemning: object|null }}
  */
 function resolveStandard(measurement, manufacturerStandards) {
@@ -556,8 +556,9 @@ function evaluateBang63(totalPercent, voltageClass, applicable) {
  * CHỈ dùng đúng các mốc/điều kiện QĐ1901 nêu rõ để kết luận; giá trị nằm ngoài các mốc
  * đó chỉ hiển thị con số kèm ghi chú giới hạn, không tự suy diễn thêm ngưỡng ngoài văn
  * bản gốc (văn bản chỉ cho 1 mốc tham khảo O2/N2 ~ 0,5 "bình thường", không có thang đầy đủ).
- * @param {object} gases 7 khí GASES (ppm)
- * @param {number|null} n2, {number|null} o2  ppm, hoặc null nếu chưa nhập
+ * @param {GasReading} gases 7 khí GASES (ppm)
+ * @param {number|null} n2  ppm, hoặc null nếu chưa nhập
+ * @param {number|null} o2  ppm, hoặc null nếu chưa nhập
  */
 function diagnoseAdditionalRatios(gases, n2, o2) {
   const co = num(gases.CO), co2 = num(gases.CO2);

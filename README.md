@@ -9,9 +9,9 @@ cấu hình đầy đủ ngưỡng) lấy **CHẶT HƠN** giữa **Quyết đị
 
 | Loại thiết bị | Nguồn ngưỡng tuyệt đối | Ngưỡng PD (CH4/H2) |
 |---|---|---|
-| TI / TU | QĐ1901 Bảng 12 (Điều 10) = IEC Annex A.3.4 "giá trị tối đa cho phép" (2 nguồn trùng khớp) | < 0,2 (Annex A.3.3) |
-| MBA/Kháng dầu | min(QĐ1901 Bảng 64, IEC Annex A.1 Table A.2) theo từng khí, phân theo ngăn OLTC không/có thông dầu/khí với thùng chính | < 0,1 (mặc định, Table 2) |
-| Sứ xuyên (Bushing) | IEC Annex A.4.4 Table A.9 (QĐ1901 chưa có bảng riêng) | < 0,07 (Annex A.4.3) |
+| TI / TU | QĐ1901 Bảng 12 (Điều 10) = IEC Annex A.4.4 Table A.8 "giá trị tối đa cho phép" (2 nguồn trùng khớp) | < 0,2 (Annex A.4.3) |
+| MBA/Kháng dầu | min(QĐ1901 Bảng 64, IEC Annex A.2.4 Table A.2) theo từng khí, phân theo ngăn OLTC không/có thông dầu/khí với thùng chính | < 0,1 (mặc định, Table 1) |
+| Sứ xuyên (Bushing) | IEC Annex A.5.4 Table A.11 (QĐ1901 chưa có bảng riêng) | < 0,07 (Annex A.5.3) |
 
 Ngoài ra, công cụ vẫn cho phép **cấu hình tiêu chuẩn riêng theo từng nhà sản
 xuất** — khi thiết bị có gán nhà sản xuất đã cấu hình đầy đủ ngưỡng, công cụ
@@ -22,15 +22,21 @@ Tính năng:
   khí cháy (TCG).
 - Đánh giá giá trị tuyệt đối từng khí so với tiêu chuẩn áp dụng (NSX, hoặc
   QĐ1901/IEC — xem bảng trên).
-- **Chẩn đoán dạng sự cố bằng 2 phương pháp:**
-  - *Ba tỷ số khí cơ bản* (Bảng 66 QĐ1901 = Table 2, IEC 60599:2022) → mã
+- **Chẩn đoán dạng sự cố bằng 3 phương pháp:**
+  - *Ba tỷ số khí cơ bản* (Bảng 66 QĐ1901 = Table 1, IEC 60599:2022, mục 5.4) → mã
     PD/D1/D2/T1/T2/T3, ngưỡng PD (CH4/H2) tự điều chỉnh theo loại thiết bị.
+  - *Table A.10 (Annex A.5.3, IEC 60599:2022)* — bảng đơn giản hóa riêng cho **Sứ
+    xuyên**: 4 mã **độc lập** PD/D/T/TP (có thể khớp 0, 1 hoặc nhiều mã cùng lúc);
+    không mã nào khớp thì tự lùi về Table 1 như bảng gốc yêu cầu.
   - *Tam giác Duval 1* (Annex B, Figure B.3, IEC 60599:2022) — dùng %CH4,
     %C2H4, %C2H2 (quy về tổng 100%), có hình vẽ tam giác trực quan kèm điểm
     chẩn đoán. Vùng "D+T" là vùng chồng lấn phóng điện/tăng nhiệt mà chính
     hình vẽ gốc IEC cũng không phân định rạch ròi.
-  - Khi 2 phương pháp cho kết quả khác nhau, công cụ tự ghi chú để người dùng
+  - Khi các phương pháp cho kết quả khác nhau, công cụ tự ghi chú để người dùng
     đối chiếu thêm trước khi kết luận.
+- **So sánh với nhóm thiết bị tương tự** (z-score thang log + Isolation Forest) và
+  **ca tương tự trong lịch sử đo** (cosine similarity) — 2 khối thống kê **tham
+  khảo bổ sung**, không đổi ngưỡng/kết luận chính thức.
 - Nhập lần đo sau cho cùng Trạm + Thiết bị + Pha → tự động tính tốc độ tăng
   hàm lượng khí (ppm/năm) và đối chiếu Bảng 65 QĐ1901.
 - Khuyến cáo tổng hợp dựa trên kết quả đánh giá tuyệt đối, 2 mã chẩn đoán và
@@ -220,16 +226,27 @@ policy "cho phép tất cả" trong `supabase-schema.sql`).
 
 ## 4. Cấu trúc file
 
-| File | Vai trò |
+**App chạy trực tiếp từ các file dưới đây — không có bước build.** `package.json`, `tests/`,
+`scripts/`, `tsconfig.json`, `types.d.ts` chỉ phục vụ phát triển/kiểm thử (xem mục 6), không được
+trình duyệt nạp và không bắt buộc phải có để chạy app.
+
+| File / thư mục | Vai trò |
 |---|---|
-| `index.html` | Giao diện (form nhập liệu, lịch sử, cấu hình tiêu chuẩn NSX) |
-| `style.css` | Giao diện/màu sắc |
-| `dga-logic.js` | Toàn bộ công thức đánh giá DGA (TCG, tỷ lệ khí Bảng 66, Tam giác Duval Annex B, tiêu chuẩn IEC Annex A theo loại thiết bị, tốc độ sinh khí Bảng 65, khuyến cáo) — tách riêng, không phụ thuộc DOM, có thể unit test độc lập |
-| `storage.js` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
+| `index.html` | Giao diện (form nhập liệu, lịch sử, cấu hình tiêu chuẩn NSX, tab Hướng dẫn) |
+| `style.css`, `css/*.css` | Giao diện/màu sắc |
 | `config.js` | Nơi dán URL Apps Script (Google Sheets) hoặc URL/anon key Supabase (để trống hết = chạy chế độ thử nghiệm) |
-| `app.js` | Nối giao diện với `dga-logic.js` + `storage.js` |
+| `logic/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
+| `dga-logic.js` | File **lắp ráp**: gom 8 file `logic/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
+| `storage.js` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
+| `ui/ui-errors.js` | Xử lý lỗi tập trung (toast lỗi + handler `error`/`unhandledrejection` toàn cục) — nạp sớm, ngay sau `config.js` |
+| `ui/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
+| `app-core.js` | Lõi khởi động app (nạp dữ liệu, gắn sự kiện dùng chung, bố cục tab) |
+| `bbtn/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx) |
 | `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
 | `gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
+| `mobile/` | Bản giao diện tối ưu cho điện thoại — dùng chung logic với bản web (xem mục 6 và `mobile/README.md`) |
+| `user_manual.md` | Hướng dẫn sử dụng cho người dùng cuối — cũng là nguồn của tab "Hướng dẫn" trong app (xem mục 6) |
+| `Features-web-app.md` | Danh sách đầy đủ tính năng theo từng tab |
 
 ## 5. Giới hạn / lưu ý
 
@@ -244,15 +261,87 @@ policy "cho phép tất cả" trong `supabase-schema.sql`).
   chú "Điều kiện áp dụng" nhưng vẫn hiển thị mã chẩn đoán để tham khảo.
 - Với MBA/Kháng dầu, nhớ tick đúng checkbox **"Ngăn OLTC (thông dầu/khí với
   thùng chính?)"** nếu thiết bị có OLTC và ngăn OLTC đó thông dầu/khí với thùng
-  dầu chính — lựa chọn này quyết định bảng IEC Annex A.1 Table A.2 nào được
-  dùng để tính "tiêu chuẩn chặt hơn". Nếu không chắc, cứ để mặc định KHÔNG tick
-  (ngưỡng C2H2 chặt hơn nhiều so với khi tick: 20 ppm so với ~270 ppm).
+  dầu chính — lựa chọn này quyết định bảng IEC Annex A.2.4 Table A.2 nào được
+  dùng để tính "tiêu chuẩn chặt hơn". **Với số liệu mặc định hiện tại**, ngưỡng
+  C2H2 áp dụng thực tế luôn là 20 ppm ở cả 2 lựa chọn — vì công cụ lấy giá trị
+  **chặt hơn (min)** giữa Table A.2 (20 ppm nếu không có OLTC, 280 ppm nếu có
+  OLTC thông thùng chính) và QĐ1901 Bảng 64 (20 ppm) — nên tick hay không tick ô
+  này *chưa* làm đổi kết quả đánh giá; ô vẫn nên tick đúng thực tế vì được lưu
+  cùng lần đo và dùng làm tiêu chí gom nhóm ở "So sánh với nhóm thiết bị tương
+  tự" (xem `tests/gas-absolute.test.js`, mục "MBA: với số liệu mặc định...").
 - Bảng A.3 (IEC, vận tốc sinh khí theo mL/ngày cho MBA lực) **không được** dùng
   trong công cụ vì cần biết khối lượng/thể tích dầu để quy đổi — công cụ chỉ
   dùng Bảng 65 QĐ1901 (ppm/năm) cho tốc độ sinh khí.
 - Tam giác Duval 1 chỉ nên dùng khi CH4+C2H4+C2H2 đủ lớn để có ý nghĩa (vài
   ppm trở lên) — với khí quá thấp, tỷ lệ % có thể dao động mạnh và làm sai
-  lệch điểm chẩn đoán. Vùng "D+T" (giữa D2 và T3, khi %C2H2 nằm trong khoảng
-  4–13% và %C2H4 &gt; 38%) là vùng ranh giới mà bản thân hình vẽ gốc IEC 60599
-  Annex B cũng không phân định rõ — công cụ trả về mã riêng thay vì gán ép
-  vào D2 hoặc T3.
+  lệch điểm chẩn đoán. Vùng "D+T" (phần diện tích ngoài D1/D2 nhưng %C2H4 ≤ 50%,
+  hoặc %C2H2 &gt; 15% với %C2H4 &gt; 50%) là vùng ranh giới mà bản thân hình vẽ
+  gốc IEC 60599:2022 Annex B, Figure B.3 cũng không phân định rõ — công cụ trả
+  về mã riêng thay vì gán ép vào D2 hoặc T3.
+- Hai đề xuất đã biết **lệch với văn bản gốc IEC 60599:2022 Table 1** (phát hiện
+  khi viết bộ kiểm thử — xem `tests/invariants.test.js`, các `test.failing`,
+  và mục 6 bên dưới): (1) điểm tỷ số khí chỉ khớp D1 nhưng bị gán nhãn "D1/D2
+  vùng chồng lấn"; (2) khi cả 7 khí đều bằng 0 (chưa đo), công cụ vẫn trả về
+  mã "T3 - Tăng nhiệt >700°C" thay vì "Không xác định". Chưa sửa code — cần xác
+  nhận trước khi đổi hành vi chẩn đoán.
+
+## 6. Công cụ phát triển (kiểm thử, kiểm tra kiểu, đồng bộ bản di động, dựng tab Hướng dẫn)
+
+**Chỉ người phát triển/bảo trì cần mục này.** Người dùng cuối mở `index.html` (hoặc
+`mobile/index.html`) chạy thẳng, không cần Node/npm/pandoc gì cả — các công cụ dưới đây không
+đổi cách app chạy, chỉ giúp phát hiện lỗi sớm và giữ 2 nguồn (web/di động, code/tài liệu) khớp
+nhau khi sửa mã.
+
+```bash
+npm install          # lần đầu (cài Jest/TypeScript vào node_modules/, đã có trong .gitignore)
+npm test              # chạy toàn bộ kiểm thử tự động
+npm run typecheck     # kiểm tra kiểu (TypeScript checkJs) cho lớp logic/
+npm run sync-mobile   # đồng bộ mobile/dga-logic.js từ logic/ của bản web
+npm run build-guide   # dựng lại tab "Hướng dẫn" trong index.html từ user_manual.md (cần cài pandoc)
+```
+
+### 6.1. Kiểm thử tự động (Jest)
+
+Logic DGA (`dga-logic.js` + `logic/*.js`) không phụ thuộc DOM và nạp được trong Node, nên có bộ
+kiểm thử tự động ở thư mục `tests/` (~250 test, chạy dưới 3 giây). Bao phủ:
+
+- Đánh giá tuyệt đối từng khí và chọn tiêu chuẩn theo loại thiết bị/nhà sản xuất/ngưỡng loại bỏ.
+- Bảng 66 (IEC Table 1), Table A.10 (sứ xuyên), Tam giác Duval 1.
+- Tốc độ sinh khí (Bảng 65), Bảng 63 và tỷ lệ bổ sung (Điều 54), trạng thái tổng thể.
+- Dầu MBA/OLTC/TI-TU, dự báo xu hướng, cơ chế "Cấu hình quy định".
+- So sánh với nhóm thiết bị tương tự (z-score + Isolation Forest) và ca tương tự (cosine similarity).
+- Xử lý lỗi tập trung (`ui/ui-errors.js`).
+- Các bất biến trên nhiều tổ hợp khí ngẫu nhiên (seed cố định, tái lập được).
+- **Thứ tự nạp `<script>` và namespace toàn cục** của cả `index.html` lẫn `mobile/index.html`
+  (`tests/load-order.test.js`) — bắt sớm việc 2 file khai báo trùng 1 tên hoặc thiếu file tham chiếu.
+- **Bản di động khớp bản web** (mục 6.3) và **tên cột khớp giữa Supabase/Google Sheets**
+  (`tests/schema-consistency.test.js`) — 2 backend lệch tên cột thì dữ liệu mất/rỗng khi đổi backend.
+- **Tab "Hướng dẫn" khớp `user_manual.md`** (mục 6.4, cần pandoc — tự bỏ qua nếu máy chưa cài).
+
+Số liệu chuẩn (golden) lấy từ văn bản gốc QĐ1901/IEC 60599:2022, không sao chép kết quả từ chính
+code. Các trường hợp đã biết là lệch văn bản gốc được ghi bằng `test.failing` trong
+`tests/invariants.test.js` (chờ quyết định sửa — xem mục 5).
+
+### 6.2. Kiểm tra kiểu (TypeScript `checkJs`, không đổi ngôn ngữ)
+
+`tsconfig.json` + `types.d.ts` bật `tsc --noEmit --checkJs` cho `logic/*.js` + `dga-logic.js` —
+bắt lỗi kiểu (sai tên trường, thiếu khí, `undefined` so sánh với số) ngay lúc viết, **không** thêm
+bước build và **không** đổi file `.js` nào (JSDoc trong `logic/*.js` được bổ sung/chỉnh cho khớp
+kiểu, code chạy không đổi). `npm run typecheck` chạy sạch (0 lỗi) tính đến lần cập nhật gần nhất.
+
+### 6.3. Đồng bộ logic với bản di động (`scripts/sync-mobile.js`)
+
+Bản di động (`mobile/`) được deploy như 1 thư mục độc lập nên không tham chiếu được
+`../logic/...`. `mobile/dga-logic.js` vì vậy **được sinh tự động** bằng cách ghép các file
+`logic/*.js` của bản web theo đúng thứ tự nạp trong `index.html` — **không sửa tay file này**.
+Sau khi sửa bất kỳ file nào trong `logic/`, chạy `npm run sync-mobile` rồi commit cả 2 thay đổi.
+`npm test` tự kiểm tra file đã đồng bộ chưa (`tests/mobile-sync.test.js`) và so kết quả đánh giá
+giữa 2 bản trên nhiều bộ số liệu để bảo đảm **cùng số liệu luôn ra cùng kết luận**.
+
+### 6.4. Dựng tab "Hướng dẫn" trong app (`scripts/build-user-guide.js`)
+
+`user_manual.md` là **nguồn duy nhất** của hướng dẫn người dùng. Nội dung tab "Hướng dẫn" trong
+`index.html` (giữa 2 dấu `<!-- USER-GUIDE:BEGIN -->` / `<!-- USER-GUIDE:END -->`) được **sinh tự
+động** từ file đó — không sửa tay khối HTML này. Sau khi sửa `user_manual.md`, chạy
+`npm run build-guide` rồi commit cả 2 thay đổi. Cần cài [pandoc](https://pandoc.org) trên máy
+đang cập nhật hướng dẫn (người dùng mở app không cần).

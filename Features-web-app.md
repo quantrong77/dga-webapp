@@ -12,17 +12,17 @@ Tab chính của ứng dụng, nơi nhập và đánh giá 1 lần đo khí hòa
 
 **Nhập liệu:**
 - Thông tin lần đo: Trạm, Thiết bị, Loại thiết bị (TI/TU/MBA-Kháng dầu/Sứ xuyên/Khác), Pha (A/B/C/Chung 3 pha), Lần đo (tự gợi ý số thứ tự kế tiếp theo nhóm Trạm+Thiết bị+Pha), Ngày lấy mẫu, Nhà sản xuất (ô combo tự gõ-tìm).
-- Với MBA: tick chọn phân loại OLTC ("OLTC có/không thông dầu với thùng chính" — ảnh hưởng chuẩn ngưỡng CO/CO2 theo Bảng 66/Table A.2).
+- Với MBA: tick chọn phân loại OLTC ("Ngăn OLTC thông dầu/khí với thùng chính?" — quyết định dùng bảng IEC Annex A.2.4 Table A.2 nào để tính ngưỡng C2H2 tham khảo; lưu kèm bản ghi và dùng làm tiêu chí gom nhóm ở mục "So sánh với nhóm thiết bị tương tự". **Lưu ý:** với số liệu mặc định hiện tại, do công cụ luôn lấy ngưỡng **chặt hơn (min)** giữa Table A.2 và QĐ1901 Bảng 64 (cả 2 đều 20 ppm cho C2H2 ở nhánh "không tick"), việc tick/không tick ô này *chưa* làm đổi ngưỡng C2H2 cuối cùng đang áp dụng).
 - 7 khí hòa tan chính (H2, CH4, C2H6, C2H4, C2H2, CO, CO2), cùng 2 khí bổ sung tùy chọn N2/O2 (dùng cho Tổng hàm lượng khí hòa tan — Bảng 63, Điều 54).
-- Khối "Thông số kỹ thuật thiết bị" (kiểu máy, năm sản xuất, năm vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu cách điện, hiện trạng vận hành) — phục vụ xuất "Báo cáo phân tích kỹ thuật".
+- Khối "Thông số kỹ thuật thiết bị" (kiểu máy, năm sản xuất, năm vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu cách điện, hiện trạng vận hành) — phục vụ xuất "Báo cáo phân tích kỹ thuật". Có thể **đọc gợi ý một phần** từ ảnh chụp tấm nhãn thiết bị (xem mục 12.3) thay vì gõ tay toàn bộ.
 - Khối "Thông tin thí nghiệm bổ sung" (ngày thí nghiệm, lý do thí nghiệm, nhiệt độ/độ ẩm môi trường) — phục vụ xuất Biên bản thí nghiệm (BBTN).
-- Đính kèm 1 file BBTN (PDF) gốc cho lần đo — có thể **tự động trích xuất** dữ liệu từ PDF (xem mục 12) để điền sẵn toàn bộ form phía trên, người dùng không phải gõ tay.
-- Nhập liệu hàng loạt (Batch import) từ nhiều file BBTN cùng lúc — xem mục 12.
+- Đính kèm 1 file BBTN (PDF) gốc cho lần đo — có thể **tự động trích xuất** dữ liệu từ PDF (xem mục 12.1) để điền sẵn toàn bộ form phía trên, người dùng không phải gõ tay.
+- Nhập liệu hàng loạt (Batch import) từ nhiều file BBTN cùng lúc — xem mục 12.2.
 
 **Phân tích & đánh giá (khi bấm "Phân tích & Lưu"):**
 - **Đánh giá giá trị tuyệt đối từng khí** so với ngưỡng đang áp dụng (QĐ1901/IEC hoặc tiêu chuẩn nhà sản xuất nếu đã cấu hình) — kết luận Đạt/Không đạt từng khí và tổng thể.
 - **Tổng lượng khí cháy (TCG)**.
-- **Chẩn đoán mã sự cố theo tỷ số khí**: dùng song song 2 phương pháp độc lập, không thay thế nhau:
+- **Chẩn đoán mã sự cố theo tỷ số khí**: dùng song song 3 phương pháp độc lập, không thay thế nhau:
   - *Bảng 66 QĐ1901 / Table 1 IEC 60599:2022* (6 mã sự cố loại trừ lẫn nhau: PD, D1, D2, T1, T2, T3) — áp dụng cho MBA/Kháng dầu, TI, TU.
   - *Table A.10 IEC 60599:2022 Annex A.5.3 (Bảng đơn giản hóa cho Sứ xuyên)* — 4 mã **độc lập** (PD, D, T, TP; có thể khớp 0, 1 hoặc nhiều mã cùng lúc), dùng riêng cho Sứ xuyên; nếu không khớp mã nào thì tự động lùi về dùng Bảng 66 (đúng khuyến cáo của IEC). Ngưỡng PD theo tỷ số CH4/H2 cũng khác nhau theo loại thiết bị: Sứ xuyên 0,07; MBA/Khác 0,1; TI/TU 0,2.
   - **Tam giác Duval 1** — áp dụng đồng thời cho mọi loại thiết bị (kể cả Sứ xuyên), có đối chiếu chéo với mã Bảng 66/Table A.10 trong phần khuyến cáo.
@@ -30,6 +30,8 @@ Tab chính của ứng dụng, nơi nhập và đánh giá 1 lần đo khí hòa
 - **Ngưỡng loại bỏ (condemning limits)** riêng của nhà sản xuất (nếu đã cấu hình) — cảnh báo "⚠ Vượt ngưỡng loại bỏ" tách biệt với đánh giá "Không đạt" thông thường.
 - **Tốc độ gia tăng khí** so với lần đo liền trước (nếu có), đối chiếu Bảng 65 QĐ1901 (chỉ chính thức cho MBA/Kháng dầu; loại khác chỉ mang tính tham khảo) hoặc khoảng tốc độ riêng của nhà sản xuất nếu đã cấu hình.
 - **Trạng thái tổng thể** (Bình thường / Cảnh báo (ALERT) / Báo động (ALARM)) tổng hợp từ: kết quả Đạt/Không đạt, số khí vượt ngưỡng, mã chẩn đoán, đổi loại sự cố giữa 2 lần đo liền kề, tốc độ tăng bất thường, và vượt ngưỡng loại bỏ.
+- **So sánh với nhóm thiết bị tương tự** (thống kê tham khảo, KHÔNG phải ngưỡng quy định QĐ1901/IEC, không ảnh hưởng trạng thái tổng thể): gom các lần đo đã lưu của thiết bị **cùng loại** (ưu tiên cùng cấp điện áp + cùng nhà sản xuất, tự nới tiêu chí nếu chưa đủ dữ liệu; cần tối thiểu 5 lần đo trong nhóm) rồi tính **z-score từng khí trên thang log1p** (cảnh báo khi |z| ≥ 2, báo động khi |z| ≥ 3) và **điểm bất thường tổng hợp bằng Isolation Forest tự dựng ngay lúc đánh giá** (xét đồng thời cả 7 khí, không lưu model, chạy 100% phía trình duyệt).
+- **Ca tương tự trong lịch sử đo** (case-based reasoning — tham khảo, KHÔNG phải kết luận cho lần đo này): so "hình dạng" 7 khí (cosine similarity trên thang log1p) với toàn bộ lịch sử đã lưu, hiển thị tối đa 3 ca giống nhất (độ giống ≥ 0,5).
 - **Khuyến cáo hành động** cụ thể theo từng trường hợp.
 - Cảnh báo giá trị âm khi nhập liệu nhầm.
 
@@ -50,7 +52,7 @@ Gồm 3 khối con, chọn qua bộ lọc "Loại thiết bị":
 - Tùy chọn "Có bảo vệ màng/nitơ" — chỉ hiện khi cấp điện áp đó có phân biệt 2 mức ngưỡng độ ẩm (theo Bảng 58).
 - Hỗ trợ lấy mẫu theo điểm "Chung" (1 mẫu đại diện 3 pha) hoặc "Pha riêng" (A/B/C — dành cho MBA/Kháng 3 pha rời, phổ biến ở cấp 500kV).
 - Có thể ưu tiên dùng tiêu chuẩn riêng của nhà sản xuất (nếu đã cấu hình ở tab "Cấu hình" — mục "Tiêu chuẩn") thay cho bảng mặc định.
-- Sửa/xóa thí nghiệm đã lưu (quyền theo vai trò — xem mục 9).
+- Sửa/xóa thí nghiệm đã lưu (quyền theo vai trò — xem mục 8).
 
 ### 2.2. Dầu OLTC (bộ đổi nấc có tải)
 - Cùng 3 chỉ tiêu Độ ẩm/tgδ 90°C/Điện áp chọc thủng — theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) hoặc theo Bảng 58 (nếu là dầu mới lắp).
@@ -121,13 +123,15 @@ Cho phép chỉnh sửa **13 bảng ngưỡng số học đơn giản** trích t
 
 ---
 
-## 7. Tab "Quy trình lấy mẫu"
+## 7. Tab "Quy trình"
 
+Gộp 2 nhóm nội dung tham khảo vào 1 tab, chuyển đổi qua bộ chọn segmented control nội bộ "Lấy mẫu dầu" / "Đánh giá DGA" (cùng cơ chế subtab đã dùng ở tab "Cấu hình", mục 6).
+
+### 7.1. Mục "Lấy mẫu dầu"
 - **7 phương pháp lấy mẫu dầu** (Điều 8 QĐ1901) trình bày dạng accordion, có nút "Mở tất cả"/"Thu gọn tất cả".
 - 5 sơ đồ minh họa (Hình 2–5) + thư viện ảnh thực tế lấy mẫu — xem phóng to qua lightbox (bấm ảnh để mở, đóng bằng nút ×/bấm ra ngoài/phím Esc).
 
-## 8. Tab "Quy trình đánh giá"
-
+### 7.2. Mục "Đánh giá DGA"
 - **Cẩm nang tham khảo nhanh** — các áp phích tổng hợp quy trình chẩn đoán, xem phóng to qua lightbox riêng.
 - **2 sơ đồ tư duy (mindmap)** dạng accordion lồng nhau (`<details>/<summary>`), có nút "Mở tất cả"/"Thu gọn tất cả" cho từng sơ đồ:
   - Sơ đồ diễn giải quy trình DGA.
@@ -135,7 +139,7 @@ Cho phép chỉnh sửa **13 bảng ngưỡng số học đơn giản** trích t
 
 ---
 
-## 9. Đăng nhập, phân quyền và Quản trị
+## 8. Đăng nhập, phân quyền và Quản trị
 
 **Đăng nhập** (chỉ hoạt động ở chế độ Google Sheets — `Auth.enabled`; ở chế độ Supabase/localStorage mọi người dùng đều có toàn quyền):
 - Đăng ký/đăng nhập bằng email + mật khẩu.
@@ -156,9 +160,13 @@ Cho phép chỉnh sửa **13 bảng ngưỡng số học đơn giản** trích t
 
 ---
 
-## 10. Tab "Giới thiệu" (About)
+## 9. Tab "Giới thiệu" (About)
 
 Thông tin giới thiệu chung về ứng dụng, phạm vi áp dụng và căn cứ pháp lý (QĐ1901/IEC 60599:2022).
+
+## 10. Tab "Hướng dẫn"
+
+Hướng dẫn sử dụng đầy đủ cho người dùng cuối, trình bày thành 19 mục accordion (Mở tất cả/Thu gọn tất cả) — đi theo từng công việc cụ thể: nhập số liệu, đọc kết quả, xuất báo cáo, xem cảnh báo, cấu hình, xử lý sự cố... Nội dung được **sinh tự động từ `user_manual.md`** (script `scripts/build-user-guide.js`) — sửa tài liệu gốc rồi dựng lại tab, không sửa tay HTML.
 
 ## 11. Tab "Người dùng phản hồi"
 
@@ -169,13 +177,20 @@ Thông tin giới thiệu chung về ứng dụng, phạm vi áp dụng và căn
 
 ---
 
-## 12. Nhập liệu từ Biên bản thí nghiệm (BBTN) — tự động hóa nhập liệu
+## 12. Nhập liệu tự động từ BBTN/ảnh nhãn thiết bị
 
-Chạy 100% phía trình duyệt bằng thư viện `pdf.js` (đóng gói sẵn, không phụ thuộc CDN ngoài) — không gửi file lên server nào để "đọc".
+Chạy 100% phía trình duyệt (không gửi file lên bất kỳ server nào để "đọc") bằng 2 kỹ thuật khác nhau tùy loại tài liệu:
 
-- **Nhập rời từng lần** (tab "DGA"): đính kèm 1 file BBTN PDF (mẫu PTC3/BM.15) cho lần đo đang nhập — hệ thống tự nhận diện và điền sẵn: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu cách điện, Ngày thí nghiệm, Lý do thí nghiệm, Điều kiện môi trường (nhiệt độ/độ ẩm), và cả 7 giá trị khí hòa tan.
-- **Nhập hàng loạt (Batch import)** (tab "DGA"): chọn nhiều file PDF hoặc cả 1 thư mục BBTN của cùng 1 thiết bị cùng lúc — dùng chung Trạm/Thiết bị/Loại thiết bị/Nhà sản xuất/Thông số kỹ thuật đang điền ở form phía trên cho cả đợt, chỉ đọc riêng Pha/Ngày/7 khí từ mỗi file. Có bảng xem trước (preview) cho từng file với trạng thái: sẵn sàng nhập / cảnh báo (không đọc được Pha, hoặc trùng Pha+Ngày với bản ghi đã có/dòng khác trong đợt) / lỗi (không đọc được file hoặc thiếu dữ liệu bắt buộc) — có thể sửa tay Pha/Ngày từng dòng, tick chọn/bỏ chọn từng dòng hoặc chọn tất cả/bỏ tất cả, tùy chọn đính kèm luôn PDF gốc vào bản ghi. Lưu tuần tự từng dòng (1 dòng lỗi không chặn các dòng còn lại), tự đánh số "Lần đo" tăng dần đúng theo nhóm Trạm+Thiết bị+Pha. Phù hợp để nhập nhanh dữ liệu lịch sử (backfill) phục vụ phân tích xu hướng.
-- Đây là suy đoán "tốt nhất có thể" dựa trên cấu trúc mẫu BBTN hiện hành — nếu biên bản dùng mẫu khác, có thể chỉ nhận được một phần hoặc không nhận được trường nào; người dùng luôn xem lại và sửa tay được mọi trường trước khi lưu.
+### 12.1. Nhập rời từng lần (tab "DGA") — đọc Biên bản thí nghiệm (PDF)
+Dùng thư viện `pdf.js` (đóng gói sẵn, không phụ thuộc CDN ngoài) để đọc trực tiếp lớp text của file PDF mẫu PTC3/BM.15 — đính kèm 1 file cho lần đo đang nhập, hệ thống tự nhận diện và điền sẵn: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu cách điện, Ngày thí nghiệm, Lý do thí nghiệm, Điều kiện môi trường (nhiệt độ/độ ẩm), và cả 7 giá trị khí hòa tan. Nếu PDF là bản scan/ảnh (không có lớp text), tự động chuyển sang đọc bằng OCR (Tesseract.js, vendor sẵn, không qua CDN) như phương án dự phòng.
+
+### 12.2. Nhập hàng loạt — Batch import (tab "DGA")
+Chọn nhiều file PDF hoặc cả 1 thư mục BBTN của cùng 1 thiết bị cùng lúc — dùng chung Trạm/Thiết bị/Loại thiết bị/Nhà sản xuất/Thông số kỹ thuật đang điền ở form phía trên cho cả đợt, chỉ đọc riêng Pha/Ngày/7 khí từ mỗi file. Có bảng xem trước (preview) cho từng file với trạng thái: sẵn sàng nhập / cảnh báo (không đọc được Pha, hoặc trùng Pha+Ngày với bản ghi đã có/dòng khác trong đợt) / lỗi (không đọc được file hoặc thiếu dữ liệu bắt buộc) — có thể sửa tay Pha/Ngày từng dòng, tick chọn/bỏ chọn từng dòng hoặc chọn tất cả/bỏ tất cả, tùy chọn đính kèm luôn PDF gốc vào bản ghi. Lưu tuần tự từng dòng (1 dòng lỗi không chặn các dòng còn lại), tự đánh số "Lần đo" tăng dần đúng theo nhóm Trạm+Thiết bị+Pha. Phù hợp để nhập nhanh dữ liệu lịch sử (backfill) phục vụ phân tích xu hướng.
+
+### 12.3. Đọc ảnh chụp tấm nhãn thiết bị (nameplate OCR, tab "DGA")
+Dùng OCR (Tesseract.js, chạy 100% trong trình duyệt qua Web Worker riêng, vendor sẵn không qua CDN) để đọc ảnh chụp/scan tấm nhãn gắn trên vỏ máy — gợi ý điền vào khối "Thông số kỹ thuật thiết bị" (Kiểu máy, Năm sản xuất, Điện áp định mức, Số chế tạo, Loại dầu cách điện) và "Nhà sản xuất". **Độ tin cậy thấp hơn** đọc BBTN vì mỗi hãng trình bày nhãn khác nhau (không có mẫu chung như PTC3/BM.15) — chỉ dò theo các nhãn thường gặp trên nameplate quốc tế, không suy diễn khi không thấy nhãn, không khóa trường nào. Các trường vận hành (Năm đưa vào vận hành, Kết cấu cách điện dầu, Hiện trạng vận hành) không đọc được từ nhãn (không in sẵn từ nhà sản xuất) nên luôn phải nhập tay.
+
+Cả 3 kiểu đọc trên đều là suy đoán "tốt nhất có thể" dựa trên cấu trúc tài liệu hiện hành — người dùng luôn xem lại và sửa tay được mọi trường trước khi lưu.
 
 ---
 
@@ -184,7 +199,7 @@ Chạy 100% phía trình duyệt bằng thư viện `pdf.js` (đóng gói sẵn,
 - **Bố cục thanh tab**: chuyển đổi giữa bố cục **ngang** (mặc định, có hiệu ứng bóng mờ 2 bên báo hiệu còn tab ẩn ngoài tầm nhìn, tự cuộn mượt tới tab vừa bấm) và bố cục **sidebar dọc** (có thể thu gọn) — trạng thái được nhớ qua localStorage.
 - **Icon "i" (info popover)**: cơ chế dùng chung cho mọi đoạn hướng dẫn dài — bấm để xem, đóng bằng nút "×" hoặc bấm ra ngoài; chỉ 1 popover mở tại 1 thời điểm.
 - **Ô combo tự gõ-tìm** (Trạm, Thiết bị...) — vừa gõ tự do vừa gợi ý từ dữ liệu đã có, không ép buộc chọn đúng từ danh sách.
-- **Toast thông báo** góc trên bên phải cho các thao tác rõ ràng (đăng nhập/đăng ký/lưu thành công...).
+- **Toast thông báo** góc trên bên phải, xử lý lỗi tập trung (`ui/ui-errors.js`): toast xanh cho thao tác thành công (đăng nhập/đăng ký/lưu...), **toast đỏ cho lỗi/thiếu thông tin** (thiếu trường bắt buộc, mất kết nối database, lỗi không lường trước — kể cả lỗi trong Promise không được `await`, nhờ handler `error`/`unhandledrejection` toàn cục) — hiện lâu hơn (~6,5 giây) và hiển thị được nhiều dòng để đọc hết gợi ý xử lý.
 - Giao diện tiếng Việt, tối ưu cho cả máy tính và di động.
 
 ---

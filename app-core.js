@@ -47,9 +47,10 @@ function applyDatabaseBadgeLink(badge) {
 // ---------------------------------------------------------------------
 async function initApp() {
   if (Auth.enabled && Auth.current) {
-    const roleLabel = Auth.current.role === "admin" ? "Admin" : "User";
+    const roleLabel = Auth.current.role === "admin" ? "Admin" : Auth.current.role === "viewer" ? "Viewer" : "User";
     $("userBadge").textContent = `${Auth.current.email} — ${roleLabel}`;
     $("userBadge").classList.remove("hidden");
+    $("btnOpenChangePassword").classList.remove("hidden");
     $("navQuanTri").classList.toggle("hidden", Auth.current.role !== "admin");
   }
 
@@ -89,6 +90,7 @@ async function initApp() {
   setupOverviewMindmap();
   setupSampleMethods();
   setupSamplingLightbox();
+  setupUserGuideExpandCollapse();
   setupFeedbackDropzone();
   setupFeedbackPaste();
   setupFeedbackLightbox();
@@ -145,7 +147,7 @@ async function initApp() {
     await refreshStandardsUI();
     await refreshHistoryUI();
   } catch (err) {
-    alert(storageErrorMessage(err));
+    notifyError(storageErrorMessage(err));
     // Đây là lần gọi API đầu tiên thật sự chạm tới database (Tiêu chuẩn/Lịch sử đo) —
     // nếu lỗi ngay tại đây, coi như MẤT KẾT NỐI database, chuyển badge #storageBadge
     // (đang lạc quan để xanh từ đầu initApp(), xem phía trên) sang đỏ để phản ánh
@@ -499,7 +501,7 @@ async function initApp() {
   // ui-trend.js); trạng thái tick là SỞ THÍCH GIAO DIỆN, lưu qua setupTrendForecastToggle()
   // (localStorage, giống TAB_LAYOUT_STORAGE_KEY) chứ không qua onTrendDeviceChange() ở đây.
   $("tr_forecastEnabled").addEventListener("change", () => {
-    try { localStorage.setItem(TREND_FORECAST_ENABLED_STORAGE_KEY, $("tr_forecastEnabled").checked ? "1" : "0"); } catch (e) {}
+    try { localStorage.setItem(TREND_FORECAST_ENABLED_STORAGE_KEY, $("tr_forecastEnabled").checked ? "1" : "0"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
     onTrendDeviceChange();
   });
   // Tab "Cảnh báo" — combo tự gõ-tìm lọc theo Trạm biến áp (#al_stationFilter), chỉ gợi
@@ -668,7 +670,7 @@ function setupTabLayoutToggle() {
   btn.addEventListener("click", () => {
     const next = !document.body.classList.contains("tabs-sidebar");
     applyTabLayout(next);
-    try { localStorage.setItem(TAB_LAYOUT_STORAGE_KEY, next ? "sidebar" : "top"); } catch (e) {}
+    try { localStorage.setItem(TAB_LAYOUT_STORAGE_KEY, next ? "sidebar" : "top"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   });
 }
 
@@ -707,7 +709,7 @@ function setupTrendForecastToggle() {
   const checkbox = $("tr_forecastEnabled");
   if (!checkbox) return;
   let saved = null;
-  try { saved = localStorage.getItem(TREND_FORECAST_ENABLED_STORAGE_KEY); } catch (e) {}
+  try { saved = localStorage.getItem(TREND_FORECAST_ENABLED_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   if (saved !== null) checkbox.checked = saved === "1";
 }
 
@@ -787,7 +789,7 @@ function setLichSuView(view) {
   const wraps = { gas: $("lichsuGasWrap"), oil: $("lichsuOilWrap") };
   Object.entries(wraps).forEach(([key, el]) => { if (el) el.classList.toggle("hidden", key !== view); });
   populateHistoryEquipmentFilterOptions(view);
-  try { localStorage.setItem(LICHSU_VIEW_STORAGE_KEY, view); } catch (e) {}
+  try { localStorage.setItem(LICHSU_VIEW_STORAGE_KEY, view); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   // Đổi bảng đang xem thì nạp lại đúng bảng đó theo bộ lọc #historyFilter hiện tại — cả 3
   // bảng dầu chỉ tính lại từ dữ liệu ĐÃ CÓ SẴN trong bộ nhớ (_allOilTests/
   // _allOltcOilTests/_allTioOilTests), không gọi lại Storage nên rất nhẹ.
@@ -831,7 +833,7 @@ function toggleDauEquipmentType() {
     onTioEquipmentTypeChange();
   }
 
-  try { localStorage.setItem(DAU_EQUIPMENTTYPE_STORAGE_KEY, value); } catch (e) {}
+  try { localStorage.setItem(DAU_EQUIPMENTTYPE_STORAGE_KEY, value); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
 }
 
 function setupDauEquipmentTypeToggle() {
@@ -839,7 +841,7 @@ function setupDauEquipmentTypeToggle() {
   if (!select) return;
   select.addEventListener("change", toggleDauEquipmentType);
   let saved = null;
-  try { saved = localStorage.getItem(DAU_EQUIPMENTTYPE_STORAGE_KEY); } catch (e) {}
+  try { saved = localStorage.getItem(DAU_EQUIPMENTTYPE_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   if (saved && Array.from(select.options).some((o) => o.value === saved)) select.value = saved;
   toggleDauEquipmentType();
 }
@@ -858,7 +860,7 @@ function setupLichSuViewToggle() {
     btn.addEventListener("click", () => setLichSuView(btn.dataset.lichsuType));
   });
   let saved = null;
-  try { saved = localStorage.getItem(LICHSU_VIEW_STORAGE_KEY); } catch (e) {}
+  try { saved = localStorage.getItem(LICHSU_VIEW_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   setLichSuView(saved === "oil" || saved === "oltc" ? "oil" : "gas");
 }
 
@@ -869,7 +871,7 @@ function setupSidebarCollapseToggle() {
   btn.addEventListener("click", () => {
     const next = !document.body.classList.contains("sidebar-collapsed");
     applySidebarCollapse(next);
-    try { localStorage.setItem(SIDEBAR_COLLAPSE_STORAGE_KEY, next ? "1" : "0"); } catch (e) {}
+    try { localStorage.setItem(SIDEBAR_COLLAPSE_STORAGE_KEY, next ? "1" : "0"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   });
 }
 
@@ -1096,7 +1098,7 @@ function findNegativeValueField(fields) {
 function alertIfNegative(fields) {
   const negativeField = findNegativeValueField(fields);
   if (negativeField) {
-    alert(`Giá trị "${negativeField}" không hợp lệ: không được nhập số âm.`);
+    notifyError(`Giá trị "${negativeField}" không hợp lệ: không được nhập số âm.`);
     return true;
   }
   return false;

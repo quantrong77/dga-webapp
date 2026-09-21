@@ -177,31 +177,31 @@ function collectRegulationFormValues(container) {
 }
 
 async function onSaveRegulationItem(key) {
-  if (!canWrite()) { alert('Chỉ Admin mới lưu được Cấu hình quy định.'); return; }
+  if (!canWrite()) { notifyError('Chỉ Admin mới lưu được Cấu hình quy định.'); return; }
   const item = DGA.getRegulationConfigRegistry().find((it) => it.key === key);
   const container = document.querySelector(`.rc-item[data-config-key="${key}"]`);
   if (!item || !container) return;
 
   const citation = container.querySelector(".rc-citation").value.trim();
-  if (!citation) { alert('Vui lòng nhập tham chiếu nguồn.'); return; }
+  if (!citation) { notifyError('Vui lòng nhập tham chiếu nguồn.'); return; }
 
   const { valuesObj, hasInvalidNumber } = collectRegulationFormValues(container);
-  if (hasInvalidNumber) { alert('Có ô nhập số không hợp lệ — vui lòng kiểm tra lại.'); return; }
+  if (hasInvalidNumber) { notifyError('Có ô nhập số không hợp lệ — vui lòng kiểm tra lại.'); return; }
   const problems = validateRegulationValues(item, valuesObj);
-  if (problems.length > 0) { alert('Vui lòng kiểm tra lại:\n- ' + problems.join('\n- ')); return; }
+  if (problems.length > 0) { notifyError('Vui lòng kiểm tra lại:\n- ' + problems.join('\n- ')); return; }
 
   try {
     await Storage.saveRegulationConfig({ id: key, citation, values: valuesObj });
     DGA.applyRegulationConfigOverride(key, { citation, values: valuesObj });
     await refreshRegulationConfigUI();
-    alert(`Đã lưu cấu hình cho "${item.title}".`);
+    showToast(`Đã lưu cấu hình cho "${item.title}".`);
   } catch (err) {
-    alert(storageErrorMessage(err));
+    notifyError(storageErrorMessage(err));
   }
 }
 
 async function onResetRegulationItem(key) {
-  if (!canWrite()) { alert('Chỉ Admin mới khôi phục được Cấu hình quy định.'); return; }
+  if (!canWrite()) { notifyError('Chỉ Admin mới khôi phục được Cấu hình quy định.'); return; }
   const item = DGA.getRegulationConfigRegistry().find((it) => it.key === key);
   if (!item) return;
   if (!confirm(`Khôi phục "${item.title}" về đúng mặc định gốc? Cấu hình đã lưu cho bảng này (nếu có) sẽ bị xóa.`)) return;
@@ -210,6 +210,6 @@ async function onResetRegulationItem(key) {
     DGA.resetRegulationConfigItem(key);
     await refreshRegulationConfigUI();
   } catch (err) {
-    alert(storageErrorMessage(err));
+    notifyError(storageErrorMessage(err));
   }
 }

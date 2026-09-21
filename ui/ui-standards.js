@@ -302,7 +302,7 @@ async function refreshStandardsUI() {
           await Storage.deleteStandard(rec.id);
           await refreshStandardsUI();
         } catch (err) {
-          alert(storageErrorMessage(err));
+          notifyError(storageErrorMessage(err));
         }
       });
     }
@@ -361,9 +361,9 @@ function resetStandardForm() {
 }
 
 async function onSaveStandard() {
-  if (!canWrite()) { alert("Chỉ Admin mới lưu được tiêu chuẩn."); return; }
+  if (!canWrite()) { notifyError("Chỉ Admin mới lưu được tiêu chuẩn."); return; }
   const manufacturer = $("s_manufacturer").value.trim();
-  if (!manufacturer) { alert("Vui lòng nhập tên nhà sản xuất."); return; }
+  if (!manufacturer) { notifyError("Vui lòng nhập tên nhà sản xuất."); return; }
   const standardType = $("s_standard_type").value === "dau" ? "dau" : "khi";
   const source = $("s_source").value.trim();
 
@@ -378,7 +378,7 @@ async function onSaveStandard() {
     const tgd90Loaibo = isMba ? "" : $("s_oil_tgd90_loaibo").value;
     const bdvLoaibo = isMba ? "" : $("s_oil_bdv_loaibo").value;
     if ([moisture, tgd90, bdv, moistureLoaibo, tgd90Loaibo, bdvLoaibo].every((v) => v === "")) {
-      alert(isMba
+      notifyError(isMba
         ? "Vui lòng nhập ít nhất 1 trong 3 ngưỡng: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng."
         : "Vui lòng nhập ít nhất 1 ngưỡng (bình thường hoặc loại bỏ) cho 1 trong 3 hạng mục: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng.");
       return;
@@ -433,9 +433,9 @@ async function onSaveStandard() {
     await Storage.saveStandard(rec);
     resetStandardForm();
     await refreshStandardsUI();
-    alert((wasEditing ? "Đã cập nhật tiêu chuẩn cho " : "Đã lưu tiêu chuẩn cho ") + manufacturer + ".");
+    showToast((wasEditing ? "Đã cập nhật tiêu chuẩn cho " : "Đã lưu tiêu chuẩn cho ") + manufacturer + ".");
   } catch (err) {
-    alert(storageErrorMessage(err));
+    notifyError(storageErrorMessage(err));
   }
 }
 

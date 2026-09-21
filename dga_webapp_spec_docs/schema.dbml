@@ -1,0 +1,156 @@
+enum role_type {
+  system_admin
+  maintenance_manager
+  data_analyst
+  field_technician
+  maintenance_engineer
+  compliance_officer
+}
+
+enum sync_status {
+  pending
+  synced
+  failed
+}
+
+enum compliance_status {
+  compliant
+  non_compliant
+  warning
+}
+
+enum calculation_method {
+  duval_triangle
+  rogers_ratio
+}
+
+enum batch_status {
+  queued
+  processing
+  completed
+  partially_failed
+  failed
+}
+
+table users {
+  id integer [primary key]
+  email varchar [unique, not null]
+  password_hash varchar [not null]
+  role role_type [not null]
+  last_login timestamp
+  created_at timestamp [default: `now()`]
+}
+
+table assets {
+  id integer [primary key]
+  name varchar [not null]
+  serial_number varchar [unique, not null]
+  type varchar [not null]
+  manufacturer varchar
+  location varchar
+  created_at timestamp [default: `now()`]
+}
+
+table oil_samples {
+  id integer [primary key]
+  asset_id integer [not null]
+  sample_date timestamp [not null]
+  h2_ppm decimal
+  ch4_ppm decimal
+  c2h6_ppm decimal
+  c2h4_ppm decimal
+  c2h2_ppm decimal
+  co_ppm decimal
+  co2_ppm decimal
+  o2_ppm decimal
+  n2_ppm decimal
+  sync_status sync_status [default: 'synced']
+  created_at timestamp [default: `now()`]
+  
+  Note: 'Core telemetry data for transformer oil health.'
+}
+
+table diagnostic_results {
+  id integer [primary key]
+  sample_id integer [unique, not null]
+  method calculation_method [not null]
+  result_code varchar
+  calculated_at timestamp [default: `now()`]
+}
+
+table compliance_records {
+  id integer [primary key]
+  sample_id integer [unique, not null]
+  standard_name varchar [not null]
+  status compliance_status [not null]
+  checked_at timestamp [default: `now()`]
+}
+
+table sync_queue {
+  id integer [primary key]
+  user_id integer [not null]
+  payload jsonb [not null]
+  status sync_status [default: 'pending']
+  created_at timestamp [default: `now()`]
+}
+
+table batch_jobs {
+  id integer [primary key]
+  user_id integer [not null]
+  job_type varchar [not null]
+  status batch_status [default: 'queued']
+  processed_count integer [default: 0]
+  error_log text
+  created_at timestamp [default: `now()`]
+}
+
+table reports {
+  id integer [primary key]
+  user_id integer [not null]
+  report_type varchar [not null]
+  file_path varchar [not null]
+  generated_at timestamp [default: `now()`]
+}
+
+table google_integrations {
+  id integer [primary key]
+  user_id integer [not null]
+  sheet_id varchar [not null]
+  access_token varchar
+  refresh_token varchar
+  last_sync_at timestamp
+}
+
+table audit_logs {
+  id integer [primary key]
+  event_type varchar [not null]
+  severity varchar
+  message text
+  user_id integer
+  created_at timestamp [default: `now()`]
+}
+
+ref: users.id < sync_queue.user_id
+ref: users.id < batch_jobs.user_id
+ref: users.id < reports.user_id
+ref: users.id < google_integrations.user_id
+ref: users.id < audit_logs.user_id
+ref: assets.id < oil_samples.asset_id
+ref: oil_samples.id - diagnostic_results.sample_id
+ref: oil_samples.id - compliance_records.sample_id
+
+index idx_oil_samples_date {
+  sample_date
+}
+
+index idx_asset_serial {
+  serial_number
+}
+
+index idx_sync_status {
+  sync_status
+}
+
+index idx_audit_log_timestamp {
+  created_at
+}

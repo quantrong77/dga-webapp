@@ -14,6 +14,7 @@ const LS_KEYS = {
   stations: "dga_stations_v1",
   oilTests: "dga_oil_tests_v1",
   oltcOilTests: "dga_oltc_oil_tests_v1",
+  regulationConfig: "dga_regulation_config_v1",
 };
 
 // Tên các khí — dùng để chuẩn hóa key về chữ thường (h2, ch4, ...) khi lưu, khớp với
@@ -314,6 +315,30 @@ const Storage = {
     }
     const all = lsGet(LS_KEYS.measurements).filter((r) => r.id !== id);
     lsSet(LS_KEYS.measurements, all);
+  },
+
+  /** Chỉ ĐỌC (di động không có màn hình sửa) — giống Storage.listRegulationConfig() của bản web
+   *  (storage.js): values_json được giải mã thành object `values`. Sửa ở bản web (chỉ Admin). */
+  async listRegulationConfig() {
+    let rows;
+    if (this.mode === "gsheet") {
+      rows = await gsheetGet("listRegulationConfig");
+    } else if (this.mode === "supabase") {
+      const { data, error } = await sb().from("regulation_config").select("*");
+      if (error) throw error;
+      rows = data || [];
+    } else {
+      rows = lsGet(LS_KEYS.regulationConfig);
+    }
+    return (rows || []).map((r) => {
+      let values = null;
+      try {
+        values = r.values_json ? JSON.parse(r.values_json) : null;
+      } catch (err) {
+        console.warn("Không đọc được values_json của cấu hình quy định:", r.id, err);
+      }
+      return { id: r.id, citation: r.citation || null, values, updated_by: r.updated_by, updated_at: r.updated_at };
+    });
   },
 
   async listStandards() {

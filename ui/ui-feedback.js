@@ -34,7 +34,7 @@ function onFeedbackImageSelected() {
     return;
   }
   if (!file.type || !file.type.startsWith("image/")) {
-    alert(`"${file.name}" không phải file ảnh — vui lòng chọn lại (jpg, png, webp...).`);
+    notifyError(`"${file.name}" không phải file ảnh — vui lòng chọn lại (jpg, png, webp...).`);
     clearFeedbackImage();
     return;
   }
@@ -133,7 +133,7 @@ function setupFeedbackPaste() {
 async function onSubmitFeedback() {
   const content = $("fb_content").value.trim();
   if (!content) {
-    alert("Vui lòng nhập ý kiến góp ý trước khi gửi.");
+    notifyError("Vui lòng nhập ý kiến góp ý trước khi gửi.");
     $("fb_content").focus();
     return;
   }
@@ -154,7 +154,7 @@ async function onSubmitFeedback() {
     clearFeedbackForm();
     await refreshFeedbackUI();
   } catch (err) {
-    alert(storageErrorMessage(err));
+    notifyError(storageErrorMessage(err));
   } finally {
     btn.disabled = false;
     btn.textContent = originalLabel;
@@ -239,7 +239,7 @@ function renderFeedbackList() {
           await Storage.deleteFeedback(rec.id);
           await refreshFeedbackUI();
         } catch (err) {
-          alert(storageErrorMessage(err));
+          notifyError(storageErrorMessage(err));
         }
       });
     }

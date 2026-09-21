@@ -143,7 +143,7 @@ function renderBbtnCurrent() {
  *  (file thật nằm trong localStorage, base64) — dựng lại thành Blob URL rồi mới mở. */
 async function viewBbtn(att) {
   if (!att || !att.bbtn_url) {
-    alert("Lần đo này chưa có Biên bản thí nghiệm đính kèm.");
+    notifyError("Lần đo này chưa có Biên bản thí nghiệm đính kèm.");
     return;
   }
   const url = String(att.bbtn_url);
@@ -154,7 +154,7 @@ async function viewBbtn(att) {
   const measurementId = url.slice("local:".length);
   const local = Storage.getLocalAttachment(measurementId);
   if (!local) {
-    alert("Không tìm thấy file đính kèm trong bộ nhớ trình duyệt này (file chỉ lưu được ở máy/trình duyệt đã tải lên).");
+    notifyError("Không tìm thấy file đính kèm trong bộ nhớ trình duyệt này (file chỉ lưu được ở máy/trình duyệt đã tải lên).");
     return;
   }
   try {
@@ -163,7 +163,7 @@ async function viewBbtn(att) {
     const blobUrl = URL.createObjectURL(blob);
     window.open(blobUrl, "_blank", "noopener");
   } catch (err) {
-    alert("Không mở được file: " + ((err && err.message) || err));
+    notifyError("Không mở được file: " + ((err && err.message) || err));
   }
 }
 
@@ -625,7 +625,7 @@ async function onAnalyze() {
   }
 
   if (!measurement.thiet_bi || !measurement.sample_date) {
-    alert("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
+    notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
     return;
   }
   if (alertIfNegative([
@@ -694,7 +694,7 @@ async function onAnalyze() {
   try {
     all = await Storage.listMeasurements();
   } catch (err) {
-    alert(storageErrorMessage(err));
+    notifyError(storageErrorMessage(err));
     return;
   }
   const prior = all
@@ -784,7 +784,7 @@ async function onAnalyze() {
       const uploaded = await Storage.uploadAttachment(measurement.id, bbtnFile);
       Object.assign(measurement, uploaded);
     } catch (err) {
-      alert(
+      notifyError(
         "Tải lên Biên bản thí nghiệm (PDF) thất bại: " + ((err && err.message) || err) +
         "\n\nLần đo vẫn sẽ được lưu, nhưng KHÔNG kèm file — bấm \"Sửa\" ở Lịch sử đo để đính kèm lại sau."
       );
@@ -809,7 +809,7 @@ async function onAnalyze() {
     updateLanDoSuggestion();
     if (wasEditing) showToast("Đã cập nhật lần đo.");
   } catch (err) {
-    alert("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
+    notifyError("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
   }
 }
 
@@ -1105,7 +1105,7 @@ function renderSimilarCases(similarCases) {
 // ---------------------------------------------------------------------
 async function onExportBbtn() {
   if (!_lastAnalysis) {
-    alert('Vui lòng bấm "Phân tích & Lưu" trước khi xuất Biên bản thí nghiệm.');
+    notifyError('Vui lòng bấm "Phân tích & Lưu" trước khi xuất Biên bản thí nghiệm.');
     return;
   }
   const btn = $("btnExportBbtn");
@@ -1115,7 +1115,7 @@ async function onExportBbtn() {
   try {
     await BbtnExport.exportBbtnDocx(_lastAnalysis);
   } catch (err) {
-    alert("Xuất BBTN (docx) thất bại: " + ((err && err.message) || err));
+    notifyError("Xuất BBTN (docx) thất bại: " + ((err && err.message) || err));
   } finally {
     btn.disabled = false;
     btn.innerHTML = original;
@@ -1130,7 +1130,7 @@ async function onExportBbtn() {
 // ---------------------------------------------------------------------
 async function onExportTechReport() {
   if (!_lastAnalysis) {
-    alert('Vui lòng bấm "Phân tích & Lưu" trước khi xuất Báo cáo phân tích kỹ thuật.');
+    notifyError('Vui lòng bấm "Phân tích & Lưu" trước khi xuất Báo cáo phân tích kỹ thuật.');
     return;
   }
   const btn = $("btnExportTechReport");
@@ -1140,7 +1140,7 @@ async function onExportTechReport() {
   try {
     await TechReportExport.exportTechReportDocx(_lastAnalysis);
   } catch (err) {
-    alert("Xuất báo cáo phân tích kỹ thuật (docx) thất bại: " + ((err && err.message) || err));
+    notifyError("Xuất báo cáo phân tích kỹ thuật (docx) thất bại: " + ((err && err.message) || err));
   } finally {
     btn.disabled = false;
     btn.innerHTML = original;

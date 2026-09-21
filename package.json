@@ -1,0 +1,25 @@
+{
+  "name": "dga-webapp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Công cụ đánh giá DGA dầu cách điện (web app tĩnh). package.json này CHỈ phục vụ công cụ phát triển (kiểm thử Jest, typecheck, đồng bộ bản di động, dựng tab Hướng dẫn) — app vẫn chạy trực tiếp từ index.html, không có bước build.",
+  "scripts": {
+    "test": "jest",
+    "typecheck": "tsc -p tsconfig.json",
+    "sync-mobile": "node scripts/sync-mobile.js",
+    "sync-mobile:check": "node scripts/sync-mobile.js --check",
+    "build-guide": "node scripts/build-user-guide.js",
+    "build-guide:check": "node scripts/build-user-guide.js --check"
+  },
+  "devDependencies": {
+    "@babel/parser": "^7.29.9",
+    "jest": "^29.7.0",
+    "typescript": "^7.0.2"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.js"
+    ]
+  }
+}

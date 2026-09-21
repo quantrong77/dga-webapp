@@ -76,6 +76,7 @@
       <symbol id="icon-ruler" viewBox="0 0 24 24"><rect x="2.5" y="7" width="19" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 7v4M11 7v4M15 7v4M19 7v4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-flow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="18" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 8.3V11a3 3 0 0 0 3 3h0.3M18 8.3V11a3 3 0 0 0-3 3h-0.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2.5l7.5 3.2v5.6c0 5-3.2 8.6-7.5 10.2-4.3-1.6-7.5-5.2-7.5-10.2V5.7L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 12L20 3M17 6l2.5 2.5M14 9l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.3l2.6 2.6L16.2 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M12 3.2l9.5 16.6H2.5L12 3.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9.5v4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
@@ -141,10 +142,16 @@
         </label>
         <button id="btnAuthLogin" class="btn primary" style="width:100%; margin-top:6px;">Đăng nhập</button>
         <p class="auth-error hidden" id="authLoginError"></p>
-        <p class="auth-switch">Chưa có tài khoản? <a href="#" id="linkShowRegister">Đăng ký</a></p>
+        <!-- Link "Đăng ký" tự ẩn nếu server báo REGISTRATION_MODE="closed" (xem
+             applyRegistrationInfo() ở ui-auth.js, gọi Storage.registrationInfo() lúc mở màn
+             hình đăng nhập) — thay bằng #authRegistrationClosedNote. -->
+        <p class="auth-switch" id="authShowRegisterWrap">Chưa có tài khoản? <a href="#" id="linkShowRegister">Đăng ký</a></p>
+        <p class="note hidden" id="authRegistrationClosedNote">Đăng ký tài khoản mới hiện đang đóng — liên hệ Admin để được cấp tài khoản.</p>
       </div>
 
       <div id="authRegisterForm" class="hidden">
+        <!-- Chỉ hiện khi REGISTRATION_MODE="domain" (xem applyRegistrationInfo(), ui-auth.js). -->
+        <p class="note hidden" id="authRegisterDomainHint"></p>
         <label class="field">Email
           <input id="auth_register_email" type="email" placeholder="ten@gmail.com" autocomplete="username" />
         </label>
@@ -179,12 +186,42 @@
       </div>
     </div>
     <div class="header-right">
+      <!-- Chỉ hiện khi Auth.enabled && Auth.current (giống userBadge, xem
+           refreshAuthHeaderUI() ở ui-auth.js) — mở modal #changePasswordOverlay bên dưới. -->
+      <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>
+      </button>
       <!-- Nút tên user TÍCH HỢP luôn đăng xuất (không còn nút "Đăng xuất" rời) — bấm vào
            hiện hộp thoại xác nhận rồi mới đăng xuất, xem $("userBadge").addEventListener
            ở ui-auth.js (thay cho $("btnLogout") cũ). -->
       <button type="button" id="userBadge" class="badge user-badge hidden" title="Bấm để đăng xuất"></button>
     </div>
   </header>
+
+  <!-- ===================== MODAL: ĐỔI MẬT KHẨU =====================
+       Tự phục vụ cho user ĐÃ đăng nhập (cần biết mật khẩu cũ) — mở qua #btnOpenChangePassword
+       ở header, xem setupChangePassword() ở ui-auth.js. Dùng chung khung ".mini-modal-*" với
+       modal "mật khẩu tạm" ở tab Quản trị (xem css/style-auth.css). -->
+  <div id="changePasswordOverlay" class="mini-modal-overlay hidden">
+    <div class="mini-modal-card">
+      <button type="button" class="mini-modal-close" id="btnCloseChangePassword" aria-label="Đóng">&times;</button>
+      <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h3>
+      <p class="note" id="changePasswordGoogleHint" style="display:none;">Tài khoản này trước giờ chỉ đăng nhập bằng
+        Google, chưa từng có mật khẩu — không tự đặt mật khẩu lần đầu ở đây được, nhờ Admin đặt hộ ở tab "Quản trị".</p>
+      <label class="field">Mật khẩu hiện tại
+        <input id="cp_old" type="password" autocomplete="current-password" />
+      </label>
+      <label class="field">Mật khẩu mới (tối thiểu 6 ký tự)
+        <input id="cp_new" type="password" autocomplete="new-password" />
+      </label>
+      <label class="field">Nhập lại mật khẩu mới
+        <input id="cp_new2" type="password" autocomplete="new-password" />
+      </label>
+      <button id="btnSubmitChangePassword" class="btn primary" style="width:100%; margin-top:6px;">Đổi mật khẩu</button>
+      <p class="auth-error hidden" id="changePasswordError"></p>
+      <p class="note">Đổi xong, các thiết bị/trình duyệt khác đang đăng nhập bằng tài khoản này sẽ bị đăng xuất, cần đăng nhập lại bằng mật khẩu mới.</p>
+    </div>
+  </div>
 
   <nav class="tabs">
     <!-- Nút thu gọn/mở rộng sidebar — CHỈ hiện khi đang ở bố cục dọc (body.tabs-sidebar,
@@ -200,20 +237,30 @@
          (màn hình hẹp), nên overflow-x:auto ở nav.tabs vẫn cuộn ngang bình thường từ
          mép trái, không bị lỗi "kẹt giữa" như dùng justify-content:center trực tiếp
          trên nav.tabs khi nội dung tràn. -->
+    <!-- Thứ tự tab (2026-09, xem thảo luận trong lịch sử trao đổi khi hiệu chỉnh): nhóm
+         "Nhập & đánh giá" (DGA, Dầu) → nhóm "Theo dõi dữ liệu đã lưu" (Cảnh báo trước Lịch
+         sử đo — ưu tiên xem ngay thiết bị nào đang cần chú ý kiểu dashboard, rồi mới tra
+         cứu chi tiết từng bản ghi; Xu hướng) → nhóm "Tham khảo/hỗ trợ" (Quy trình, Giới
+         thiệu, Hướng dẫn, Phản hồi — không thao tác dữ liệu thiết bị) → nhóm "Quản lý hệ
+         thống" (Cấu hình, Quản trị — đặt liền nhau vì cùng chủ yếu dành cho Admin; Quản
+         trị luôn ẩn với User qua class "hidden" bất kể thứ tự). Đổi thứ tự tab chỉ cần sửa
+         DOM ở đây — không phụ thuộc thứ tự các <section id="tab-..."> bên dưới (mỗi nút
+         tự tìm đúng section theo data-tab, xem addEventListener(".tab-btn"), app-core.js). -->
     <div class="tabs-inner">
       <button class="tab-btn active" data-tab="nhap" title="DGA"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg><span class="tab-label">DGA</span></button>
       <button class="tab-btn" data-tab="dau" title="Dầu cách điện"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg><span class="tab-label">Dầu cách điện</span></button>
-      <button class="tab-btn" data-tab="lichsu" title="Lịch sử đo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="tab-label">Lịch sử đo</span></button>
       <button class="tab-btn" data-tab="canhbao" title="Cảnh báo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg><span class="tab-label">Cảnh báo</span></button>
+      <button class="tab-btn" data-tab="lichsu" title="Lịch sử đo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="tab-label">Lịch sử đo</span></button>
       <button class="tab-btn" data-tab="xuhuong" title="Xu hướng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg><span class="tab-label">Xu hướng</span></button>
       <!-- "Quy trình lấy mẫu" + "Quy trình đánh giá" (2 tab cũ) đã gộp thành 1 tab "Quy
            trình" duy nhất để thu gọn thanh tab — chọn nội dung con bằng cụm nút
            .quytrinh-subtab-btn ngay trong tab, xem section id="tab-quytrinh" bên dưới +
            setupQuyTrinhSubtabs() ở app-core.js (cùng cơ chế đã dùng cho tab "Cấu hình"). -->
       <button class="tab-btn" data-tab="quytrinh" title="Quy trình"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg><span class="tab-label">Quy trình</span></button>
-      <button class="tab-btn" data-tab="cauhinh" title="Cấu hình"><svg class="tab-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg><span class="tab-label">Cấu hình</span></button>
       <button class="tab-btn" data-tab="about" title="Giới thiệu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg><span class="tab-label">Giới thiệu</span></button>
+      <button class="tab-btn" data-tab="huongdan" title="Hướng dẫn sử dụng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-book"></use></svg><span class="tab-label">Hướng dẫn</span></button>
       <button class="tab-btn" data-tab="phanhoi" title="Người dùng phản hồi"><svg class="tab-icon" aria-hidden="true"><use href="#icon-feedback"></use></svg><span class="tab-label">Người dùng phản hồi</span></button>
+      <button class="tab-btn" data-tab="cauhinh" title="Cấu hình"><svg class="tab-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg><span class="tab-label">Cấu hình</span></button>
       <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="tab-label">Quản trị</span></button>
     </div>
   </nav>
@@ -2223,6 +2270,1039 @@
       </div>
     </section>
 
+    <!-- ===================== TAB: HƯỚNG DẪN SỬ DỤNG =====================
+         Nội dung chuyển thể từ user_manual.md (tài liệu hướng dẫn cho người dùng
+         cuối) thành 19 khối "details.mm-node" thu gọn/mở rộng — dùng lại đúng
+         khung .mm-node/.mm-branches/.sm-body/.sm-note/.rec-list đã có ở tab "Quy trình"
+         (xem setupSampleMethods() ở ui-guides.js — setupUserGuideExpandCollapse() bên
+         dưới nó dùng cùng cơ chế "Mở tất cả/Thu gọn tất cả" cho khối #userGuideRoot này).
+         Cập nhật nội dung: sửa user_manual.md rồi chạy `npm run build-guide` để dựng lại
+         khối HTML này giữa 2 dấu USER-GUIDE:BEGIN/END (KHÔNG sửa tay ở đây — sẽ bị ghi đè). -->
+    <section id="tab-huongdan" class="tab-panel hidden">
+      <div class="panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-book"></use></svg>Hướng dẫn sử dụng</h2>
+        <p class="note">Tài liệu dành cho người dùng cuối (kỹ sư thí nghiệm, cán bộ theo dõi thiết bị) — đi theo
+          từng công việc cụ thể: nhập số liệu, đọc kết quả, xem cảnh báo, xuất biên bản... Bấm vào từng mục dưới
+          đây để xem chi tiết.</p>
+        <div class="mindmap-controls">
+          <button type="button" class="btn ghost" id="btnGuideExpandAll">Mở tất cả</button>
+          <button type="button" class="btn ghost" id="btnGuideCollapseAll">Thu gọn tất cả</button>
+        </div>
+        <div class="mm-branches" id="userGuideRoot">
+        <!-- USER-GUIDE:BEGIN — sinh tự động bởi scripts/build-user-guide.js từ user_manual.md, KHÔNG sửa tay -->
+        <details class="mm-node">
+          <summary>1. App dùng để làm gì?<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Ứng dụng hỗ trợ đánh giá tình trạng cách điện của các thiết bị dầu
+          cách điện qua <strong>phân tích khí hòa tan (DGA)</strong> và
+          <strong>thí nghiệm dầu</strong>:</p>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Loại thiết bị</th>
+          <th style="text-align: center;">Có nhập DGA</th>
+          <th style="text-align: center;">Có nhập thí nghiệm dầu</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>MBA / Kháng dầu</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔ (dầu chính + dầu OLTC)</td>
+          </tr>
+          <tr>
+          <td>TI (biến dòng điện)</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔ (cần chọn nhà sản xuất — xem mục
+          9.3)</td>
+          </tr>
+          <tr>
+          <td>TU (biến điện áp)</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔ (cần chọn nhà sản xuất — xem mục
+          9.3)</td>
+          </tr>
+          <tr>
+          <td>Sứ xuyên (Bushing)</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✘ (không có thí nghiệm dầu)</td>
+          </tr>
+          <tr>
+          <td>Khác</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✘</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p>Căn cứ đánh giá: <strong>QĐ 1901/QĐ-EVNNPT</strong> và <strong>IEC
+          60599:2022</strong>. Khi bạn chưa chọn nhà sản xuất, app tự lấy ngưỡng
+          <strong>chặt hơn</strong> giữa hai nguồn này.</p>
+          <p>App làm được những việc chính:</p>
+          <ul class="rec-list">
+          <li>Nhập 7 khí hòa tan → tự tính <strong>TCG</strong>, đánh giá từng
+          khí, chẩn đoán dạng sự cố (<strong>Bảng 66 / Tam giác Duval</strong>),
+          tính tốc độ sinh khí, đưa ra <strong>trạng thái tổng thể</strong> và
+          <strong>khuyến cáo</strong>.</li>
+          <li>Đánh giá độ ẩm, tgδ, điện áp chọc thủng của dầu.</li>
+          <li>Lưu lịch sử, so sánh giữa các lần đo, vẽ xu hướng và dự báo.</li>
+          <li>Tự động liệt kê các thiết bị đang ở mức <strong>Cảnh báo / Báo
+          động</strong>.</li>
+          <li>Tự đọc số liệu từ <strong>Biên bản thí nghiệm PDF</strong>, và xuất
+          lại thành <strong>BBTN / Báo cáo kỹ thuật (.docx)</strong>.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>2. Bắt đầu: mở app và đăng nhập<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>2.1. Mở app</h3>
+          <p>Mở đường link do quản trị viên cung cấp bằng <strong>Chrome, Edge
+          hoặc Safari</strong> (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở
+          file <code>index.html</code> bằng trình duyệt.</p>
+          <p>Góc trên bên trái có <strong>huy hiệu trạng thái lưu
+          trữ</strong>:</p>
+          <div class="table-scroll"><table>
+          <colgroup>
+          <col style="width: 50%" />
+          <col style="width: 50%" />
+          </colgroup>
+          <thead>
+          <tr>
+          <th>Huy hiệu</th>
+          <th>Ý nghĩa</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>“Đã kết nối database (Google Sheets)”</td>
+          <td>Dữ liệu lưu dùng chung, có đăng nhập và phân quyền</td>
+          </tr>
+          <tr>
+          <td>“Đã kết nối database (Supabase)”</td>
+          <td>Dữ liệu lưu dùng chung, <strong>không</strong> có đăng nhập/phân
+          quyền</td>
+          </tr>
+          <tr>
+          <td>“Chế độ thử nghiệm”</td>
+          <td>Dữ liệu chỉ lưu trong trình duyệt của máy này</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p class="sm-note">⚠ Ở <strong>chế độ thử nghiệm</strong>, dữ liệu chỉ nằm trên trình
+          duyệt hiện tại — <strong>mất nếu xóa lịch sử duyệt web</strong> và người
+          khác không thấy được. Chỉ dùng để thử.</p>
+          <h3>2.2. Đăng ký và đăng nhập (chế độ Google Sheets)</h3>
+          <ol type="1">
+          <li>Khi mở app sẽ hiện hộp thoại <strong>“Đánh giá Dầu cách
+          điện”</strong>.</li>
+          <li><strong>Lần đầu:</strong> bấm <strong>Đăng ký</strong> → nhập email
+          + mật khẩu (tối thiểu 6 ký tự) → bấm <strong>Đăng ký</strong>.</li>
+          <li><strong>Các lần sau:</strong> nhập email + mật khẩu → bấm
+          <strong>Đăng nhập</strong>.</li>
+          <li>Nếu app có bật <strong>Đăng nhập bằng Google</strong>, nút này hiện
+          ở đầu hộp thoại — bấm và chọn tài khoản Google.</li>
+          <li>Lần sau mở lại app, phiên đăng nhập được <strong>tự khôi
+          phục</strong>.</li>
+          </ol>
+          <p><strong>Đăng xuất:</strong> bấm vào <strong>tên/email của
+          bạn</strong> ở góc trên bên phải → xác nhận.</p>
+          <p class="sm-note">Ở chế độ Supabase hoặc thử nghiệm, không có màn hình đăng nhập và mọi
+          người có toàn quyền như nhau.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>3. Làm quen giao diện<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>3.1. Các tab</h3>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Tab</th>
+          <th>Dùng để</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>DGA</strong></td>
+          <td>Nhập và đánh giá một lần đo khí hòa tan (tab chính)</td>
+          </tr>
+          <tr>
+          <td><strong>Dầu cách điện</strong></td>
+          <td>Nhập và đánh giá thí nghiệm dầu</td>
+          </tr>
+          <tr>
+          <td><strong>Lịch sử đo</strong></td>
+          <td>Xem lại, sửa, xóa; so sánh 2 lần đo bất kỳ</td>
+          </tr>
+          <tr>
+          <td><strong>Cảnh báo</strong></td>
+          <td>Danh sách thiết bị đang ở mức Cảnh báo/Báo động</td>
+          </tr>
+          <tr>
+          <td><strong>Xu hướng</strong></td>
+          <td>Đồ thị theo thời gian + dự báo</td>
+          </tr>
+          <tr>
+          <td><strong>Quy trình</strong></td>
+          <td>Hướng dẫn lấy mẫu dầu, sơ đồ quy trình đánh giá DGA</td>
+          </tr>
+          <tr>
+          <td><strong>Cấu hình</strong></td>
+          <td>Tiêu chuẩn theo nhà sản xuất; chỉnh bảng quy định</td>
+          </tr>
+          <tr>
+          <td><strong>Giới thiệu</strong></td>
+          <td>Thông tin chung và căn cứ pháp lý</td>
+          </tr>
+          <tr>
+          <td><strong>Hướng dẫn</strong></td>
+          <td>Xem hướng dẫn sử dụng này ngay trong app</td>
+          </tr>
+          <tr>
+          <td><strong>Người dùng phản hồi</strong></td>
+          <td>Gửi góp ý</td>
+          </tr>
+          <tr>
+          <td><strong>Quản trị</strong></td>
+          <td>Quản lý người dùng — <strong>chỉ Admin</strong> mới thấy</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <h3>3.2. Thanh tab ngang hoặc dọc</h3>
+          <p>Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển giữa
+          <strong>thanh tab ngang</strong> (mặc định) và <strong>thanh tab dọc bên
+          trái</strong>. Ở chế độ dọc, bấm mũi tên để <strong>thu gọn</strong>
+          (chỉ còn biểu tượng; rê chuột để xem tên tab). App nhớ lựa chọn của
+          bạn.</p>
+          <h3>3.3. Các thao tác dùng chung</h3>
+          <ul class="rec-list">
+          <li><strong>Ô Trạm / Thiết bị:</strong> vừa <strong>gõ để tìm</strong>,
+          vừa <strong>bấm ▼ để chọn</strong> trong danh sách đã có. Bạn cũng có
+          thể <strong>gõ tên mới</strong> (không bắt buộc phải chọn từ danh
+          sách).</li>
+          <li><strong>Biểu tượng “i”:</strong> bấm để xem giải thích chi tiết;
+          đóng bằng <strong>×</strong> hoặc bấm ra ngoài. Chỉ một hộp giải thích
+          mở tại một thời điểm.</li>
+          <li><strong>Thông báo nhanh (toast)</strong> hiện ở góc trên bên phải:
+          màu xanh khi thao tác thành công (đăng nhập, lưu…), <strong>màu đỏ khi
+          có lỗi hoặc thiếu thông tin</strong> (ví dụ chưa nhập Thiết bị, mất kết
+          nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý
+          cách xử lý.</li>
+          <li>Khi thấy <strong>“Vui lòng chờ! Đang nạp dữ liệu…”</strong>, hãy chờ
+          danh sách Trạm/Thiết bị và lịch sử tải xong.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>4. Nhập và đánh giá một lần đo khí hòa tan (tab DGA)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>Bước 1 — Chọn loại thiết bị</h3>
+          <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: TI, TU, MBA/Kháng
+          dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng
+          và phương pháp chẩn đoán được dùng — <strong>hãy chọn đúng</strong>.</p>
+          <h3>Bước 2 — Điền “Thông tin lần đo”</h3>
+          <div class="table-scroll"><table>
+          <colgroup>
+          <col style="width: 50%" />
+          <col style="width: 50%" />
+          </colgroup>
+          <thead>
+          <tr>
+          <th>Trường</th>
+          <th>Cách điền</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>Trạm</strong></td>
+          <td>Gõ/chọn tên trạm</td>
+          </tr>
+          <tr>
+          <td><strong>Thiết bị (tên/mã)</strong></td>
+          <td>Gõ/chọn tên thiết bị, ví dụ <code>TI174</code>,
+          <code>MBA T1</code></td>
+          </tr>
+          <tr>
+          <td><strong>Ngăn OLTC (thông dầu/khí với thùng chính)</strong></td>
+          <td><em>Chỉ hiện với MBA/Kháng dầu.</em> Tick nếu thiết bị có OLTC mà
+          ngăn OLTC <strong>thông dầu/khí</strong> với thùng chính (thông tin này
+          được lưu cùng lần đo). Với số liệu ngưỡng mặc định hiện tại, ô này chưa
+          làm đổi ngưỡng đánh giá</td>
+          </tr>
+          <tr>
+          <td><strong>Nhà sản xuất (tùy chọn)</strong></td>
+          <td>Chọn hãng nếu đã có tiêu chuẩn riêng ở tab Cấu hình; để trống = dùng
+          ngưỡng mặc định QĐ1901/IEC</td>
+          </tr>
+          <tr>
+          <td><strong>Pha</strong></td>
+          <td>A, B, C hoặc <strong>Chung</strong> (dùng chung cả 3 pha)</td>
+          </tr>
+          <tr>
+          <td><strong>Lần đo</strong></td>
+          <td>Tự gợi ý số thứ tự kế tiếp theo nhóm Trạm + Thiết bị + Pha; sửa được
+          nếu cần</td>
+          </tr>
+          <tr>
+          <td><strong>Ngày lấy mẫu</strong></td>
+          <td>Ngày lấy mẫu dầu</td>
+          </tr>
+          <tr>
+          <td><strong>Ghi chú</strong></td>
+          <td>Không bắt buộc</td>
+          </tr>
+          <tr>
+          <td><strong>Biên bản thí nghiệm (PDF)</strong></td>
+          <td>Không bắt buộc — xem mục
+          6</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p class="sm-note"><strong>Mẹo:</strong> Để tránh app coi là hai thiết bị khác nhau, hãy
+          <strong>gõ tên Trạm và Thiết bị thống nhất</strong> (nên chọn từ danh
+          sách gợi ý thay vì gõ lại). Tốc độ sinh khí và xu hướng được tính theo
+          nhóm <strong>Trạm + Thiết bị + Pha</strong>.</p>
+          <h3>Bước 3 — Nhập hàm lượng khí (ppm)</h3>
+          <p>Nhập 7 khí: <strong>H2, CH4, C2H6, C2H4, C2H2, CO, CO2</strong>.
+          Không nhập số âm.</p>
+          <h3>Bước 4 — Khí bổ sung N2, O2 (tùy chọn)</h3>
+          <p>Chỉ cần nếu muốn xem thêm:</p>
+          <ul class="rec-list">
+          <li>Tỷ lệ <strong>CO2/CO, O2/N2</strong> (Điều 54 QĐ1901);</li>
+          <li><strong>Tổng hàm lượng khí hòa tan</strong> (Bảng 63).</li>
+          </ul>
+          <p>Với Bảng 63, chọn thêm <strong>Cấp điện áp</strong> (110–220 kV hoặc
+          500 kV) và tick ô <em>“Dầu mới đưa vào vận hành lần đầu / sau sửa chữa
+          có thay dầu hoặc lọc dầu”</em> nếu đúng trường hợp đó. <strong>Cần nhập
+          cả N2 lẫn O2</strong> thì mục này mới tính được. Nếu để trống, các mục
+          này tự ẩn và không ảnh hưởng đánh giá khác.</p>
+          <h3>Bước 5 — Thông tin bổ sung (tùy chọn)</h3>
+          <p>Hai khối này <strong>không ảnh hưởng đánh giá</strong>, chỉ để điền
+          sẵn vào file Word khi xuất:</p>
+          <ul class="rec-list">
+          <li><strong>Thông tin thí nghiệm bổ sung:</strong> ngày thí nghiệm, lý
+          do thí nghiệm, nhiệt độ và độ ẩm môi trường (dùng cho BBTN).</li>
+          <li><strong>Thông số kỹ thuật thiết bị:</strong> kiểu máy, năm sản xuất,
+          năm đưa vào vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu
+          cách điện, hiện trạng vận hành (dùng cho Báo cáo phân tích kỹ
+          thuật).</li>
+          </ul>
+          <p class="sm-note">Thông số kỹ thuật lưu <strong>theo từng lần đo</strong>. Nếu muốn báo
+          cáo có đủ thông số, hãy điền (hoặc để nguyên nếu chưa xóa form) ở mỗi
+          lần đo.</p>
+          <h3>Bước 6 — Bấm “Phân tích &amp; Lưu”</h3>
+          <ul class="rec-list">
+          <li>Kết quả hiện ngay bên dưới ở khối <strong>“2. Kết quả đánh
+          giá”</strong>, đồng thời lần đo được <strong>lưu</strong> vào
+          database.</li>
+          <li><strong>Xóa form:</strong> làm trống toàn bộ ô để nhập lần đo
+          mới.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>5. Đọc kết quả đánh giá<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>5.1. Trạng thái tổng thể (khung màu đầu kết quả)</h3>
+          <div class="table-scroll"><table>
+          <colgroup>
+          <col style="width: 50%" />
+          <col style="width: 50%" />
+          </colgroup>
+          <thead>
+          <tr>
+          <th>Mức</th>
+          <th>Ý nghĩa</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>Bình thường</strong></td>
+          <td>Không có dấu hiệu bất thường theo các tiêu chí kiểm tra</td>
+          </tr>
+          <tr>
+          <td><strong>Cảnh báo (ALERT)</strong></td>
+          <td>Có dấu hiệu cần chú ý, tăng tần suất theo dõi</td>
+          </tr>
+          <tr>
+          <td><strong>Báo động (ALARM)</strong></td>
+          <td>Bất thường nghiêm trọng, cần xử lý/xác minh ngay</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p>Ngay dưới là <strong>danh sách lý do</strong> (khí nào vượt, mã sự cố
+          gì, tốc độ tăng bao nhiêu…) và <strong>khuyến cáo hành động</strong> cụ
+          thể. Trạng thái tổng hợp từ: đạt/không đạt từng khí, mã chẩn đoán, sự
+          thay đổi loại sự cố so với lần đo trước, tốc độ tăng khí, và vượt ngưỡng
+          loại bỏ.</p>
+          <h3>5.2. Các thành phần kết quả</h3>
+          <div class="table-scroll"><table>
+          <colgroup>
+          <col style="width: 50%" />
+          <col style="width: 50%" />
+          </colgroup>
+          <thead>
+          <tr>
+          <th>Thành phần</th>
+          <th>Cách hiểu</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>TCG</strong> (Tổng khí cháy)</td>
+          <td>Tổng các khí cháy được; kèm ghi chú tốc độ tăng nếu đã có lần đo
+          trước</td>
+          </tr>
+          <tr>
+          <td><strong>Đánh giá từng khí</strong></td>
+          <td>Mỗi khí so với ngưỡng áp dụng → Đạt / Không đạt; có <strong>Kết luận
+          chung</strong></td>
+          </tr>
+          <tr>
+          <td><strong>Bảng 66 (IEC Table 1)</strong></td>
+          <td>Mã sự cố theo tỷ số khí: <strong>PD, D1, D2, T1, T2, T3</strong> —
+          dùng cho MBA/Kháng dầu, TI, TU</td>
+          </tr>
+          <tr>
+          <td><strong>Table A.10 (Sứ xuyên)</strong></td>
+          <td>Riêng Sứ xuyên: 4 mã <strong>độc lập</strong> PD, D, T, TP (có thể
+          khớp 0, 1 hoặc nhiều mã); nếu không khớp mã nào, app lùi về Bảng 66</td>
+          </tr>
+          <tr>
+          <td><strong>Tam giác Duval 1</strong></td>
+          <td>Hình tam giác trực quan có điểm chẩn đoán; dùng cho mọi loại thiết
+          bị. Nếu khác kết quả tỷ số khí, app ghi chú để bạn đối chiếu</td>
+          </tr>
+          <tr>
+          <td><strong>Tỷ lệ bổ sung (Điều 54)</strong> và <strong>Tổng hàm lượng
+          khí hòa tan (Bảng 63)</strong></td>
+          <td>Chỉ hiện khi đã nhập N2 và O2; là thông tin <strong>tham khảo bổ
+          sung</strong>, không làm thay đổi trạng thái tổng thể</td>
+          </tr>
+          <tr>
+          <td><strong>Ngưỡng loại bỏ (condemning)</strong></td>
+          <td>Nếu nhà sản xuất có cấu hình: hiện cảnh báo riêng <strong>“⚠ Vượt
+          ngưỡng loại bỏ”</strong></td>
+          </tr>
+          <tr>
+          <td><strong>Tốc độ gia tăng khí</strong></td>
+          <td>So với lần đo liền trước của cùng Trạm + Thiết bị + Pha (Bảng 65
+          QĐ1901 hoặc khoảng riêng của hãng). Bảng 65 chỉ chính thức cho MBA/Kháng
+          dầu; với loại khác chỉ để tham khảo</td>
+          </tr>
+          <tr>
+          <td><strong>So sánh với nhóm thiết bị tương tự</strong></td>
+          <td>Thống kê <strong>tham khảo</strong> (xem 5.3): lần đo này lệch bao
+          nhiêu so với các lần đo khác của cùng nhóm thiết bị đã lưu</td>
+          </tr>
+          <tr>
+          <td><strong>Ca tương tự trong lịch sử đo</strong></td>
+          <td>Tối đa 3 lần đo cũ có “dạng” khí giống lần đo này nhất — để tham
+          khảo diễn biến các trường hợp trước đây</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <h3>5.3. Hai khối thống kê tham khảo (chỉ có trên bản web)</h3>
+          <p>Hai khối này <strong>không phải ngưỡng của QĐ1901/IEC</strong> và
+          <strong>không làm đổi</strong> trạng thái Bình thường/Cảnh báo/Báo động
+          ở đầu kết quả — chỉ để bạn có thêm góc nhìn.</p>
+          <ul class="rec-list">
+          <li><strong>So sánh với nhóm thiết bị tương tự.</strong> App lấy các lần
+          đo đã lưu của thiết bị <strong>cùng loại</strong> (ưu tiên cùng cấp điện
+          áp và cùng nhà sản xuất; nếu không đủ dữ liệu sẽ tự nới dần tiêu chí,
+          tên nhóm đang dùng được ghi ngay trong khối). Cần <strong>tối thiểu 5
+          lần đo</strong> trong nhóm, ít hơn thì app báo “chưa đủ dữ liệu”. Kết
+          quả gồm:
+          <ul class="rec-list">
+          <li><strong>Z-score từng khí</strong> (tính trên thang log): |z| ≥ 2 là
+          lệch nhẹ khỏi số đông — nên theo dõi thêm; |z| ≥ 3 là lệch rõ rệt.</li>
+          <li><strong>Điểm bất thường tổng hợp</strong> (Isolation Forest, xét
+          <strong>đồng thời cả 7 khí</strong>): từ 0,55 là hơi lệch, từ 0,62 là
+          khả năng bất thường cao. Điểm này phát hiện được trường hợp nhiều khí
+          cùng tăng nhẹ mà không khí nào riêng lẻ vượt ngưỡng.</li>
+          </ul></li>
+          <li><strong>Ca tương tự trong lịch sử đo.</strong> App so “hình dạng” 7
+          khí của lần đo này với toàn bộ lịch sử và hiện tối đa 3 lần đo giống
+          nhất (độ giống từ 0,5 trở lên). Dùng để xem các trường hợp tương tự
+          trước đây diễn biến ra sao — <strong>không phải kết luận</strong> cho
+          lần đo này. Chưa có lần đo nào đủ giống thì khối này báo không có ca
+          tham khảo.</li>
+          </ul>
+          <h3>5.4. Hai điều cần nhớ</h3>
+          <ul class="rec-list">
+          <li><strong>Tỷ số khí (Bảng 66) chỉ có ý nghĩa chẩn đoán khi có ít nhất
+          1 khí vượt giá trị điển hình.</strong> Nếu chưa vượt, app vẫn hiển thị
+          mã nhưng kèm ghi chú “Điều kiện áp dụng”.</li>
+          <li><strong>Tam giác Duval chỉ đáng tin khi CH4 + C2H4 + C2H2 đủ
+          lớn</strong> (vài ppm trở lên). Khí quá thấp thì tỷ lệ % dao động mạnh.
+          Vùng <strong>“D+T”</strong> là vùng ranh giới mà chính hình gốc IEC cũng
+          không phân định rõ.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>6. Nhập nhanh từ Biên bản thí nghiệm (PDF) và ảnh tấm nhãn<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN)</h3>
+          <ol type="1">
+          <li>Ở tab <strong>DGA</strong>, mục <strong>“Biên bản thí nghiệm (PDF,
+          tùy chọn)”</strong>: <strong>kéo thả</strong> file PDF vào khung, hoặc
+          bấm khung để chọn file.</li>
+          <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị,
+          Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định
+          mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí
+          nghiệm, nhiệt độ/độ ẩm môi trường và <strong>7 khí hòa
+          tan</strong>.</li>
+          <li><strong>Kiểm tra lại toàn bộ</strong> các ô đã điền, sửa nếu cần,
+          rồi bấm <strong>Phân tích &amp; Lưu</strong>. File PDF được đính kèm
+          cùng lần đo.</li>
+          <li>Sau này có thể bấm <strong>Xem BBTN đã lưu</strong> để mở lại file,
+          hoặc <strong>Bỏ file</strong> để gỡ đính kèm.</li>
+          </ol>
+          <p>Việc đọc PDF chạy <strong>hoàn toàn trên trình duyệt của
+          bạn</strong>, file không bị gửi đi đâu để “đọc”.</p>
+          <p class="sm-note">⚠ App được thiết kế theo mẫu biên bản <strong>PTC3/BM.15</strong>.
+          Nếu biên bản dùng mẫu khác, có thể chỉ đọc được một phần hoặc không đọc
+          được. Luôn đối chiếu với biên bản gốc.</p>
+          <h3>6.2. Đọc thông số từ ảnh tấm nhãn thiết bị (nameplate)</h3>
+          <p>Trong khối <strong>“Thông số kỹ thuật thiết bị”</strong>, kéo thả
+          <strong>ảnh chụp tấm nhãn</strong> (JPG/PNG) vào khung. App dùng OCR để
+          gợi ý điền: Kiểu máy, Số chế tạo, Năm sản xuất, Điện áp định mức, Loại
+          dầu và Nhà sản xuất.</p>
+          <p class="sm-note">Mỗi hãng trình bày nhãn khác nhau nên <strong>độ tin cậy thấp
+          hơn</strong> đọc BBTN — hãy chụp rõ, đủ sáng và <strong>luôn kiểm tra
+          lại từng ô</strong>.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>7. Nhập hàng loạt nhiều biên bản của cùng một thiết bị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Dùng khi cần <strong>nhập bổ sung dữ liệu lịch sử</strong> (nhiều năm
+          đo) để phân tích xu hướng, không muốn lặp lại “chọn file → Phân tích
+          &amp; Lưu” từng lần.</p>
+          <ol type="1">
+          <li><strong>Điền trước</strong> ở form phía trên: <strong>Trạm, Thiết
+          bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất</strong> (các thông số kỹ
+          thuật nếu muốn). Các thông tin này được dùng chung cho <strong>tất
+          cả</strong> file trong đợt; riêng <strong>Pha, Ngày lấy mẫu và 7
+          khí</strong> được đọc riêng từ mỗi file.</li>
+          <li>Ở khối <strong>“Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết
+          bị”</strong>: kéo thả nhiều file PDF, hoặc bấm <strong>Chọn cả thư
+          mục…</strong>.</li>
+          <li>Tick/bỏ tick <strong>“Đính kèm PDF gốc vào từng lần đo”</strong>
+          (mặc định đang tick).</li>
+          <li>Xem <strong>bảng xem trước</strong>: mỗi file có một trạng thái:
+          <ul class="rec-list">
+          <li><strong>Sẵn sàng</strong> — có thể nhập.</li>
+          <li><strong>Cảnh báo</strong> — không đọc được Pha, hoặc <strong>trùng
+          Pha + Ngày</strong> với bản ghi đã có/dòng khác trong đợt.</li>
+          <li><strong>Lỗi</strong> — không đọc được file hoặc thiếu dữ liệu bắt
+          buộc.</li>
+          </ul></li>
+          <li>Sửa tay <strong>Pha / Ngày</strong> ở từng dòng nếu cần; tick chọn
+          từng dòng, hoặc dùng <strong>Chọn tất cả hợp lệ / Bỏ chọn tất
+          cả</strong>.</li>
+          <li>Bấm <strong>Lưu các lần đo đã chọn</strong>. App lưu lần lượt từng
+          dòng (một dòng lỗi <strong>không chặn</strong> các dòng còn lại) và tự
+          đánh số <strong>Lần đo</strong> tăng dần theo đúng nhóm Trạm + Thiết bị
+          + Pha.</li>
+          </ol>
+          <p class="sm-note">Trình duyệt Firefox không lọc theo thư mục được (nút “Chọn cả thư
+          mục” chỉ mở hộp chọn file thường). Nên dùng Chrome/Edge.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>8. Xuất Biên bản thí nghiệm và Báo cáo phân tích kỹ thuật (.docx)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Sau khi bấm <strong>Phân tích &amp; Lưu</strong>, ở đầu khối
+          <strong>“2. Kết quả đánh giá”</strong> có hai nút:</p>
+          <div class="table-scroll"><table>
+          <colgroup>
+          <col style="width: 33%" />
+          <col style="width: 33%" />
+          <col style="width: 33%" />
+          </colgroup>
+          <thead>
+          <tr>
+          <th>Nút</th>
+          <th>Nội dung</th>
+          <th>Điều kiện</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>Xuất BBTN (docx)</strong></td>
+          <td>Điền sẵn vào mẫu Biên bản thí nghiệm <strong>PTC3/BM.15</strong>:
+          trạm, vị trí lắp đặt, hãng SX, ngày lấy/thí nghiệm mẫu, lý do, điều kiện
+          môi trường, 7 khí, TCG, tốc độ sinh khí (%/tháng), N2/O2, Tổng hàm lượng
+          khí hòa tan, kết luận</td>
+          <td>Luôn có</td>
+          </tr>
+          <tr>
+          <td><strong>Xuất báo cáo phân tích kỹ thuật (docx)</strong></td>
+          <td>Thông số thiết bị, kết quả thí nghiệm, 3 tỷ số khí, chẩn đoán bất
+          thường, đề xuất hướng xử lý</td>
+          <td>Chỉ hiện khi trạng thái <strong>khác “Bình thường”</strong></td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p><strong>Cách dùng:</strong> bấm nút → file .docx được tải về →
+          <strong>mở bằng Word</strong> để bổ sung các mục chưa có sẵn (hãng SX,
+          số chế tạo, chữ ký…) rồi mới ban hành.</p>
+          <ul class="rec-list">
+          <li>Trường nào bạn để trống, file Word sẽ bỏ trống dòng đó (app không tự
+          suy diễn).</li>
+          <li>Việc tạo file chạy hoàn toàn trên trình duyệt, không gửi số liệu lên
+          máy chủ.</li>
+          <li>Số liệu điền sẵn chỉ mang tính <strong>hỗ trợ</strong>; người ký
+          phải kiểm tra lại.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>9. Thí nghiệm dầu cách điện (tab Dầu cách điện)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Ba chỉ tiêu được đánh giá: <strong>Độ ẩm dầu (ppm)</strong>,
+          <strong>Tổn hao điện môi tgδ ở 90°C (%)</strong>, <strong>Điện áp chọc
+          thủng (kV)</strong>.</p>
+          <p>Đầu tab, chọn <strong>Loại thiết bị</strong> — chỉ khối nhập liệu phù
+          hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản
+          ghi).</p>
+          <h3>9.1. Dầu MBA/Kháng dầu (dầu chính)</h3>
+          <p>Điền: <strong>Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng
+          thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú</strong>, rồi
+          nhập 3 kết quả và bấm <strong>Đánh giá &amp; Lưu</strong>.</p>
+          <ul class="rec-list">
+          <li><strong>Điểm lấy mẫu:</strong> <em>Thùng dầu chung 3 pha</em> (1 mẫu
+          đại diện) hoặc <em>Thùng dầu riêng từng pha</em> (MBA/Kháng 3 pha rời,
+          thường ở 500 kV) — khi đó chọn thêm <strong>Pha A/B/C</strong> và nhập
+          riêng từng pha. Bấm <strong>“i”</strong> để xem giải thích.</li>
+          <li><strong>Trạng thái dầu:</strong> <em>Dầu mới (sau lắp đặt/sau sửa
+          chữa)</em> hoặc <em>Dầu vận hành</em>.</li>
+          <li><strong>“Có bảo vệ bằng màng chất dẻo/nitơ”</strong>: chỉ hiện với
+          cấp điện áp có phân biệt hai mức ngưỡng độ ẩm (≤ 110 kV).</li>
+          <li>Ngưỡng theo <strong>Bảng 58 / 55 / 54 QĐ1901</strong> (Điều 50 / 47
+          / 46). Nếu chọn nhà sản xuất đã cấu hình tiêu chuẩn dầu, ngưỡng hãng
+          được ưu tiên.</li>
+          </ul>
+          <h3>9.2. Dầu OLTC (bộ đổi nấc có tải)</h3>
+          <p>Cùng 3 chỉ tiêu, theo <strong>Điều 37, Bảng 49 QĐ1901</strong> (dầu
+          vận hành) hoặc Bảng 58 (dầu mới lắp). Điểm lấy mẫu: <em>Điểm cuối trung
+          tính</em> (3 pha dùng chung) hoặc <em>Pha riêng</em>.</p>
+          <h3>9.3. Dầu TI / TU</h3>
+          <p><strong>QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU</strong>
+          (chỉ dẫn chiếu “theo quy định nhà sản xuất”). Vì vậy:</p>
+          <ul class="rec-list">
+          <li>Bạn <strong>bắt buộc phải chọn một Nhà sản xuất</strong> đã được cấu
+          hình đủ tiêu chuẩn <strong>2 tầng (Bình thường / Loại bỏ)</strong> ở tab
+          <strong>Cấu hình → Tiêu chuẩn</strong>.</li>
+          <li>Nếu chưa chọn hoặc hãng chưa có cấu hình, app <strong>chặn
+          lưu</strong> và báo rõ lý do; hãy nhờ Admin cấu hình.</li>
+          <li>Kết quả có 3 mức: <strong>Đạt / Cảnh báo / Không đạt</strong>.</li>
+          </ul>
+          <h3>9.4. Sứ xuyên (Bushing)</h3>
+          <p>Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab
+          <strong>DGA</strong> (khí hòa tan là phương pháp đánh giá chính cho sứ
+          xuyên kín dầu).</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>10. Xem lại, sửa, xóa và so sánh (tab Lịch sử đo)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>10.1. Chọn nội dung xem</h3>
+          <p>Ở đầu tab, chọn xem <strong>Khí hòa tan (DGA)</strong> hoặc
+          <strong>Dầu</strong> (gồm 3 bảng: dầu MBA chính / dầu OLTC / dầu
+          TI-TU-Sứ xuyên). Dùng ô lọc <strong>Trạm/Thiết bị</strong> (gõ tự do) và
+          bộ lọc <strong>Loại thiết bị</strong> để thu hẹp danh sách.</p>
+          <h3>10.2. Đọc bảng lịch sử DGA</h3>
+          <p>Mỗi dòng gồm: ngày, trạm, thiết bị, loại, pha, lần đo, 7 khí + N2/O2,
+          TCG, <strong>Kết luận</strong> (kèm “⚠ Vượt ngưỡng loại bỏ” nếu có), mã
+          <strong>Bảng 66</strong>, vùng <strong>Duval</strong>, <strong>Người
+          nhập</strong> và các nút thao tác.</p>
+          <ul class="rec-list">
+          <li>Ô khí <strong>tô nền đỏ</strong> = giá trị <strong>đã bị
+          sửa</strong> so với lần lưu gốc. Rê chuột vào ô để xem <strong>giá trị
+          cũ và thời điểm sửa</strong>.</li>
+          <li>Huy hiệu <strong>“✎ N lần sửa”</strong> ở cột <em>Người nhập</em>
+          cho xem log các lần chỉnh sửa.</li>
+          <li><strong>Xem BBTN</strong> để mở lại file PDF đã đính kèm (nếu
+          có).</li>
+          </ul>
+          <h3>10.3. Sửa một lần đo đã lưu</h3>
+          <ol type="1">
+          <li>Bấm nút sửa ở dòng cần sửa → app đưa số liệu lên form ở tab tương
+          ứng, kèm dòng cảnh báo màu vàng <strong>“Đang SỬA lần đo đã
+          lưu…”</strong>.</li>
+          <li>Chỉnh số liệu → bấm <strong>Cập nhật &amp; Lưu</strong> để ghi đè,
+          hoặc <strong>Hủy sửa</strong> để bỏ qua.</li>
+          <li>Hệ thống <strong>tự ghi log</strong> trường nào đã sửa (giá trị cũ,
+          thời điểm) để mọi người cùng thấy.</li>
+          </ol>
+          <p class="sm-note">Người dùng thường chỉ sửa được bản ghi <strong>do chính mình
+          nhập</strong>; xóa bản ghi chỉ dành cho <strong>Admin</strong> (xem mục
+          16).</p>
+          <h3>10.4. So sánh tốc độ gia tăng khí giữa 2 lần đo bất kỳ</h3>
+          <p>Ở khối <strong>“So sánh tốc độ gia tăng khí giữa 2 lần
+          đo”</strong>:</p>
+          <ol type="1">
+          <li>Chọn <strong>Thiết bị</strong> (Trạm + Thiết bị + Pha) đã có từ
+          <strong>2 lần đo trở lên</strong>.</li>
+          <li>Chọn <strong>Lần đo thứ nhất</strong> và <strong>Lần đo thứ
+          hai</strong> (không cần là hai lần liền kề; app tự sắp theo thời
+          gian).</li>
+          <li>Bấm <strong>Tính tốc độ gia tăng</strong>.</li>
+          </ol>
+          <p>Bảng kết quả gồm: giá trị trước, sau, chênh lệch (Δ), <strong>tốc độ
+          (ppm/năm)</strong>, khoảng điển hình và <strong>đánh giá</strong> theo
+          Bảng 65 QĐ1901 (hoặc khoảng riêng của hãng nếu có).</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>11. Theo dõi thiết bị bất thường (tab Cảnh báo)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết
+          bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê
+          các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo
+          động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab DGA/Dầu cách
+          điện, không tự đặt ngưỡng riêng.</p>
+          <ul class="rec-list">
+          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số
+          thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.</li>
+          <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý
+          các trạm đang có cảnh báo); để trống = tất cả.</li>
+          <li>Mỗi dòng cho biết: thiết bị, loại đo, mức cảnh báo, tình trạng,
+          khí/chỉ tiêu vượt ngưỡng, lý do và khuyến cáo hành động.</li>
+          <li><strong>Xem xu hướng:</strong> nhảy thẳng sang tab <strong>Xu
+          hướng</strong>, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây
+          cảnh báo.</li>
+          <li><strong>Xuất Excel:</strong> tải file <code>.xlsx</code> gồm thống
+          kê tổng quan và toàn bộ danh sách đang hiển thị (theo bộ lọc Trạm hiện
+          tại). Nút này chỉ bấm được khi có dữ liệu.</li>
+          </ul>
+          <p><strong>Gợi ý thói quen:</strong> mở tab này mỗi ngày/tuần để nắm các
+          thiết bị cần theo dõi ngay, không phải mở từng thiết bị.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>12. Xem xu hướng và dự báo (tab Xu hướng)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <h3>12.1. Vẽ đồ thị</h3>
+          <ol type="1">
+          <li>(Tùy chọn) Chọn <strong>Trạm biến áp</strong> để danh sách thiết bị
+          chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng
+          ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.</li>
+          <li>Chọn <strong>Thiết bị</strong>.</li>
+          <li>Nếu thiết bị có dữ liệu từ nhiều pha, tick các pha muốn so sánh ở
+          <strong>“Lọc theo pha”</strong> — mỗi pha một đường riêng.</li>
+          <li>Ở <strong>“Chọn thông số cần vẽ”</strong>, tick các thông số muốn
+          xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và
+          độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số
+          dùng một trục tung phù hợp đơn vị.</li>
+          </ol>
+          <p>Phía dưới có <strong>bảng số liệu thô</strong> của từng nguồn (khí /
+          dầu chính / dầu OLTC).</p>
+          <p class="sm-note">Nếu không có mạng hoặc thư viện vẽ đồ thị (Chart.js) tải lỗi, đồ thị
+          sẽ ẩn kèm thông báo — kiểm tra kết nối và tải lại trang. Các bảng số
+          liệu và bảng dự báo vẫn dùng được.</p>
+          <h3>12.2. Dự báo xu hướng (ngoại suy tuyến tính)</h3>
+          <ul class="rec-list">
+          <li>Tick <strong>“Hiện dự báo xu hướng tương lai”</strong> (app nhớ lựa
+          chọn) và đặt <strong>Số năm dự báo</strong> (1–30).</li>
+          <li>Với mỗi khí trong 7 khí chính, bảng hiển thị kết quả của <strong>3
+          thuật toán độc lập</strong> (hồi quy OLS, Theil-Sen, trung bình liền kề)
+          và một dòng <strong>Trung bình 3 thuật toán</strong>: tốc độ thay đổi,
+          giá trị dự báo, <strong>R²</strong> và <strong>thời điểm dự kiến chạm
+          ngưỡng</strong> (nếu xu hướng đang tăng).</li>
+          <li>Cần <strong>tối thiểu 2 lần đo</strong> mỗi khí; nên có <strong>≥ 4
+          lần đo</strong> để đáng tin (R² càng gần 1 càng tốt).</li>
+          <li>Chỉ dự báo mốc chạm ngưỡng cho <strong>7 khí chính</strong>.</li>
+          </ul>
+          <p class="sm-note">⚠ Dự báo giả định tốc độ sinh khí <strong>không đổi</strong> — chỉ
+          mang tính tham khảo thống kê, không thay thế đánh giá tổng hợp.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>13. Cấu hình tiêu chuẩn theo nhà sản xuất và bảng quy định (tab Cấu hình)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Tab có hai mục, chuyển bằng nút <strong>Tiêu chuẩn / Quy
+          định</strong> ở đầu tab. Bấm biểu tượng <strong>“i”</strong> cạnh tiêu
+          đề để xem hướng dẫn chi tiết.</p>
+          <p class="sm-note">Phần này thường do <strong>Admin</strong> thực hiện. Người dùng
+          thường chủ yếu chỉ cần xem.</p>
+          <h3>13.1. Mục “Tiêu chuẩn” — ngưỡng riêng theo nhà sản xuất</h3>
+          <p>Cho phép đặt ngưỡng riêng cho từng hãng, áp dụng thay cho ngưỡng mặc
+          định QĐ1901/IEC:</p>
+          <ul class="rec-list">
+          <li><strong>Khí hòa tan (DGA):</strong> ngưỡng tuyệt đối từng khí,
+          <strong>ngưỡng loại bỏ</strong>, khoảng tốc độ tăng riêng.</li>
+          <li><strong>Dầu cách điện MBA/Kháng dầu:</strong> thay cho Bảng 54/55/58
+          (theo cấp điện áp + trạng thái dầu).</li>
+          <li><strong>Dầu cách điện TI/TU:</strong> <strong>bắt buộc</strong> cấu
+          hình (2 tầng Bình thường/Loại bỏ) vì QĐ1901 không có bảng mặc định.</li>
+          </ul>
+          <p>Các bước: chọn/nhập thông tin hãng và loại tiêu chuẩn → điền ngưỡng →
+          bấm <strong>Lưu tiêu chuẩn</strong> (hoặc <strong>Hủy</strong>). Danh
+          sách tiêu chuẩn đã cấu hình hiện bên dưới, có thể <strong>xem lại / sửa
+          / xóa</strong>.</p>
+          <p><strong>Quy tắc áp dụng:</strong> nếu thiết bị/thí nghiệm không chọn
+          nhà sản xuất, hoặc hãng chưa có cấu hình khớp, app dùng tiêu chuẩn mặc
+          định QĐ1901/IEC. Riêng dầu TI/TU sẽ báo <em>“Chưa có tiêu chuẩn nhà sản
+          xuất”</em>.</p>
+          <h3>13.2. Mục “Quy định” — 13 bảng ngưỡng số học</h3>
+          <p>Cho phép chỉnh <strong>13 bảng ngưỡng đơn giản</strong> trích từ
+          QĐ1901/IEC 60599:2022 (ví dụ: MBA/Kháng dầu — Khí hòa tan; Dầu MBA —
+          Điện áp chọc thủng; tgδ ở 90°C; Hàm lượng nước; Dầu OLTC — Độ ẩm &amp;
+          điện áp chọc thủng…).</p>
+          <ul class="rec-list">
+          <li>Sửa số liệu + nguồn tham chiếu → bấm <strong>Lưu bảng này</strong>
+          (dùng khi quy định được cập nhật, không cần sửa code).</li>
+          <li><strong>Khôi phục mặc định:</strong> trả bảng về đúng số liệu gốc
+          tích hợp sẵn.</li>
+          <li><strong>Không</strong> gồm logic tra mã Bảng 66/Table A.10 và ranh
+          giới Tam giác Duval — các phần này cố định theo văn bản gốc.</li>
+          <li>Chỉ <strong>Admin</strong> sửa/lưu được (chế độ Google Sheets); mọi
+          người dùng đã đăng nhập đều xem được.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>14. Tra cứu quy trình lấy mẫu và đánh giá (tab Quy trình)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Tab có hai mục con:</p>
+          <h3>14.1. “Lấy mẫu dầu”</h3>
+          <ul class="rec-list">
+          <li><strong>7 phương pháp lấy mẫu dầu</strong> (Điều 8 QĐ1901) dạng thu
+          gọn/mở rộng; dùng <strong>Mở tất cả / Thu gọn tất cả</strong>.</li>
+          <li>5 sơ đồ minh họa (Hình 2–5) và thư viện ảnh thực tế. <strong>Bấm vào
+          ảnh để phóng to</strong>; đóng bằng nút <strong>×</strong>, bấm ra ngoài
+          hoặc phím <strong>Esc</strong>.</li>
+          </ul>
+          <h3>14.2. “Đánh giá DGA”</h3>
+          <ul class="rec-list">
+          <li><strong>Cẩm nang tham khảo nhanh:</strong> các áp phích tổng hợp quy
+          trình chẩn đoán (bấm để phóng to). Lưu ý đây chỉ là bản tóm tắt trực
+          quan; số liệu ngưỡng chính thức mà app dùng là bảng theo đúng loại thiết
+          bị.</li>
+          <li><strong>Hai sơ đồ tư duy</strong> (diễn giải quy trình DGA; cơ chế
+          hình thành khí, 7 loại khí, khí chỉ thị theo lỗi…), mỗi sơ đồ có nút
+          <strong>Mở tất cả / Thu gọn tất cả</strong>.</li>
+          <li>Mục <strong>“Căn cứ”</strong> ghi rõ nguồn: IEC 60599:2022 và các
+          điều/bảng của QĐ1901.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>15. Góp ý cho ứng dụng (tab Người dùng phản hồi)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <ol type="1">
+          <li>Nhập nội dung góp ý.</li>
+          <li>(Tùy chọn) Đính kèm <strong>1 ảnh minh họa</strong> bằng một trong
+          ba cách: chọn file, <strong>kéo thả</strong>, hoặc <strong>dán trực tiếp
+          (Ctrl+V)</strong> ảnh vừa chụp màn hình. Bấm <strong>Bỏ ảnh</strong> nếu
+          muốn gỡ.</li>
+          <li>Bấm <strong>Gửi góp ý</strong>.</li>
+          </ol>
+          <p>Các góp ý đã gửi được hiển thị (mới nhất ở trên) để mọi người cùng
+          xem, tránh đề xuất trùng nhau; bấm ảnh để phóng to. Góp ý <strong>không
+          sửa lại được</strong> sau khi gửi; chỉ Admin xóa được.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>16. Phân quyền Admin / User và tab Quản trị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p><em>(Chỉ áp dụng ở chế độ Google Sheets. Ở chế độ khác, mọi người có
+          toàn quyền.)</em></p>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Quyền</th>
+          <th style="text-align: center;">User</th>
+          <th style="text-align: center;">Admin</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>Xem toàn bộ dữ liệu</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          <tr>
+          <td>Nhập bản ghi mới (khí, dầu MBA, dầu OLTC, dầu TI/TU)</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          <tr>
+          <td>Sửa bản ghi</td>
+          <td style="text-align: center;">Chỉ bản ghi <strong>do mình
+          nhập</strong></td>
+          <td style="text-align: center;">Mọi bản ghi</td>
+          </tr>
+          <tr>
+          <td>Xóa bản ghi</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          <tr>
+          <td>Cấu hình Tiêu chuẩn / Quy định</td>
+          <td style="text-align: center;">✘ (chỉ xem)</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          <tr>
+          <td>Quản lý người dùng</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p>Mỗi bản ghi lưu <strong>người tạo, người sửa cuối và thời
+          điểm</strong> (cột “Người nhập”). Quyền thực sự được kiểm tra lại ở phía
+          máy chủ.</p>
+          <h3>Tab Quản trị (chỉ Admin)</h3>
+          <ul class="rec-list">
+          <li>Xem danh sách người dùng: email, vai trò, ngày tạo, lần đăng nhập
+          cuối.</li>
+          <li><strong>Đổi vai trò</strong> User ⇄ Admin bằng ô chọn.</li>
+          <li><strong>Xóa người dùng</strong> (có xác nhận).</li>
+          <li>Dòng của chính Admin đang đăng nhập bị khóa đổi vai trò và ẩn nút
+          xóa để tránh tự khóa mình.</li>
+          </ul>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>17. Bản di động<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p>Thư mục <code>mobile/</code> chứa bản giao diện tối ưu cho điện thoại
+          (một cột, thanh điều hướng trên cùng), <strong>dùng chung database và
+          tài khoản</strong> với bản web nếu được cấu hình cùng
+          <code>config.js</code>. Số liệu nhập ở điện thoại xuất hiện ở bản web và
+          ngược lại.</p>
+          <p><strong>Cùng số liệu, cùng kết luận:</strong> bản di động dùng
+          <strong>chính bộ logic đánh giá của bản web</strong> (file
+          <code>mobile/dga-logic.js</code> được sinh tự động từ logic web, không
+          sửa tay), nên ngưỡng QĐ1901/IEC 60599:2022, chẩn đoán Bảng 66/Table A.10
+          (sứ xuyên), Tam giác Duval, trạng thái tổng thể và đánh giá dầu đều
+          giống hệt. <strong>Cấu hình quy định</strong> do Admin chỉnh ở bản web
+          cũng được bản di động tự áp dụng khi mở app.</p>
+          <p>Bản di động gồm các tab: <strong>DGA</strong>, <strong>Dầu</strong>,
+          <strong>Xu hướng</strong>, <strong>Tiêu chuẩn</strong> (Admin ghi được,
+          người dùng thường chỉ xem) và <strong>Quản trị</strong> (chỉ Admin). Các
+          phần <strong>chỉ có trên bản web</strong>: nhập N2/O2 và Tổng hàm lượng
+          khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương
+          tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN.
+          Chi tiết xem <code>mobile/README.md</code>.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>18. Câu hỏi thường gặp và xử lý sự cố<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <p><strong>Bấm “Phân tích &amp; Lưu” báo lỗi (thông báo màu đỏ góc trên
+          bên phải).</strong> Nếu thông báo là “Vui lòng nhập…” thì bổ sung ô còn
+          thiếu. Nếu là “Lỗi kết nối Google Sheets/Supabase…” thường do đường link
+          kết nối database bị sai hoặc chưa cấp quyền truy cập đúng — thông báo đã
+          kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho
+          Admin. Admin xem hướng dẫn xử lý ở <code>README.md</code>.</p>
+          <p><strong>Thấy thông báo “Đã xảy ra lỗi không lường trước” hoặc “Thao
+          tác không hoàn tất”.</strong> Đây là lỗi ngoài dự kiến của app (không
+          phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn
+          hình thông báo, ghi lại bạn đang thao tác gì và gửi ở tab <strong>Người
+          dùng phản hồi</strong> hoặc cho Admin (chi tiết kỹ thuật nằm trong
+          Console của trình duyệt, dòng bắt đầu bằng “[DGA]”).</p>
+          <p><strong>Mở app thấy trắng/không có dữ liệu cũ.</strong> Kiểm tra huy
+          hiệu trạng thái góc trên bên trái. Nếu đang ở <em>“Chế độ thử
+          nghiệm”</em>, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang
+          mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.</p>
+          <p><strong>Không thấy Trạm/Thiết bị trong danh sách gợi ý.</strong> Chờ
+          dòng <em>“Vui lòng chờ! Đang nạp dữ liệu…”</em> biến mất. Nếu thiết bị
+          mới hoàn toàn, cứ <strong>gõ tên mới</strong>.</p>
+          <p><strong>Tốc độ sinh khí không hiện.</strong> Cần có <strong>lần đo
+          trước</strong> của cùng <strong>Trạm + Thiết bị + Pha</strong>. Kiểm tra
+          tên Trạm/Thiết bị và Pha đã trùng khớp với lần đo trước chưa.</p>
+          <p><strong>Không lưu được thí nghiệm dầu TI/TU.</strong> Chưa chọn nhà
+          sản xuất, hoặc hãng chưa có tiêu chuẩn dầu TI/TU đủ 2 tầng. Nhờ Admin
+          cấu hình ở <strong>Cấu hình → Tiêu chuẩn</strong>.</p>
+          <p><strong>Không thấy nút “Xuất báo cáo phân tích kỹ thuật”.</strong>
+          Nút này chỉ hiện khi trạng thái tổng thể <strong>khác “Bình
+          thường”</strong>.</p>
+          <p><strong>Không thấy nút Xuất BBTN/báo cáo sau khi mở lại một lần đo
+          cũ.</strong> Các nút xuất nằm trong khối kết quả, chỉ hiện sau khi phân
+          tích. Bấm <strong>Phân tích &amp; Lưu</strong> (hoặc <strong>Cập nhật
+          &amp; Lưu</strong> khi sửa) để hiện.</p>
+          <p><strong>Đọc PDF không ra số liệu / ra sai.</strong> Biên bản có thể
+          dùng mẫu khác PTC3/BM.15, hoặc là bản scan mờ. Nhập tay các ô còn thiếu;
+          luôn kiểm tra lại trước khi lưu.</p>
+          <p><strong>Tôi lỡ nhập sai số liệu đã lưu.</strong> Vào <strong>Lịch sử
+          đo</strong> → sửa bản ghi đó (mục 10.3). Nếu bạn là User và bản ghi
+          không phải của bạn, nhờ Admin sửa. Lịch sử chỉnh sửa luôn được ghi
+          lại.</p>
+          <p><strong>Tôi không đăng nhập được.</strong> Kiểm tra email/mật khẩu
+          (tối thiểu 6 ký tự). Nếu quên mật khẩu, liên hệ Admin. Nếu dùng Google
+          mà không thấy nút Google, chức năng này chưa được bật ở app của bạn.</p>
+          <p><strong>Bản web và bản di động cho kết luận khác nhau với cùng số
+          liệu.</strong> Hai bản dùng chung logic nên kết quả phải giống nhau. Nếu
+          thấy khác, tải lại cứng trang (Ctrl+F5 trên máy tính; xóa dữ liệu trang
+          trên di động) để bỏ bản cũ lưu trong bộ nhớ đệm, rồi kiểm tra Cấu hình
+          quy định/tiêu chuẩn nhà sản xuất đang áp dụng có giống nhau ở hai bản
+          không (cả hai đọc chung từ database). Nếu vẫn lệch, báo Admin.</p>
+          <p><strong>Nên dùng trình duyệt nào?</strong> Chrome hoặc Edge (đầy đủ
+          nhất). Safari dùng được; Firefox không hỗ trợ chọn cả thư mục khi nhập
+          hàng loạt.</p>
+
+          </div>
+        </details>
+        <details class="mm-node">
+          <summary>19. Lưu ý quan trọng khi dùng kết quả<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <div class="sm-body">
+          <ul class="rec-list">
+          <li>App là <strong>công cụ hỗ trợ tham khảo</strong>, <strong>không thay
+          thế</strong> nguyên tắc đánh giá tổng thể tại <strong>Điều 3
+          QĐ1901</strong>. Cần đối chiếu thêm với các pha khác, thiết bị cùng
+          loại, lần đo trước, diễn biến vận hành và hướng dẫn của nhà sản xuất
+          trước khi kết luận chính thức.</li>
+          <li><strong>Trạng thái tổng thể</strong> (Bình thường/Cảnh báo/Báo động)
+          là thuật toán do ứng dụng tự xây dựng để số hóa lưu đồ đánh giá — không
+          phải một bảng trích nguyên văn từ QĐ1901.</li>
+          <li><strong>Bảng 65</strong> (tốc độ sinh khí) chỉ chính thức cho
+          MBA/Kháng dầu; với loại khác chỉ để tham khảo, trừ khi hãng có khoảng
+          tốc độ riêng.</li>
+          <li><strong>Nhập đúng loại thiết bị</strong> — lựa chọn này quyết định
+          bảng ngưỡng và phương pháp chẩn đoán được dùng. Hãy tick “Ngăn OLTC”
+          đúng thực tế để dữ liệu lưu chính xác.</li>
+          <li><strong>So sánh với nhóm thiết bị tương tự</strong> và <strong>ca
+          tương tự</strong> chỉ là thống kê tham khảo, không phải ngưỡng quy định
+          và không thay đổi trạng thái tổng thể (xem mục 5.3).</li>
+          <li>Số liệu tự động điền từ PDF/ảnh nhãn chỉ là <strong>gợi ý</strong>:
+          luôn kiểm tra lại trước khi lưu hoặc ký biên bản.</li>
+          <li>Không chia sẻ đường link database (Google Apps Script/Supabase) công
+          khai ra ngoài nhóm nội bộ.</li>
+          </ul>
+          <hr />
+          <p><em>Nếu phát hiện lỗi hoặc muốn đề xuất tính năng, hãy dùng tab
+          <strong>Người dùng phản hồi</strong> trong ứng dụng.</em></p>
+
+          </div>
+        </details>
+        <!-- USER-GUIDE:END -->
+        </div>
+      </div>
+    </section>
+
     <!-- ===================== NGƯỜI DÙNG PHẢN HỒI =====================
          Góp ý tự do (không phải dữ liệu thí nghiệm) — nội dung + 1 ảnh minh họa tùy chọn
          (chụp màn hình lỗi, giao diện muốn cải thiện...). Lưu qua Storage.listFeedback()/
@@ -2270,7 +3350,29 @@
         <p class="note">Chỉ Admin xem được tab này. Admin có toàn quyền thêm/sửa/xóa mọi dữ liệu (Đo khí, Dầu MBA,
           Dầu OLTC, Tiêu chuẩn, Trạm...). Người dùng thường (User) tự nhập và lưu được Đo khí/Dầu MBA/Dầu OLTC, và
           sửa lại được các bản ghi do chính mình đã nhập — nhưng không sửa được bản ghi của người khác, không xóa
-          được bản ghi nào, và không thêm/sửa được Tiêu chuẩn/Trạm (các mục đó vẫn chỉ Admin mới thao tác được).</p>
+          được bản ghi nào, và không thêm/sửa được Tiêu chuẩn/Trạm (các mục đó vẫn chỉ Admin mới thao tác được).
+          Vai trò <strong>Viewer</strong> chỉ xem được dữ liệu, không nhập/sửa gì (vẫn gửi góp ý được).</p>
+
+        <!-- Tạo tài khoản trực tiếp — cần thiết khi đăng ký tự do đang bị đóng
+             (REGISTRATION_MODE="closed"/"domain" ở gsheet/Code.gs), nhưng để mở luôn cho mọi
+             chế độ vì Admin có thể muốn chủ động cấp tài khoản trước. Xem onAdminCreateUser()
+             ở ui-admin.js — mật khẩu TẠM sinh ngẫu nhiên, hiện 1 lần qua #tempPasswordOverlay
+             để Admin copy gửi người dùng qua kênh khác (app không tự gửi email được). -->
+        <div class="toolbar" style="align-items:flex-end; flex-wrap:wrap;">
+          <label class="field" style="flex:1 1 240px; margin:0;">Email tài khoản mới
+            <input id="qt_newuser_email" type="email" placeholder="ten@vidu.com" autocomplete="off" />
+          </label>
+          <label class="field" style="max-width:160px; margin:0;">Vai trò
+            <select id="qt_newuser_role">
+              <option value="user">User</option>
+              <option value="viewer">Viewer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </label>
+          <button type="button" class="btn primary" id="btnAdminCreateUser">+ Tạo tài khoản</button>
+        </div>
+        <p class="auth-error hidden" id="qtNewUserError"></p>
+
         <div class="table-scroll"><table>
           <thead><tr><th>Email</th><th>Vai trò</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
           <tbody id="usersTable"></tbody>
@@ -2279,6 +3381,29 @@
       </div>
     </section>
   </main>
+
+  <!-- ===================== MODAL: MẬT KHẨU TẠM (kết quả) =====================
+       Dùng chung cho CẢ 2 thao tác của Admin: "Đặt lại mật khẩu" (1 user đã có) và "+ Tạo
+       tài khoản" (user mới) — cả 2 đều trả về 1 mật khẩu ngẫu nhiên CHỈ hiện ĐÚNG 1 LẦN, xem
+       showTempPasswordModal() ở ui-admin.js. Đóng modal này KHÔNG hiện lại được mật khẩu đó
+       (app không lưu), nên phải copy/ghi lại trước khi đóng. -->
+  <div id="tempPasswordOverlay" class="mini-modal-overlay hidden">
+    <div class="mini-modal-card">
+      <button type="button" class="mini-modal-close" id="btnCloseTempPassword" aria-label="Đóng">&times;</button>
+      <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span id="tempPasswordTitle">Mật khẩu tạm</span></h3>
+      <p class="note">Gửi thông tin dưới đây cho người dùng qua kênh khác (Zalo/điện thoại...) — mật khẩu này chỉ
+        hiện <strong>đúng 1 lần</strong>, ứng dụng không lưu lại. Nên nhắc người dùng đổi mật khẩu (biểu tượng
+        <svg class="icon-svg" aria-hidden="true" style="width:14px; height:14px; vertical-align:-2px;"><use href="#icon-key"></use></svg>
+        ở góc trên bên phải) ngay sau khi đăng nhập được.</p>
+      <div class="temp-password-box">
+        <div><span class="temp-password-label">Email:</span> <span id="tempPasswordEmail"></span></div>
+        <div><span class="temp-password-label">Mật khẩu tạm:</span> <code id="tempPasswordValue"></code>
+          <button type="button" class="btn ghost" id="btnCopyTempPassword" style="padding:3px 9px; font-size:11.5px;">Copy</button>
+        </div>
+      </div>
+      <button type="button" class="btn primary" id="btnCloseTempPassword2" style="width:100%; margin-top:10px;">Đã lưu lại, đóng</button>
+    </div>
+  </div>
 
   <footer class="app-footer">
     Công cụ hỗ trợ tham khảo — không thay thế nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.
@@ -2329,6 +3454,8 @@
   <script src="vendor/docxtemplater/pizzip.min.js"></script>
   <script src="vendor/docxtemplater/docxtemplater.min.js"></script>
   <script src="config.js"></script>
+  <!-- Xử lý lỗi tập trung (toast lỗi + handler error/unhandledrejection) — nạp SỚM để bắt cả lỗi lúc khởi động, xem ui/ui-errors.js -->
+  <script src="ui/ui-errors.js"></script>
   <!-- dga-logic.js (lớp logic nghiệp vụ) đã được tách thành 8 file theo miền, nạp bằng
        <script> thường (KHÔNG phải module) NGAY TRƯỚC dga-logic.js bên dưới — chia sẻ
        chung 1 scope toàn cục giống hệt các file ui-*.js. dga-logic-core.js là "hub" mà

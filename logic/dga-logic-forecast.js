@@ -111,7 +111,7 @@ const FORECAST_METHOD_LABELS = {
  * bị lệch (vd Theil-Sen ổn định hơn khi có outlier, nhưng OLS phản ánh đúng xu hướng
  * chung hơn khi dữ liệu đều) — xem ghi chú tổng quan ở đầu khối này về giới hạn/giả định
  * chung của MỌI phép ngoại suy tuyến tính (giả định tốc độ không đổi trong tương lai).
- * @param {Array<{date: string|Date, value: number|null|undefined}>} history lịch sử đo
+ * @param {Array<{date: string|Date, value: number|string|null|undefined}>} history lịch sử đo
  *   (không cần sort sẵn — hàm tự sort tăng dần theo ngày); các điểm value rỗng/null bị
  *   loại bỏ trước khi tính (đúng nguyên tắc "số liệu trống thì không đánh giá").
  * @param {number} forecastYears số năm muốn ngoại suy tới (vd 3, 5, 10)
@@ -131,7 +131,7 @@ function forecastGasTrend(history, forecastYears, limit) {
     .filter((h) => h && h.value !== null && h.value !== undefined && h.value !== "" && h.date)
     .map((h) => ({ date: new Date(h.date), value: Number(h.value) }))
     .filter((h) => Number.isFinite(h.value) && !Number.isNaN(h.date.getTime()))
-    .sort((a, b) => a.date - b.date);
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 
   if (pts.length < 2) {
     return { ok: false, reason: "not_enough_data", n: pts.length };

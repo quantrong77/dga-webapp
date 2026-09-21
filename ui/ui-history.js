@@ -102,7 +102,7 @@ async function refreshHistoryUI() {
             await Storage.deleteMeasurement(rec.id);
             await refreshHistoryUI();
           } catch (err) {
-            alert(storageErrorMessage(err));
+            notifyError(storageErrorMessage(err));
           }
         }
       });
@@ -250,21 +250,32 @@ function refreshCompareMeasurementOptions() {
   afterSel.value = list[list.length - 1].id;
 }
 
+/** Làm tròn tối đa 4 chữ số thập phân để HIỂN THỊ (JS tự bỏ số 0 thừa ở cuối khi
+ *  chuyển sang chuỗi) — tránh hiện số lẻ nhiễu do sai số dấu phẩy động (VD
+ *  1.3333333000000002) ở cột before/after/delta của bảng so sánh tốc độ gia tăng
+ *  khí (tab "Lịch sử đo" > So sánh 2 lần đo). Chỉ áp dụng lúc hiển thị — KHÔNG
+ *  dùng giá trị đã làm tròn này để so sánh ngưỡng (verdict đã được tính trước đó
+ *  trong DGA.computeRateOfChange() bằng giá trị chưa làm tròn). */
+function fmt4(n) {
+  if (n === null || n === undefined || !isFinite(n)) return n;
+  return Math.round(n * 10000) / 10000;
+}
+
 function onCompareRate() {
   const key = $("cmp_device").value;
-  if (!key) { alert("Vui lòng chọn thiết bị."); return; }
+  if (!key) { notifyError("Vui lòng chọn thiết bị."); return; }
   const list = _allMeasurements.filter((r) => deviceKey(r) === key);
   const beforeRec = list.find((r) => String(r.id) === $("cmp_before").value);
   const afterRec = list.find((r) => String(r.id) === $("cmp_after").value);
-  if (!beforeRec || !afterRec) { alert("Vui lòng chọn đủ 2 lần đo."); return; }
-  if (beforeRec.id === afterRec.id) { alert("Vui lòng chọn 2 lần đo khác nhau."); return; }
+  if (!beforeRec || !afterRec) { notifyError("Vui lòng chọn đủ 2 lần đo."); return; }
+  if (beforeRec.id === afterRec.id) { notifyError("Vui lòng chọn 2 lần đo khác nhau."); return; }
 
   // Luôn xếp theo thời gian thực tế, bất kể người dùng chọn ở ô "thứ nhất"/"thứ hai" nào
   const [prevRec, currRec] = new Date(beforeRec.sample_date) <= new Date(afterRec.sample_date)
     ? [beforeRec, afterRec] : [afterRec, beforeRec];
 
   const deltaDays = Math.round((new Date(currRec.sample_date) - new Date(prevRec.sample_date)) / 86400000);
-  if (deltaDays <= 0) { alert("2 lần đo phải có ngày lấy mẫu khác nhau."); return; }
+  if (deltaDays <= 0) { notifyError("2 lần đo phải có ngày lấy mẫu khác nhau."); return; }
 
   const mbaSubtype = currRec.mba_subtype ?? currRec.mbaSubtype ?? null;
   const standard = DGA.resolveStandard(
@@ -283,7 +294,7 @@ function onCompareRate() {
       : "Chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");
   $("cmpTable").innerHTML = rateRows.map((r) => `
     <tr>
-      <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
+      <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${fmt4(r.before)}</td><td>${fmt4(r.after)}</td><td>${fmt4(r.delta)}</td>
       <td>${r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
       <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${r.verdict}</span>` : r.verdict}</td>
     </tr>
