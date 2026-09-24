@@ -12,6 +12,7 @@
 }
 .combo-wrap input {
   flex: 1;
+  min-width: 0;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
@@ -228,9 +229,11 @@ tbody tr:hover { background: var(--blue-100); }
    gasLabelIcon() ở app-core.js. */
 .gas-icon { width: 13px; height: 13px; margin-right: 4px; vertical-align: -2px; flex: none; }
 
-/* Ô lọc dạng "tìm kiếm" (vd #historyFilter, tab "Lịch sử đo") — icon kính lúp đặt đè
-   lên input bằng position:absolute thay vì đứng trước như nhãn field thường, giống
-   UX thanh tìm kiếm phổ biến. */
+/* Ô lọc dạng "tìm kiếm" (icon kính lúp đặt đè lên input bằng position:absolute thay
+   vì đứng trước như nhãn field thường, giống UX thanh tìm kiếm phổ biến) — hiện KHÔNG
+   còn nơi nào dùng (tab "Lịch sử đo" đã đổi #historyFilter cũ sang 2 ô combo tự gõ-tìm
+   #lichsu_station/#lichsu_device, xem ui-history.js/app-core.js) nhưng giữ lại class
+   dùng chung này phòng khi cần 1 ô tìm kiếm tự do kiểu này ở chỗ khác sau này. */
 .search-input-wrap { position: relative; display: inline-flex; align-items: center; }
 .search-input-wrap .search-input-icon {
   position: absolute;

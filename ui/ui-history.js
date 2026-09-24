@@ -24,14 +24,15 @@ function setHistoryLoading(isLoading) {
 async function refreshHistoryUI() {
   const all = await Storage.listMeasurements();
   _allMeasurements = all;
-  const filterText = ($("historyFilter").value || "").toLowerCase();
+  // #lichsu_station/#lichsu_device (combo tự gõ-tìm, xem lichsuFilterValues() bên dưới)
+  // — khớp CHÍNH XÁC Trạm/Thiết bị đang chọn, thay cho ô tìm kiếm tự do #historyFilter cũ.
+  const filter = lichsuFilterValues();
   // #historyEquipmentFilter (xem index.html) — lọc riêng theo Loại thiết bị (TI/TU/Sứ
   // xuyên/MBA/Kháng dầu/Khác) vì bảng này gộp chung tất cả loại thiết bị vào 1 danh
   // sách; "" (Tất cả loại thiết bị) nghĩa là không lọc theo tiêu chí này.
   const equipmentTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
   const filtered = all.filter((r) =>
-    (!filterText || (r.tram || "").toLowerCase().includes(filterText) || (r.thiet_bi || "").toLowerCase().includes(filterText)) &&
-    (!equipmentTypeFilter || r.equipment_type === equipmentTypeFilter)
+    lichsuMatchesFilter(r, filter) && (!equipmentTypeFilter || r.equipment_type === equipmentTypeFilter)
   );
   filtered.sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
 
@@ -130,18 +131,85 @@ async function refreshHistoryUI() {
 // ô lọc #historyFilter (Trạm/Thiết bị) cho cả 3 bảng để đổi qua lại giữa DGA/Dầu vẫn giữ
 // nguyên bộ lọc đang gõ, khỏi phải gõ lại.
 // ---------------------------------------------------------------------
-function lichsuFilterText() {
-  return ($("historyFilter").value || "").toLowerCase();
+/** Đọc giá trị 2 ô combo lọc "Trạm biến áp"/"Thiết bị" (#lichsu_station/#lichsu_device
+ *  — THAY THẾ ô tìm kiếm tự do #historyFilter cũ, xem lichsuStationOptions()/
+ *  lichsuDeviceOptions() bên dưới + setupCombo() cho 2 ô này ở initApp(), app-core.js). TRIM CHÍNH XÁC
+ *  (không lowercase/substring như #historyFilter cũ) vì giờ chọn từ danh sách gợi ý —
+ *  nhưng vẫn cho gõ tự do tên chưa có trong gợi ý (setupCombo() không ép buộc chọn từ
+ *  danh sách, đúng quy ước chung mọi combo trong app). Gọi 1 LẦN trước mỗi lượt
+ *  .filter() một bảng (không đọc lại DOM trong từng dòng), giữ đúng quy ước hiệu năng
+ *  của lichsuFilterText() cũ. */
+function lichsuFilterValues() {
+  return {
+    station: $("lichsu_station") ? $("lichsu_station").value.trim() : "",
+    device: $("lichsu_device") ? $("lichsu_device").value.trim() : "",
+  };
 }
-function lichsuMatchesFilter(rec, filterText) {
-  return !filterText || (rec.tram || "").toLowerCase().includes(filterText) || (rec.thiet_bi || "").toLowerCase().includes(filterText);
+function lichsuMatchesFilter(rec, filter) {
+  return (!filter.station || (rec.tram || "").trim() === filter.station) &&
+    (!filter.device || (rec.thiet_bi || "").trim() === filter.device);
+}
+
+/** Nguồn dữ liệu để tính gợi ý cho #lichsu_station/#lichsu_device — PHỤ THUỘC view đang
+ *  xem (currentLichSuView(), xem app-core.js) và lựa chọn hiện tại của
+ *  #historyEquipmentFilter (Ý NGHĨA KHÁC NHAU theo view — xem
+ *  populateHistoryEquipmentFilterOptions(), app-core.js): view "gas" lọc theo
+ *  r.equipment_type (TI/TU/Sứ xuyên/MBA/Khác); view "oil" chọn đúng 1 trong 3 mảng dữ
+ *  liệu dầu theo "Nguồn dầu" đang chọn ("main"/"oltc"/1 trong 3 loại TI/TU/Sứ xuyên —
+ *  gộp CẢ 3 mảng nếu để "" = Tất cả). Nhờ vậy danh sách gợi ý Trạm/Thiết bị LUÔN khớp
+ *  đúng "gom nhóm" đang chọn ở #historyEquipmentFilter — không gợi ý thiết bị/trạm
+ *  không thuộc nhóm đang xem, tránh dẫn vào ngõ cụt (0 dòng kết quả). */
+function lichsuDeviceSourceRecords() {
+  const view = currentLichSuView();
+  const equipFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
+  if (view === "gas") {
+    return equipFilter ? _allMeasurements.filter((r) => r.equipment_type === equipFilter) : _allMeasurements;
+  }
+  if (equipFilter === "main") return _allOilTests;
+  if (equipFilter === "oltc") return _allOltcOilTests;
+  const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
+  if (instrumentTypes.includes(equipFilter)) {
+    return (_allTioOilTests || []).filter((r) => r.equipment_type === equipFilter);
+  }
+  return [..._allOilTests, ..._allOltcOilTests, ...(_allTioOilTests || [])];
+}
+
+/** Danh sách gợi ý cho ô combo "Trạm biến áp" (#lichsu_station) — CHỈ liệt kê các trạm
+ *  THỰC SỰ có ít nhất 1 bản ghi trong nhóm đang xem (xem lichsuDeviceSourceRecords()
+ *  trên) — cùng lý do đã áp dụng cho trendStationOptions() (ui-trend.js)/
+ *  alertStationOptions() (ui-alerts.js): tránh gợi ý trạm không có dữ liệu ở nhóm này,
+ *  dẫn vào ngõ cụt. setupCombo() tự gọi lại hàm này mỗi lần mở/gõ nên danh sách luôn
+ *  theo đúng dữ liệu + nhóm đang chọn mới nhất. */
+function lichsuStationOptions() {
+  const names = new Set();
+  lichsuDeviceSourceRecords().forEach((r) => { const n = (r.tram || "").trim(); if (n) names.add(n); });
+  return Array.from(names).sort((a, b) => a.localeCompare(b, "vi")).map((name) => ({ value: name, label: name }));
+}
+
+/** Danh sách gợi ý cho ô combo "Thiết bị" (#lichsu_device) — khi #lichsu_station đang
+ *  có giá trị, CHỈ gợi ý thiết bị THUỘC đúng trạm đó (cùng ràng buộc trendDeviceOptions()
+ *  đang áp dụng ở tab "Xu hướng"); để trống Trạm thì gợi ý thiết bị của TẤT CẢ các trạm
+ *  trong nhóm đang xem, kèm tên trạm trong nhãn hiển thị để phân biệt thiết bị trùng
+ *  tên giữa nhiều trạm. Vẫn cho gõ tự do tên chưa có trong gợi ý. */
+function lichsuDeviceOptions() {
+  const station = $("lichsu_station") ? $("lichsu_station").value.trim() : "";
+  const matchesStation = (r) => !station || (r.tram || "").trim() === station;
+  const byName = new Map();
+  lichsuDeviceSourceRecords().filter(matchesStation).forEach((r) => {
+    const name = (r.thiet_bi || "").trim();
+    if (!name || byName.has(name)) return;
+    byName.set(name, (r.tram || "").trim());
+  });
+  return Array.from(byName.entries())
+    .sort((a, b) => a[0].localeCompare(b[0], "vi"))
+    .map(([name, tram]) => ({ value: name, label: station || !tram ? name : `${name} — ${tram}` }));
 }
 
 function refreshLichSuOilTable() {
   if (!$("lichsuOilHistoryTable")) return; // phòng khi gọi trước khi DOM sẵn sàng
-  const filterText = lichsuFilterText();
+  const filter = lichsuFilterValues();
   const sorted = _allOilTests
-    .filter((r) => lichsuMatchesFilter(r, filterText))
+    .filter((r) => lichsuMatchesFilter(r, filter))
     .slice()
     .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
   renderOilTestRows("lichsuOilHistoryTable", "lichsuOilHistoryEmpty", sorted);
@@ -149,9 +217,9 @@ function refreshLichSuOilTable() {
 
 function refreshLichSuOltcTable() {
   if (!$("lichsuOltcHistoryTable")) return;
-  const filterText = lichsuFilterText();
+  const filter = lichsuFilterValues();
   const sorted = _allOltcOilTests
-    .filter((r) => lichsuMatchesFilter(r, filterText))
+    .filter((r) => lichsuMatchesFilter(r, filter))
     .slice()
     .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
   renderOltcOilTestRows("lichsuOltcHistoryTable", "lichsuOltcHistoryEmpty", sorted);
@@ -167,12 +235,12 @@ function refreshLichSuOltcTable() {
  *  quán 100% cách tính Kết luận. */
 function refreshLichSuInstrumentOilTable() {
   if (!$("lichsuInstrumentOilHistoryTable")) return; // phòng khi gọi trước khi DOM sẵn sàng
-  const filterText = lichsuFilterText();
+  const filter = lichsuFilterValues();
   const equipTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
   const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
   const isInstrumentType = instrumentTypes.includes(equipTypeFilter);
   const sorted = (_allTioOilTests || [])
-    .filter((r) => lichsuMatchesFilter(r, filterText))
+    .filter((r) => lichsuMatchesFilter(r, filter))
     .filter((r) => !isInstrumentType || r.equipment_type === equipTypeFilter)
     .slice()
     .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
@@ -293,34 +361,18 @@ async function renumberLanDoForDevice(tramRaw, thietbiRaw) {
 }
 
 /** Nút "Sắp xếp lại Lần đo..." ở tab "Lịch sử đo" (#btnHistoryRenumber, xem index.html) —
- *  dùng LẠI đúng ô lọc #historyFilter + #historyEquipmentFilter đang có (KHÔNG thêm ô
- *  chọn thiết bị riêng) nên bắt buộc bộ lọc hiện tại phải khớp ĐÚNG 1 thiết bị (1 cặp
- *  Trạm+Thiết bị) mới xử lý — nếu khớp 0 hoặc nhiều hơn 1 thiết bị thì báo lỗi, yêu cầu
- *  gõ thêm/gõ đúng tên thiết bị vào #historyFilter trước. */
+ *  dùng TRỰC TIẾP giá trị 2 ô combo #lichsu_station/#lichsu_device đang chọn (khớp
+ *  CHÍNH XÁC 1 thiết bị vì chọn/gõ từ combo, khác #historyFilter cũ chỉ lọc gần đúng
+ *  theo substring nên trước đây phải tự dò xem có đang khớp ĐÚNG 1 thiết bị hay không —
+ *  nay không cần nữa). Chỉ cần bắt buộc #lichsu_device không được để trống. */
 function onHistoryRenumber() {
-  const filterText = lichsuFilterText();
-  const equipTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
-  const matches = (_allMeasurements || []).filter(
-    (r) => lichsuMatchesFilter(r, filterText) && (!equipTypeFilter || r.equipment_type === equipTypeFilter)
-  );
-  if (!matches.length) {
-    notifyError('Không có lần đo nào khớp bộ lọc hiện tại — gõ Trạm/Thiết bị vào ô lọc trước.');
+  const thietbi = $("lichsu_device") ? $("lichsu_device").value.trim() : "";
+  if (!thietbi) {
+    notifyError('Chọn (hoặc gõ) Thiết bị ở ô lọc bên trên trước khi sắp xếp lại "Lần đo".');
     return;
   }
-  const byDevice = new Map();
-  matches.forEach((r) => {
-    const key = (r.tram || "").trim() + "|||" + (r.thiet_bi || "").trim();
-    if (!byDevice.has(key)) byDevice.set(key, { tram: r.tram, thiet_bi: r.thiet_bi });
-  });
-  if (byDevice.size > 1) {
-    notifyError(
-      `Bộ lọc hiện tại đang khớp ${byDevice.size} thiết bị khác nhau — gõ đúng/đủ tên 1 thiết bị vào ô lọc ` +
-      `"Lọc theo trạm / thiết bị..." để chỉ còn khớp ĐÚNG 1 thiết bị rồi bấm lại.`
-    );
-    return;
-  }
-  const device = byDevice.values().next().value;
-  renumberLanDoForDevice(device.tram, device.thiet_bi);
+  const tram = $("lichsu_station") ? $("lichsu_station").value.trim() : "";
+  renumberLanDoForDevice(tram, thietbi);
 }
 
 function measurementOptionLabel(rec) {

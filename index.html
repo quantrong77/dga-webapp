@@ -691,10 +691,26 @@
               <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
               <option value="Khác">Khác</option>
             </select>
-            <span class="search-input-wrap">
-              <svg class="icon-svg search-input-icon" aria-hidden="true"><use href="#icon-zoom"></use></svg>
-              <input id="historyFilter" type="text" placeholder="Lọc theo trạm / thiết bị..." style="width:260px;" />
-            </span>
+            <!-- Thay ô tìm kiếm tự do #historyFilter cũ (chỉ lọc gần đúng theo substring)
+                 bằng 2 ô combo tự gõ-tìm giống #tr_station/#tr_device ở tab "Xu hướng" (xem
+                 setupCombo()/lichsuStationOptions()/lichsuDeviceOptions(), ui-history.js/
+                 app-core.js): #lichsu_station gợi ý CHỈ các trạm thực sự có dữ liệu trong
+                 đúng nhóm đang xem (view DGA/Dầu + lựa chọn ở #historyEquipmentFilter trên
+                 kia); #lichsu_device gợi ý thiết bị THUỘC đúng trạm đang chọn (để trống Trạm
+                 = gợi ý thiết bị mọi trạm, kèm tên trạm để phân biệt), và TỰ ĐỘNG lọc theo
+                 đúng "gom nhóm" ở #historyEquipmentFilter (đổi lựa chọn đó thì danh sách gợi
+                 ý thiết bị đổi theo ngay lần mở kế tiếp, không cần nạp lại gì thêm). Vẫn cho
+                 gõ tự do tên chưa có trong gợi ý như mọi combo khác trong app. -->
+            <div class="combo-wrap" style="width:190px;">
+              <input id="lichsu_station" type="text" placeholder="Trạm biến áp — để trống = TẤT CẢ" autocomplete="off" />
+              <button type="button" id="lichsu_station_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="lichsu_station_list" class="combo-list hidden"></div>
+            </div>
+            <div class="combo-wrap" style="width:200px;">
+              <input id="lichsu_device" type="text" placeholder="Thiết bị — gõ để tìm" autocomplete="off" />
+              <button type="button" id="lichsu_device_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+              <div id="lichsu_device_list" class="combo-list hidden"></div>
+            </div>
           </div>
         </div>
         <!-- Chọn xem lịch sử của NGUỒN dữ liệu nào — Khí hòa tan (DGA)/Dầu (gộp chung
@@ -727,10 +743,10 @@
         <div class="panel">
           <h2 style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
             <span style="display:inline-flex; align-items:center;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Lịch sử đo khí hòa tan (DGA)</span>
-            <!-- Dùng LẠI ô lọc #historyFilter/#historyEquipmentFilter ở trên (không thêm ô
-                 chọn thiết bị riêng) — bắt buộc bộ lọc phải khớp ĐÚNG 1 thiết bị mới xử lý,
+            <!-- Dùng LẠI đúng ô combo #lichsu_station/#lichsu_device ở trên (không thêm ô
+                 chọn thiết bị riêng) — cần chọn/gõ đúng Thiết bị ở đó trước mới xử lý được,
                  xem onHistoryRenumber()/renumberLanDoForDevice() ở ui-history.js. -->
-            <button type="button" class="btn ghost" id="btnHistoryRenumber" style="padding:5px 10px; font-size:12px; font-weight:400; text-transform:none;" title="Gõ đúng Trạm/Thiết bị vào ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
+            <button type="button" class="btn ghost" id="btnHistoryRenumber" style="padding:5px 10px; font-size:12px; font-weight:400; text-transform:none;" title="Chọn/gõ đúng Thiết bị ở ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
           </h2>
           <p class="note">Các ô số liệu khí tô <strong style="color:var(--bad);">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
             gốc — di chuột vào ô để xem giá trị trước khi sửa và thời điểm sửa; cột "Người nhập" có thêm huy hiệu

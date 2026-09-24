@@ -453,13 +453,36 @@ async function initApp() {
   // khối trường KHÁC nhau (Cấp điện áp/Trạng thái dầu vs Ngưỡng loại bỏ) — xem
   // toggleOilStandardEquipmentFields() ở ui-standards.js.
   $("s_equipmenttype").addEventListener("change", toggleOilStandardEquipmentFields);
-  // Áp dụng CHUNG cho cả 4 bảng ở tab "Lịch sử đo" (xem lichsuFilterText(), ui-history.js)
-  // — đổi qua lại DGA/Dầu MBA chính/Dầu OLTC/Dầu TI-TU-Sứ xuyên vẫn giữ nguyên bộ lọc đang gõ.
-  $("historyFilter").addEventListener("input", () => {
+  // Bộ lọc "Trạm biến áp"/"Thiết bị" ở tab "Lịch sử đo" — 2 ô combo tự gõ-tìm
+  // (#lichsu_station/#lichsu_device, THAY THẾ ô tìm kiếm tự do #historyFilter cũ) giống
+  // hệt kiểu #tr_station/#tr_device ở tab "Xu hướng" (xem lichsuStationOptions()/
+  // lichsuDeviceOptions()/lichsuFilterValues(), ui-history.js). Áp dụng CHUNG cho cả 4
+  // bảng — đổi qua lại DGA/Dầu MBA chính/Dầu OLTC/Dầu TI-TU-Sứ xuyên vẫn giữ nguyên Trạm/
+  // Thiết bị đang chọn. #lichsu_device tự lọc theo đúng Trạm đang chọn + đúng "gom nhóm"
+  // ở #historyEquipmentFilter mỗi lần mở/gõ (không cần nạp lại thủ công, giống mọi combo
+  // tự gõ-tìm khác trong app) — không ép người dùng phải đổi Trạm trước mới đổi được
+  // Thiết bị, chỉ đơn giản là danh sách gợi ý sẽ khác nhau tùy Trạm đang chọn.
+  setupCombo({
+    input: $("lichsu_station"),
+    toggleBtn: $("lichsu_station_toggle"),
+    listEl: $("lichsu_station_list"),
+    getOptions: () => lichsuStationOptions(),
+  });
+  setupCombo({
+    input: $("lichsu_device"),
+    toggleBtn: $("lichsu_device_toggle"),
+    listEl: $("lichsu_device_list"),
+    getOptions: () => lichsuDeviceOptions(),
+  });
+  const refreshAllLichSuTables = () => {
     refreshHistoryUI();
     refreshLichSuOilTable();
     refreshLichSuOltcTable();
     refreshLichSuInstrumentOilTable();
+  };
+  ["input", "change"].forEach((evt) => {
+    $("lichsu_station").addEventListener(evt, refreshAllLichSuTables);
+    $("lichsu_device").addEventListener(evt, refreshAllLichSuTables);
   });
   // #historyEquipmentFilter dùng CHUNG cho cả 2 view nhưng xử lý khác nhau: view "gas"
   // cần nạp lại bảng (lọc theo loại thiết bị, xem refreshHistoryUI()); view "oil" chỉ
@@ -832,7 +855,7 @@ function setLichSuView(view) {
   Object.entries(wraps).forEach(([key, el]) => { if (el) el.classList.toggle("hidden", key !== view); });
   populateHistoryEquipmentFilterOptions(view);
   try { localStorage.setItem(LICHSU_VIEW_STORAGE_KEY, view); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  // Đổi bảng đang xem thì nạp lại đúng bảng đó theo bộ lọc #historyFilter hiện tại — cả 3
+  // Đổi bảng đang xem thì nạp lại đúng bảng đó theo bộ lọc #lichsu_station/#lichsu_device hiện tại — cả 3
   // bảng dầu chỉ tính lại từ dữ liệu ĐÃ CÓ SẴN trong bộ nhớ (_allOilTests/
   // _allOltcOilTests/_allTioOilTests), không gọi lại Storage nên rất nhẹ.
   // (toggleLichSuOilSourceWraps() ở cuối tự gọi refreshLichSuInstrumentOilTable().)
