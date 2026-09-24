@@ -187,6 +187,142 @@ function deviceKey(rec) {
   return `${rec.tram || ""}|||${rec.thiet_bi || ""}|||${rec.pha || ""}`;
 }
 
+/** Tính danh sách "Lần đo" cần đổi để đúng thứ tự thời gian (lần 1 = Ngày lấy mẫu XA
+ *  NHẤT, tăng dần) cho 1 nhóm bản ghi CỦA CÙNG 1 THIẾT BỊ (records — đã lọc sẵn theo
+ *  Trạm+Thiết bị, có thể gồm cả 3 Pha trộn lẫn) — dùng cho nút "Sắp xếp lại Lần đo" ở
+ *  cả tab "DGA" (khối nhập hàng loạt BBTN, xem onBatchRenumber() ở bbtn-batch-import.js)
+ *  lẫn tab "Lịch sử đo" (xem onHistoryRenumber() bên dưới). Nhóm RIÊNG theo Pha (đúng
+ *  quy ước "Lần đo" hiện có — xem updateLanDoSuggestion() ở ui-dga.js) rồi sắp theo
+ *  sample_date tăng dần; 2 bản ghi TRÙNG NGÀY giữ nguyên thứ tự tương đối theo "Lần đo"
+ *  hiện tại (không đảo lộn vô cớ khi ngày bằng nhau). Chỉ trả về các bản ghi có "Lần đo"
+ *  THỰC SỰ đổi số — bản ghi đã đúng thứ tự thì bỏ qua, không tạo thay đổi thừa. */
+function computeLanDoRenumberChanges(records) {
+  const byPha = new Map();
+  (records || []).forEach((r) => {
+    const pha = r.pha || "";
+    if (!byPha.has(pha)) byPha.set(pha, []);
+    byPha.get(pha).push(r);
+  });
+
+  const changes = [];
+  byPha.forEach((group) => {
+    const sorted = group.slice().sort((a, b) => {
+      const da = a.sample_date || "";
+      const db = b.sample_date || "";
+      if (da !== db) return da < db ? -1 : 1;
+      return (Number(a.lan_do) || 0) - (Number(b.lan_do) || 0);
+    });
+    sorted.forEach((rec, idx) => {
+      const newLanDo = idx + 1;
+      const oldLanDo = Number(rec.lan_do) || 0;
+      if (oldLanDo !== newLanDo) changes.push({ record: rec, oldLanDo: rec.lan_do ?? null, newLanDo });
+    });
+  });
+  return changes;
+}
+
+/** Sắp xếp lại "Lần đo" cho ĐÚNG 1 thiết bị (khớp Trạm+Thiết bị, TRIM chính xác — cùng
+ *  quy ước updateLanDoSuggestion()/deviceKey() ở trên, KHÔNG lowercase để tránh gộp
+ *  nhầm 2 thiết bị viết hoa/thường khác nhau) theo thời gian thực (lần 1 = Ngày lấy mẫu
+ *  xa nhất), gồm CẢ 3 PHA. Luôn tải lại "Lịch sử đo" MỚI NHẤT từ Storage (không dùng
+ *  _allMeasurements đang cache trên UI) để không bỏ sót bản ghi ai đó vừa thêm ở máy
+ *  khác. Xác nhận (confirm()) trước khi ghi, xem trước tối đa 8 dòng sẽ đổi. Ghi TUẦN
+ *  TỰ từng bản ghi qua Storage.addMeasurement() (upsert theo id, xem storage.js) — 1
+ *  dòng lỗi KHÔNG chặn các dòng còn lại, vì ở chế độ gsheet server chỉ cho SỬA bản ghi
+ *  do chính người đang đăng nhập nhập vào hoặc Admin (prepareOwnedRecord(), Code.gs) —
+ *  nếu lịch sử thiết bị có bản ghi do người khác nhập từ trước, user thường có thể chỉ
+ *  sắp xếp lại được MỘT PHẦN, cần Admin xử lý nốt phần còn lại. */
+async function renumberLanDoForDevice(tramRaw, thietbiRaw) {
+  const tram = (tramRaw || "").trim();
+  const thietbi = (thietbiRaw || "").trim();
+  if (!thietbi) {
+    notifyError('Cần biết đúng Thiết bị để sắp xếp lại "Lần đo".');
+    return;
+  }
+
+  let fresh;
+  try {
+    fresh = await Storage.listMeasurements();
+  } catch (err) {
+    notifyError('Không tải được Lịch sử đo để sắp xếp lại: ' + storageErrorMessage(err));
+    return;
+  }
+
+  const records = fresh.filter((r) => (r.tram || "").trim() === tram && (r.thiet_bi || "").trim() === thietbi);
+  if (!records.length) {
+    notifyError(`Không tìm thấy lần đo nào của thiết bị "${thietbi}"${tram ? " (Trạm " + tram + ")" : ""} trong Lịch sử đo.`);
+    return;
+  }
+
+  const changes = computeLanDoRenumberChanges(records);
+  if (!changes.length) {
+    showToast(`"Lần đo" của thiết bị "${thietbi}" đã đúng thứ tự thời gian — không cần sắp xếp lại.`, "success");
+    return;
+  }
+
+  const PREVIEW_MAX = 8;
+  const previewLines = changes.slice(0, PREVIEW_MAX).map((c) =>
+    `${DGA.phaLabelWithPrefix(c.record.pha) || "Pha ?"}: ${DGA.formatSampleDate(c.record.sample_date)} — Lần ${c.oldLanDo ?? "—"} → Lần ${c.newLanDo}`
+  );
+  const moreLine = changes.length > PREVIEW_MAX ? `
+… và ${changes.length - PREVIEW_MAX} dòng khác` : "";
+  const confirmed = confirm(
+    `Sắp xếp lại "Lần đo" của thiết bị "${thietbi}"${tram ? " (Trạm " + tram + ")" : ""} theo đúng thứ tự thời gian.\n` +
+    `${changes.length} bản ghi sẽ được cập nhật:\n${previewLines.join("\n")}${moreLine}\n\nTiếp tục?`
+  );
+  if (!confirmed) return;
+
+  let okCount = 0;
+  let failCount = 0;
+  for (const c of changes) {
+    try {
+      await Storage.addMeasurement({ ...c.record, lan_do: c.newLanDo });
+      okCount++;
+    } catch (err) {
+      failCount++;
+    }
+  }
+
+  await refreshHistoryUI();
+  if (typeof updateLanDoSuggestion === "function") updateLanDoSuggestion();
+  showToast(
+    `Đã sắp xếp lại "Lần đo": ${okCount}/${changes.length} bản ghi được cập nhật` +
+      (failCount ? `, ${failCount} lỗi (thường do bản ghi được nhập bởi người khác — cần Admin xử lý nốt).` : "."),
+    failCount ? "error" : "success"
+  );
+}
+
+/** Nút "Sắp xếp lại Lần đo..." ở tab "Lịch sử đo" (#btnHistoryRenumber, xem index.html) —
+ *  dùng LẠI đúng ô lọc #historyFilter + #historyEquipmentFilter đang có (KHÔNG thêm ô
+ *  chọn thiết bị riêng) nên bắt buộc bộ lọc hiện tại phải khớp ĐÚNG 1 thiết bị (1 cặp
+ *  Trạm+Thiết bị) mới xử lý — nếu khớp 0 hoặc nhiều hơn 1 thiết bị thì báo lỗi, yêu cầu
+ *  gõ thêm/gõ đúng tên thiết bị vào #historyFilter trước. */
+function onHistoryRenumber() {
+  const filterText = lichsuFilterText();
+  const equipTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
+  const matches = (_allMeasurements || []).filter(
+    (r) => lichsuMatchesFilter(r, filterText) && (!equipTypeFilter || r.equipment_type === equipTypeFilter)
+  );
+  if (!matches.length) {
+    notifyError('Không có lần đo nào khớp bộ lọc hiện tại — gõ Trạm/Thiết bị vào ô lọc trước.');
+    return;
+  }
+  const byDevice = new Map();
+  matches.forEach((r) => {
+    const key = (r.tram || "").trim() + "|||" + (r.thiet_bi || "").trim();
+    if (!byDevice.has(key)) byDevice.set(key, { tram: r.tram, thiet_bi: r.thiet_bi });
+  });
+  if (byDevice.size > 1) {
+    notifyError(
+      `Bộ lọc hiện tại đang khớp ${byDevice.size} thiết bị khác nhau — gõ đúng/đủ tên 1 thiết bị vào ô lọc ` +
+      `"Lọc theo trạm / thiết bị..." để chỉ còn khớp ĐÚNG 1 thiết bị rồi bấm lại.`
+    );
+    return;
+  }
+  const device = byDevice.values().next().value;
+  renumberLanDoForDevice(device.tram, device.thiet_bi);
+}
+
 function measurementOptionLabel(rec) {
   return `${DGA.formatSampleDate(rec.sample_date)} (Lần ${rec.lan_do ?? "?"})`;
 }

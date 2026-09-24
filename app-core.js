@@ -98,6 +98,7 @@ async function initApp() {
   // tab (xem $("navQuanTri") ở trên), nhưng nối sự kiện 1 lần cho MỌI user không hại gì
   // (nút thật sự chỉ bấm được khi tab hiện ra, và server luôn kiểm tra lại requireAdmin()).
   setupAdminUsers();
+  setupNameplateFieldsToggle();
   $("f_ngay").value = new Date().toISOString().slice(0, 10);
   $("o_ngay").value = new Date().toISOString().slice(0, 10);
   $("ot_ngay").value = new Date().toISOString().slice(0, 10);
@@ -415,6 +416,7 @@ async function initApp() {
   $("btnBatchSelectAll").addEventListener("click", onBatchSelectAll);
   $("btnBatchSelectNone").addEventListener("click", onBatchSelectNone);
   $("btnBatchSave").addEventListener("click", onBatchSave);
+  $("btnBatchRenumber").addEventListener("click", onBatchRenumber);
   // Gợi ý "Lần đo" kế tiếp theo Trạm+Thiết bị+Pha — xem updateLanDoSuggestion() ở
   // ui-dga.js. "change" bắt được cả lúc chọn từ danh sách gợi ý (setupCombo() tự
   // bắn "change" khi chọn) lẫn lúc gõ tay rồi rời khỏi ô (blur mặc định của trình
@@ -466,6 +468,9 @@ async function initApp() {
     if (currentLichSuView() === "gas") refreshHistoryUI();
     else toggleLichSuOilSourceWraps();
   });
+  // Nút "Sắp xếp lại Lần đo..." ở bảng "Lịch sử đo khí hòa tan (DGA)" — xem
+  // onHistoryRenumber() ở ui-history.js.
+  $("btnHistoryRenumber").addEventListener("click", onHistoryRenumber);
   $("f_loai").addEventListener("change", () => { refreshManufacturerOptions(); toggleMbaSubtypeField(); });
   $("cmp_device").addEventListener("change", refreshCompareMeasurementOptions);
   $("btnCompareRate").addEventListener("click", onCompareRate);
@@ -715,6 +720,39 @@ function setupTrendForecastToggle() {
   let saved = null;
   try { saved = localStorage.getItem(TREND_FORECAST_ENABLED_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   if (saved !== null) checkbox.checked = saved === "1";
+}
+
+/** Khóa localStorage lưu trạng thái tick "Ẩn phần này" ở khối "Thông số kỹ thuật thiết
+ *  bị" (tab "DGA", #f_hideNameplateFields) — SỞ THÍCH GIAO DIỆN riêng trình duyệt (giống
+ *  TAB_LAYOUT_STORAGE_KEY/TREND_FORECAST_ENABLED_STORAGE_KEY ở trên), KHÔNG lưu qua
+ *  Storage (gsheet/Supabase) — mỗi trình duyệt/máy tự nhớ lựa chọn riêng. */
+const NAMEPLATE_FIELDS_HIDDEN_STORAGE_KEY = "dga_nameplate_fields_hidden";
+
+/** Ẩn/hiện #nameplateFieldsWrap (dropzone nameplate + 8 trường "Thông số kỹ thuật thiết
+ *  bị", index.html) theo nút icon con mắt #btnToggleNameplateFields — CHỈ ẩn giao diện,
+ *  KHÔNG xóa giá trị đã nhập trong các ô (vẫn được lưu/gửi bình thường khi "Phân tích &
+ *  Lưu", xem onAnalyze() ở ui-dga.js) — bấm lại để hiện thì dữ liệu vẫn còn nguyên. Mặc
+ *  định HIỆN (icon-eye, aria-pressed="false") nếu người dùng CHƯA từng đổi lựa chọn này
+ *  bao giờ, giữ hành vi cũ — kiểu ẩn/hiện giống nút ẩn/hiện mật khẩu. */
+function setupNameplateFieldsToggle() {
+  const btn = $("btnToggleNameplateFields");
+  const wrap = $("nameplateFieldsWrap");
+  if (!btn || !wrap) return;
+  const iconUse = btn.querySelector("use");
+  const applyState = (hidden) => {
+    wrap.classList.toggle("hidden", hidden);
+    btn.setAttribute("aria-pressed", hidden ? "true" : "false");
+    btn.title = hidden ? "Hiện phần này" : "Ẩn phần này";
+    if (iconUse) iconUse.setAttribute("href", hidden ? "#icon-eye-off" : "#icon-eye");
+  };
+  let saved = null;
+  try { saved = localStorage.getItem(NAMEPLATE_FIELDS_HIDDEN_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
+  applyState(saved === "1");
+  btn.addEventListener("click", () => {
+    const nowHidden = btn.getAttribute("aria-pressed") !== "true";
+    applyState(nowHidden);
+    try { localStorage.setItem(NAMEPLATE_FIELDS_HIDDEN_STORAGE_KEY, nowHidden ? "1" : "0"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
+  });
 }
 
 /** Bộ chọn xem lịch sử ở tab "Lịch sử đo" (#lichsuTypeToggle: "gas"/"oil" — xem

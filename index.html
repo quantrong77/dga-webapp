@@ -77,6 +77,8 @@
       <symbol id="icon-flow" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="18" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 8.3V11a3 3 0 0 0 3 3h0.3M18 8.3V11a3 3 0 0 0-3 3h-0.3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2.5l7.5 3.2v5.6c0 5-3.2 8.6-7.5 10.2-4.3-1.6-7.5-5.2-7.5-10.2V5.7L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 12L20 3M17 6l2.5 2.5M14 9l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+      <symbol id="icon-eye-off" viewBox="0 0 24 24"><path d="M10.6 5.2A11 11 0 0 1 12 5c6.5 0 10.5 7 10.5 7a15.6 15.6 0 0 1-3.4 4.2M7 6.7C3.9 8.5 1.5 12 1.5 12S5.5 19 12 19a10.6 10.6 0 0 0 3.2-.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9.9 10a3 3 0 0 0 4.1 4.1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 3.5l17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 12.3l2.6 2.6L16.2 9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-alert-triangle" viewBox="0 0 24 24"><path d="M12 3.2l9.5 16.6H2.5L12 3.2z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 9.5v4.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
@@ -422,7 +424,20 @@
              diễn. Vì lưu chung 1 bản ghi lần đo nên nếu thiết bị đo nhiều lần, nên điền lại (hoặc
              để nguyên nếu form chưa xóa) mỗi lần — xem addEventListener 3 ô Trạm/Thiết bị/Pha ở
              app-core.js KHÔNG tự nhớ nhóm trường này giữa các thiết bị khác nhau. -->
-        <div class="section-title">Thông số kỹ thuật thiết bị (tùy chọn — dùng khi xuất Báo cáo phân tích kỹ thuật)</div>
+        <!-- Nút icon con mắt (#btnToggleNameplateFields) — SỞ THÍCH GIAO DIỆN riêng
+             trình duyệt (giống TAB_LAYOUT_STORAGE_KEY/TREND_FORECAST_ENABLED_STORAGE_KEY,
+             xem setupNameplateFieldsToggle() ở app-core.js), KHÔNG xóa dữ liệu đã nhập ở
+             #nameplateFieldsWrap bên dưới — chỉ ẩn bớt cho đỡ rối mắt với user không cần
+             xuất "Báo cáo phân tích kỹ thuật", dữ liệu vẫn còn nguyên khi bấm lại để hiện.
+             aria-pressed="true" = đang ẨN (icon-eye-off) — đổi icon/title bằng JS, xem
+             setupNameplateFieldsToggle() ở app-core.js (kiểu giống ẩn/hiện mật khẩu). -->
+        <div class="section-title" style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <span>Thông số kỹ thuật thiết bị (tùy chọn — dùng khi xuất Báo cáo phân tích kỹ thuật)</span>
+          <button type="button" id="btnToggleNameplateFields" class="field-icon-toggle-btn" aria-pressed="false" title="Ẩn phần này">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
+          </button>
+        </div>
+        <div id="nameplateFieldsWrap">
         <!-- Ô kéo-thả ảnh chụp TẤM NHÃN THIẾT BỊ (nameplate) — đọc bằng OCR (xem
              bbtn/nameplate-import.js) để gợi ý điền 1 phần các ô bên dưới (Kiểu máy/Số
              chế tạo/Năm sản xuất/Điện áp định mức/Loại dầu + Nhà sản xuất ở khối phía
@@ -466,6 +481,7 @@
           <label class="field">Hiện trạng vận hành
             <input id="f_hientrangvanhanh" type="text" placeholder="VD: Đang vận hành bình thường" />
           </label>
+        </div>
         </div>
 
         <p class="note hidden" id="editingMeasurementNote" style="color:var(--warn); font-weight:600;">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
@@ -521,6 +537,12 @@
           </table></div>
           <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
             <button type="button" class="btn primary" id="btnBatchSave">Lưu các lần đo đã chọn</button>
+            <!-- Sắp xếp lại "Lần đo" của ĐÚNG thiết bị đang chọn ở form phía trên (Trạm+
+                 Thiết bị, cả 3 Pha) theo đúng thứ tự thời gian — dùng khi BBTN vừa nhập có
+                 ngày CŨ HƠN các lần đo đã lưu từ trước (xem onBatchRenumber(),
+                 bbtn-batch-import.js). Không phụ thuộc bảng preview — bấm được bất kể đã
+                 "Lưu hàng loạt" hay chưa. -->
+            <button type="button" class="btn ghost" id="btnBatchRenumber" style="padding:7px 14px;" title="Quét lại toàn bộ Lịch sử đo của thiết bị đang chọn và sắp xếp lại &quot;Lần đo&quot; cho đúng thứ tự thời gian (Ngày lấy mẫu)">Sắp xếp lại Lần đo...</button>
             <span class="note" id="batchProgressText" style="margin:0;"></span>
           </div>
         </div>
@@ -703,7 +725,13 @@
 
       <div id="lichsuGasWrap">
         <div class="panel">
-          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Lịch sử đo khí hòa tan (DGA)</h2>
+          <h2 style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
+            <span style="display:inline-flex; align-items:center;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Lịch sử đo khí hòa tan (DGA)</span>
+            <!-- Dùng LẠI ô lọc #historyFilter/#historyEquipmentFilter ở trên (không thêm ô
+                 chọn thiết bị riêng) — bắt buộc bộ lọc phải khớp ĐÚNG 1 thiết bị mới xử lý,
+                 xem onHistoryRenumber()/renumberLanDoForDevice() ở ui-history.js. -->
+            <button type="button" class="btn ghost" id="btnHistoryRenumber" style="padding:5px 10px; font-size:12px; font-weight:400; text-transform:none;" title="Gõ đúng Trạm/Thiết bị vào ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
+          </h2>
           <p class="note">Các ô số liệu khí tô <strong style="color:var(--bad);">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
             gốc — di chuột vào ô để xem giá trị trước khi sửa và thời điểm sửa; cột "Người nhập" có thêm huy hiệu
             "✎ N lần sửa" hiện đầy đủ log các lần chỉnh sửa số liệu của bản ghi đó (nếu có).</p>

@@ -13,7 +13,14 @@
    pdf.js chạy client-side, không gửi file lên server nào để "đọc"). Việc lưu file đính
    kèm PDF gốc (tùy chọn, xem #batchAttachPdf) vẫn qua đúng Storage.uploadAttachment() như
    nhập từng lần — chỉ khác là gọi lặp lại cho từng file, TUẦN TỰ (không song song) để dễ
-   theo dõi tiến độ và không dồn dập quá nhiều request cùng lúc lên Apps Script/Supabase. */
+   theo dõi tiến độ và không dồn dập quá nhiều request cùng lúc lên Apps Script/Supabase.
+
+   "Lần đo" luôn được gán TỰ ĐỘNG theo Ngày lấy mẫu tăng dần (lần 1 = ngày xa nhất) bất
+   kể thứ tự file được chọn/đọc vào (thư mục hệ điều hành liệt kê theo TÊN FILE, không
+   nhất thiết khớp Ngày lấy mẫu ghi trong BBTN) — xem batchDateCompare() bên dưới, dùng ở
+   cả bảng preview (handleBatchFileList()) lẫn ngay trước khi lưu (onBatchSave()). Chỉ áp
+   dụng trong PHẠM VI 1 ĐỢT NHẬP này — không renumber "Lần đo" của các bản ghi ĐÃ LƯU
+   trước đó trong Lịch sử đo. */
 
 // _batchRows: 1 phần tử / 1 file PDF đã chọn — {id, file, parsed, pha, ngay, gases,
 // status, statusKind: "pending"|"ok"|"warn"|"bad", include}. _batchExisting: bản ghi đã
@@ -32,6 +39,22 @@ function batchGasesCount(gases) {
  *  (vd tìm "lần đo liền trước" ở onAnalyze(), ui-dga.js). */
 function batchDupKey(tram, thietbi, pha, ngay) {
   return [String(tram || "").trim().toLowerCase(), String(thietbi || "").trim().toLowerCase(), pha || "", ngay || ""].join("|");
+}
+
+/** So sánh 2 dòng batch theo Ngày lấy mẫu (#f_ngay của dòng, chuỗi "YYYY-MM-DD" từ
+ *  input type="date" — so sánh CHUỖI cho đúng thứ tự thời gian vì đúng định dạng ISO,
+ *  không cần parse Date). Dùng để "Lần đo" luôn tăng dần đúng theo THỜI GIAN THỰC của
+ *  mẫu (lần 1 = Ngày lấy mẫu XA NHẤT), bất kể thứ tự file được đọc vào (thứ tự liệt kê
+ *  trong thư mục theo TÊN FILE, không nhất thiết khớp thứ tự Ngày lấy mẫu bên trong nội
+ *  dung BBTN) — xem handleBatchFileList()/onBatchSave() bên dưới. Dòng KHÔNG đọc được
+ *  Ngày (parseError/thiếu) bị đẩy xuống CUỐI thay vì chen vào giữa. .sort() trong JS
+ *  hiện đại vốn ỔN ĐỊNH (stable) nên các dòng trùng Ngày giữ nguyên thứ tự tương đối
+ *  trước đó. */
+function batchDateCompare(a, b) {
+  if (!a.ngay && !b.ngay) return 0;
+  if (!a.ngay) return 1;
+  if (!b.ngay) return -1;
+  return a.ngay < b.ngay ? -1 : a.ngay > b.ngay ? 1 : 0;
 }
 
 function resetBatchUI() {
@@ -102,6 +125,13 @@ async function handleBatchFileList(fileList) {
     recomputeRowStatus(row);
     renderBatchTable();
   }
+  // Đọc xong CẢ ĐỢT mới sắp lại theo Ngày lấy mẫu tăng dần (không sắp ngay từng dòng
+  // trong lúc đang đọc — tránh bảng preview nhảy vị trí liên tục khi từng file lần
+  // lượt có kết quả). Xem batchDateCompare() ở trên — bảng preview hiện đúng thứ tự
+  // "Lần đo" sẽ được gán khi lưu (onBatchSave() cũng sắp lại 1 lần nữa cho chắc, đề
+  // phòng người dùng sửa tay Ngày ở bảng preview sau bước này).
+  _batchRows.sort(batchDateCompare);
+  renderBatchTable();
   updateBatchSummary();
 }
 
@@ -200,6 +230,9 @@ function renderBatchTable() {
     tr.querySelector(".batch-row-ngay").addEventListener("change", (e) => {
       row.ngay = e.target.value;
       recomputeRowStatus(row);
+      // Sửa tay Ngày có thể đổi thứ tự thời gian đúng của dòng này so với các dòng
+      // khác — sắp lại ngay để bảng preview luôn khớp thứ tự "Lần đo" sẽ được gán.
+      _batchRows.sort(batchDateCompare);
       renderBatchTable();
       updateBatchSummary();
     });
@@ -241,6 +274,14 @@ async function onBatchSave() {
     notifyError("Chưa có dòng nào được chọn để lưu — tick vào cột đầu bảng preview.");
     return;
   }
+  // Sắp lại theo Ngày lấy mẫu tăng dần (lần 1 = Ngày XA NHẤT) NGAY TRƯỚC KHI gán "Lần
+  // đo" bên dưới — bảng preview thường đã đúng thứ tự này (xem handleBatchFileList()),
+  // sắp lại đây thêm 1 lần cho CHẮC CHẮN dù người dùng có sửa tay Ngày sau đó. CHỈ áp
+  // dụng cho các dòng trong ĐỢT NÀY (toSave) — không đụng tới "Lần đo" của các bản ghi
+  // ĐÃ LƯU từ trước (biến "existing" bên dưới); nếu backfill dữ liệu CŨ HƠN mọi lần đo
+  // đã có trong Lịch sử đo của cùng Trạm+Thiết bị+Pha, "Lần đo" của các bản ghi cũ đó
+  // sẽ KHÔNG tự lùi lại — cần tự kiểm tra/sửa lại thủ công cho trường hợp này.
+  toSave.sort(batchDateCompare);
   const tram = $("f_tram").value.trim();
   const thietbi = $("f_thietbi").value.trim();
   if (!thietbi) {
@@ -279,9 +320,10 @@ async function onBatchSave() {
 
     // "Lần đo" kế tiếp trong nhóm Trạm+Thiết bị+Pha CHÍNH XÁC CỦA DÒNG NÀY — cùng tiêu
     // chí updateLanDoSuggestion() (ui-dga.js), tính trên "existing" đã gồm cả bản ghi vừa
-    // lưu ở vòng lặp trước, nên nhiều dòng cùng Pha trong 1 đợt vẫn được đánh số tăng dần
-    // đúng thứ tự xử lý (không nhất thiết đúng thứ tự ngày — nếu cần đúng thứ tự ngày,
-    // sắp lại bảng trước khi lưu bằng cách chỉnh Ngày rồi lưu lần lượt theo nhóm Pha).
+    // lưu ở vòng lặp trước. toSave đã được sắp theo Ngày lấy mẫu tăng dần ở trên
+    // (toSave.sort(batchDateCompare)) nên thứ tự xử lý ở vòng lặp này CŨNG LÀ thứ tự
+    // ngày — nhiều dòng cùng Pha trong 1 đợt được đánh số tăng dần đúng thứ tự thời
+    // gian thực (lần 1 = ngày xa nhất), bất kể thứ tự file được đọc/chọn ban đầu.
     const sameGroup = existing.filter(
       (r) => (r.tram || "").trim().toLowerCase() === tram.toLowerCase() &&
         (r.thiet_bi || "").trim().toLowerCase() === thietbi.toLowerCase() &&
@@ -343,4 +385,17 @@ async function onBatchSave() {
     `Đã lưu ${okCount}/${toSave.length} lần đo` + (failCount ? `, ${failCount} lỗi — xem trạng thái từng dòng.` : "."),
     failCount ? "error" : "success"
   );
+}
+
+/** Nút "Sắp xếp lại Lần đo..." (#btnBatchRenumber) trong khối nhập hàng loạt — dùng khi
+ *  vừa nhập thêm BBTN backfill CŨ HƠN các lần đo đã có (file đọc/chọn vào KHÔNG theo thứ
+ *  tự ngày, xem batchDateCompare() ở trên xử lý đúng thứ tự NGAY KHI LƯU trong 1 đợt —
+ *  nhưng "Lần đo" của các bản ghi ĐÃ LƯU TỪ TRƯỚC thì không tự lùi lại được, xem ghi chú
+ *  ở onBatchSave()). Bấm nút này để quét lại TOÀN BỘ Lịch sử đo của ĐÚNG thiết bị đang
+ *  chọn ở form "1. Thông tin lần đo" phía trên (Trạm+Thiết bị, cả 3 Pha) và sắp xếp lại
+ *  cho đúng thứ tự thời gian — xem renumberLanDoForDevice() ở ui-history.js (dùng chung
+ *  với nút cùng tên ở tab "Lịch sử đo"). Dùng được bất kể đã "Lưu hàng loạt" hay chưa —
+ *  không phụ thuộc _batchRows. */
+function onBatchRenumber() {
+  renumberLanDoForDevice($("f_tram").value, $("f_thietbi").value);
 }
