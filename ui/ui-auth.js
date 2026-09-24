@@ -122,6 +122,7 @@ function editLogBadgeHtml(rec) {
 
 async function init() {
   setupAuthForms();
+  setupChangePassword();
 
   if (!Auth.enabled) {
     $("authOverlay").classList.add("hidden");
@@ -209,6 +210,72 @@ function setupAuthForms() {
     // Tải lại trang cho gọn — reset toàn bộ state trong bộ nhớ (danh sách đã
     // nạp, form đang nhập dở...) và quay lại đúng luồng init() từ đầu.
     location.reload();
+  });
+}
+
+// ---------------------------------------------------------------------
+// Đổi mật khẩu tự phục vụ — mở qua #btnOpenChangePassword ở header (chỉ hiện khi đã
+// đăng nhập, xem initApp() ở app-core.js), modal #changePasswordOverlay (index.html).
+// Tài khoản trước giờ chỉ đăng nhập Google (chưa có mật khẩu) KHÔNG tự đặt mật khẩu
+// lần đầu qua đây được — actionChangePassword() (Code.gs) luôn từ chối vì không có
+// "mật khẩu cũ" nào để xác thực; hiện gợi ý #changePasswordGoogleHint TRƯỚC (dựa vào
+// Auth.current.hasPassword, làm mới qua Auth.refresh() mỗi lần mở modal cho chắc) thay
+// vì để user nhập xong mới gặp lỗi khó hiểu.
+// ---------------------------------------------------------------------
+function setupChangePassword() {
+  function closeModal() {
+    $("changePasswordOverlay").classList.add("hidden");
+  }
+
+  $("btnOpenChangePassword").addEventListener("click", async () => {
+    ["cp_old", "cp_new", "cp_new2"].forEach((id) => ($(id).value = ""));
+    $("changePasswordError").classList.add("hidden");
+    // Làm mới Auth.current.hasPassword trước khi hiện gợi ý — token có thể đã tồn tại
+    // từ trước lúc actionMe() chưa có trường này (server cũ), hoặc Admin vừa mới đặt lại
+    // mật khẩu cho tài khoản này (auth_provider google -> password) ở thiết bị khác.
+    await Auth.refresh();
+    $("changePasswordGoogleHint").style.display = Auth.current && Auth.current.hasPassword === false ? "" : "none";
+    $("changePasswordOverlay").classList.remove("hidden");
+    $("cp_old").focus();
+  });
+
+  $("btnCloseChangePassword").addEventListener("click", closeModal);
+
+  $("btnSubmitChangePassword").addEventListener("click", async () => {
+    const oldPassword = $("cp_old").value;
+    const newPassword = $("cp_new").value;
+    const newPassword2 = $("cp_new2").value;
+    const errEl = $("changePasswordError");
+    errEl.classList.add("hidden");
+    if (!oldPassword || !newPassword) {
+      errEl.textContent = "Vui lòng nhập đủ mật khẩu hiện tại và mật khẩu mới.";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    if (newPassword.length < 6) {
+      errEl.textContent = "Mật khẩu mới phải có ít nhất 6 ký tự.";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    if (newPassword !== newPassword2) {
+      errEl.textContent = "Nhập lại mật khẩu mới không khớp.";
+      errEl.classList.remove("hidden");
+      return;
+    }
+    const btn = $("btnSubmitChangePassword");
+    btn.disabled = true;
+    try {
+      // gsheetPost() (storage.js) NÉM lỗi cho response { error: "..." } (VD "Mật khẩu
+      // hiện tại không đúng") — không cần tự kiểm tra result.error ở đây, catch bên dưới lo.
+      await Auth.changePassword(oldPassword, newPassword);
+      closeModal();
+      showToast("Đã đổi mật khẩu. Các thiết bị khác đang đăng nhập bằng tài khoản này đã bị đăng xuất.");
+    } catch (err) {
+      errEl.textContent = (err && err.message) || String(err);
+      errEl.classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
+    }
   });
 }
 

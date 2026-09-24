@@ -7,6 +7,7 @@
 //   - logic/dga-logic-gas.js                 : đánh giá khí hòa tan (TCG, tỷ lệ, Duval, tốc độ tăng, khuyến cáo...)
 //   - logic/dga-logic-oil.js                 : thí nghiệm dầu MBA + dầu OLTC
 //   - logic/dga-logic-instrument-oil.js      : thí nghiệm dầu TI/TU
+//   - logic/dga-logic-iec60422-2024.js       : đánh giá THAM KHẢO dầu MBA + TI/TU theo IEC 60422:2024 (Bảng 5/7)
 //   - logic/dga-logic-forecast.js            : dự báo xu hướng khí
 //   - logic/dga-logic-regulation-config.js   : cơ chế cấu hình quy định (ghi đè ngưỡng tại chỗ)
 //
@@ -42,6 +43,7 @@ if (typeof module !== "undefined" && module.exports) {
     "dga-logic-gas.js",
     "dga-logic-oil.js",
     "dga-logic-instrument-oil.js",
+    "dga-logic-iec60422-2024.js", // phụ thuộc verdictTwoTierOil() (instrument-oil.js) — nạp SAU file đó
     "dga-logic-forecast.js",
     "dga-logic-regulation-config.js",
     "dga-logic-peer.js",
@@ -90,6 +92,9 @@ if (typeof module !== "undefined" && module.exports) {
       dieu54AdvisoryMessages, buildRecommendations, computeOverallStatus,
       OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
       evaluateInstrumentOilTest,
+      IEC60422_2024_TABLE5_MBA, IEC60422_2024_TABLE7_TITU, IEC60422_2024_CATEGORY_LABEL_MBA,
+      IEC60422_2024_CATEGORY_LABEL_TITU, mapOilVoltageClassToIec60422Category, resolveIec60422TituCategory,
+      evaluateIec60422MbaOilTest, evaluateIec60422TituOilTest,
       OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
       linearRegression, theilSenSlope, consecutiveAverageSlope, FORECAST_METHOD_LABELS, forecastGasTrend,
       REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
@@ -124,6 +129,9 @@ if (typeof module !== "undefined" && module.exports) {
     dieu54AdvisoryMessages, buildRecommendations, computeOverallStatus,
     OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
     evaluateInstrumentOilTest,
+    IEC60422_2024_TABLE5_MBA, IEC60422_2024_TABLE7_TITU, IEC60422_2024_CATEGORY_LABEL_MBA,
+    IEC60422_2024_CATEGORY_LABEL_TITU, mapOilVoltageClassToIec60422Category, resolveIec60422TituCategory,
+    evaluateIec60422MbaOilTest, evaluateIec60422TituOilTest,
     OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
     linearRegression, theilSenSlope, consecutiveAverageSlope, FORECAST_METHOD_LABELS, forecastGasTrend,
     REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,

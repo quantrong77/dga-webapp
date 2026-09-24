@@ -794,8 +794,8 @@
           <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Lịch sử thí nghiệm dầu TI/TU/Sứ xuyên</h2>
           <div class="table-scroll"><table>
             <thead><tr>
-              <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th>
-              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
             </tr></thead>
             <tbody id="lichsuInstrumentOilHistoryTable"></tbody>
           </table></div>
@@ -1106,6 +1106,20 @@
               <label class="field">Độ ẩm dầu — loại bỏ (ppm) <input id="s_oil_moisture_loaibo" type="number" min="0" step="0.1" /></label>
               <label class="field">tgδ ở 90°C — loại bỏ (%) <input id="s_oil_tgd90_loaibo" type="number" min="0" step="0.01" /></label>
               <label class="field">Điện áp chọc thủng — loại bỏ (kV) <input id="s_oil_bdv_loaibo" type="number" min="0" step="0.1" /></label>
+            </div>
+            <div class="section-title">tgδ ở 20°C (tùy chọn — chỉ TI/TU, khác hẳn tgδ 90°C ở trên)</div>
+            <p class="note">Một số nhà sản xuất (VD Arteche) đưa ra ngưỡng riêng đo ở nhiệt độ phòng (20°C) thay vì
+              90°C — bỏ trống nếu tài liệu nhà sản xuất của bạn không có hạng mục này.</p>
+            <div class="grid gases">
+              <label class="field">tgδ ở 20°C — bình thường (%) <input id="s_oil_tgd20" type="number" min="0" step="0.01" /></label>
+              <label class="field">tgδ ở 20°C — loại bỏ (%) <input id="s_oil_tgd20_loaibo" type="number" min="0" step="0.01" /></label>
+            </div>
+            <p class="note">Riêng cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX ghi ngưỡng loại bỏ tgδ20°C
+              thấp hơn cho thiết bị U.H.V) — nếu nhập, PHẢI nhập ĐỦ CẢ HAI ô dưới đây; bỏ trống cả hai nếu NSX
+              không có biệt lệ này.</p>
+            <div class="grid gases">
+              <label class="field">tgδ ở 20°C — loại bỏ khi U.H.V (%) <input id="s_oil_tgd20_uhv_loaibo" type="number" min="0" step="0.01" /></label>
+              <label class="field">Mốc Um áp dụng U.H.V (kV) <input id="s_oil_tgd20_uhv_um_kv" type="number" min="0" step="1" placeholder="VD: 500" /></label>
             </div>
           </div>
         </div>
@@ -2001,6 +2015,19 @@
         </table></div>
       </div>
 
+      <div class="panel hidden" id="oilIec60422Panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 5, theo Category A/B/C)</h2>
+        <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với QĐ1901 ở trên — không thay thế "Kết luận chung". Category suy ra từ
+          Cấp điện áp MBA/Kháng đã chọn (&gt;170kV=A, &gt;72,5–170kV=B, ≤72,5kV=C).</p>
+        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+          <div class="stat-card"><div class="label">Kết luận (IEC 60422:2024)</div><div class="value" id="o_iec_overall">—</div></div>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn (Tốt/Kém)</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
+          <tbody id="o_iec_resultTable"></tbody>
+        </table></div>
+      </div>
+
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu đã lưu</h2>
         <div class="table-scroll"><table>
@@ -2133,8 +2160,9 @@
       <div id="dauInstrumentWrap">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU</h2>
-        <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
-          thủng dầu (kV) — áp dụng cho TI/TU kiểu kín, cách điện dầu. QĐ1901 Điều 10 (Bảng 9, mục 12) và Điều 11
+        <p class="note">Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
+          chọc thủng dầu (kV) — kèm 1 hạng mục tùy chọn tgδ ở 20°C (%) nếu nhà sản xuất có quy định riêng (VD
+          Arteche) — áp dụng cho TI/TU kiểu kín, cách điện dầu. QĐ1901 Điều 10 (Bảng 9, mục 12) và Điều 11
           (Bảng 14, mục 11) đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục này — KHÔNG có bảng
           số mặc định như dầu MBA (Bảng 54/55/58), nên <strong>bắt buộc chọn nhà sản xuất đã cấu hình sẵn</strong>
           ở tab "Cấu hình" — mục "Tiêu chuẩn" mới đánh giá được. Hỗ trợ 2 mức ngưỡng (nếu nhà sản xuất có cấu hình): "Bình thường"
@@ -2182,6 +2210,9 @@
               <option value="">— Chọn nhà sản xuất —</option>
             </select>
           </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp Um (kV) — tùy chọn, để đối chiếu IEC 60422:2024
+            <input id="tio_um_kv" type="number" min="0" step="1" placeholder="VD: 220" />
+          </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
             <input id="tio_ngay" type="date" />
           </label>
@@ -2194,6 +2225,7 @@
         <div class="grid gases">
           <label class="field">Độ ẩm dầu (ppm) <input id="tio_moisture" type="number" min="0" step="0.1" /></label>
           <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="tio_tgd90" type="number" min="0" step="0.01" /></label>
+          <label class="field">Tổn hao điện môi tgδ ở 20°C (%) — tùy chọn <input id="tio_tgd20" type="number" min="0" step="0.01" /></label>
           <label class="field">Điện áp chọc thủng (kV) <input id="tio_bdv" type="number" min="0" step="0.1" /></label>
         </div>
 
@@ -2216,12 +2248,26 @@
         </table></div>
       </div>
 
+      <div class="panel hidden" id="tioIec60422Panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 7, theo Category D/E)</h2>
+        <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với tiêu chuẩn nhà sản xuất ở trên — không thay thế "Kết luận chung". Cần nhập
+          Cấp điện áp Um để xác định Category. Điện áp chọc thủng dùng số liệu SUY DIỄN (Category D≈A, E≈B của Bảng 5) do
+          Bảng 7 gốc không có số liệu riêng cho hạng mục này — xem cột "Căn cứ".</p>
+        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+          <div class="stat-card"><div class="label">Kết luận (IEC 60422:2024)</div><div class="value" id="tio_iec_overall">—</div></div>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn (Tốt/Kém)</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
+          <tbody id="tio_iec_resultTable"></tbody>
+        </table></div>
+      </div>
+
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu TI/TU đã lưu</h2>
         <div class="table-scroll"><table>
           <thead><tr>
-            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
           </tr></thead>
           <tbody id="tioOilHistoryTable"></tbody>
         </table></div>
@@ -3466,6 +3512,7 @@
   <script src="logic/dga-logic-gas.js"></script>
   <script src="logic/dga-logic-oil.js"></script>
   <script src="logic/dga-logic-instrument-oil.js"></script>
+  <script src="logic/dga-logic-iec60422-2024.js"></script>
   <script src="logic/dga-logic-forecast.js"></script>
   <script src="logic/dga-logic-regulation-config.js"></script>
   <script src="logic/dga-logic-peer.js"></script>

@@ -10,6 +10,10 @@ function tioVerdictPill(v) {
   if (v === "Cảnh báo") return `<span class="pill warn">Cảnh báo</span>`;
   if (v === "Chưa có tiêu chuẩn nhà sản xuất") return `<span class="pill muted">Chưa có tiêu chuẩn NSX</span>`;
   if (v === "Chưa đủ dữ liệu") return `<span class="pill muted">Chưa đủ dữ liệu</span>`;
+  // "Chưa có cấp điện áp Um" — riêng cho DGA.evaluateIec60422TituOilTest() (dga-logic-
+  // iec60422-2024.js): thiếu Um thì KHÔNG xác định được Category D/E nên không đánh
+  // giá được, khác hẳn ngữ nghĩa "Không đạt".
+  if (v === "Chưa có cấp điện áp Um") return `<span class="pill muted">Chưa có Um</span>`;
   return `<span class="pill bad">Không đạt</span>`;
 }
 
@@ -26,9 +30,10 @@ function onTioEquipmentTypeChange() {
 }
 
 function clearTioOilForm() {
-  ["tio_tram", "tio_thietbi", "tio_ghichu", "tio_moisture", "tio_tgd90", "tio_bdv"].forEach((id) => ($(id).value = ""));
+  ["tio_tram", "tio_thietbi", "tio_ghichu", "tio_moisture", "tio_tgd90", "tio_tgd20", "tio_bdv", "tio_um_kv"].forEach((id) => ($(id).value = ""));
   $("tio_nsx").value = "";
   $("tioOilResultsPanel").classList.add("hidden");
+  $("tioIec60422Panel").classList.add("hidden");
   resetTioOilTestEditState();
 }
 
@@ -49,9 +54,11 @@ function onEditTioOilTest(rec) {
   $("tio_thietbi").value = rec.thiet_bi || "";
   $("tio_phase").value = rec.phase || "chung3pha";
   $("tio_nsx").value = rec.manufacturer || "";
+  $("tio_um_kv").value = rec.um_kv ?? "";
   $("tio_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   $("tio_moisture").value = rec.moisture_ppm ?? "";
   $("tio_tgd90").value = rec.tgd_90c_percent ?? "";
+  $("tio_tgd20").value = rec.tgd_20c_percent ?? "";
   $("tio_bdv").value = rec.bdv_kv ?? "";
   $("tio_ghichu").value = rec.ghi_chu || "";
   $("editingTioOilTestNote").classList.remove("hidden");
@@ -76,9 +83,11 @@ async function onAnalyzeTioOil() {
     thiet_bi: $("tio_thietbi").value.trim(),
     phase: $("tio_phase").value,
     manufacturer,
+    um_kv: $("tio_um_kv").value === "" ? null : Number($("tio_um_kv").value),
     sample_date: $("tio_ngay").value,
     moisture_ppm: $("tio_moisture").value === "" ? null : Number($("tio_moisture").value),
     tgd_90c_percent: $("tio_tgd90").value === "" ? null : Number($("tio_tgd90").value),
+    tgd_20c_percent: $("tio_tgd20").value === "" ? null : Number($("tio_tgd20").value),
     bdv_kv: $("tio_bdv").value === "" ? null : Number($("tio_bdv").value),
     ghi_chu: $("tio_ghichu").value.trim(),
   };
@@ -87,8 +96,9 @@ async function onAnalyzeTioOil() {
     notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
     return;
   }
-  if (tioOilTest.moisture_ppm === null && tioOilTest.tgd_90c_percent === null && tioOilTest.bdv_kv === null) {
-    notifyError("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
+  if (tioOilTest.moisture_ppm === null && tioOilTest.tgd_90c_percent === null
+    && tioOilTest.tgd_20c_percent === null && tioOilTest.bdv_kv === null) {
+    notifyError("Vui lòng nhập ít nhất 1 trong các giá trị: Độ ẩm dầu, tgδ ở 90°C, tgδ ở 20°C, hoặc Điện áp chọc thủng dầu.");
     return;
   }
   if (!manufacturer) {
@@ -98,15 +108,25 @@ async function onAnalyzeTioOil() {
   if (alertIfNegative([
     { label: "Độ ẩm dầu", value: tioOilTest.moisture_ppm },
     { label: "tgδ ở 90°C", value: tioOilTest.tgd_90c_percent },
+    { label: "tgδ ở 20°C", value: tioOilTest.tgd_20c_percent },
     { label: "Điện áp chọc thủng", value: tioOilTest.bdv_kv },
   ])) return;
 
   const evalResult = DGA.evaluateInstrumentOilTest({
     equipmentType, manufacturer,
     manufacturerOilStandards: toOilStandardsForLogic(_allStandards),
-    moisture: tioOilTest.moisture_ppm, tgd90: tioOilTest.tgd_90c_percent, bdv: tioOilTest.bdv_kv,
+    moisture: tioOilTest.moisture_ppm, tgd90: tioOilTest.tgd_90c_percent,
+    tgd20: tioOilTest.tgd_20c_percent, bdv: tioOilTest.bdv_kv, umKv: tioOilTest.um_kv,
   });
   renderTioOilResults(evalResult);
+
+  // Tham khảo SONG SONG — IEC 60422:2024 Bảng 7 (Category D/E) — xem dga-logic-
+  // iec60422-2024.js. KHÔNG ảnh hưởng evalResult/việc lưu ở trên, chỉ hiển thị thêm.
+  const iecResult = DGA.evaluateIec60422TituOilTest({
+    umKv: tioOilTest.um_kv, moisture: tioOilTest.moisture_ppm,
+    tgd90: tioOilTest.tgd_90c_percent, bdv: tioOilTest.bdv_kv,
+  });
+  renderTioIec60422Results(iecResult);
 
   if (!canSaveEntry()) return;
   const wasEditing = !!_editingTioOilTestId;
@@ -138,6 +158,25 @@ function renderTioOilResults(evalResult) {
   }
 }
 
+/** Hiển thị khối "Tham khảo — IEC 60422:2024" cho dầu TI/TU — xem
+ *  DGA.evaluateIec60422TituOilTest() (dga-logic-iec60422-2024.js). Panel RIÊNG, KHÔNG
+ *  dùng chung #tioOilResultsPanel/#tio_overall với tiêu chuẩn nhà sản xuất để tránh
+ *  nhầm lẫn 2 hệ đánh giá độc lập. */
+function renderTioIec60422Results(iecResult) {
+  $("tioIec60422Panel").classList.remove("hidden");
+  $("tio_iec_overall").innerHTML = tioVerdictPill(iecResult.overall);
+  $("tio_iec_resultTable").innerHTML = iecResult.rows.length > 0
+    ? iecResult.rows.map((r) => `
+      <tr>
+        <td>${r.label}</td><td>${r.value}</td>
+        <td>${r.limit}</td>
+        <td>${r.unit}</td><td>${tioVerdictPill(r.verdict)}</td>
+        <td style="font-size:12px;">${escapeHtml(r.ref)}</td>
+      </tr>
+    `).join("")
+    : `<tr><td colspan="6" style="font-size:13px;">Chưa nhập Cấp điện áp Um (kV) ở trên — cần Um để xác định Category D (&gt;170kV) hoặc E (≤170kV) của IEC 60422:2024.</td></tr>`;
+}
+
 function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
   const tbody = $(tbodyId);
   if (!tbody) return;
@@ -151,7 +190,8 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
     const evalResult = DGA.evaluateInstrumentOilTest({
       equipmentType, manufacturer: rec.manufacturer || null,
       manufacturerOilStandards: oilStandardsForLogic,
-      moisture: rec.moisture_ppm, tgd90: rec.tgd_90c_percent, bdv: rec.bdv_kv,
+      moisture: rec.moisture_ppm, tgd90: rec.tgd_90c_percent,
+      tgd20: rec.tgd_20c_percent, bdv: rec.bdv_kv, umKv: rec.um_kv,
     });
 
     const tr = document.createElement("tr");
@@ -162,8 +202,10 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${tioEquipmentTypeShort(equipmentType)}</td>
       <td>${rec.phase ? escapeHtml(DGA.phaLabelWithPrefix(rec.phase)) : "—"}</td>
       <td>${escapeHtml(rec.manufacturer || "—")}</td>
+      <td>${rec.um_kv ?? "—"}</td>
       <td>${rec.moisture_ppm ?? "—"}</td>
       <td>${rec.tgd_90c_percent ?? "—"}</td>
+      <td>${rec.tgd_20c_percent ?? "—"}</td>
       <td>${rec.bdv_kv ?? "—"}</td>
       <td>${tioVerdictPill(evalResult.overall)}</td>
       <td>${ownerCellHtml(rec)}</td>

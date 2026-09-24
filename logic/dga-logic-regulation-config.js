@@ -213,6 +213,30 @@ function buildRegulationConfigRegistry() {
         { path: ["pharieng", "500", "moisture"], label: "Một pha/không trung tính, 500kV — Hàm lượng nước", unit: "ppm", kind: "number" },
       ],
     },
+    {
+      key: "IEC60422_2024_TABLE5_MBA", category: "Dầu MBA/Kháng — IEC 60422:2024 (tham khảo, song song QĐ1901)",
+      title: "IEC 60422:2024 Bảng 5 — Ngưỡng Tốt/Kém dầu MBA/Kháng vận hành, theo Category A/B/C",
+      citationKey: "IEC60422_2024_TABLE5_MBA", target: IEC60422_2024_TABLE5_MBA,
+      fields: ["A", "B", "C"].flatMap((cat) => [
+        { path: [cat, "bdv", "good"], label: `Category ${cat} — Điện áp chọc thủng, biên "Tốt" (≥)`, unit: "kV", kind: "number" },
+        { path: [cat, "bdv", "poor"], label: `Category ${cat} — Điện áp chọc thủng, biên "Kém" (<)`, unit: "kV", kind: "number" },
+        { path: [cat, "moisture", "good"], label: `Category ${cat} — Độ ẩm dầu, biên "Tốt" (≤)`, unit: "mg/kg", kind: "number" },
+        { path: [cat, "moisture", "poor"], label: `Category ${cat} — Độ ẩm dầu, biên "Kém" (>)`, unit: "mg/kg", kind: "number" },
+        { path: [cat, "tgd90", "good"], label: `Category ${cat} — tgδ 90°C, biên "Tốt" (≤)`, unit: "%", kind: "number" },
+        { path: [cat, "tgd90", "poor"], label: `Category ${cat} — tgδ 90°C, biên "Kém" (>)`, unit: "%", kind: "number" },
+      ]),
+    },
+    {
+      key: "IEC60422_2024_TABLE7_TITU", category: "Dầu TI/TU — IEC 60422:2024 (tham khảo, song song tiêu chuẩn NSX)",
+      title: "IEC 60422:2024 Bảng 7 — Ngưỡng Tốt/Kém dầu TI/TU vận hành, theo Category D/E (Độ ẩm, tgδ 90°C — số liệu tường minh)",
+      citationKey: "IEC60422_2024_TABLE7_TITU", target: IEC60422_2024_TABLE7_TITU,
+      fields: ["D", "E"].flatMap((cat) => [
+        { path: [cat, "moisture", "good"], label: `Category ${cat} — Độ ẩm dầu, biên "Tốt" (≤)`, unit: "mg/kg", kind: "number" },
+        { path: [cat, "moisture", "poor"], label: `Category ${cat} — Độ ẩm dầu, biên "Kém" (>)`, unit: "mg/kg", kind: "number" },
+        { path: [cat, "tgd90", "good"], label: `Category ${cat} — tgδ 90°C, biên "Tốt" (≤)`, unit: "%", kind: "number" },
+        { path: [cat, "tgd90", "poor"], label: `Category ${cat} — tgδ 90°C, biên "Kém" (>)`, unit: "%", kind: "number" },
+      ]),
+    },
   ];
 }
 

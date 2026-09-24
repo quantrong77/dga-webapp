@@ -409,7 +409,8 @@ function computeInstrumentOilAlerts() {
     const equipmentType = latest.equipment_type || DGA.EQUIPMENT_TYPES.TI;
     const evalResult = DGA.evaluateInstrumentOilTest({
       equipmentType, manufacturer: latest.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
-      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent, bdv: latest.bdv_kv,
+      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent,
+      tgd20: latest.tgd_20c_percent, bdv: latest.bdv_kv, umKv: latest.um_kv,
     });
     if (evalResult.overall !== "Không đạt" && evalResult.overall !== "Cảnh báo") return;
 

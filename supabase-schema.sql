@@ -49,6 +49,17 @@ create table if not exists manufacturer_standards (
   oil_moisture_loaibo_ppm numeric,
   oil_tgd_90c_loaibo_percent numeric,
   oil_bdv_loaibo_kv numeric,
+  -- tgδ đo ở 20°C (nhiệt độ phòng) — CHỈ TI/TU dùng, khác tgδ 90°C ở trên (một số tài
+  -- liệu nhà sản xuất, ví dụ Arteche, đưa ra ngưỡng riêng ở 20°C thay vì 90°C như
+  -- QĐ1901/Bảng 55 dùng cho dầu MBA). 2 mức bình thường/loại bỏ giống các hạng mục khác.
+  oil_tgd_20c_percent numeric,
+  oil_tgd_20c_loaibo_percent numeric,
+  -- Ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX
+  -- ghi ngưỡng loại bỏ thấp hơn cho thiết bị U.H.V nhưng không nêu rõ mốc kV — người
+  -- dùng xác nhận áp dụng khi Um ≥ oil_tgd_20c_uhv_um_kv). Cả 2 null nếu NSX không có
+  -- biệt lệ này — xem evaluateInstrumentOilTest() ở dga-logic.js.
+  oil_tgd_20c_loaibo_uhv_percent numeric,
+  oil_tgd_20c_uhv_um_kv numeric,
   created_at timestamptz default now()
 );
 
@@ -206,6 +217,13 @@ create table if not exists instrument_oil_tests (
   moisture_ppm numeric,
   tgd_90c_percent numeric,
   bdv_kv numeric,
+  -- tgδ đo ở 20°C (nhiệt độ phòng, tùy chọn — một số NSX như Arteche đo thêm ngoài tgδ
+  -- 90°C) — xem oil_tgd_20c_percent ở manufacturer_standards.
+  tgd_20c_percent numeric,
+  -- Cấp điện áp Um (kV) của chính TI/TU — tùy chọn, dùng để đối chiếu THAM KHẢO với
+  -- IEC 60422:2024 Bảng 7 (Category D >170kV / E ≤170kV, xem dga-logic-iec60422-
+  -- 2024.js) — KHÔNG dùng cho đánh giá theo tiêu chuẩn nhà sản xuất ở trên.
+  um_kv numeric,
   ghi_chu text,
   created_at timestamptz default now()
 );
@@ -324,6 +342,19 @@ create table if not exists regulation_config (
 -- alter table manufacturer_standards add column if not exists oil_moisture_loaibo_ppm numeric;
 -- alter table manufacturer_standards add column if not exists oil_tgd_90c_loaibo_percent numeric;
 -- alter table manufacturer_standards add column if not exists oil_bdv_loaibo_kv numeric;
+
+-- Nếu bạn đã tạo bảng manufacturer_standards/instrument_oil_tests từ trước (chưa có cột
+-- tgδ đo ở 20°C — một số tài liệu nhà sản xuất, ví dụ Arteche, đưa ra ngưỡng riêng ở
+-- 20°C thay vì 90°C), chạy các dòng sau để nâng cấp (an toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_percent numeric;
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_loaibo_percent numeric;
+-- alter table instrument_oil_tests add column if not exists tgd_20c_percent numeric;
+-- alter table instrument_oil_tests add column if not exists um_kv numeric;
+
+-- Nếu bạn đã tạo bảng manufacturer_standards từ trước (chưa có ngưỡng loại bỏ tgδ20°C
+-- riêng cho thiết bị U.H.V, VD Arteche), chạy các dòng sau để nâng cấp:
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_loaibo_uhv_percent numeric;
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_uhv_um_kv numeric;
 
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.

@@ -94,6 +94,10 @@ async function initApp() {
   setupFeedbackDropzone();
   setupFeedbackPaste();
   setupFeedbackLightbox();
+  // Tab "Quản trị" (tạo tài khoản/đặt lại mật khẩu/đổi vai trò) — chỉ Admin thấy được
+  // tab (xem $("navQuanTri") ở trên), nhưng nối sự kiện 1 lần cho MỌI user không hại gì
+  // (nút thật sự chỉ bấm được khi tab hiện ra, và server luôn kiểm tra lại requireAdmin()).
+  setupAdminUsers();
   $("f_ngay").value = new Date().toISOString().slice(0, 10);
   $("o_ngay").value = new Date().toISOString().slice(0, 10);
   $("ot_ngay").value = new Date().toISOString().slice(0, 10);

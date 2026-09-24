@@ -148,6 +148,15 @@ const STANDARD_HEADERS = [
   // định bảng số, chỉ dẫn chiếu "theo quy định nhà sản xuất", xem evaluateInstrumentOilTest()
   // ở dga-logic.js). Thêm ở CUỐI (xem lưu ý trên) — record cũ (MBA) để trống 3 cột này.
   "oil_moisture_loaibo_ppm", "oil_tgd_90c_loaibo_percent", "oil_bdv_loaibo_kv",
+  // tgδ đo ở 20°C (nhiệt độ phòng, tùy chọn — một số NSX như Arteche đo thêm ngoài tgδ
+  // 90°C) — chỉ áp dụng TI/TU, giống 2 mức bình thường/loại bỏ của các hạng mục khác.
+  // Thêm ở CUỐI (xem lưu ý trên) — record cũ để trống 2 cột này.
+  "oil_tgd_20c_percent", "oil_tgd_20c_loaibo_percent",
+  // Ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX
+  // ghi ngưỡng loại bỏ thấp hơn cho thiết bị U.H.V nhưng không nêu rõ mốc kV — người
+  // dùng xác nhận áp dụng khi Um ≥ mốc oil_tgd_20c_uhv_um_kv) — xem evaluateInstrumentOilTest()
+  // ở dga-logic.js. Thêm ở CUỐI (xem lưu ý trên) — record cũ/NSX khác để trống 2 cột này.
+  "oil_tgd_20c_loaibo_uhv_percent", "oil_tgd_20c_uhv_um_kv",
 ];
 
 // Danh mục Trạm (MaTram/TenTram) — dùng để gợi ý/tìm kiếm ở ô "Trạm".
@@ -212,6 +221,14 @@ const INSTRUMENT_OILTEST_HEADERS = [
   "sample_date", "moisture_ppm", "tgd_90c_percent", "bdv_kv", "ghi_chu", "created_at",
   // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
   "created_by", "updated_by", "updated_at",
+  // tgδ đo ở 20°C (nhiệt độ phòng, tùy chọn — một số NSX như Arteche đo thêm ngoài tgδ
+  // 90°C) — xem oil_tgd_20c_percent ở STANDARD_HEADERS. Thêm ở CUỐI (xem lưu ý trên).
+  "tgd_20c_percent",
+  // Cấp điện áp Um (kV) của chính TI/TU — tùy chọn, dùng để đối chiếu THAM KHẢO với
+  // IEC 60422:2024 Bảng 7 (Category D >170kV / E ≤170kV, xem dga-logic-iec60422-
+  // 2024.js) — KHÔNG dùng cho đánh giá theo tiêu chuẩn nhà sản xuất ở trên. Thêm ở
+  // CUỐI (xem lưu ý trên).
+  "um_kv",
 ];
 
 // Tài khoản người dùng — mật khẩu KHÔNG lưu gốc, chỉ lưu password_hash (SHA-256
@@ -603,7 +620,11 @@ function prepareOwnedRecord(token, sheetName, headers, record, requireFn) {
 
 function actionMe(token) {
   const user = requireSession(token);
-  return { email: user.email, role: user.role };
+  // hasPassword: để client biết tài khoản này ĐÃ có mật khẩu chưa (tài khoản trước giờ
+  // chỉ đăng nhập Google thì password_hash rỗng) — dùng hiện gợi ý #changePasswordGoogleHint
+  // TRƯỚC khi user bấm "Đổi mật khẩu" (xem setupChangePassword() ở ui-auth.js), thay vì để
+  // họ nhập xong mới nhận lỗi "Mật khẩu hiện tại không đúng" khó hiểu.
+  return { email: user.email, role: user.role, hasPassword: !!user.password_hash };
 }
 
 function actionSetUserRole(body) {

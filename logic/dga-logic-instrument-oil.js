@@ -51,11 +51,16 @@ function resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOil
 }
 
 /**
- * @param {InstrumentOilTestInput} input  equipmentType là EQUIPMENT_TYPES.TI/TU; manufacturerOilStandards
- *   xem toOilStandardsForLogic() ở ui-standards.js — cần thêm equipmentType/*Reject
- * @returns {OilTestResult}
+ * @param {"TI (biến dòng điện)"|"TU (biến điện áp)"} equipmentType EQUIPMENT_TYPES.TI/TU
+ * @param {object} manufacturerOilStandards xem toOilStandardsForLogic() — cần thêm equipmentType/*Reject
+ * @param {number} [tgd20] tgδ đo ở 20°C (%, tùy chọn) — khác hẳn tgd90, một số NSX (VD Arteche)
+ *   đưa ra ngưỡng riêng ở nhiệt độ phòng thay vì 90°C như QĐ1901/Bảng 55 dùng cho dầu MBA.
+ * @param {number} [umKv] Cấp điện áp Um (kV) của chính TI/TU (tùy chọn) — dùng để xác định có
+ *   áp ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V hay không, xem tgd20RejectUhv/
+ *   tgd20UhvUmKv ở toOilStandardsForLogic() (VD Arteche: loại bỏ chung >3%, nhưng U.H.V
+ *   (Um≥500kV theo xác nhận người dùng) dùng ngưỡng chặt hơn 1,5%).
  */
-function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOilStandards, moisture, tgd90, bdv }) {
+function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOilStandards, moisture, tgd90, tgd20, bdv, umKv }) {
   const match = resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOilStandards);
   const refBase = match
     ? `Tiêu chuẩn nhà sản xuất: ${match.manufacturer}${match.source ? " (" + match.source + ")" : ""}`
@@ -85,6 +90,25 @@ function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOi
     const rejectLimit = match ? match.tgd90Reject : null;
     rows.push({
       key: "tgd90", label: "Tổn hao điện môi tgδ (90°C)", value: v, direction: "le", unit: "%",
+      limit: limitText(normalLimit, rejectLimit, "le"),
+      verdict: verdictTwoTierOil(v, normalLimit, rejectLimit, "le"), ref: refBase,
+    });
+  }
+  if (hasVal(tgd20)) {
+    const v = Number(tgd20);
+    const normalLimit = match ? match.tgd20 : null;
+    // Ngưỡng loại bỏ RIÊNG cho thiết bị U.H.V (VD Arteche: tài liệu NSX ghi "giới hạn
+    // thấp phía U.H.V là 1,5 hoặc 2" — không nêu rõ mốc kV; người dùng xác nhận áp
+    // dụng khi Um ≥ 500kV, chọn 1,5 làm giá trị — xem tgd20RejectUhv/tgd20UhvUmKv ở
+    // toOilStandardsForLogic()). Chỉ áp dụng khi NSX có cấu hình ĐỦ cả 2 trường này
+    // VÀ đã nhập Um của thiết bị VÀ Um đạt/vượt mốc — nếu không, dùng tgd20Reject chung.
+    const uhvApplies = match && hasVal(match.tgd20RejectUhv) && hasVal(match.tgd20UhvUmKv)
+      && hasVal(umKv) && Number(umKv) >= Number(match.tgd20UhvUmKv);
+    const rejectLimit = match ? (uhvApplies ? match.tgd20RejectUhv : match.tgd20Reject) : null;
+    rows.push({
+      key: "tgd20",
+      label: "Tổn hao điện môi tgδ (20°C)" + (uhvApplies ? ` — áp ngưỡng U.H.V (Um≥${match.tgd20UhvUmKv}kV)` : ""),
+      value: v, direction: "le", unit: "%",
       limit: limitText(normalLimit, rejectLimit, "le"),
       verdict: verdictTwoTierOil(v, normalLimit, rejectLimit, "le"), ref: refBase,
     });

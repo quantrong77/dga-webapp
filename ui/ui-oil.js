@@ -54,6 +54,7 @@ function clearOilForm() {
   $("o_samplepoint").value = "chung";
   toggleOilPhaseField();
   $("oilResultsPanel").classList.add("hidden");
+  $("oilIec60422Panel").classList.add("hidden");
   resetOilTestEditState();
 }
 
@@ -140,6 +141,13 @@ async function onAnalyzeOil() {
   });
   renderOilResults(evalResult);
 
+  // Tham khảo SONG SONG — IEC 60422:2024 Bảng 5 (Category A/B/C) — xem dga-logic-
+  // iec60422-2024.js. KHÔNG ảnh hưởng evalResult/việc lưu ở trên, chỉ hiển thị thêm.
+  const iecResult = DGA.evaluateIec60422MbaOilTest({
+    voltageClass, moisture: oilTest.moisture_ppm, tgd90: oilTest.tgd_90c_percent, bdv: oilTest.bdv_kv,
+  });
+  renderOilIec60422Results(iecResult);
+
   // Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được, y hệt onAnalyze().
   if (!canSaveEntry()) return;
   const wasEditing = !!_editingOilTestId;
@@ -172,6 +180,27 @@ function renderOilResults(evalResult) {
   if (typeof $("oilResultsPanel").scrollIntoView === "function") {
     $("oilResultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
   }
+}
+
+/** Hiển thị khối "Tham khảo — IEC 60422:2024" cho dầu MBA — xem
+ *  DGA.evaluateIec60422MbaOilTest() (dga-logic-iec60422-2024.js). Panel RIÊNG,
+ *  KHÔNG dùng chung #oilResultsPanel/#o_overall với QĐ1901 để tránh nhầm lẫn 2 hệ
+ *  đánh giá độc lập. */
+function renderOilIec60422Results(iecResult) {
+  // Dùng tioVerdictPill() (ui-ti-oil.js, cùng scope global) thay vì verdictPill() ở
+  // trên — verdictPill() KHÔNG có nhánh riêng cho "Cảnh báo" (mọi giá trị khác "Đạt"/
+  // "Không có ngưỡng" đều vẽ đỏ "Không đạt"), trong khi hệ 3 mức Tốt/Cần theo
+  // dõi/Kém của IEC 60422:2024 LUÔN có thể ra "Cảnh báo" (= "Cần theo dõi").
+  $("oilIec60422Panel").classList.remove("hidden");
+  $("o_iec_overall").innerHTML = tioVerdictPill(iecResult.overall);
+  $("o_iec_resultTable").innerHTML = iecResult.rows.map((r) => `
+    <tr>
+      <td>${r.label}</td><td>${r.value}</td>
+      <td>${r.limit}</td>
+      <td>${r.unit}</td><td>${tioVerdictPill(r.verdict)}</td>
+      <td style="font-size:12px;">${r.ref}</td>
+    </tr>
+  `).join("");
 }
 
 /** Vẽ danh sách dòng thí nghiệm dầu MBA chính vào 1 bảng bất kỳ (tbody/emptyId truyền

@@ -273,7 +273,11 @@ const Auth = {
     if (!_authToken) return null;
     try {
       const me = await gsheetGet("me");
-      this.current = { token: _authToken, email: me.email, role: me.role };
+      // hasPassword: xem actionMe() ở Code.gs — dùng để hiện gợi ý #changePasswordGoogleHint
+      // (setupChangePassword(), ui-auth.js) TRƯỚC khi tài khoản chỉ đăng nhập Google thử đổi
+      // mật khẩu. Server cũ (chưa có trường này) trả undefined -> !!undefined = false, coi
+      // như "chưa có mật khẩu" (an toàn hơn: hiện gợi ý nhầm còn hơn để lỗi khó hiểu).
+      this.current = { token: _authToken, email: me.email, role: me.role, hasPassword: !!me.hasPassword };
       authLsSet(this.current);
       return this.current;
     } catch (err) {

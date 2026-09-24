@@ -195,10 +195,17 @@ function toOilStandardsForLogic(list) {
     oilState: rec.oil_state === "new" ? "new" : "inservice",
     moisture: rec.oil_moisture_ppm,
     tgd90: rec.oil_tgd_90c_percent,
+    // tgδ đo ở 20°C (tùy chọn) — chỉ TI/TU dùng, khác hẳn tgd90 (VD Arteche).
+    tgd20: rec.oil_tgd_20c_percent,
     bdv: rec.oil_bdv_kv,
     // Ngưỡng loại bỏ (mức 2) — chỉ TI/TU dùng, xem evaluateInstrumentOilTest().
     moistureReject: rec.oil_moisture_loaibo_ppm,
     tgd90Reject: rec.oil_tgd_90c_loaibo_percent,
+    tgd20Reject: rec.oil_tgd_20c_loaibo_percent,
+    // Ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V (tùy chọn, VD Arteche) — áp dụng
+    // khi Um của lần đo ≥ tgd20UhvUmKv, xem evaluateInstrumentOilTest() (dga-logic.js).
+    tgd20RejectUhv: rec.oil_tgd_20c_loaibo_uhv_percent,
+    tgd20UhvUmKv: rec.oil_tgd_20c_uhv_um_kv,
     bdvReject: rec.oil_bdv_loaibo_kv,
     source: rec.source,
   }));
@@ -266,11 +273,16 @@ async function refreshStandardsUI() {
       const hasV = (v) => v !== undefined && v !== null && v !== "";
       const parts = [];
       if (hasV(rec.oil_moisture_ppm)) parts.push(`Độ ẩm=${rec.oil_moisture_ppm}ppm`);
-      if (hasV(rec.oil_tgd_90c_percent)) parts.push(`tgδ=${rec.oil_tgd_90c_percent}%`);
+      if (hasV(rec.oil_tgd_90c_percent)) parts.push(`tgδ90°C=${rec.oil_tgd_90c_percent}%`);
+      if (hasV(rec.oil_tgd_20c_percent)) parts.push(`tgδ20°C=${rec.oil_tgd_20c_percent}%`);
       if (hasV(rec.oil_bdv_kv)) parts.push(`BDV=${rec.oil_bdv_kv}kV`);
       const loaiboParts = [];
       if (hasV(rec.oil_moisture_loaibo_ppm)) loaiboParts.push(`Độ ẩm=${rec.oil_moisture_loaibo_ppm}ppm`);
-      if (hasV(rec.oil_tgd_90c_loaibo_percent)) loaiboParts.push(`tgδ=${rec.oil_tgd_90c_loaibo_percent}%`);
+      if (hasV(rec.oil_tgd_90c_loaibo_percent)) loaiboParts.push(`tgδ90°C=${rec.oil_tgd_90c_loaibo_percent}%`);
+      if (hasV(rec.oil_tgd_20c_loaibo_percent)) loaiboParts.push(`tgδ20°C=${rec.oil_tgd_20c_loaibo_percent}%`);
+      if (hasV(rec.oil_tgd_20c_loaibo_uhv_percent) && hasV(rec.oil_tgd_20c_uhv_um_kv)) {
+        loaiboParts.push(`tgδ20°C(U.H.V,Um≥${rec.oil_tgd_20c_uhv_um_kv}kV)=${rec.oil_tgd_20c_loaibo_uhv_percent}%`);
+      }
       if (hasV(rec.oil_bdv_loaibo_kv)) loaiboParts.push(`BDV=${rec.oil_bdv_loaibo_kv}kV`);
       const loaiboText = loaiboParts.length > 0 ? " | Loại bỏ: " + loaiboParts.join(", ") : "";
       thresholdText = (parts.length > 0 ? parts.join(", ") : "—") + loaiboText;
@@ -330,6 +342,10 @@ function onEditStandard(rec) {
     $("s_oil_moisture_loaibo").value = rec.oil_moisture_loaibo_ppm ?? "";
     $("s_oil_tgd90_loaibo").value = rec.oil_tgd_90c_loaibo_percent ?? "";
     $("s_oil_bdv_loaibo").value = rec.oil_bdv_loaibo_kv ?? "";
+    $("s_oil_tgd20").value = rec.oil_tgd_20c_percent ?? "";
+    $("s_oil_tgd20_loaibo").value = rec.oil_tgd_20c_loaibo_percent ?? "";
+    $("s_oil_tgd20_uhv_loaibo").value = rec.oil_tgd_20c_loaibo_uhv_percent ?? "";
+    $("s_oil_tgd20_uhv_um_kv").value = rec.oil_tgd_20c_uhv_um_kv ?? "";
     toggleOilStandardEquipmentFields();
   } else {
     DGA.GASES.forEach((g) => {
@@ -350,6 +366,7 @@ function resetStandardForm() {
   [
     "s_manufacturer", "s_source", "s_oil_moisture", "s_oil_tgd90", "s_oil_bdv",
     "s_oil_moisture_loaibo", "s_oil_tgd90_loaibo", "s_oil_bdv_loaibo",
+    "s_oil_tgd20", "s_oil_tgd20_loaibo", "s_oil_tgd20_uhv_loaibo", "s_oil_tgd20_uhv_um_kv",
   ].forEach((id) => ($(id).value = ""));
   DGA.GASES.forEach((g) => { $("s_" + g).value = ""; $("s_loaibo_" + g).value = ""; });
   $("s_standard_type").value = "khi";
@@ -377,10 +394,22 @@ async function onSaveStandard() {
     const moistureLoaibo = isMba ? "" : $("s_oil_moisture_loaibo").value;
     const tgd90Loaibo = isMba ? "" : $("s_oil_tgd90_loaibo").value;
     const bdvLoaibo = isMba ? "" : $("s_oil_bdv_loaibo").value;
-    if ([moisture, tgd90, bdv, moistureLoaibo, tgd90Loaibo, bdvLoaibo].every((v) => v === "")) {
+    // tgδ ở 20°C — CHỈ TI/TU dùng (VD Arteche), MBA không có hạng mục này (Bảng 54/55/58
+    // QĐ1901 không đo tgδ ở 20°C) nên luôn để trống khi isMba, giống 3 cột "loại bỏ" trên.
+    const tgd20 = isMba ? "" : $("s_oil_tgd20").value;
+    const tgd20Loaibo = isMba ? "" : $("s_oil_tgd20_loaibo").value;
+    // Ngưỡng loại bỏ tgδ20°C RIÊNG cho U.H.V — TÙY CHỌN, không tính vào "phải nhập ít
+    // nhất 1 hạng mục" bên dưới (xem ghi chú ở toOilStandardsForLogic()/evaluateInstrumentOilTest()).
+    const tgd20UhvLoaibo = isMba ? "" : $("s_oil_tgd20_uhv_loaibo").value;
+    const tgd20UhvUmKv = isMba ? "" : $("s_oil_tgd20_uhv_um_kv").value;
+    if (!isMba && (tgd20UhvLoaibo === "") !== (tgd20UhvUmKv === "")) {
+      notifyError('Cặp "tgδ20°C loại bỏ khi U.H.V" và "Mốc Um áp dụng U.H.V" phải nhập ĐỦ CẢ HAI hoặc để trống cả hai.');
+      return;
+    }
+    if ([moisture, tgd90, bdv, moistureLoaibo, tgd90Loaibo, bdvLoaibo, tgd20, tgd20Loaibo].every((v) => v === "")) {
       notifyError(isMba
         ? "Vui lòng nhập ít nhất 1 trong 3 ngưỡng: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng."
-        : "Vui lòng nhập ít nhất 1 ngưỡng (bình thường hoặc loại bỏ) cho 1 trong 3 hạng mục: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng.");
+        : "Vui lòng nhập ít nhất 1 ngưỡng (bình thường hoặc loại bỏ) cho 1 trong 4 hạng mục: Độ ẩm dầu, tgδ ở 90°C, tgδ ở 20°C, hoặc Điện áp chọc thủng.");
       return;
     }
     rec = {
@@ -398,13 +427,24 @@ async function onSaveStandard() {
       oil_moisture_loaibo_ppm: moistureLoaibo === "" ? null : Number(moistureLoaibo),
       oil_tgd_90c_loaibo_percent: tgd90Loaibo === "" ? null : Number(tgd90Loaibo),
       oil_bdv_loaibo_kv: bdvLoaibo === "" ? null : Number(bdvLoaibo),
+      // tgδ ở 20°C — CHỈ TI/TU dùng, xem ghi chú ở khai báo biến tgd20/tgd20Loaibo trên.
+      oil_tgd_20c_percent: tgd20 === "" ? null : Number(tgd20),
+      oil_tgd_20c_loaibo_percent: tgd20Loaibo === "" ? null : Number(tgd20Loaibo),
+      // Ngưỡng loại bỏ tgδ20°C riêng cho U.H.V + mốc Um áp dụng — xem ghi chú ở khai
+      // báo biến tgd20UhvLoaibo/tgd20UhvUmKv trên. Cả 2 null nếu NSX không có biệt lệ này.
+      oil_tgd_20c_loaibo_uhv_percent: tgd20UhvLoaibo === "" ? null : Number(tgd20UhvLoaibo),
+      oil_tgd_20c_uhv_um_kv: tgd20UhvUmKv === "" ? null : Number(tgd20UhvUmKv),
     };
     if (alertIfNegative([
       { label: "Độ ẩm dầu", value: rec.oil_moisture_ppm },
       { label: "tgδ ở 90°C", value: rec.oil_tgd_90c_percent },
+      { label: "tgδ ở 20°C", value: rec.oil_tgd_20c_percent },
       { label: "Điện áp chọc thủng", value: rec.oil_bdv_kv },
       { label: "Độ ẩm dầu (loại bỏ)", value: rec.oil_moisture_loaibo_ppm },
       { label: "tgδ ở 90°C (loại bỏ)", value: rec.oil_tgd_90c_loaibo_percent },
+      { label: "tgδ ở 20°C (loại bỏ)", value: rec.oil_tgd_20c_loaibo_percent },
+      { label: "tgδ ở 20°C (loại bỏ khi U.H.V)", value: rec.oil_tgd_20c_loaibo_uhv_percent },
+      { label: "Mốc Um áp dụng U.H.V", value: rec.oil_tgd_20c_uhv_um_kv },
       { label: "Điện áp chọc thủng (loại bỏ)", value: rec.oil_bdv_loaibo_kv },
     ])) return;
   } else {
