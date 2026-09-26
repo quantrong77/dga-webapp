@@ -80,6 +80,10 @@
 }
 .auth-loading.hidden { display: none; }
 .auth-loading p { margin: 0; font-size: 13px; color: var(--blue-900); font-weight: 600; }
+/* .spinner (vòng tròn xoay đơn) không còn dùng ở #authLoadingOverlay (đã đổi sang
+   icon "3 bánh răng" .gear-loader bên dưới) nhưng GIỮ LẠI rule này (không xóa) —
+   @keyframes dga-spin vẫn đang được .spinner-sm dùng ở nhiều nơi khác (ô "Vui lòng
+   chờ! Đang nạp dữ liệu..."), và bản thân .spinner có thể cần dùng lại sau này. */
 .spinner {
   width: 34px;
   height: 34px;
@@ -89,6 +93,41 @@
   animation: dga-spin 0.8s linear infinite;
 }
 @keyframes dga-spin { to { transform: rotate(360deg); } }
+
+/* Icon "3 bánh răng xoay" — định nghĩa 1 LẦN DUY NHẤT ở <symbol id="icon-gear-loader">
+   (index.html, trong <defs> đầu trang) rồi TÁI SỬ DỤNG bằng <use href="#icon-gear-loader">
+   ở MỌI nơi cần hiện "đang xử lý/đang tải": (1) màn hình chờ đăng nhập/đăng ký/xác thực
+   Google (#authLoadingOverlay, xem setAuthLoading() ở ui-auth.js) — .gear-loader (56px,
+   thay cho .spinner cũ), và (2) mọi dòng "Vui lòng chờ! Đang nạp dữ liệu..." (khung
+   Trạm/Thiết bị + bảng Lịch sử đo, xem setComboLoading()/setHistoryLoading() ở
+   app-core.js/ui-history.js) — .gear-loader.gear-loader-sm (20px, thay cho .spinner-sm
+   cũ). Mỗi <use> tự tạo 1 bản sao SVG riêng nên nhiều chỗ cùng hiện vẫn xoay ĐỘC LẬP,
+   không ảnh hưởng lẫn nhau. 3 <path> hình bánh răng bên trong symbol (sinh bằng script,
+   không vẽ tay) đặt trong 3 <g> riêng, mỗi <g> tự xoay quanh đúng tâm bánh răng của nó
+   (transform-origin khớp tọa độ tâm trong viewBox) bằng CSS animation, KHÔNG động tới
+   thuộc tính "transform" trên <path> để không lệch tâm xoay. Bánh răng lớn (giữa, màu
+   xám) ăn khớp với 2 bánh nhỏ (xanh dương/cam) nên xoay NGƯỢC chiều nhau cho giống bánh
+   răng thật đang "cắn" nhau; tốc độ tỉ lệ nghịch với số răng (răng ít quay nhanh hơn) —
+   chỉ là ước lệ hình ảnh, không cần khớp cơ khí chính xác. */
+.gear-loader { width: 56px; height: 56px; overflow: visible; }
+.gear-loader.gear-loader-sm { width: 20px; height: 20px; flex: none; }
+.gear-loader-big {
+  transform-origin: 55px 66px;
+  animation: dga-gear-cw 3.2s linear infinite;
+}
+.gear-loader-blue {
+  transform-origin: 29px 33px;
+  animation: dga-gear-ccw 2.56s linear infinite;
+}
+.gear-loader-orange {
+  transform-origin: 83px 40px;
+  animation: dga-gear-ccw 2.24s linear infinite;
+}
+@keyframes dga-gear-cw { to { transform: rotate(360deg); } }
+@keyframes dga-gear-ccw { to { transform: rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .gear-loader-big, .gear-loader-blue, .gear-loader-orange { animation: none; }
+}
 
 /* Thông báo "Vui lòng chờ! Đang nạp dữ liệu..." — khung Trạm/Thiết bị (DGA, Dầu cách
    điện MBA/OLTC, class dùng chung "combo-loading-hint") và bảng Lịch sử đo
@@ -107,6 +146,9 @@
   font-weight: 600;
 }
 .loading-hint.hidden { display: none; }
+/* .spinner-sm (vòng tròn xoay đơn, nhỏ) không còn dùng ở các ô "Vui lòng chờ! Đang
+   nạp dữ liệu..." (đã đổi sang .gear-loader.gear-loader-sm ở trên) nhưng GIỮ LẠI rule
+   này (không xóa), tương tự .spinner phía trên — có thể cần dùng lại sau này. */
 .spinner-sm {
   width: 15px;
   height: 15px;

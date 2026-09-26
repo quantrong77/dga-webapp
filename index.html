@@ -112,6 +112,11 @@
       <symbol id="icon-hash" viewBox="0 0 24 24"><path d="M9.5 3L7 21M17 3l-2.5 18M4 8.5h16M3 15.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-note" viewBox="0 0 24 24"><path d="M5 3.5h11l3 3v13.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <symbol id="icon-gear-loader" viewBox="6 10 100 92">
+        <g class="gear-loader-big"><path fill="var(--gear-gray)" d="M 80.16 61.85 L 86.57 60.80 L 86.57 71.20 L 80.16 70.15 L 79.62 72.65 L 78.83 75.09 L 77.79 77.43 L 83.60 80.35 L 77.48 88.77 L 72.92 84.14 L 71.01 85.85 L 68.93 87.36 L 66.72 88.65 L 69.71 94.42 L 59.81 97.64 L 58.83 91.21 L 56.28 91.47 L 53.72 91.47 L 51.17 91.21 L 50.19 97.64 L 40.29 94.42 L 43.28 88.65 L 41.07 87.36 L 38.99 85.85 L 37.08 84.14 L 32.52 88.77 L 26.40 80.35 L 32.21 77.43 L 31.17 75.09 L 30.38 72.65 L 29.84 70.15 L 23.43 71.20 L 23.43 60.80 L 29.84 61.85 L 30.38 59.35 L 31.17 56.91 L 32.21 54.57 L 26.40 51.65 L 32.52 43.23 L 37.08 47.86 L 38.99 46.15 L 41.07 44.64 L 43.28 43.35 L 40.29 37.58 L 50.19 34.36 L 51.17 40.79 L 53.72 40.53 L 56.28 40.53 L 58.83 40.79 L 59.81 34.36 L 69.71 37.58 L 66.72 43.35 L 68.93 44.64 L 71.01 46.15 L 72.92 47.86 L 77.48 43.23 L 83.60 51.65 L 77.79 54.57 L 78.83 56.91 L 79.62 59.35 Z"/></g>
+        <g class="gear-loader-blue"><path fill="var(--blue-700)" d="M 43.69 29.96 L 47.61 29.15 L 47.61 36.85 L 43.69 36.04 L 42.86 38.74 L 41.54 41.24 L 44.88 43.43 L 39.43 48.88 L 37.24 45.54 L 34.74 46.86 L 32.04 47.69 L 32.85 51.61 L 25.15 51.61 L 25.96 47.69 L 23.26 46.86 L 20.76 45.54 L 18.57 48.88 L 13.12 43.43 L 16.46 41.24 L 15.14 38.74 L 14.31 36.04 L 10.39 36.85 L 10.39 29.15 L 14.31 29.96 L 15.14 27.26 L 16.46 24.76 L 13.12 22.57 L 18.57 17.12 L 20.76 20.46 L 23.26 19.14 L 25.96 18.31 L 25.15 14.39 L 32.85 14.39 L 32.04 18.31 L 34.74 19.14 L 37.24 20.46 L 39.43 17.12 L 44.88 22.57 L 41.54 24.76 L 42.86 27.26 Z"/></g>
+        <g class="gear-loader-orange"><path fill="var(--gear-orange)" d="M 95.65 36.99 L 99.05 36.18 L 99.05 43.82 L 95.65 43.01 L 94.71 45.64 L 93.24 48.01 L 95.99 50.17 L 90.03 54.93 L 88.54 51.76 L 85.89 52.67 L 83.12 53.00 L 83.15 56.50 L 75.71 54.80 L 77.25 51.66 L 74.89 50.16 L 72.91 48.20 L 70.19 50.40 L 66.88 43.53 L 70.30 42.78 L 70.00 40.00 L 70.30 37.22 L 66.88 36.47 L 70.19 29.60 L 72.91 31.80 L 74.89 29.84 L 77.25 28.34 L 75.71 25.20 L 83.15 23.50 L 83.12 27.00 L 85.89 27.33 L 88.54 28.24 L 90.03 25.07 L 95.99 29.83 L 93.24 31.99 L 94.71 34.36 Z"/></g>
+      </symbol>
     </defs>
   </svg>
 
@@ -121,7 +126,7 @@
   <div id="authOverlay" class="auth-overlay hidden">
     <div class="auth-card" id="authCard">
       <div id="authLoadingOverlay" class="auth-loading hidden">
-        <div class="spinner"></div>
+        <svg class="gear-loader" aria-hidden="true"><use href="#icon-gear-loader"></use></svg>
         <p id="authLoadingText">Đang xử lý...</p>
       </div>
 
@@ -297,7 +302,7 @@
              app-core.js) — tránh cảm giác app bị đứng khi bấm mở gợi ý mà danh sách
              còn rỗng lúc mới vào app. -->
         <div class="loading-hint combo-loading-hint hidden" id="dgaComboLoadingHint">
-          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+          <svg class="gear-loader gear-loader-sm" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
@@ -735,7 +740,7 @@
              ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
              dưới trong khi dữ liệu thật vẫn đang tải. -->
         <div class="loading-hint hidden" id="historyLoadingHint" style="margin-top:14px;">
-          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu...
+          <svg class="gear-loader gear-loader-sm" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu...
         </div>
       </div>
 
@@ -872,7 +877,7 @@
              setAlertsLoading(false), xem ui-alerts.js) — tránh hiện "chưa có cảnh báo"
              nhầm lẫn trong lúc dữ liệu thật vẫn đang tải lúc mới vào app. -->
         <div class="loading-hint hidden" id="alertsLoadingHint">
-          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu...
+          <svg class="gear-loader gear-loader-sm" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu...
         </div>
 
         <!-- Lọc theo Trạm biến áp — combo tự gõ-tìm giống #tr_station ở tab "Xu hướng"
@@ -1972,7 +1977,7 @@
           đúng bảng số liệu của QĐ1901.</p>
 
         <div class="loading-hint combo-loading-hint hidden" id="oilComboLoadingHint">
-          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+          <svg class="gear-loader gear-loader-sm" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
@@ -2100,7 +2105,7 @@
           diễn số liệu.</p>
 
         <div class="loading-hint combo-loading-hint hidden" id="oltcComboLoadingHint">
-          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+          <svg class="gear-loader gear-loader-sm" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
@@ -2213,7 +2218,7 @@
           và "Loại bỏ" — giá trị nằm giữa 2 mức báo "Cảnh báo" thay vì "Không đạt".</p>
 
         <div class="loading-hint combo-loading-hint hidden" id="tioComboLoadingHint">
-          <span class="spinner-sm"></span> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
+          <svg class="gear-loader gear-loader-sm" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
           <!-- ẨN #tio_equipmenttype (KHÔNG xóa khỏi DOM — onTioEquipmentTypeChange()/
