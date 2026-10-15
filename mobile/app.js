@@ -765,7 +765,7 @@ function renderResults(a) {
   $("r_gasTable").innerHTML = evalRows.map((r) => {
     const c = condemnMap[r.gas];
     const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${c.limit} ⚠</strong>` : c.limit;
-    return `<tr><td>${r.gas}</td><td>${r.value}</td><td>${r.limit ?? "—"}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    return `<tr><td>${r.gas}</td><td>${r.value}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 
   $("r_ratio1").textContent = ratios.c2h2_c2h4.toFixed(3);
@@ -964,7 +964,7 @@ async function onAnalyzeOil() {
 function renderOilResultRows(rows) {
   return rows.map((r) => {
     const limitText = r.limit === null || r.limit === undefined ? "—" : `${r.direction === "ge" ? "≥ " : "≤ "}${r.limit} ${r.unit}`;
-    return `<tr><td>${escapeHtml(r.label)}</td><td>${r.value ?? "—"}</td><td>${limitText}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    return `<tr><td>${escapeHtml(r.label)}</td><td>${escapeHtml(r.value ?? "—")}</td><td>${limitText}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 }
 function overallPillHtml(overall) {
@@ -997,7 +997,7 @@ function oilTestCardHtml(rec) {
       </div>
       ${pill}
     </div>
-    <div class="list-card-meta">Độ ẩm ${rec.moisture_ppm ?? "—"} ppm · tgδ ${rec.tgd_90c_percent ?? "—"}% · BDV ${rec.bdv_kv ?? "—"} kV</div>
+    <div class="list-card-meta">Độ ẩm ${escapeHtml(rec.moisture_ppm ?? "—")} ppm · tgδ ${escapeHtml(rec.tgd_90c_percent ?? "—")}% · BDV ${escapeHtml(rec.bdv_kv ?? "—")} kV</div>
     ${(canEdit || canDel) ? `<div class="list-card-actions">
       ${canEdit ? `<button data-action="edit">Sửa</button>` : ""}
       ${canDel ? `<button data-action="delete" class="danger">Xóa</button>` : ""}
@@ -1159,7 +1159,7 @@ function oltcOilTestCardHtml(rec) {
       </div>
       ${pill}
     </div>
-    <div class="list-card-meta">Độ ẩm ${rec.moisture_ppm ?? "—"} ppm · tgδ ${rec.tgd_90c_percent ?? "—"}% · BDV ${rec.bdv_kv ?? "—"} kV</div>
+    <div class="list-card-meta">Độ ẩm ${escapeHtml(rec.moisture_ppm ?? "—")} ppm · tgδ ${escapeHtml(rec.tgd_90c_percent ?? "—")}% · BDV ${escapeHtml(rec.bdv_kv ?? "—")} kV</div>
     ${(canEdit || canDel) ? `<div class="list-card-actions">
       ${canEdit ? `<button data-action="edit">Sửa</button>` : ""}
       ${canDel ? `<button data-action="delete" class="danger">Xóa</button>` : ""}
@@ -1292,18 +1292,18 @@ function renderTrendHistoryLists(gasRecords, oilRecords, oltcRecords) {
   $("trHistGasList").innerHTML = gasRecords.slice().reverse().map((r) => {
     const g = recordGases(r);
     return `<div class="list-card"><div class="list-card-title">${escapeHtml((r.sample_date || "").slice(0, 10))}${r.pha ? (" · " + escapeHtml(DGA.phaLabelWithPrefix(r.pha))) : ""}${r.lan_do ? (" · Lần " + r.lan_do) : ""}</div>
-      <div class="list-card-meta">H2 ${g.H2 ?? "—"} · CH4 ${g.CH4 ?? "—"} · C2H6 ${g.C2H6 ?? "—"} · C2H4 ${g.C2H4 ?? "—"} · C2H2 ${g.C2H2 ?? "—"} · CO ${g.CO ?? "—"} · CO2 ${g.CO2 ?? "—"}</div></div>`;
+      <div class="list-card-meta">H2 ${escapeHtml(g.H2 ?? "—")} · CH4 ${escapeHtml(g.CH4 ?? "—")} · C2H6 ${escapeHtml(g.C2H6 ?? "—")} · C2H4 ${escapeHtml(g.C2H4 ?? "—")} · C2H2 ${escapeHtml(g.C2H2 ?? "—")} · CO ${escapeHtml(g.CO ?? "—")} · CO2 ${escapeHtml(g.CO2 ?? "—")}</div></div>`;
   }).join("");
 
   $("trHistOilWrap").classList.toggle("hidden", oilRecords.length === 0);
   $("trHistOilList").innerHTML = oilRecords.slice().reverse().map((r) => `<div class="list-card">
     <div class="list-card-title">${escapeHtml((r.sample_date || "").slice(0, 10))} · ${r.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}</div>
-    <div class="list-card-meta">Độ ẩm ${r.moisture_ppm ?? "—"} ppm · tgδ ${r.tgd_90c_percent ?? "—"}% · BDV ${r.bdv_kv ?? "—"} kV</div></div>`).join("");
+    <div class="list-card-meta">Độ ẩm ${escapeHtml(r.moisture_ppm ?? "—")} ppm · tgδ ${escapeHtml(r.tgd_90c_percent ?? "—")}% · BDV ${escapeHtml(r.bdv_kv ?? "—")} kV</div></div>`).join("");
 
   $("trHistOltcWrap").classList.toggle("hidden", oltcRecords.length === 0);
   $("trHistOltcList").innerHTML = oltcRecords.slice().reverse().map((r) => `<div class="list-card">
     <div class="list-card-title">${escapeHtml((r.sample_date || "").slice(0, 10))} · ${escapeHtml(oltcSamplePointLabel(r.oltc_sample_point))}${r.phase ? (" · " + escapeHtml(DGA.phaLabelWithPrefix(r.phase))) : ""}</div>
-    <div class="list-card-meta">Độ ẩm ${r.moisture_ppm ?? "—"} ppm · tgδ ${r.tgd_90c_percent ?? "—"}% · BDV ${r.bdv_kv ?? "—"} kV</div></div>`).join("");
+    <div class="list-card-meta">Độ ẩm ${escapeHtml(r.moisture_ppm ?? "—")} ppm · tgδ ${escapeHtml(r.tgd_90c_percent ?? "—")}% · BDV ${escapeHtml(r.bdv_kv ?? "—")} kV</div></div>`).join("");
 }
 function destroyTrendChart() { if (_trendChart) { _trendChart.destroy(); _trendChart = null; } }
 function trendPoints(records, valueOf) {
@@ -1602,7 +1602,9 @@ async function viewBbtn(att) {
     }
     return;
   }
-  window.open(att.bbtn_url, "_blank");
+  // Chỉ mở link http(s) — chặn "javascript:..." do ai đó ghi thẳng vào database qua API.
+  if (!/^https?:\/\//i.test(String(att.bbtn_url))) return;
+  window.open(att.bbtn_url, "_blank", "noopener");
 }
 async function onBbtnFileSelected(e) {
   const file = e.target.files[0];

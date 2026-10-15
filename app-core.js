@@ -78,6 +78,7 @@ async function initApp() {
     badge.textContent = "Chế độ thử nghiệm (chỉ lưu trên trình duyệt này)";
     badge.className = "badge local";
     badge.classList.remove("hidden");
+    $("localModeBanner").classList.remove("hidden");
     footerInfo.textContent = "lưu trong localStorage của trình duyệt này — điền config.js để dùng database dùng chung";
   }
   setupStorageBadgeLink();
@@ -228,6 +229,7 @@ async function initApp() {
   if (Auth.enabled && Auth.isAdmin()) {
     try {
       await refreshUsersUI();
+      await refreshSupabaseSyncUI();
     } catch (err) {
       console.warn("Không tải được danh sách user:", err);
     }
@@ -1144,6 +1146,18 @@ function setupQuyTrinhSubtabs() {
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/** URL đọc từ database (bbtn_url, image_url...) chỉ được mở/hiển thị nếu là http(s) — chặn
+ *  "javascript:"/"data:text/html"... do ai đó ghi thẳng vào database qua API để chạy mã độc
+ *  khi người khác bấm "Xem". Trả về URL gốc nếu an toàn, null nếu không. */
+function safeHttpUrl(url) {
+  try {
+    const u = new URL(String(url), location.href);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
+  } catch (e) {
+    return null;
+  }
 }
 
 /** Xác thực dữ liệu đầu vào: không đại lượng nào ở đây (nồng độ khí ppm, %, kV, °C, năm,

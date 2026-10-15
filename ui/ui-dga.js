@@ -148,7 +148,12 @@ async function viewBbtn(att) {
   }
   const url = String(att.bbtn_url);
   if (!url.startsWith("local:")) {
-    window.open(url, "_blank", "noopener");
+    const safe = safeHttpUrl(url);
+    if (!safe) {
+      notifyError("Đường dẫn file đính kèm không hợp lệ.");
+      return;
+    }
+    window.open(safe, "_blank", "noopener");
     return;
   }
   const measurementId = url.slice("local:".length);
@@ -910,7 +915,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   $("r_gasTable").innerHTML = evalRows.map((r) => {
     const c = condemnMap[r.gas];
     const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${c.limit} ⚠</strong>` : c.limit;
-    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.value}</td><td>${r.limit ?? "—"}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.value}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 
   $("r_ratio1").textContent = ratios.c2h2_c2h4.toFixed(3);
@@ -1073,7 +1078,7 @@ function renderSimilarCases(similarCases) {
   $("caseCards").innerHTML = similarCases.cases.map(({ record, similarity, evaluation }) => {
     const gasCells = DGA.GASES.map((g) => {
       const v = evaluation.gases[g];
-      return `<span style="margin-right:12px; white-space:nowrap;">${gasLabelIcon(g)}${g}: <strong>${v ?? 0}</strong></span>`;
+      return `<span style="margin-right:12px; white-space:nowrap;">${gasLabelIcon(g)}${g}: <strong>${escapeHtml(v ?? 0)}</strong></span>`;
     }).join("");
     const phaText = record.pha ? " (pha " + escapeHtml(DGA.phaLabel(record.pha)) + ")" : "";
     return `

@@ -235,7 +235,9 @@ const Auth = {
 
   _applySession(data) {
     _authToken = data.token;
-    this.current = { token: data.token, email: data.email, role: data.role };
+    // mustChangePassword: đang dùng mật khẩu TẠM do Admin cấp — server chặn mọi thao tác
+    // khác cho tới khi đổi (requireSession(), Code.gs); xem enterApp() ở ui-auth.js.
+    this.current = { token: data.token, email: data.email, role: data.role, mustChangePassword: !!data.mustChangePassword };
     authLsSet(this.current);
     return this.current;
   },
@@ -277,7 +279,10 @@ const Auth = {
       // (setupChangePassword(), ui-auth.js) TRƯỚC khi tài khoản chỉ đăng nhập Google thử đổi
       // mật khẩu. Server cũ (chưa có trường này) trả undefined -> !!undefined = false, coi
       // như "chưa có mật khẩu" (an toàn hơn: hiện gợi ý nhầm còn hơn để lỗi khó hiểu).
-      this.current = { token: _authToken, email: me.email, role: me.role, hasPassword: !!me.hasPassword };
+      this.current = {
+        token: _authToken, email: me.email, role: me.role,
+        hasPassword: !!me.hasPassword, mustChangePassword: !!me.mustChangePassword,
+      };
       authLsSet(this.current);
       return this.current;
     } catch (err) {
@@ -345,6 +350,16 @@ const Auth = {
    *  Trả về { email, role, tempPassword } giống adminResetPassword() ở trên. */
   async adminCreateUser(email, role) {
     return await gsheetPost("adminCreateUser", { email, role });
+  },
+
+  /** Bản sao song song trên Supabase (Code.gs ghi theo phía máy chủ) — chỉ Admin. Server cũ
+   *  chưa có action này sẽ báo lỗi "unknown action" (hiện nguyên văn ở tab Quản trị). */
+  async supabaseSyncStatus() {
+    return await gsheetGet("supabaseSyncStatus");
+  },
+
+  async syncSupabase() {
+    return await gsheetPost("syncSupabase", {});
   },
 };
 

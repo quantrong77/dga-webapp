@@ -326,6 +326,9 @@ create table if not exists regulation_config (
 -- alter table manufacturer_standards add column if not exists oil_bdv_loaibo_kv numeric;
 
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
+-- ⚠ CẢNH BÁO BẢO MẬT: các policy "using (true)" dưới đây cho BẤT KỲ AI có anon key (vốn công
+-- khai trong config.js) đọc/sửa/xóa toàn bộ dữ liệu. Không dùng Supabase thì chạy
+-- supabase/lockdown-anon.sql để khóa lại.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.
 -- Nếu cần giới hạn theo tài khoản đăng nhập, thay các policy "using (true)"
 -- bằng điều kiện auth.uid() phù hợp (xem tài liệu Supabase Auth).

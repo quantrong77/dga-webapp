@@ -61,22 +61,22 @@ async function refreshHistoryUI() {
     const editedMap = parseEditedFields(rec.edited_fields);
     const gasCellHtml = (field, value) => {
       const oldVal = editedMap.get(field);
-      if (oldVal === undefined) return `<td>${value ?? "—"}</td>`;
+      if (oldVal === undefined) return `<td>${escapeHtml(value ?? "—")}</td>`;
       const editedAtText = rec.edited_at ? new Date(rec.edited_at).toLocaleString("vi-VN") : "?";
       const title = `Giá trị trước khi sửa: ${oldVal === "" ? "(trống)" : oldVal} — đã sửa lúc ${editedAtText}`;
-      return `<td class="cell-edited-warn" title="${escapeHtml(title)}">${value ?? "—"}</td>`;
+      return `<td class="cell-edited-warn" title="${escapeHtml(title)}">${escapeHtml(value ?? "—")}</td>`;
     };
     const n2 = rec.n2 ?? rec.N2 ?? null;
     const o2 = rec.o2 ?? rec.O2 ?? null;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${DGA.formatSampleDate(rec.sample_date)}</td>
+      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td class="nowrap-cell">${escapeHtml(rec.equipment_type)}</td>
       <td>${escapeHtml(DGA.phaLabel(rec.pha) || "—")}</td>
-      <td>${rec.lan_do ?? "—"}</td>
+      <td>${escapeHtml(rec.lan_do ?? "—")}</td>
       ${DGA.GASES.map((g) => gasCellHtml(g, gases[g])).join("")}
       ${gasCellHtml("N2", n2)}
       ${gasCellHtml("O2", o2)}

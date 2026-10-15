@@ -126,10 +126,55 @@ function showTempPasswordModal(email, tempPassword, title) {
   $("tempPasswordOverlay").classList.remove("hidden");
 }
 
+// ---------------------------------------------------------------------
+// Bản sao Supabase (khối dưới bảng người dùng ở tab "Quản trị") — trạng thái + nút đồng bộ toàn
+// bộ. Việc ghi sang Supabase do Code.gs làm ở máy chủ; trình duyệt chỉ hỏi trạng thái/ra lệnh.
+// ---------------------------------------------------------------------
+async function refreshSupabaseSyncUI() {
+  const statusEl = $("sbSyncStatus");
+  try {
+    const st = await Auth.supabaseSyncStatus();
+    $("btnSyncSupabase").disabled = !st.enabled;
+    statusEl.textContent = st.enabled
+      ? `Đang bật — dữ liệu được ghi theo sang ${st.url}.`
+      : "Chưa bật — đặt SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY trong Script properties của Apps Script (README mục 2c).";
+    const errors = st.recentErrors || [];
+    $("sbSyncErrorsWrap").classList.toggle("hidden", errors.length === 0);
+    $("sbSyncErrors").innerHTML = errors.map((e) => `<tr>
+      <td style="font-size:12px;">${escapeHtml(e.time ? new Date(e.time).toLocaleString("vi-VN") : "")}</td>
+      <td>${escapeHtml(e.table)}</td><td>${escapeHtml(e.op)}</td><td>${escapeHtml(e.id)}</td>
+      <td style="font-size:12px; max-width:360px;">${escapeHtml(e.error)}</td></tr>`).join("");
+  } catch (err) {
+    $("btnSyncSupabase").disabled = true;
+    statusEl.textContent = "Không đọc được trạng thái (máy chủ chưa cập nhật Code.gs mới?): " + storageErrorMessage(err);
+  }
+}
+
+async function onSyncSupabase() {
+  if (!confirm("Chép toàn bộ dữ liệu Google Sheets sang Supabase và xóa các dòng chỉ còn bên Supabase? Trong lúc chạy, các thao tác lưu khác phải chờ.")) return;
+  const btn = $("btnSyncSupabase");
+  btn.disabled = true;
+  const original = btn.textContent;
+  btn.textContent = "Đang đồng bộ…";
+  try {
+    const res = await Auth.syncSupabase();
+    const parts = Object.entries(res.summary || {}).map(([table, s]) =>
+      s.error ? `${table}: LỖI` : `${table}: ${s.upserted} dòng${s.deleted ? `, xóa ${s.deleted}` : ""}`);
+    const failed = Object.values(res.summary || {}).some((s) => s.error);
+    showToast((failed ? "Đồng bộ xong nhưng có bảng lỗi — " : "Đã đồng bộ — ") + parts.join("; "), failed ? "error" : "success");
+  } catch (err) {
+    notifyError(storageErrorMessage(err));
+  } finally {
+    btn.textContent = original;
+    await refreshSupabaseSyncUI();
+  }
+}
+
 /** Nối các nút thao tác 1 LẦN lúc khởi động app (xem initApp(), app-core.js) — khác
  *  refreshUsersUI() (vẽ lại BẢNG mỗi lần mở tab "Quản trị", gọi riêng ở setupTabs()). */
 function setupAdminUsers() {
   $("btnAdminCreateUser").addEventListener("click", onAdminCreateUser);
+  $("btnSyncSupabase").addEventListener("click", onSyncSupabase);
   $("qt_newuser_email").addEventListener("keydown", (e) => {
     if (e.key === "Enter") onAdminCreateUser();
   });

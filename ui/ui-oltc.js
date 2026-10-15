@@ -187,15 +187,15 @@ function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${DGA.formatSampleDate(rec.sample_date)}</td>
+      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(oltcSamplePointLabel(rec.oltc_sample_point))}</td>
       <td>${rec.phase ? escapeHtml(rec.phase) : "—"}</td>
       <td>${escapeHtml(oilVoltageClassLabel(rec.voltage_class))}</td>
       <td>${rec.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}</td>
-      <td>${rec.moisture_ppm ?? "—"}</td>
-      <td>${rec.bdv_kv ?? "—"}</td>
+      <td>${escapeHtml(rec.moisture_ppm ?? "—")}</td>
+      <td>${escapeHtml(rec.bdv_kv ?? "—")}</td>
       <td>${overallPill}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">

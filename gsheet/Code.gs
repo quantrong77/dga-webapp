@@ -39,7 +39,12 @@
  *    cần biết mật khẩu cũ); nếu quên hẳn, Admin đặt lại mật khẩu TẠM cho họ qua tab
  *    "Quản trị" (actionAdminResetPassword) — cả 2 thao tác đều hủy MỌI phiên đăng
  *    nhập cũ của tài khoản đó (đăng xuất khỏi mọi thiết bị), phòng trường hợp lý do
- *    đổi/đặt lại mật khẩu là thiết bị bị mất hoặc mật khẩu bị lộ.
+ *    đổi/đặt lại mật khẩu là thiết bị bị mất hoặc mật khẩu bị lộ. Mật khẩu TẠM (Admin tạo
+ *    tài khoản/đặt lại) bắt buộc phải đổi ngay ở lần đăng nhập đầu (cột must_change_password,
+ *    xem requireSession()) — vì nó đã được gửi qua kênh ngoài (Zalo/điện thoại...).
+ *  - Sai mật khẩu MAX_FAILED_LOGINS lần liên tiếp → tạm khóa đăng nhập bằng mật khẩu của
+ *    email đó LOGIN_LOCKOUT_SECONDS (chống dò mật khẩu).
+ *  - Mọi thao tác ghi vào Sheet được tuần tự hóa bằng LockService (xem doPost()).
  *  - Đăng nhập thành công trả về 1 "token" phiên (lưu 30 ngày). Token này bắt
  *    buộc phải gửi kèm mọi request đọc/ghi dữ liệu sau đó.
  *  - PHÂN QUYỀN GHI cho measurements/oil_tests/oltc_oil_tests/instrument_oil_tests (xem prepareOwnedRecord()):
@@ -240,6 +245,12 @@ const USER_HEADERS = [
   // "auth_provider": thêm ở CUỐI (xem lưu ý ở STANDARD_HEADERS) — "password" (mặc định,
   // record cũ/để trống cũng hiểu là "password") hoặc "google".
   "auth_provider",
+  // "must_change_password": thêm ở CUỐI — "1" khi mật khẩu hiện tại là mật khẩu TẠM do Admin
+  // cấp (actionAdminCreateUser()/actionAdminResetPassword()); khi còn cờ này, requireSession()
+  // chặn MỌI thao tác đọc/ghi (trừ me/changePassword/logout) cho tới khi người dùng tự đổi
+  // sang mật khẩu riêng — mật khẩu tạm đã đi qua kênh ngoài (Zalo/điện thoại...) nên coi như
+  // không còn bí mật. Record cũ/để trống = không bắt đổi.
+  "must_change_password",
 ];
 
 // Phiên đăng nhập — mỗi lần Đăng nhập/Đăng ký thành công tạo 1 dòng token mới.
@@ -284,6 +295,15 @@ const GOOGLE_CLIENT_ID = "";
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // phiên đăng nhập hết hạn sau 30 ngày
 
+// Thời gian tối đa chờ khóa ghi (xem doPost()) trước khi báo "máy chủ đang bận".
+const WRITE_LOCK_TIMEOUT_MS = 20000;
+
+// Chống dò mật khẩu: sau MAX_FAILED_LOGINS lần nhập sai mật khẩu LIÊN TIẾP của cùng 1 email,
+// tạm khóa đăng nhập bằng mật khẩu email đó trong LOGIN_LOCKOUT_SECONDS (đếm bằng CacheService,
+// tự hết hạn — không cần Admin mở khóa). Áp dụng cho cả login và changePassword (mật khẩu cũ).
+const MAX_FAILED_LOGINS = 5;
+const LOGIN_LOCKOUT_SECONDS = 15 * 60;
+
 // Cache CHỈ áp dụng cho listRows() (đọc toàn bộ 1 sheet) — mỗi lần đọc trực tiếp từ
 // Google Sheets tốn ~200-500ms, trong khi đọc từ CacheService (bộ nhớ đệm cấp script,
 // dùng CHUNG cho mọi lượt gọi web app, không phân biệt user) chỉ ~50-100ms. 20 phút là
@@ -318,6 +338,8 @@ function doGet(e) {
     if (action === "listRegulationConfig") { requireSession(token); return jsonOut(listRows(SHEET_REGULATION_CONFIG, REGULATION_CONFIG_HEADERS)); }
     // Danh sách user: chỉ Admin xem được (dùng cho tab "Quản trị").
     if (action === "listUsers") { requireAdmin(token); return jsonOut(listPublicUsers()); }
+    // Trạng thái bản sao Supabase (tab "Quản trị") — xem actionSupabaseSyncStatus().
+    if (action === "supabaseSyncStatus") { requireAdmin(token); return jsonOut(actionSupabaseSyncStatus()); }
 
     return jsonOut({ error: "unknown action: " + action });
   } catch (err) {
@@ -326,11 +348,25 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  let lock = null;
   try {
     const body = JSON.parse(e.postData.contents);
     const action = body.action;
     const token = body.token;
     let result;
+
+    // Google Sheets KHÔNG có giao dịch (transaction): 2 request ghi chạy song song có thể cùng
+    // thấy "id chưa tồn tại" rồi cùng appendRow (trùng dòng), hoặc deleteRow() theo chỉ số dòng
+    // đã bị request khác làm lệch (xóa NHẦM dòng). Khóa cấp script tuần tự hóa MỌI thao tác ghi
+    // vào Sheet. uploadAttachment chỉ ghi Drive (không đụng Sheet) và có thể mất vài giây với
+    // file lớn nên không giữ khóa, tránh chặn người khác lâu.
+    if (action !== "uploadAttachment") {
+      lock = LockService.getScriptLock();
+      if (!lock.tryLock(WRITE_LOCK_TIMEOUT_MS)) {
+        lock = null;
+        return jsonOut({ error: "Máy chủ đang bận xử lý thao tác ghi khác, vui lòng thử lại sau vài giây." });
+      }
+    }
 
     // Đăng ký/đăng nhập/đăng xuất: không cần token sẵn có.
     if (action === "register") result = actionRegister(body);
@@ -374,10 +410,15 @@ function doPost(e) {
     else if (action === "changePassword") result = actionChangePassword(token, body);
     else if (action === "adminResetPassword") { requireAdmin(token); result = actionAdminResetPassword(body); }
     else if (action === "adminCreateUser") { requireAdmin(token); result = actionAdminCreateUser(body); }
+    // Đồng bộ toàn bộ Google Sheets → Supabase (bản sao song song) — giữ khóa ghi suốt quá trình
+    // để không có bản ghi mới chen vào giữa lúc đang chép.
+    else if (action === "syncSupabase") { requireAdmin(token); result = syncAllToSupabase(); }
     else result = { error: "unknown action: " + action };
     return jsonOut(result);
   } catch (err) {
     return jsonOut({ error: String((err && err.message) || err) });
+  } finally {
+    if (lock) lock.releaseLock();
   }
 }
 
@@ -389,13 +430,43 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-/** Chuỗi hex ngẫu nhiên (dùng làm salt và token) — không cần bảo mật cấp mật mã. */
+/** Chuỗi hex ngẫu nhiên dùng làm salt, token phiên và mật khẩu tạm. Token phiên/mật khẩu tạm
+ *  là bí mật thật sự nên KHÔNG dùng Math.random() (bộ sinh số giả ngẫu nhiên, đoán được từ vài
+ *  giá trị đã lộ) — lấy entropy từ Utilities.getUuid() (UUID v4 sinh bằng SecureRandom của Java,
+ *  ~122 bit ngẫu nhiên mỗi lần gọi), trộn qua SHA-256 cho đủ độ dài. byteLen tối đa 32. */
 function randomHex(byteLen) {
-  let out = "";
-  for (let i = 0; i < byteLen; i++) {
-    out += ("0" + Math.floor(Math.random() * 256).toString(16)).slice(-2);
+  const seed = Utilities.getUuid() + "|" + Utilities.getUuid() + "|" + Date.now() + "|" + Math.random();
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, seed);
+  return digest.map((b) => ("0" + (b & 0xff).toString(16)).slice(-2)).join("").slice(0, byteLen * 2);
+}
+
+function failedLoginKey(email) {
+  return "login_fail_" + normalizeEmail(email);
+}
+
+/** null nếu email này còn được thử mật khẩu, hoặc chuỗi lỗi nếu đang bị tạm khóa. */
+function checkLoginThrottle(email) {
+  const count = Number(CacheService.getScriptCache().get(failedLoginKey(email)) || 0);
+  if (count >= MAX_FAILED_LOGINS) {
+    return "Nhập sai mật khẩu quá " + MAX_FAILED_LOGINS + " lần — tài khoản tạm khóa đăng nhập bằng mật khẩu " +
+      Math.round(LOGIN_LOCKOUT_SECONDS / 60) + " phút. Thử lại sau hoặc liên hệ Admin.";
   }
-  return out;
+  return null;
+}
+
+function recordFailedLogin(email) {
+  const cache = CacheService.getScriptCache();
+  const count = Number(cache.get(failedLoginKey(email)) || 0) + 1;
+  cache.put(failedLoginKey(email), String(count), LOGIN_LOCKOUT_SECONDS);
+}
+
+function clearFailedLogins(email) {
+  CacheService.getScriptCache().remove(failedLoginKey(email));
+}
+
+/** true nếu tài khoản đang dùng mật khẩu TẠM do Admin cấp (xem cột must_change_password). */
+function mustChangePassword(user) {
+  return String((user && user.must_change_password) || "") === "1";
 }
 
 function hashPassword(password, salt) {
@@ -459,12 +530,16 @@ function actionRegister(body) {
 function actionLogin(body) {
   const email = normalizeEmail(body.email);
   const password = String(body.password || "");
+  const throttled = checkLoginThrottle(email);
+  if (throttled) return { error: throttled };
   const user = findUserByEmail(email);
-  if (!user || hashPassword(password, user.password_salt) !== user.password_hash) {
+  if (!user || !user.password_hash || hashPassword(password, user.password_salt) !== user.password_hash) {
+    recordFailedLogin(email);
     return { error: "Email hoặc mật khẩu không đúng." };
   }
+  clearFailedLogins(email);
   upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { last_login: new Date().toISOString() }));
-  return createSession(email, user.role);
+  return Object.assign(createSession(email, user.role), { mustChangePassword: mustChangePassword(user) });
 }
 
 /**
@@ -531,7 +606,7 @@ function actionGoogleLogin(body) {
       auth_provider: user.auth_provider || "google",
     }));
   }
-  return createSession(email, user.role);
+  return Object.assign(createSession(email, user.role), { mustChangePassword: mustChangePassword(user) });
 }
 
 function actionLogout(body) {
@@ -552,14 +627,19 @@ function createSession(email, role) {
   return { token: token, email: email, role: role };
 }
 
-/** Ném lỗi nếu token thiếu/không hợp lệ/hết hạn; trả về bản ghi user nếu hợp lệ. */
-function requireSession(token) {
+/** Ném lỗi nếu token thiếu/không hợp lệ/hết hạn, hoặc tài khoản còn phải đổi mật khẩu tạm
+ *  (trừ khi allowPendingPasswordChange — chỉ actionMe()/actionChangePassword() dùng); trả về
+ *  bản ghi user nếu hợp lệ. */
+function requireSession(token, allowPendingPasswordChange) {
   if (!token) throw new Error("Chưa đăng nhập.");
   const session = listRows(SHEET_SESSIONS, SESSION_HEADERS).find((s) => String(s.token) === String(token));
   if (!session) throw new Error("Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại.");
   if (new Date(session.expires_at) < new Date()) throw new Error("Phiên đăng nhập đã hết hạn, vui lòng đăng nhập lại.");
   const user = findUserByEmail(session.email);
   if (!user) throw new Error("Tài khoản không tồn tại.");
+  if (!allowPendingPasswordChange && mustChangePassword(user)) {
+    throw new Error("Bạn đang dùng mật khẩu tạm do Admin cấp — vui lòng đổi mật khẩu trước khi tiếp tục.");
+  }
   return user;
 }
 
@@ -619,12 +699,12 @@ function prepareOwnedRecord(token, sheetName, headers, record, requireFn) {
 }
 
 function actionMe(token) {
-  const user = requireSession(token);
+  const user = requireSession(token, true);
   // hasPassword: để client biết tài khoản này ĐÃ có mật khẩu chưa (tài khoản trước giờ
   // chỉ đăng nhập Google thì password_hash rỗng) — dùng hiện gợi ý #changePasswordGoogleHint
   // TRƯỚC khi user bấm "Đổi mật khẩu" (xem setupChangePassword() ở ui-auth.js), thay vì để
   // họ nhập xong mới nhận lỗi "Mật khẩu hiện tại không đúng" khó hiểu.
-  return { email: user.email, role: user.role, hasPassword: !!user.password_hash };
+  return { email: user.email, role: user.role, hasPassword: !!user.password_hash, mustChangePassword: mustChangePassword(user) };
 }
 
 function actionSetUserRole(body) {
@@ -645,12 +725,12 @@ function actionDeleteUser(body) {
 
 const MIN_PASSWORD_LENGTH = 6; // giống ngưỡng đã dùng ở actionRegister()
 
-/** Mật khẩu TẠM ngẫu nhiên (10 ký tự hex) — dùng cho actionAdminResetPassword()/
+/** Mật khẩu TẠM ngẫu nhiên (12 ký tự hex, ~48 bit) — dùng cho actionAdminResetPassword()/
  *  actionAdminCreateUser(), CHỈ trả về ĐÚNG 1 LẦN trong response cho Admin copy gửi cho
  *  người dùng qua kênh khác (app không có email server để tự gửi) — KHÔNG lưu lại ở đâu
  *  ngoài password_hash (đã băm) của tài khoản đó. */
 function generateTempPassword() {
-  return randomHex(5);
+  return randomHex(6);
 }
 
 /** Hủy TOÀN BỘ phiên đăng nhập đang có của 1 email (đăng xuất khỏi mọi thiết bị) — gọi
@@ -670,19 +750,27 @@ function deleteAllSessionsForEmail(email) {
  *  phiên KHÁC rồi cấp lại 1 phiên MỚI ngay (không đăng xuất người vừa đổi) — client PHẢI
  *  thay token đang lưu bằng token mới trả về (xem Auth.changePassword(), storage.js). */
 function actionChangePassword(token, body) {
-  const user = requireSession(token);
+  const user = requireSession(token, true);
   const oldPassword = String(body.oldPassword || "");
   const newPassword = String(body.newPassword || "");
+  const throttled = checkLoginThrottle(user.email);
+  if (throttled) return { error: throttled };
   if (!user.password_hash || hashPassword(oldPassword, user.password_salt) !== user.password_hash) {
+    recordFailedLogin(user.email);
     return { error: "Mật khẩu hiện tại không đúng." };
   }
   if (newPassword.length < MIN_PASSWORD_LENGTH) {
     return { error: "Mật khẩu mới phải có ít nhất " + MIN_PASSWORD_LENGTH + " ký tự." };
   }
+  if (newPassword === oldPassword) {
+    return { error: "Mật khẩu mới phải khác mật khẩu hiện tại." };
+  }
+  clearFailedLogins(user.email);
   const salt = randomHex(16);
   upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, {
     password_hash: hashPassword(newPassword, salt),
     password_salt: salt,
+    must_change_password: "",
   }));
   deleteAllSessionsForEmail(user.email);
   return createSession(user.email, user.role);
@@ -704,8 +792,10 @@ function actionAdminResetPassword(body) {
     password_hash: hashPassword(tempPassword, salt),
     password_salt: salt,
     auth_provider: "password",
+    must_change_password: "1",
   }));
   deleteAllSessionsForEmail(email);
+  clearFailedLogins(email);
   return { email: email, tempPassword: tempPassword };
 }
 
@@ -730,6 +820,7 @@ function actionAdminCreateUser(body) {
     created_at: now,
     last_login: "",
     auth_provider: "password",
+    must_change_password: "1",
   };
   upsertRow(SHEET_USERS, USER_HEADERS, record);
   return { email: email, role: role, tempPassword: tempPassword };
@@ -925,6 +1016,7 @@ function upsertRow(sheetName, headers, record) {
     sh.appendRow(rowValues);
   }
   clearSheetCache(sheetName); // xem lưu ý an toàn ở clearSheetCache()
+  mirrorUpsertToSupabase(sheetName, headers, record);
   return record;
 }
 
@@ -950,6 +1042,158 @@ function deleteRow(sheetName, id) {
   if (idx > 0) {
     sh.deleteRow(idx);
     clearSheetCache(sheetName); // xem lưu ý an toàn ở clearSheetCache()
+    mirrorDeleteToSupabase(sheetName, id);
   }
   return { deleted: idx > 0, id: id };
+}
+
+// ---------------------------------------------------------------------------
+// Bản sao SONG SONG trên Supabase — Google Sheets vẫn là database CHÍNH (đọc/ghi/đăng nhập
+// đều ở đây); mỗi lần ghi/xóa thành công vào 1 sheet dữ liệu nghiệp vụ, script ghi/xóa theo
+// đúng bản ghi đó sang bảng cùng tên trên Supabase.
+//
+// Gọi Supabase từ PHÍA MÁY CHỦ bằng service_role key cất trong Script Properties (Apps Script
+// > Project Settings > Script properties: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) — key này
+// KHÔNG bao giờ xuống trình duyệt, nên Supabase có thể khóa RLS hoàn toàn với anon key (xem
+// supabase/mirror-setup.sql). Chưa đặt 2 thuộc tính đó = tắt đồng bộ, app chạy như cũ.
+//
+// Lỗi phía Supabase (mất mạng, sai cột...) KHÔNG làm hỏng thao tác chính trên Google Sheets —
+// chỉ ghi lại vào sheet SHEET_SUPABASE_SYNC_LOG; chạy syncAllToSupabase() (Admin bấm ở tab
+// "Quản trị", hoặc chạy hàm trong trình soạn thảo Apps Script) để đồng bộ lại toàn bộ.
+// Sheet users/sessions (mật khẩu băm, token) KHÔNG bao giờ được sao sang Supabase.
+// ---------------------------------------------------------------------------
+const SUPABASE_MIRROR_SHEETS = [
+  SHEET_MEASUREMENTS, SHEET_STANDARDS, SHEET_STATIONS, SHEET_OILTESTS, SHEET_OLTC_OILTESTS,
+  SHEET_INSTRUMENT_OILTESTS, SHEET_FEEDBACK, SHEET_REGULATION_CONFIG,
+];
+const SHEET_SUPABASE_SYNC_LOG = "supabase_sync_log";
+const SUPABASE_SYNC_LOG_HEADERS = ["time", "table", "op", "id", "error"];
+const SUPABASE_BATCH_SIZE = 200;
+
+/** { url, key } nếu đã cấu hình Script Properties, null nếu chưa (= tắt đồng bộ). */
+function supabaseMirrorConfig() {
+  const props = PropertiesService.getScriptProperties();
+  // Chỉ cần "https://<mã>.supabase.co" — lỡ dán kèm "/rest/v1/" (link ở trang Data API) cũng tự cắt bỏ.
+  const url = String(props.getProperty("SUPABASE_URL") || "").trim().replace(/\/+$/, "").replace(/\/rest\/v1$/i, "");
+  const key = String(props.getProperty("SUPABASE_SERVICE_ROLE_KEY") || "").trim();
+  return url && key ? { url: url, key: key } : null;
+}
+
+/** Supabase có 2 loại khóa: khóa MỚI "sb_secret_..." (Settings > API Keys) chỉ gửi qua header
+ *  apikey — không phải JWT nên KHÔNG đặt vào Authorization; khóa CŨ service_role (JWT "eyJ...",
+ *  tab Legacy API Keys) thì gửi thêm Authorization: Bearer như trước. */
+function supabaseAuthHeader(key) {
+  return /^sb_secret_/.test(key) ? {} : { Authorization: "Bearer " + key };
+}
+
+/** Gọi Supabase REST (PostgREST). Ném lỗi nếu HTTP >= 300; trả về JSON (hoặc null). */
+function supabaseRequest(cfg, method, path, payload, extraHeaders) {
+  const options = {
+    method: method,
+    contentType: "application/json",
+    headers: Object.assign({
+      apikey: cfg.key,
+      Prefer: "resolution=merge-duplicates,return=minimal",
+    }, supabaseAuthHeader(cfg.key), extraHeaders || {}),
+    muteHttpExceptions: true,
+  };
+  if (payload !== undefined) options.payload = JSON.stringify(payload);
+  const res = UrlFetchApp.fetch(cfg.url + "/rest/v1/" + path, options);
+  const code = res.getResponseCode();
+  const text = res.getContentText();
+  if (code >= 300) throw new Error("Supabase HTTP " + code + ": " + String(text).slice(0, 300));
+  return text ? JSON.parse(text) : null;
+}
+
+/** Chỉ lấy đúng các cột của sheet; ô trống ("") thành null (Postgres không nhận "" cho cột số/ngày). */
+function toSupabaseRow(headers, record) {
+  const row = {};
+  headers.forEach((h) => {
+    const v = record[h];
+    row[h] = v === undefined || v === null || v === "" ? null : v;
+  });
+  return row;
+}
+
+function logSupabaseSyncError(table, op, id, err) {
+  try {
+    const sh = getOrCreateSheet(SHEET_SUPABASE_SYNC_LOG, SUPABASE_SYNC_LOG_HEADERS);
+    sh.appendRow([new Date().toISOString(), table, op, String(id || ""), String((err && err.message) || err)]);
+    clearSheetCache(SHEET_SUPABASE_SYNC_LOG);
+  } catch (e) {
+    Logger.log("Không ghi được nhật ký đồng bộ Supabase: " + e);
+  }
+}
+
+function mirrorUpsertToSupabase(sheetName, headers, record) {
+  if (SUPABASE_MIRROR_SHEETS.indexOf(sheetName) < 0) return;
+  const cfg = supabaseMirrorConfig();
+  if (!cfg) return;
+  try {
+    supabaseRequest(cfg, "post", sheetName + "?on_conflict=id", [toSupabaseRow(headers, record)]);
+  } catch (err) {
+    logSupabaseSyncError(sheetName, "upsert", record.id, err);
+  }
+}
+
+function mirrorDeleteToSupabase(sheetName, id) {
+  if (SUPABASE_MIRROR_SHEETS.indexOf(sheetName) < 0) return;
+  const cfg = supabaseMirrorConfig();
+  if (!cfg) return;
+  try {
+    supabaseRequest(cfg, "delete", sheetName + "?id=eq." + encodeURIComponent(String(id)));
+  } catch (err) {
+    logSupabaseSyncError(sheetName, "delete", id, err);
+  }
+}
+
+/** Danh sách id đang có trên 1 bảng Supabase (phân trang 1000 dòng/lần — giới hạn mặc định của PostgREST). */
+function listSupabaseIds(cfg, table) {
+  const ids = [];
+  for (let offset = 0; ; offset += 1000) {
+    const rows = supabaseRequest(cfg, "get", table + "?select=id&order=id&limit=1000&offset=" + offset, undefined, { Prefer: "count=none" }) || [];
+    rows.forEach((r) => ids.push(String(r.id)));
+    if (rows.length < 1000) return ids;
+  }
+}
+
+/** Đồng bộ TOÀN BỘ Google Sheets → Supabase: upsert mọi dòng, xóa các dòng chỉ còn bên Supabase
+ *  (đã bị xóa ở Sheets) — sau khi chạy, Supabase là bản sao đúng của Sheets. Dùng lần đầu bật đồng
+ *  bộ (chép dữ liệu cũ) và sau khi nhật ký supabase_sync_log báo lỗi. Trả về số dòng từng bảng. */
+function syncAllToSupabase() {
+  const cfg = supabaseMirrorConfig();
+  if (!cfg) {
+    return { error: "Chưa cấu hình đồng bộ Supabase — đặt SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY trong Script properties (Apps Script > Project Settings)." };
+  }
+  const summary = {};
+  SUPABASE_MIRROR_SHEETS.forEach((sheetName) => {
+    const headers = headersForSheet(sheetName);
+    const rows = listRows(sheetName, headers);
+    try {
+      for (let i = 0; i < rows.length; i += SUPABASE_BATCH_SIZE) {
+        const batch = rows.slice(i, i + SUPABASE_BATCH_SIZE).map((r) => toSupabaseRow(headers, r));
+        supabaseRequest(cfg, "post", sheetName + "?on_conflict=id", batch);
+      }
+      const keep = {};
+      rows.forEach((r) => { keep[String(r.id)] = true; });
+      const extra = listSupabaseIds(cfg, sheetName).filter((id) => !keep[id]);
+      for (let i = 0; i < extra.length; i += 100) {
+        const list = extra.slice(i, i + 100).map((id) => '"' + id.replace(/\\/g, "\\\\").replace(/"/g, '\\"') + '"').join(",");
+        supabaseRequest(cfg, "delete", sheetName + "?id=in.(" + encodeURIComponent(list) + ")");
+      }
+      summary[sheetName] = { upserted: rows.length, deleted: extra.length };
+    } catch (err) {
+      logSupabaseSyncError(sheetName, "syncAll", "", err);
+      summary[sheetName] = { error: String((err && err.message) || err) };
+    }
+  });
+  Logger.log(JSON.stringify(summary));
+  return { summary: summary };
+}
+
+/** Trạng thái đồng bộ cho tab "Quản trị": đã cấu hình chưa + vài lỗi gần nhất. */
+function actionSupabaseSyncStatus() {
+  const cfg = supabaseMirrorConfig();
+  const errors = listRows(SHEET_SUPABASE_SYNC_LOG, SUPABASE_SYNC_LOG_HEADERS).slice(-10).reverse();
+  return { enabled: !!cfg, url: cfg ? cfg.url : "", recentErrors: errors };
 }

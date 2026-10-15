@@ -133,12 +133,23 @@ async function init() {
   Auth.loadSaved();
   const session = await Auth.refresh();
   if (session) {
-    $("authOverlay").classList.add("hidden");
-    await initApp();
+    await enterApp();
   } else {
     $("authOverlay").classList.remove("hidden");
     initGoogleSignIn();
   }
+}
+
+/** Vào giao diện chính sau khi có phiên hợp lệ. Tài khoản đang dùng mật khẩu TẠM do Admin cấp
+ *  (Auth.current.mustChangePassword) phải đổi mật khẩu trước — server cũng chặn mọi thao tác
+ *  khác cho tới lúc đó (requireSession(), Code.gs), nên initApp() chỉ chạy sau khi đổi xong. */
+async function enterApp() {
+  $("authOverlay").classList.add("hidden");
+  if (Auth.current && Auth.current.mustChangePassword) {
+    openChangePasswordModal(true);
+    return;
+  }
+  await initApp();
 }
 
 function setupAuthForms() {
@@ -167,9 +178,8 @@ function setupAuthForms() {
     try {
       await Auth.login(email, password);
       setAuthLoading(false);
-      $("authOverlay").classList.add("hidden");
       showToast("Đăng nhập thành công!");
-      await initApp();
+      await enterApp();
     } catch (err) {
       setAuthLoading(false);
       errEl.textContent = err.message || String(err);
@@ -191,9 +201,8 @@ function setupAuthForms() {
     try {
       await Auth.register(email, password);
       setAuthLoading(false);
-      $("authOverlay").classList.add("hidden");
       showToast("Đăng ký thành công!");
-      await initApp();
+      await enterApp();
     } catch (err) {
       setAuthLoading(false);
       errEl.textContent = err.message || String(err);
@@ -222,24 +231,43 @@ function setupAuthForms() {
 // Auth.current.hasPassword, làm mới qua Auth.refresh() mỗi lần mở modal cho chắc) thay
 // vì để user nhập xong mới gặp lỗi khó hiểu.
 // ---------------------------------------------------------------------
+// true khi modal đang mở ở chế độ BẮT BUỘC (mật khẩu tạm, xem enterApp()) — không cho đóng,
+// và đổi xong thì mới chạy initApp().
+let _forcedPasswordChange = false;
+
+function openChangePasswordModal(forced) {
+  _forcedPasswordChange = !!forced;
+  ["cp_old", "cp_new", "cp_new2"].forEach((id) => ($(id).value = ""));
+  $("changePasswordError").classList.add("hidden");
+  $("btnCloseChangePassword").classList.toggle("hidden", _forcedPasswordChange);
+  $("changePasswordForcedHint").classList.toggle("hidden", !_forcedPasswordChange);
+  $("changePasswordGoogleHint").style.display =
+    !_forcedPasswordChange && Auth.current && Auth.current.hasPassword === false ? "" : "none";
+  $("changePasswordOverlay").classList.remove("hidden");
+  $("cp_old").focus();
+}
+
 function setupChangePassword() {
   function closeModal() {
+    if (_forcedPasswordChange) return;
     $("changePasswordOverlay").classList.add("hidden");
   }
 
   $("btnOpenChangePassword").addEventListener("click", async () => {
-    ["cp_old", "cp_new", "cp_new2"].forEach((id) => ($(id).value = ""));
-    $("changePasswordError").classList.add("hidden");
     // Làm mới Auth.current.hasPassword trước khi hiện gợi ý — token có thể đã tồn tại
     // từ trước lúc actionMe() chưa có trường này (server cũ), hoặc Admin vừa mới đặt lại
     // mật khẩu cho tài khoản này (auth_provider google -> password) ở thiết bị khác.
     await Auth.refresh();
-    $("changePasswordGoogleHint").style.display = Auth.current && Auth.current.hasPassword === false ? "" : "none";
-    $("changePasswordOverlay").classList.remove("hidden");
-    $("cp_old").focus();
+    openChangePasswordModal(false);
   });
 
   $("btnCloseChangePassword").addEventListener("click", closeModal);
+
+  $("linkForcedLogout").addEventListener("click", async (e) => {
+    e.preventDefault();
+    await Auth.logout();
+    location.reload();
+  });
 
   $("btnSubmitChangePassword").addEventListener("click", async () => {
     const oldPassword = $("cp_old").value;
@@ -268,8 +296,11 @@ function setupChangePassword() {
       // gsheetPost() (storage.js) NÉM lỗi cho response { error: "..." } (VD "Mật khẩu
       // hiện tại không đúng") — không cần tự kiểm tra result.error ở đây, catch bên dưới lo.
       await Auth.changePassword(oldPassword, newPassword);
+      const wasForced = _forcedPasswordChange;
+      _forcedPasswordChange = false;
       closeModal();
       showToast("Đã đổi mật khẩu. Các thiết bị khác đang đăng nhập bằng tài khoản này đã bị đăng xuất.");
+      if (wasForced) await initApp();
     } catch (err) {
       errEl.textContent = (err && err.message) || String(err);
       errEl.classList.remove("hidden");
@@ -331,9 +362,8 @@ async function onGoogleCredential(response) {
   try {
     await Auth.loginWithGoogle(response.credential);
     setAuthLoading(false);
-    $("authOverlay").classList.add("hidden");
     showToast("Đăng nhập thành công!");
-    await initApp();
+    await enterApp();
   } catch (err) {
     setAuthLoading(false);
     errEl.textContent = "Đăng nhập Google thất bại: " + ((err && err.message) || err);

@@ -552,8 +552,8 @@ function refreshAlertsUI() {
       <td style="max-width:160px;">${exceededHtml}</td>
       <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
       <td style="font-size:12px; max-width:280px;">${escapeHtml(a.action)}</td>
-      <td>${a.lanDo}</td>
-      <td>${a.sampleDate}</td>
+      <td>${escapeHtml(a.lanDo)}</td>
+      <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell"><div class="btn-row">
         <button class="btn ghost icon-only" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>

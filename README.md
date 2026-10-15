@@ -118,6 +118,13 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 
 ### 2b. Supabase (Postgres, có Row Level Security thực sự — chặt hơn Google Sheets)
 
+> ⚠ **Bảo mật:** chế độ Supabase của app hiện **chưa có đăng nhập/phân quyền**, và
+> `supabase-schema.sql` mở policy `using (true)` — ai có anon key (công khai trong
+> `config.js`) đều đọc/sửa/xóa được toàn bộ dữ liệu. Chỉ dùng cho thử nghiệm nội bộ.
+> Không dùng Supabase thì chạy [`supabase/lockdown-anon.sql`](./supabase/lockdown-anon.sql)
+> và vô hiệu hóa anon key cũ (Project Settings > API Keys > tab Legacy API Keys > Disable JWT-based API keys). Muốn có Supabase chạy song song an toàn, dùng cách
+> ở **mục 2c** (Code.gs ghi theo phía máy chủ, không cần anon key).
+
 1. Tạo tài khoản tại https://supabase.com → **New project** (chọn khu vực gần
    Việt Nam, ví dụ Singapore).
 2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase-schema.sql`](./supabase-schema.sql)
@@ -153,50 +160,47 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 > đã bật ở bước 2. **Không dán "service_role key"** (khóa có toàn quyền, phải
 > giữ bí mật) vào `config.js`.
 
-### 2c. Thiết lập Supabase SONG SONG với Google Sheets (dự phòng / chuẩn bị chuyển sau)
+### 2c. Dùng Supabase SONG SONG với Google Sheets (bản sao tự động)
 
-Đang dùng Google Sheets làm chính, muốn thiết lập sẵn Supabase để dự phòng hoặc
-thử nghiệm, mà KHÔNG ảnh hưởng gì đến hệ thống đang chạy? App chỉ dùng **đúng 1**
-nơi lưu trữ tại 1 thời điểm — thứ tự ưu tiên nếu `config.js` điền cả 2 là
-**Google Sheets > Supabase > localStorage** (xem đầu file `config.js`) — nên có
-thể điền sẵn cả 2 mà không lo "song song" theo nghĩa ghi cùng lúc 2 nơi (app
-KHÔNG hỗ trợ tự động đồng bộ 2 chiều Gsheet ⇄ Supabase).
+Google Sheets vẫn là database **chính** (đăng nhập, phân quyền, mọi thao tác của app). Mỗi lần
+lưu/xóa thành công, `gsheet/Code.gs` **tự ghi/xóa theo** bản ghi đó sang bảng cùng tên trên
+Supabase: `measurements`, `oil_tests`, `oltc_oil_tests`, `instrument_oil_tests`,
+`manufacturer_standards`, `stations`, `regulation_config`, `feedback`. Tài khoản/mật khẩu/phiên
+đăng nhập (`users`, `sessions`) **không** được sao chép.
 
-1. Làm đúng bước 1–3 ở mục 2b bên trên (tạo project Supabase, chạy
-   `supabase-schema.sql`, copy Project URL + anon key) — **chưa cần đổi
-   `config.js` vội**.
-2. Mở `config.js`, điền thêm `SUPABASE_URL`/`SUPABASE_ANON_KEY` **bên cạnh**
-   `GSHEET_WEBAPP_URL` đang có sẵn (giữ nguyên, không xóa):
-   ```js
-   window.DGA_CONFIG = {
-     GSHEET_WEBAPP_URL: "https://script.google.com/macros/s/.../exec", // giữ nguyên
-     SUPABASE_URL: "https://xxxxxxxx.supabase.co",
-     SUPABASE_ANON_KEY: "eyJhbGciOi...",
-   };
-   ```
-3. Lưu lại, mở lại trang — vì Google Sheets vẫn được ưu tiên trước, badge
-   "Database" và toàn bộ hoạt động của app **không đổi gì cả**. Supabase lúc
-   này coi như đã "đứng sẵn ở hàng chờ", có bảng/cấu trúc đầy đủ nhưng chưa có
-   dữ liệu (chưa ai ghi vào).
-4. **Khi nào thật sự muốn CHUYỂN HẲN sang Supabase**: xóa trắng (để `""`) giá
-   trị `GSHEET_WEBAPP_URL` trong `config.js` → lưu lại → mở lại trang là app tự
-   chuyển sang dùng Supabase ngay (không cần sửa gì khác). Muốn quay lại Google
-   Sheets thì điền lại đúng URL cũ vào `GSHEET_WEBAPP_URL`.
+Việc ghi sang Supabase chạy ở **máy chủ Apps Script** bằng *service_role key* cất trong Script
+properties. Key này không bao giờ xuống trình duyệt, nên `config.js` **không cần** điền gì về
+Supabase và Supabase khóa được hoàn toàn quyền của anon key.
 
-> **2 lưu ý quan trọng trước khi chuyển hẳn:**
->
-> - **Không tự động chuyển dữ liệu cũ.** Toàn bộ lịch sử đo/dầu MBA/dầu
->   OLTC/tiêu chuẩn/góp ý đang có trong Google Sheets sẽ **không** tự xuất hiện
->   bên Supabase — 2 nơi lưu trữ độc lập hoàn toàn. Cần dữ liệu cũ bên Supabase
->   thì phải xuất/nhập tay (hoặc nhờ viết 1 script chuyển đổi riêng).
-> - **Đăng nhập/phân quyền (Admin/User) chỉ hoạt động ở chế độ Google Sheets**
->   (`Auth.enabled` chỉ bật khi có cấu hình `GSHEET_WEBAPP_URL`, xem `storage.js`).
->   Nếu chuyển hẳn sang Supabase như hướng dẫn ở bước 4, màn hình đăng nhập sẽ
->   **biến mất** và mọi người vào app đều có quyền sửa/xóa như nhau (giống hệt
->   chế độ không đăng nhập hiện tại) — tính năng phân quyền Admin/User hiện
->   CHƯA được xây dựng cho Supabase. Nếu cần giữ phân quyền khi dùng Supabase,
->   đây là việc cần phát triển thêm riêng (có thể dùng Supabase Auth) trước khi
->   chuyển hẳn.
+1. Tạo project Supabase (bước 1 mục 2b). Vào **SQL Editor**, chạy lần lượt:
+   - [`supabase-schema.sql`](./supabase-schema.sql) (nếu chưa từng chạy, để tạo bảng);
+   - [`supabase/mirror-setup.sql`](./supabase/mirror-setup.sql) (bổ sung cột còn thiếu và cột lưu
+     vết người nhập/người sửa, bỏ ràng buộc mà Sheets không có, **khóa quyền anon key**).
+     Chạy lại nhiều lần vẫn an toàn, không xóa dữ liệu.
+2. Supabase Dashboard > **Project Settings > API Keys** > tab **API Keys** > mục **Secret keys** > tạo
+   khóa mới (dạng `sb_secret_...`, bí mật, toàn quyền — không dán vào `config.js`, không gửi qua chat).
+   Project URL nằm ở **Project Settings > Data API** (dạng `https://<mã>.supabase.co`).
+   Sau khi đồng bộ chạy tốt: tab **Legacy API Keys** > **Disable JWT-based API keys** để vô hiệu hóa
+   anon key cũ đã lộ trên GitHub (app không còn dùng anon key).
+3. Mở dự án Apps Script > **Project Settings** (bánh răng) > **Script properties** > thêm 2 thuộc tính:
+   `SUPABASE_URL` = Project URL, `SUPABASE_SERVICE_ROLE_KEY` = khóa `sb_secret_...` (khóa service_role cũ dạng `eyJ...` cũng dùng được).
+4. Dán `gsheet/Code.gs` mới vào Apps Script > **Deploy > Manage deployments > New version**.
+5. Vào app bằng tài khoản Admin > tab **Quản trị** > khối "Bản sao Supabase" phải báo "Đang bật" >
+   bấm **Đồng bộ toàn bộ sang Supabase** để chép dữ liệu cũ. Từ đó trở đi mọi thay đổi tự ghi theo.
+
+Lưu ý:
+
+- Supabase lỗi (mất mạng, sai cột…) **không** làm hỏng thao tác chính trên Google Sheets — lỗi được
+  ghi vào sheet `supabase_sync_log` và hiện ở tab Quản trị. Khắc phục xong, bấm lại **Đồng bộ toàn
+  bộ** (chép lại mọi dòng và xóa các dòng chỉ còn bên Supabase → Supabase khớp đúng Sheets).
+- Chỉ đồng bộ **một chiều** Sheets → Supabase. Sửa trực tiếp trên Supabase sẽ bị ghi đè ở lần đồng
+  bộ sau.
+- File đính kèm (BBTN, ảnh góp ý) vẫn nằm trên Google Drive; Supabase chỉ lưu đường link.
+- Mỗi lần lưu chậm thêm khoảng 0,2–0,5 giây (một lượt gọi Supabase). Bỏ 2 Script properties ở
+  bước 3 là tắt đồng bộ ngay.
+- **Muốn chuyển hẳn sang Supabase** về sau: chế độ Supabase của app hiện **chưa có đăng nhập/phân
+  quyền** (xem cảnh báo ở mục 2b), cần phát triển thêm (Supabase Auth + RLS theo vai trò) trước khi
+  xóa `GSHEET_WEBAPP_URL`.
 
 ## 3. Đưa lên GitHub + GitHub Pages (miễn phí)
 
@@ -249,6 +253,14 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `Features-web-app.md` | Danh sách đầy đủ tính năng theo từng tab |
 
 ## 5. Giới hạn / lưu ý
+
+- **Bảo mật (cập nhật 10/2026):** `index.html` có thẻ Content Security Policy (chặn script
+  inline, chỉ nạp script từ site + cdn.jsdelivr.net/cdnjs/Google) và các thư viện CDN được ghim
+  phiên bản + `integrity` (SRI). Khi nâng phiên bản thư viện CDN phải tính lại hash
+  (`openssl dgst -sha512 -binary file.js | openssl base64 -A`), khi thêm CDN/backend mới phải bổ
+  sung vào CSP. `gsheet/Code.gs` có khóa ghi (LockService), token/mật khẩu tạm sinh ngẫu nhiên an
+  toàn, tạm khóa 15 phút sau 5 lần sai mật khẩu, và bắt đổi mật khẩu tạm ở lần đăng nhập đầu —
+  sau khi sửa `Code.gs` phải **Deploy > Manage deployments > New version** mới có hiệu lực.
 
 - Đây là công cụ **hỗ trợ tham khảo**, không thay thế nguyên tắc đánh giá tổng
   thể tại Điều 3, QĐ1901 (cần đối chiếu thêm các pha khác, lần đo trước, xu

@@ -64,9 +64,8 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 
 | Huy hiệu | Ý nghĩa |
 |---|---|
-| "Đã kết nối database (Google Sheets)" | Dữ liệu lưu dùng chung, có đăng nhập và phân quyền |
-| "Đã kết nối database (Supabase)" | Dữ liệu lưu dùng chung, **không** có đăng nhập/phân quyền |
-| "Chế độ thử nghiệm" | Dữ liệu chỉ lưu trong trình duyệt của máy này |
+| "Database" | Dữ liệu lưu dùng chung trên database của đơn vị |
+| "Chế độ thử nghiệm" (kèm **banner đỏ** đầu trang) | Dữ liệu chỉ lưu trong trình duyệt của máy này |
 
 > ⚠ Ở **chế độ thử nghiệm**, dữ liệu chỉ nằm trên trình duyệt hiện tại — **mất nếu xóa lịch sử duyệt web** và người khác không thấy được. Chỉ dùng để thử.
 
@@ -80,7 +79,9 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 
 **Đăng xuất:** bấm vào **tên/email của bạn** ở góc trên bên phải → xác nhận.
 
-> Ở chế độ Supabase hoặc thử nghiệm, không có màn hình đăng nhập và mọi người có toàn quyền như nhau.
+> Nếu Admin cấp tài khoản hoặc đặt lại mật khẩu cho bạn, bạn nhận được một **mật khẩu tạm**. Ở lần đăng nhập đầu, app **bắt buộc đổi sang mật khẩu riêng** (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại") rồi mới dùng được.
+>
+> Nhập sai mật khẩu **5 lần liên tiếp**, đăng nhập bằng mật khẩu của tài khoản đó bị **tạm khóa 15 phút**.
 
 ---
 
@@ -428,8 +429,6 @@ Các góp ý đã gửi được hiển thị (mới nhất ở trên) để m�
 
 ## 16. Phân quyền Admin / User và tab Quản trị
 
-*(Chỉ áp dụng ở chế độ Google Sheets. Ở chế độ khác, mọi người có toàn quyền.)*
-
 | Quyền | User | Admin |
 |---|:-:|:-:|
 | Xem toàn bộ dữ liệu | ✔ | ✔ |
@@ -447,6 +446,7 @@ Mỗi bản ghi lưu **người tạo, người sửa cuối và thời điểm*
 - **Đổi vai trò** User ⇄ Admin bằng ô chọn.
 - **Xóa người dùng** (có xác nhận).
 - Dòng của chính Admin đang đăng nhập bị khóa đổi vai trò và ẩn nút xóa để tránh tự khóa mình.
+- **Tạo tài khoản** / **Đặt lại mật khẩu**: app sinh mật khẩu tạm, chỉ hiện **1 lần**. Gửi tách riêng: email qua tin nhắn, mật khẩu tạm đọc qua cuộc gọi. Người dùng bắt buộc đổi mật khẩu ở lần đăng nhập đầu.
 
 ---
 
@@ -463,7 +463,7 @@ Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu ch
 ## 18. Câu hỏi thường gặp và xử lý sự cố
 
 **Bấm "Phân tích & Lưu" báo lỗi (thông báo màu đỏ góc trên bên phải).**
-Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nếu là "Lỗi kết nối Google Sheets/Supabase…" thường do đường link kết nối database bị sai hoặc chưa cấp quyền truy cập đúng — thông báo đã kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho Admin. Admin xem hướng dẫn xử lý ở `README.md`.
+Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nếu là lỗi kết nối database, thông báo đã kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho Admin. Admin xem hướng dẫn xử lý ở `README.md`.
 
 **Thấy thông báo "Đã xảy ra lỗi không lường trước" hoặc "Thao tác không hoàn tất".**
 Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở tab **Người dùng phản hồi** hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").
@@ -493,7 +493,7 @@ Biên bản có thể dùng mẫu khác PTC3/BM.15, hoặc là bản scan mờ. 
 Vào **Lịch sử đo** → sửa bản ghi đó (mục 10.3). Nếu bạn là User và bản ghi không phải của bạn, nhờ Admin sửa. Lịch sử chỉnh sửa luôn được ghi lại.
 
 **Tôi không đăng nhập được.**
-Kiểm tra email/mật khẩu (tối thiểu 6 ký tự). Nếu quên mật khẩu, liên hệ Admin. Nếu dùng Google mà không thấy nút Google, chức năng này chưa được bật ở app của bạn.
+Kiểm tra email/mật khẩu (tối thiểu 6 ký tự). Nếu quên mật khẩu, liên hệ Admin để được cấp mật khẩu tạm. Nếu báo "tạm khóa", chờ 15 phút rồi thử lại. Nếu dùng Google mà không thấy nút Google, chức năng này chưa được bật ở app của bạn.
 
 **Bản web và bản di động cho kết luận khác nhau với cùng số liệu.**
 Hai bản dùng chung logic nên kết quả phải giống nhau. Nếu thấy khác, tải lại cứng trang (Ctrl+F5 trên máy tính; xóa dữ liệu trang trên di động) để bỏ bản cũ lưu trong bộ nhớ đệm, rồi kiểm tra Cấu hình quy định/tiêu chuẩn nhà sản xuất đang áp dụng có giống nhau ở hai bản không (cả hai đọc chung từ database). Nếu vẫn lệch, báo Admin.
@@ -511,7 +511,7 @@ Chrome hoặc Edge (đầy đủ nhất). Safari dùng được; Firefox không 
 - **Nhập đúng loại thiết bị** — lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng. Hãy tick "Ngăn OLTC" đúng thực tế để dữ liệu lưu chính xác.
 - **So sánh với nhóm thiết bị tương tự** và **ca tương tự** chỉ là thống kê tham khảo, không phải ngưỡng quy định và không thay đổi trạng thái tổng thể (xem mục 5.3).
 - Số liệu tự động điền từ PDF/ảnh nhãn chỉ là **gợi ý**: luôn kiểm tra lại trước khi lưu hoặc ký biên bản.
-- Không chia sẻ đường link database (Google Apps Script/Supabase) công khai ra ngoài nhóm nội bộ.
+- Không chia sẻ đường link database công khai ra ngoài nhóm nội bộ; không gửi mật khẩu qua tin nhắn nhóm.
 
 ---
 

@@ -19,7 +19,11 @@
 window.DGA_CONFIG = {
   GSHEET_WEBAPP_URL:"https://script.google.com/macros/s/AKfycbzZM6-fkFkWvfX1G4WHMhzT7p5VFB5ZsT3KBHaO-BLJWtKiNoW9qTDy4RonOSyx4hyp/exec",
   GSHEET_SHEET_URL: "https://docs.google.com/spreadsheets/d/1Pm5Nq5wY-1sBDUl5DFNBtxfGqH_Ij_SsZIAJQJ0WaAU/edit", // Dán link Google Sheet (docs.google.com/spreadsheets/d/...) để bấm badge "Database" mở nhanh Sheet
-  SUPABASE_URL: "https://sfnnbdyazqguwnubzjhg.supabase.co",
-  SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNmbm5iZHlhenFndXdudWJ6amhnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2MDQ2MDEsImV4cCI6MjEwNTE4MDYwMX0.8mAzu7EGp8vsiglPFIL7Y70yCUg-qt7g2Gt_PbXF0xk",
+  // Supabase để TRỐNG: app đang dùng Google Sheets (ưu tiên cao hơn) nên khóa Supabase ở đây không
+  // được dùng tới — chỉ làm lộ anon key ra trang công khai. Chế độ Supabase CHƯA có đăng nhập/phân
+  // quyền. Supabase chạy SONG SONG làm bản sao do gsheet/Code.gs ghi ở máy chủ (README mục 2c),
+  // không cần điền gì ở đây.
+  SUPABASE_URL: "",
+  SUPABASE_ANON_KEY: "",
   GOOGLE_CLIENT_ID: "162684736346-spsmoiqgk6sp3k5d8l24h85p1mcd5cja.apps.googleusercontent.com",
 };

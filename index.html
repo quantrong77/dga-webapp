@@ -3,6 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Content Security Policy — lớp phòng thủ thứ 2 chống XSS (lớp 1 là escapeHtml() khi hiển
+       thị dữ liệu): KHÔNG cho chạy script inline/thuộc tính onxxx=, chỉ nạp script từ chính
+       site + 3 CDN/Google đã khai báo. Thêm thư viện/CDN/backend mới thì PHẢI bổ sung vào đây,
+       nếu không trình duyệt sẽ chặn (xem Console: "Refused to ... Content Security Policy").
+       - 'wasm-unsafe-eval' + worker-src blob: : Tesseract (OCR) chạy WebAssembly trong Web Worker
+         tạo từ blob: (workerBlobURL mặc định của tesseract.js).
+       - connect-src data: blob: : viewBbtn() fetch() file đính kèm lưu dạng data URL (chế độ thử nghiệm).
+       - style-src 'unsafe-inline': giao diện dùng nhiều thuộc tính style="" (không chạy được mã).
+       GitHub Pages không cho đặt HTTP header nên dùng thẻ meta (frame-ancestors không hỗ trợ ở meta). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com/gsi/client; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://script.google.com https://script.googleusercontent.com https://*.supabase.co wss://*.supabase.co https://accounts.google.com; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <title>Đánh giá Dầu cách điện — QĐ1901/EVNNPT</title>
   <!-- Icon ứng dụng (DGAOil): bình tam giác dầu cam + máy biến áp + biểu đồ xu hướng -->
   <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
@@ -24,17 +34,17 @@
   <link rel="stylesheet" href="css/style-tab-tables.css" />
   <link rel="stylesheet" href="css/style-tabs-secondary.css" />
   <link rel="stylesheet" href="css/style-tab-regulation-config.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha512-6m3RpkhE77lyYH3ZOab3pFVoIpXrtVYmLuYQHOgLaYQIBRq/n6qJb1lHeZQlrRdBNQJfvj93mSTo7Zh723jRIw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Tải đồng bộ (không async/defer)
        giống supabase-js ở trên, nên chắc chắn tải xong (hoặc chắc chắn thất bại) trước
        khi app.js chạy — app.js kiểm tra typeof Chart === "undefined" trước khi dùng, nên
        nếu mất mạng/CDN lỗi, chỉ phần đồ thị bị ẩn, các phần khác của trang không ảnh hưởng. -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js" integrity="sha512-WoViKhKD4qI2WruSZqv9+kvM4WfFhUMQCLN4QlDTt5aU56fLQy2gYoxWIqlEnXqJy/+Ac5q/hk1oWfqnMDhwMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- SheetJS (xlsx) — xuất file Excel (.xlsx) cho nút "Xuất Excel" ở tab "Cảnh báo"
        (xem onExportAlertsExcel(), ui/ui-alerts.js). Tải đồng bộ giống Chart.js ở trên;
        ui-alerts.js kiểm tra typeof XLSX === "undefined" trước khi dùng, nên nếu mất
        mạng/CDN lỗi thì chỉ nút xuất Excel báo lỗi rõ ràng, không ảnh hưởng phần còn lại. -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <!-- Google Identity Services — cho nút "Đăng nhập bằng Google". Nếu GOOGLE_CLIENT_ID
        trong config.js để trống, hoặc script này tải không được (mất mạng...), nút
        Google sẽ tự ẩn — không ảnh hưởng đến đăng nhập email/mật khẩu như trước.
@@ -45,26 +55,7 @@
   <script src="https://accounts.google.com/gsi/client" async></script>
 </head>
 <body>
-  <script>
-    // Đọc lựa chọn bố cục thanh tab đã lưu trước đó (ngang/dọc) và áp dụng NGAY, trước
-    // khi phần còn lại của trang render, để tránh nháy layout (đổi từ ngang sang dọc
-    // ngay sau khi tải xong) — đặt ngay đầu <body> (không đặt ở <head>, vì lúc đó
-    // document.body CHƯA tồn tại). Đây là SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang
-    // dùng (không phải dữ liệu nghiệp vụ) nên lưu ở localStorage, không qua Storage
-    // (gsheet/Supabase) — xem setupTabLayoutToggle() ở app-core.js (gắn sự kiện bấm nút
-    // #btnToggleTabLayout + lưu lại lựa chọn khi đổi).
-    try {
-      if (localStorage.getItem("dga_tab_layout") === "sidebar") {
-        document.body.classList.add("tabs-sidebar");
-      }
-      // Trạng thái "thu gọn sidebar" (chỉ có ý nghĩa khi đang ở bố cục dọc) — cũng đọc
-      // và áp dụng SỚM ở đây cùng lúc để tránh nháy (sidebar rộng đầy đủ rồi mới co lại
-      // ngay sau khi JS ở app-core.js chạy) — xem setupSidebarCollapseToggle().
-      if (localStorage.getItem("dga_sidebar_collapsed") === "1") {
-        document.body.classList.add("sidebar-collapsed");
-      }
-    } catch (e) {}
-  </script>
+  <script src="early-layout.js"></script>
   <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
        ẩn, tham chiếu bằng <use href="#icon-..."> để không lặp lại mã SVG nhiều nơi. -->
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
@@ -175,6 +166,13 @@
   <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
+  <!-- Banner đỏ CHẾ ĐỘ THỬ NGHIỆM (localStorage) — hiện ở initApp() (app-core.js) khi config.js
+       chưa cấu hình database, để không ai lỡ nhập dữ liệu thật vào trình duyệt. -->
+  <div id="localModeBanner" class="local-mode-banner hidden" role="alert">
+    <strong>CHẾ ĐỘ THỬ NGHIỆM</strong> — dữ liệu chỉ lưu trên trình duyệt này, người khác không thấy và
+    sẽ <strong>mất vĩnh viễn</strong> khi xóa lịch sử duyệt web. Không nhập dữ liệu thật.
+  </div>
+
   <header class="app-header">
     <div class="header-left">
       <button type="button" id="btnToggleTabLayout" class="header-icon-btn" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)">
@@ -213,6 +211,10 @@
     <div class="mini-modal-card">
       <button type="button" class="mini-modal-close" id="btnCloseChangePassword" aria-label="Đóng">&times;</button>
       <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h3>
+      <!-- Chế độ BẮT BUỘC (mật khẩu tạm do Admin cấp) — xem enterApp()/openChangePasswordModal() ở ui-auth.js. -->
+      <p class="note hidden" id="changePasswordForcedHint">Bạn đang đăng nhập bằng <strong>mật khẩu tạm</strong> do Admin cấp.
+        Vui lòng đặt mật khẩu riêng để tiếp tục sử dụng (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại").
+        <a href="#" id="linkForcedLogout">Đăng xuất</a></p>
       <p class="note" id="changePasswordGoogleHint" style="display:none;">Tài khoản này trước giờ chỉ đăng nhập bằng
         Google, chưa từng có mật khẩu — không tự đặt mật khẩu lần đầu ở đây được, nhờ Admin đặt hộ ở tab "Quản trị".</p>
       <label class="field">Mật khẩu hiện tại
@@ -2470,16 +2472,11 @@
           </thead>
           <tbody>
           <tr>
-          <td>“Đã kết nối database (Google Sheets)”</td>
-          <td>Dữ liệu lưu dùng chung, có đăng nhập và phân quyền</td>
+          <td>“Database”</td>
+          <td>Dữ liệu lưu dùng chung trên database của đơn vị</td>
           </tr>
           <tr>
-          <td>“Đã kết nối database (Supabase)”</td>
-          <td>Dữ liệu lưu dùng chung, <strong>không</strong> có đăng nhập/phân
-          quyền</td>
-          </tr>
-          <tr>
-          <td>“Chế độ thử nghiệm”</td>
+          <td>“Chế độ thử nghiệm” (kèm <strong>banner đỏ</strong> đầu trang)</td>
           <td>Dữ liệu chỉ lưu trong trình duyệt của máy này</td>
           </tr>
           </tbody>
@@ -2502,8 +2499,12 @@
           </ol>
           <p><strong>Đăng xuất:</strong> bấm vào <strong>tên/email của
           bạn</strong> ở góc trên bên phải → xác nhận.</p>
-          <p class="sm-note">Ở chế độ Supabase hoặc thử nghiệm, không có màn hình đăng nhập và mọi
-          người có toàn quyền như nhau.</p>
+          <p class="sm-note">Nếu Admin cấp tài khoản hoặc đặt lại mật khẩu cho bạn, bạn nhận được
+          một <strong>mật khẩu tạm</strong>. Ở lần đăng nhập đầu, app <strong>bắt
+          buộc đổi sang mật khẩu riêng</strong> (nhập mật khẩu tạm vào ô “Mật khẩu
+          hiện tại”) rồi mới dùng được.</p>
+          <p>Nhập sai mật khẩu <strong>5 lần liên tiếp</strong>, đăng nhập bằng
+          mật khẩu của tài khoản đó bị <strong>tạm khóa 15 phút</strong>.</p>
 
           </div>
         </details>
@@ -3220,8 +3221,6 @@
         <details class="mm-node">
           <summary>16. Phân quyền Admin / User và tab Quản trị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
-          <p><em>(Chỉ áp dụng ở chế độ Google Sheets. Ở chế độ khác, mọi người có
-          toàn quyền.)</em></p>
           <div class="table-scroll"><table>
           <thead>
           <tr>
@@ -3275,6 +3274,10 @@
           <li><strong>Xóa người dùng</strong> (có xác nhận).</li>
           <li>Dòng của chính Admin đang đăng nhập bị khóa đổi vai trò và ẩn nút
           xóa để tránh tự khóa mình.</li>
+          <li><strong>Tạo tài khoản</strong> / <strong>Đặt lại mật khẩu</strong>:
+          app sinh mật khẩu tạm, chỉ hiện <strong>1 lần</strong>. Gửi tách riêng:
+          email qua tin nhắn, mật khẩu tạm đọc qua cuộc gọi. Người dùng bắt buộc
+          đổi mật khẩu ở lần đăng nhập đầu.</li>
           </ul>
 
           </div>
@@ -3309,10 +3312,9 @@
           <div class="sm-body">
           <p><strong>Bấm “Phân tích &amp; Lưu” báo lỗi (thông báo màu đỏ góc trên
           bên phải).</strong> Nếu thông báo là “Vui lòng nhập…” thì bổ sung ô còn
-          thiếu. Nếu là “Lỗi kết nối Google Sheets/Supabase…” thường do đường link
-          kết nối database bị sai hoặc chưa cấp quyền truy cập đúng — thông báo đã
-          kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho
-          Admin. Admin xem hướng dẫn xử lý ở <code>README.md</code>.</p>
+          thiếu. Nếu là lỗi kết nối database, thông báo đã kèm gợi ý kiểm tra.
+          Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho Admin. Admin xem
+          hướng dẫn xử lý ở <code>README.md</code>.</p>
           <p><strong>Thấy thông báo “Đã xảy ra lỗi không lường trước” hoặc “Thao
           tác không hoàn tất”.</strong> Đây là lỗi ngoài dự kiến của app (không
           phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn
@@ -3347,7 +3349,8 @@
           không phải của bạn, nhờ Admin sửa. Lịch sử chỉnh sửa luôn được ghi
           lại.</p>
           <p><strong>Tôi không đăng nhập được.</strong> Kiểm tra email/mật khẩu
-          (tối thiểu 6 ký tự). Nếu quên mật khẩu, liên hệ Admin. Nếu dùng Google
+          (tối thiểu 6 ký tự). Nếu quên mật khẩu, liên hệ Admin để được cấp mật
+          khẩu tạm. Nếu báo “tạm khóa”, chờ 15 phút rồi thử lại. Nếu dùng Google
           mà không thấy nút Google, chức năng này chưa được bật ở app của bạn.</p>
           <p><strong>Bản web và bản di động cho kết luận khác nhau với cùng số
           liệu.</strong> Hai bản dùng chung logic nên kết quả phải giống nhau. Nếu
@@ -3384,8 +3387,8 @@
           và không thay đổi trạng thái tổng thể (xem mục 5.3).</li>
           <li>Số liệu tự động điền từ PDF/ảnh nhãn chỉ là <strong>gợi ý</strong>:
           luôn kiểm tra lại trước khi lưu hoặc ký biên bản.</li>
-          <li>Không chia sẻ đường link database (Google Apps Script/Supabase) công
-          khai ra ngoài nhóm nội bộ.</li>
+          <li>Không chia sẻ đường link database công khai ra ngoài nhóm nội bộ;
+          không gửi mật khẩu qua tin nhắn nhóm.</li>
           </ul>
           <hr />
           <p><em>Nếu phát hiện lỗi hoặc muốn đề xuất tính năng, hãy dùng tab
@@ -3474,6 +3477,27 @@
         </table></div>
         <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
       </div>
+
+      <!-- Bản sao song song trên Supabase — Code.gs tự ghi theo mỗi lần có thay đổi (xem
+           mirrorUpsertToSupabase()/syncAllToSupabase() ở gsheet/Code.gs, README mục 2c).
+           Xem refreshSupabaseSyncUI()/onSyncSupabase() ở ui-admin.js. -->
+      <div class="panel">
+        <h2>Bản sao Supabase</h2>
+        <p class="note">Google Sheets là database chính. Khi đã cấu hình, mỗi lần lưu/xóa dữ liệu (đo khí, dầu,
+          tiêu chuẩn, trạm, cấu hình quy định, góp ý) sẽ được ghi theo sang Supabase. Tài khoản và mật khẩu
+          không được sao chép.</p>
+        <p id="sbSyncStatus" class="note">Đang kiểm tra…</p>
+        <div class="toolbar">
+          <button type="button" class="btn ghost" id="btnSyncSupabase">Đồng bộ toàn bộ sang Supabase</button>
+        </div>
+        <div id="sbSyncErrorsWrap" class="hidden">
+          <p class="note">Lỗi đồng bộ gần nhất (đầy đủ ở sheet <code>supabase_sync_log</code>):</p>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Thời điểm</th><th>Bảng</th><th>Thao tác</th><th>Id</th><th>Lỗi</th></tr></thead>
+            <tbody id="sbSyncErrors"></tbody>
+          </table></div>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -3486,10 +3510,10 @@
     <div class="mini-modal-card">
       <button type="button" class="mini-modal-close" id="btnCloseTempPassword" aria-label="Đóng">&times;</button>
       <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span id="tempPasswordTitle">Mật khẩu tạm</span></h3>
-      <p class="note">Gửi thông tin dưới đây cho người dùng qua kênh khác (Zalo/điện thoại...) — mật khẩu này chỉ
-        hiện <strong>đúng 1 lần</strong>, ứng dụng không lưu lại. Nên nhắc người dùng đổi mật khẩu (biểu tượng
-        <svg class="icon-svg" aria-hidden="true" style="width:14px; height:14px; vertical-align:-2px;"><use href="#icon-key"></use></svg>
-        ở góc trên bên phải) ngay sau khi đăng nhập được.</p>
+      <p class="note">Mật khẩu này chỉ hiện <strong>đúng 1 lần</strong>, ứng dụng không lưu lại. Nên gửi tách
+        riêng: báo email đăng nhập qua tin nhắn, đọc mật khẩu tạm qua cuộc gọi trực tiếp (không gửi cả hai trong
+        cùng 1 tin nhắn). Ở lần đăng nhập đầu, người dùng <strong>bắt buộc</strong> phải đổi sang mật khẩu riêng
+        mới dùng được ứng dụng, nên mật khẩu tạm hết giá trị ngay sau đó.</p>
       <div class="temp-password-box">
         <div><span class="temp-password-label">Email:</span> <span id="tempPasswordEmail"></span></div>
         <div><span class="temp-password-label">Mật khẩu tạm:</span> <code id="tempPasswordValue"></code>

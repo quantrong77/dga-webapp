@@ -57,10 +57,12 @@ function makeSheetStub(headers) {
  *  const đó bình thường vì chúng cùng chung 1 script). Test nào cần soi/sửa trực tiếp dữ
  *  liệu 1 sheet (không qua doGet/doPost) thì dùng `sheets` (Map tên sheet -> sheet stub, xem
  *  makeSheetStub()) thay vì cố truy cập hằng số qua ctx. */
-function createSandbox(overrides) {
+function createSandbox(overrides, env) {
   const sheets = new Map(); // name -> sheet stub
   const cache = new Map();
   let uuidCounter = 0;
+  const lockState = { held: 0 };
+  const fetchCalls = [];
 
   let source = SOURCE;
   Object.entries(overrides || {}).forEach(([pattern, replacement]) => {
@@ -109,19 +111,38 @@ function createSandbox(overrides) {
     },
     Session: { getScriptTimeZone: () => "Asia/Ho_Chi_Minh" },
     Logger: { log: () => {} },
+    // Node chạy đơn luồng nên khóa luôn lấy được ngay; đếm lượt giữ khóa để test kiểm tra
+    // doPost() luôn trả khóa (kể cả khi action ném lỗi).
+    LockService: {
+      getScriptLock: () => ({
+        tryLock: () => { lockState.held += 1; return true; },
+        releaseLock: () => { lockState.held -= 1; },
+      }),
+    },
     DriveApp: {}, // không dùng trong các test này (actionUploadAttachment ngoài phạm vi)
-    UrlFetchApp: {}, // không dùng (actionGoogleLogin ngoài phạm vi)
+    // Script properties (cấu hình bản sao Supabase) — rỗng = tắt đồng bộ.
+    PropertiesService: {
+      getScriptProperties: () => ({ getProperty: (k) => (env && env.props && env.props[k]) || null }),
+    },
+    // Chỉ dùng cho bản sao Supabase; env.fetch(url, options) trả { code, body } (mặc định 201 rỗng).
+    UrlFetchApp: {
+      fetch: (url, options) => {
+        fetchCalls.push({ url, method: options.method, headers: options.headers, payload: options.payload ? JSON.parse(options.payload) : undefined });
+        const r = (env && env.fetch && env.fetch(url, options)) || { code: 201, body: "" };
+        return { getResponseCode: () => r.code, getContentText: () => r.body };
+      },
+    },
   };
   vm.createContext(context);
   vm.runInContext(source, context, { filename: "Code.gs" });
-  return { ctx: context, sheets };
+  return { ctx: context, sheets, lockState, fetchCalls };
 }
 
 /** Thứ tự cột thật của sheet "users" trong Code.gs (USER_HEADERS) — chép lại Ở ĐÂY vì test
  *  không lấy được hằng số này qua ctx (xem ghi chú ở createSandbox()). Nếu Code.gs đổi thứ
  *  tự cột, test "tài khoản Google..." bên dưới sẽ ĐỌC SAI CỘT và lộ ra ngay (assert sai) —
  *  chấp nhận được vì chỉ 1 test dùng tới, không đáng thêm cơ chế trích xuất tự động. */
-const USER_HEADERS_COPY = ["id", "email", "password_hash", "password_salt", "role", "created_at", "last_login", "auth_provider"];
+const USER_HEADERS_COPY = ["id", "email", "password_hash", "password_salt", "role", "created_at", "last_login", "auth_provider", "must_change_password"];
 
 /** Gọi doGet(e)/doPost(e) như Apps Script thật gọi, rồi parse JSON trả về. */
 function callGet(ctx, action, params) {
@@ -243,7 +264,7 @@ describe("Chế độ đăng ký (REGISTRATION_MODE)", () => {
     const admin = registerUser(ctx, "quantrong77@gmail.com");
     const created = callPost(ctx, "adminCreateUser", { token: admin.token, email: "moi@vidu.com", role: "user" });
     expect(created.error).toBeUndefined();
-    expect(created.tempPassword).toMatch(/^[0-9a-f]{10}$/);
+    expect(created.tempPassword).toMatch(/^[0-9a-f]{12}$/);
     const login = callPost(ctx, "login", { email: "moi@vidu.com", password: created.tempPassword });
     expect(login.error).toBeUndefined();
     expect(login.role).toBe("user");
@@ -322,7 +343,7 @@ describe("Admin đặt lại mật khẩu cho người khác (actionAdminResetPa
     const admin = registerUser(ctx, "quantrong77@gmail.com");
     const u = registerUser(ctx, "a@vidu.com", "matkhaucu1");
     const reset = callPost(ctx, "adminResetPassword", { token: admin.token, email: "a@vidu.com" });
-    expect(reset.tempPassword).toMatch(/^[0-9a-f]{10}$/);
+    expect(reset.tempPassword).toMatch(/^[0-9a-f]{12}$/);
     expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhaucu1" }).error).toBeTruthy();
     expect(callPost(ctx, "login", { email: "a@vidu.com", password: reset.tempPassword }).error).toBeUndefined();
   });
@@ -369,5 +390,175 @@ describe("Không phá vỡ hành vi cũ (prepareOwnedRecord — hồi quy)", () 
     callPost(ctx, "addMeasurement", { token: u1.token, record: rec });
     expect(callPost(ctx, "deleteMeasurement", { token: u1.token, id: "m1" }).error).toMatch(/Chỉ Admin/);
     expect(callPost(ctx, "deleteMeasurement", { token: admin.token, id: "m1" }).deleted).toBe(true);
+  });
+});
+
+describe("Bắt đổi mật khẩu tạm ở lần đăng nhập đầu (must_change_password)", () => {
+  test("tài khoản Admin tạo: đăng nhập được nhưng bị chặn đọc/ghi cho tới khi đổi mật khẩu", () => {
+    const { ctx } = createSandbox();
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    const created = callPost(ctx, "adminCreateUser", { token: admin.token, email: "moi@vidu.com", role: "user" });
+    const login = callPost(ctx, "login", { email: "moi@vidu.com", password: created.tempPassword });
+    expect(login.mustChangePassword).toBe(true);
+    expect(callGet(ctx, "me", { token: login.token }).mustChangePassword).toBe(true);
+    expect(callGet(ctx, "listMeasurements", { token: login.token }).error).toMatch(/mật khẩu tạm/);
+    expect(callPost(ctx, "addMeasurement", { token: login.token, record: { id: "m1" } }).error).toMatch(/mật khẩu tạm/);
+
+    const changed = callPost(ctx, "changePassword", { token: login.token, oldPassword: created.tempPassword, newPassword: "matkhaurieng1" });
+    expect(changed.error).toBeUndefined();
+    expect(callGet(ctx, "me", { token: changed.token }).mustChangePassword).toBe(false);
+    expect(callGet(ctx, "listMeasurements", { token: changed.token }).error).toBeUndefined();
+  });
+
+  test("Admin đặt lại mật khẩu cũng bật cờ bắt đổi; tài khoản tự đăng ký thì không", () => {
+    const { ctx } = createSandbox();
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    const u = registerUser(ctx, "a@vidu.com", "matkhaucu1");
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhaucu1" }).mustChangePassword).toBe(false);
+    const reset = callPost(ctx, "adminResetPassword", { token: admin.token, email: "a@vidu.com" });
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: reset.tempPassword }).mustChangePassword).toBe(true);
+    expect(u.mustChangePassword).toBeUndefined(); // register không trả cờ
+  });
+
+  test("mật khẩu mới trùng mật khẩu cũ bị từ chối", () => {
+    const { ctx } = createSandbox();
+    const u = registerUser(ctx, "a@vidu.com", "matkhaucu1");
+    expect(callPost(ctx, "changePassword", { token: u.token, oldPassword: "matkhaucu1", newPassword: "matkhaucu1" }).error)
+      .toMatch(/phải khác/);
+  });
+});
+
+describe("Chống dò mật khẩu (tạm khóa sau nhiều lần sai)", () => {
+  test("sai 5 lần liên tiếp thì khóa, kể cả nhập đúng; email khác không bị ảnh hưởng", () => {
+    const { ctx } = createSandbox();
+    registerUser(ctx, "a@vidu.com", "matkhaudung1");
+    registerUser(ctx, "b@vidu.com", "matkhaudung1");
+    for (let i = 0; i < 5; i++) {
+      expect(callPost(ctx, "login", { email: "a@vidu.com", password: "sai" + i }).error).toMatch(/không đúng/);
+    }
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhaudung1" }).error).toMatch(/tạm khóa/);
+    expect(callPost(ctx, "login", { email: "b@vidu.com", password: "matkhaudung1" }).error).toBeUndefined();
+  });
+
+  test("đăng nhập đúng xóa bộ đếm lần sai", () => {
+    const { ctx } = createSandbox();
+    registerUser(ctx, "a@vidu.com", "matkhaudung1");
+    for (let i = 0; i < 4; i++) callPost(ctx, "login", { email: "a@vidu.com", password: "sai" });
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhaudung1" }).error).toBeUndefined();
+    for (let i = 0; i < 4; i++) callPost(ctx, "login", { email: "a@vidu.com", password: "sai" });
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhaudung1" }).error).toBeUndefined();
+  });
+
+  test("Admin đặt lại mật khẩu mở khóa luôn", () => {
+    const { ctx } = createSandbox();
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    registerUser(ctx, "a@vidu.com", "matkhaudung1");
+    for (let i = 0; i < 5; i++) callPost(ctx, "login", { email: "a@vidu.com", password: "sai" });
+    const reset = callPost(ctx, "adminResetPassword", { token: admin.token, email: "a@vidu.com" });
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: reset.tempPassword }).error).toBeUndefined();
+  });
+});
+
+describe("Token/khóa ghi", () => {
+  test("token phiên là 48 ký tự hex và khác nhau giữa các lần đăng nhập", () => {
+    const { ctx } = createSandbox();
+    const a = registerUser(ctx, "a@vidu.com");
+    const b = callPost(ctx, "login", { email: "a@vidu.com", password: "matkhau123" });
+    expect(a.token).toMatch(/^[0-9a-f]{48}$/);
+    expect(b.token).not.toBe(a.token);
+  });
+
+  test("doPost luôn trả khóa ghi, kể cả khi action báo lỗi", () => {
+    const { ctx, lockState } = createSandbox();
+    registerUser(ctx, "a@vidu.com");
+    callPost(ctx, "addMeasurement", { token: "sai", record: { id: "m1" } });
+    callPost(ctx, "khong-co-action-nay", {});
+    expect(lockState.held).toBe(0);
+  });
+});
+
+describe("Bản sao song song trên Supabase (mirror từ Code.gs)", () => {
+  const SB_ENV = { props: { SUPABASE_URL: "https://abc.supabase.co/", SUPABASE_SERVICE_ROLE_KEY: "service-key" } };
+
+  test("chưa cấu hình Script properties → không gọi Supabase", () => {
+    const { ctx, fetchCalls } = createSandbox();
+    const u = registerUser(ctx, "a@vidu.com");
+    callPost(ctx, "addMeasurement", { token: u.token, record: { id: "m1", tram: "T1" } });
+    expect(fetchCalls).toEqual([]);
+  });
+
+  test("ghi bản ghi → upsert sang bảng cùng tên, đủ cột lưu vết, ô trống thành null, key ở header", () => {
+    const { ctx, fetchCalls } = createSandbox(null, SB_ENV);
+    const u = registerUser(ctx, "a@vidu.com");
+    callPost(ctx, "addMeasurement", { token: u.token, record: { id: "m1", tram: "T1", h2: 5, ghi_chu: "", la_cot_rac: 1 } });
+    expect(fetchCalls).toHaveLength(1);
+    const c = fetchCalls[0];
+    expect(c.url).toBe("https://abc.supabase.co/rest/v1/measurements?on_conflict=id");
+    expect(c.method).toBe("post");
+    expect(c.headers.Authorization).toBe("Bearer service-key");
+    expect(c.payload[0]).toMatchObject({ id: "m1", tram: "T1", h2: 5, ghi_chu: null, created_by: "a@vidu.com" });
+    expect(c.payload[0]).not.toHaveProperty("la_cot_rac");
+  });
+
+  test("khóa mới sb_secret_... chỉ gửi qua header apikey; URL lỡ dán kèm /rest/v1/ vẫn đúng", () => {
+    const env = { props: { SUPABASE_URL: "https://abc.supabase.co/rest/v1/", SUPABASE_SERVICE_ROLE_KEY: "sb_secret_abc" } };
+    const { ctx, fetchCalls } = createSandbox(null, env);
+    const u = registerUser(ctx, "a@vidu.com");
+    callPost(ctx, "addMeasurement", { token: u.token, record: { id: "m1" } });
+    expect(fetchCalls[0].url).toBe("https://abc.supabase.co/rest/v1/measurements?on_conflict=id");
+    expect(fetchCalls[0].headers.apikey).toBe("sb_secret_abc");
+    expect(fetchCalls[0].headers).not.toHaveProperty("Authorization");
+  });
+
+  test("users/sessions (mật khẩu băm, token) KHÔNG được sao sang Supabase", () => {
+    const { ctx, fetchCalls } = createSandbox(null, SB_ENV);
+    registerUser(ctx, "a@vidu.com");
+    callPost(ctx, "login", { email: "a@vidu.com", password: "matkhau123" });
+    expect(fetchCalls).toEqual([]);
+  });
+
+  test("xóa bản ghi → xóa theo id trên Supabase", () => {
+    const { ctx, fetchCalls } = createSandbox(null, SB_ENV);
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    callPost(ctx, "addOilTest", { token: admin.token, record: { id: "o 1" } });
+    callPost(ctx, "deleteOilTest", { token: admin.token, id: "o 1" });
+    expect(fetchCalls[1]).toMatchObject({ method: "delete", url: "https://abc.supabase.co/rest/v1/oil_tests?id=eq.o%201" });
+  });
+
+  test("Supabase lỗi → thao tác chính vẫn thành công, lỗi ghi vào supabase_sync_log", () => {
+    const env = { ...SB_ENV, fetch: () => ({ code: 400, body: '{"message":"column x does not exist"}' }) };
+    const { ctx, sheets } = createSandbox(null, env);
+    const u = registerUser(ctx, "a@vidu.com");
+    const res = callPost(ctx, "addMeasurement", { token: u.token, record: { id: "m1" } });
+    expect(res.error).toBeUndefined();
+    expect(sheets.get("measurements")._rows).toHaveLength(2);
+    const log = sheets.get("supabase_sync_log")._rows;
+    expect(log[1].slice(1, 4)).toEqual(["measurements", "upsert", "m1"]);
+    expect(log[1][4]).toMatch(/HTTP 400/);
+  });
+
+  test("syncSupabase: chỉ Admin; chép mọi dòng và xóa dòng chỉ còn bên Supabase", () => {
+    const env = {
+      ...SB_ENV,
+      fetch: (url, options) => (options.method === "get" && url.includes("/measurements?select=id")
+        ? { code: 200, body: JSON.stringify([{ id: "m1" }, { id: "cu-da-xoa" }]) }
+        : options.method === "get" ? { code: 200, body: "[]" } : { code: 201, body: "" }),
+    };
+    const { ctx, fetchCalls } = createSandbox(null, env);
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    const u = registerUser(ctx, "a@vidu.com");
+    callPost(ctx, "addMeasurement", { token: admin.token, record: { id: "m1" } });
+    expect(callPost(ctx, "syncSupabase", { token: u.token }).error).toMatch(/Chỉ Admin/);
+    fetchCalls.length = 0;
+    const res = callPost(ctx, "syncSupabase", { token: admin.token });
+    expect(res.summary.measurements).toEqual({ upserted: 1, deleted: 1 });
+    const del = fetchCalls.find((c) => c.method === "delete");
+    expect(decodeURIComponent(del.url)).toBe('https://abc.supabase.co/rest/v1/measurements?id=in.("cu-da-xoa")');
+  });
+
+  test("supabaseSyncStatus cho Admin biết đã bật đồng bộ chưa", () => {
+    const { ctx } = createSandbox(null, SB_ENV);
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    expect(callGet(ctx, "supabaseSyncStatus", { token: admin.token })).toMatchObject({ enabled: true, url: "https://abc.supabase.co" });
   });
 });

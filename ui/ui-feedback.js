@@ -169,7 +169,7 @@ async function onSubmitFeedback() {
 function feedbackImageSrc(rec) {
   if (!rec.image_url) return null;
   const url = String(rec.image_url);
-  if (!url.startsWith("local:")) return url;
+  if (!url.startsWith("local:")) return safeHttpUrl(url);
   const local = Storage.getLocalAttachment(url.slice("local:".length));
   return local ? local.dataUrl : null;
 }
@@ -218,7 +218,7 @@ function renderFeedbackList() {
     const card = document.createElement("div");
     card.className = "feedback-card";
     card.innerHTML = `
-      ${imgSrc ? `<img class="feedback-card-thumb" src="${imgSrc}" alt="Ảnh minh họa góp ý" data-action="zoom" />` : ""}
+      ${imgSrc ? `<img class="feedback-card-thumb" src="${escapeHtml(imgSrc)}" alt="Ảnh minh họa góp ý" data-action="zoom" />` : ""}
       <div class="feedback-card-body">
         <div class="feedback-card-meta">
           <span>${escapeHtml(who)}</span>

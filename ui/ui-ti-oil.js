@@ -196,17 +196,17 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${DGA.formatSampleDate(rec.sample_date)}</td>
+      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${tioEquipmentTypeShort(equipmentType)}</td>
       <td>${rec.phase ? escapeHtml(DGA.phaLabelWithPrefix(rec.phase)) : "—"}</td>
       <td>${escapeHtml(rec.manufacturer || "—")}</td>
-      <td>${rec.um_kv ?? "—"}</td>
-      <td>${rec.moisture_ppm ?? "—"}</td>
-      <td>${rec.tgd_90c_percent ?? "—"}</td>
-      <td>${rec.tgd_20c_percent ?? "—"}</td>
-      <td>${rec.bdv_kv ?? "—"}</td>
+      <td>${escapeHtml(rec.um_kv ?? "—")}</td>
+      <td>${escapeHtml(rec.moisture_ppm ?? "—")}</td>
+      <td>${escapeHtml(rec.tgd_90c_percent ?? "—")}</td>
+      <td>${escapeHtml(rec.tgd_20c_percent ?? "—")}</td>
+      <td>${escapeHtml(rec.bdv_kv ?? "—")}</td>
       <td>${tioVerdictPill(evalResult.overall)}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
