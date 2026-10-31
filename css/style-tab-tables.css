@@ -36,7 +36,7 @@
   right: 0;
   max-height: 260px;
   overflow-y: auto;
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--gray-300);
   border-radius: 6px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
@@ -64,22 +64,17 @@
 
 .btn {
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   padding: 10px 20px;
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition: transform 0.12s ease, box-shadow 0.15s ease, background-color 0.15s ease, filter 0.15s ease;
+  transition: background-color 0.15s ease;
 }
-.btn.primary {
-  background: linear-gradient(135deg, var(--blue-700), var(--blue-900));
-  color: #fff;
-  box-shadow: 0 2px 8px rgba(31, 78, 120, 0.28);
-}
-.btn.primary:hover { filter: brightness(1.08); box-shadow: 0 5px 14px rgba(31, 78, 120, 0.34); transform: translateY(-1px); }
-.btn.primary:active { transform: translateY(0); filter: brightness(0.98); box-shadow: 0 1px 4px rgba(31, 78, 120, 0.28); }
+.btn.primary { background: var(--btn-primary); color: #fff; }
+.btn.primary:hover { background: var(--btn-primary-hover); }
 .btn.ghost { background: transparent; color: var(--blue-700); border: 1px solid var(--blue-700); }
-.btn.ghost:hover { background: var(--blue-100); transform: translateY(-1px); }
+.btn.ghost:hover { background: var(--blue-100); }
 .btn.danger { background: transparent; color: var(--bad); border: 1px solid var(--bad); padding: 5px 10px; font-size: 12px; }
 .btn.danger:hover { background: var(--bad-bg); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; filter: none !important; }
@@ -101,6 +96,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
 }
 th, td {
   padding: 8px 10px;
@@ -140,7 +136,7 @@ th, td {
 .actions-col-header { z-index: 2; background: var(--gray-100); }
 .actions-cell {
   z-index: 1;
-  background: #fff;
+  background: var(--surface);
   box-shadow: -8px 0 8px -8px rgba(20, 40, 70, 0.18);
 }
 tbody tr:nth-child(even) .actions-cell { background: var(--gray-50); }
@@ -148,10 +144,8 @@ tbody tr:hover .actions-cell { background: var(--blue-100); }
 th {
   background: var(--gray-100);
   color: var(--gray-600);
-  font-weight: 700;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  font-weight: 600;
+  font-size: 12.5px;
 }
 tbody tr:nth-child(even) { background: var(--gray-50); }
 tbody tr { transition: background-color 0.1s ease; }
@@ -165,9 +159,9 @@ tbody tr:hover { background: var(--blue-100); }
   font-weight: 700;
   border: 1px solid transparent;
 }
-.pill.ok { background: var(--ok-bg); color: var(--ok); border-color: rgba(26, 127, 55, 0.22); }
-.pill.bad { background: var(--bad-bg); color: var(--bad); border-color: rgba(193, 18, 31, 0.22); }
-.pill.warn { background: var(--warn-bg); color: var(--warn); border-color: rgba(180, 83, 9, 0.22); }
+.pill.ok { background: var(--ok-bg); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.pill.bad { background: var(--bad-bg); color: var(--bad); border-color: color-mix(in srgb, var(--bad) 30%, transparent); }
+.pill.warn { background: var(--warn-bg); color: var(--warn); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
 .pill.muted { background: var(--gray-100); color: var(--gray-600); }
 
 /* Tab "Lịch sử đo" — ô số liệu khí đã bị SỬA so với lần lưu gốc (xem
@@ -187,7 +181,7 @@ tbody tr:hover { background: var(--blue-100); }
   font-weight: 600;
   background: var(--bad-bg);
   color: var(--bad);
-  border: 1px solid rgba(193, 18, 31, 0.22);
+  border: 1px solid color-mix(in srgb, var(--bad) 30%, transparent);
   cursor: help;
   white-space: nowrap;
 }
@@ -206,12 +200,6 @@ tbody tr:hover { background: var(--blue-100); }
   border: 1px solid var(--gray-100);
   border-radius: var(--radius);
   padding: 14px 16px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-}
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--blue-100);
 }
 .stat-card .label { display: flex; align-items: center; font-size: 12px; color: var(--gray-600); font-weight: 600; }
 .stat-card .label .icon-svg { width: 13px; height: 13px; margin-right: 5px; }
@@ -220,7 +208,7 @@ tbody tr:hover { background: var(--blue-100); }
    Nhà sản xuất, Pha, Ngày, Lần đo, Ghi chú...) ở tab "DGA"/"Dầu cách điện"/"Lịch sử
    đo"/"Xu hướng" — dùng class riêng (không phải .icon-svg mặc định 17px) vì cỡ chữ
    nhãn (13px) nhỏ hơn nhiều nơi khác đang dùng .icon-svg (nút, dropzone...). */
-.field-label-icon { width: 14px; height: 14px; margin-right: 5px; vertical-align: -2px; flex: none; color: var(--blue-700); }
+.field-label-icon { display: none; } /* trong label cột dọc, icon chiếm hẳn 1 dòng riêng phía trên chữ */
 
 /* Icon nhỏ cạnh TÊN từng khí hòa tan cụ thể (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) — ở ô
    nhập, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox chọn thông số (tab "Xu hướng")
@@ -228,6 +216,7 @@ tbody tr:hover { background: var(--blue-100); }
    để tự nhận màu chữ hiện tại của từng nơi (bảng: chữ thường; pill: đỏ...) — xem
    gasLabelIcon() ở app-core.js. */
 .gas-icon { width: 13px; height: 13px; margin-right: 4px; vertical-align: -2px; flex: none; }
+label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chiếm hẳn 1 dòng riêng phía trên chữ */
 
 /* Ô lọc dạng "tìm kiếm" (icon kính lúp đặt đè lên input bằng position:absolute thay
    vì đứng trước như nhãn field thường, giống UX thanh tìm kiếm phổ biến) — hiện KHÔNG
@@ -265,10 +254,9 @@ tbody tr:hover { background: var(--blue-100); }
   align-items: center;
   font-size: 15px;
   font-weight: 800;
-  letter-spacing: 0.03em;
   padding: 5px 14px;
   border-radius: 999px;
-  color: #fff;
+  color: var(--on-accent);
   margin-bottom: 8px;
   box-shadow: var(--shadow-sm);
 }
@@ -293,10 +281,9 @@ tbody tr:hover { background: var(--blue-100); }
   gap: 4px;
   font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.02em;
   padding: 3px 11px;
   border-radius: 999px;
-  color: #fff;
+  color: var(--on-accent);
   white-space: nowrap;
 }
 .status-pill.status-alert { background: var(--warn); }

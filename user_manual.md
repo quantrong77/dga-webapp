@@ -103,11 +103,15 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 | **Người dùng phản hồi** | Gửi góp ý |
 | **Quản trị** | Quản lý người dùng — **chỉ Admin** mới thấy |
 
-### 3.2. Thanh tab ngang hoặc dọc
+### 3.2. Giao diện sáng hoặc tối
+
+Bấm **biểu tượng mặt trăng/mặt trời** ở góc trên bên phải để đổi giao diện. Giao diện tối dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành.
+
+### 3.3. Thanh tab ngang hoặc dọc
 
 Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển giữa **thanh tab ngang** (mặc định) và **thanh tab dọc bên trái**. Ở chế độ dọc, bấm mũi tên để **thu gọn** (chỉ còn biểu tượng; rê chuột để xem tên tab). App nhớ lựa chọn của bạn.
 
-### 3.3. Các thao tác dùng chung
+### 3.4. Các thao tác dùng chung
 
 - **Ô Trạm / Thiết bị:** vừa **gõ để tìm**, vừa **bấm ▼ để chọn** trong danh sách đã có. Bạn cũng có thể **gõ tên mới** (không bắt buộc phải chọn từ danh sách).
 - **Biểu tượng "i":** bấm để xem giải thích chi tiết; đóng bằng **×** hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.

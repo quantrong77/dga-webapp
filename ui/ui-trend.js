@@ -2,11 +2,31 @@
    theo thông số/pha. Tách từ app.js — xem ui-auth.js đầu file đó để biết quy ước
    chia sẻ scope giữa các file ui-*.js. */
 
-const TREND_COLORS = [
-  "#2e75b6", "#c1121f", "#1a7f37", "#b45309", "#6f42c1", "#0891b2", "#be185d",
-  "#4d7c0f", "#9333ea", "#0d9488", "#ca8a04", "#475569", "#db2777",
-  "#0f766e", "#a21caf", "#65a30d", "#c2410c", "#1e40af", "#991b1b",
-];
+// 8 màu đã kiểm tra phân biệt được cả với người mù màu, riêng cho từng nền (sáng/tối). Từ đường thứ 9
+// dùng lại màu nhưng đổi hình điểm để vẫn phân biệt được.
+const TREND_COLORS = {
+  light: ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"],
+  dark: ["#3987e5", "#d95926", "#199e70", "#c98500", "#d55181", "#008300", "#9085e9", "#e66767"],
+};
+const TREND_POINT_STYLES = ["circle", "rect", "triangle"];
+// Mỗi đường giữ nguyên ô màu trong suốt phiên, để bật/tắt thông số khác không đổi màu đường đang xem.
+const _trendSeriesSlots = new Map();
+let _trendLastArgs = null;
+
+function trendSeriesStyle(label) {
+  if (!_trendSeriesSlots.has(label)) _trendSeriesSlots.set(label, _trendSeriesSlots.size);
+  const slot = _trendSeriesSlots.get(label);
+  const colors = TREND_COLORS[document.documentElement.dataset.theme === "dark" ? "dark" : "light"];
+  return {
+    color: colors[slot % colors.length],
+    pointStyle: TREND_POINT_STYLES[Math.floor(slot / colors.length) % TREND_POINT_STYLES.length],
+  };
+}
+
+// Đổi giao diện: vẽ lại đồ thị đang hiện bằng màu của giao diện mới.
+document.addEventListener("dga:themechange", () => {
+  if (_trendChart && _trendLastArgs) renderTrendChart(..._trendLastArgs);
+});
 
 // Thứ tự ưu tiên hiển thị khi tách theo pha: A, B, C trước, các giá trị khác (hiếm gặp,
 // vd người dùng gõ tự do pha khác) xếp sau theo alphabet.
@@ -340,6 +360,7 @@ function trendPoints(records, valueOf) {
 }
 
 function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
+  _trendLastArgs = [gasRecords, oilRecords, oltcRecords];
   const canvas = $("trendChart");
   // Bảng "Dự báo xu hướng" (renderTrendForecastTable()) chỉ cần các hàm tính toán thuần ở
   // dga-logic.js (forecastGasTrend()) và DOM bảng — KHÔNG phụ thuộc Chart.js — nên vẫn phải
@@ -444,13 +465,15 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     canvas.classList.remove("hidden");
   }
 
-  const datasets = seriesSpecs.map((spec, idx) => {
-    const color = TREND_COLORS[idx % TREND_COLORS.length];
+  const datasets = seriesSpecs.map((spec) => {
+    const { color, pointStyle } = trendSeriesStyle(spec.label);
     return {
       label: spec.label,
       data: spec.points,
       borderColor: color,
       backgroundColor: color,
+      pointStyle,
+      borderWidth: 2,
       yAxisID: spec.axis,
       spanGaps: true,
       tension: 0.15,
@@ -505,7 +528,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       if (!forecast.ok || !forecast.methods.average) return;
       const avg = forecast.methods.average;
       const lastPoint = spec.points[spec.points.length - 1];
-      const color = TREND_COLORS[idx % TREND_COLORS.length];
+      const { color } = trendSeriesStyle(spec.label);
       datasets.push({
         label: `${spec.label} — dự báo (TB 3 thuật toán)`,
         data: [

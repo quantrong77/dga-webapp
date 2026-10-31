@@ -5,36 +5,77 @@
    var(--blue-900), var(--radius)... khai báo ở :root bên dưới. */
 
 :root {
-  --blue-900: #1f4e78;
-  --blue-700: #2e75b6;
-  --blue-100: #eaf2fa;
-  --gray-50: #f7f8fa;
-  --gray-100: #eef0f3;
-  --gray-300: #d6dae0;
-  --gray-600: #5b6472;
-  --gray-900: #1c222b;
-  --ok: #1a7f37;
-  --ok-bg: #e6f4ea;
-  --bad: #c1121f;
-  --bad-bg: #fdecec;
-  --warn: #b45309;
-  --warn-bg: #fef3e2;
-  /* Màu nhấn phụ (KHÔNG mang ý nghĩa trạng thái đạt/cảnh báo/lỗi — chỉ dùng trang
-     trí/điểm nhấn, ví dụ viền khi hover, để tránh đơn điệu chỉ có 1 tông xanh) */
-  --accent: #0a8f8a;
+  color-scheme: light;
+  /* Lấy từ logo EVNNPT: navy làm màu thương hiệu. Đỏ thương hiệu KHÔNG dùng cho giao diện vì
+     trong app này đỏ nghĩa là "Không đạt/Báo động". */
+  --evn-navy: #1b2470;
+  --header-bg: var(--evn-navy);
+  --surface: #ffffff;
+  --blue-900: #1b2470; /* chữ nhấn: tiêu đề, tab đang chọn */
+  --blue-800: #232e8c;
+  --blue-700: #2c3fb8; /* hành động: liên kết, viền nút, focus */
+  --blue-100: #e9ebfa;
+  --btn-primary: #1b2470;
+  --btn-primary-hover: #232e8c;
+  --on-accent: #ffffff; /* chữ trên nền --blue-700 và nền trạng thái */
+  --gray-50: #f4f5fa;
+  --gray-100: #e9ebf3;
+  --gray-200: #dde0ec;
+  --gray-300: #cdd1e0;
+  --gray-600: #4f5674;
+  --gray-900: #171b33;
+  --ok: #12703a;
+  --ok-bg: #e3f4e9;
+  --bad: #b3121d;
+  --bad-bg: #fcebec;
+  --warn: #a44a00;
+  --warn-bg: #fdf0df;
+  --accent: #0a7f7a;
   --accent-bg: #e3f6f5;
-  /* 2 màu chỉ dùng riêng cho icon "3 bánh răng xoay" (#authLoadingOverlay/.gear-loader,
-     xem style-auth.css) — thuần trang trí minh họa "đang xử lý", không mang ý nghĩa
-     trạng thái đạt/cảnh báo/lỗi như --ok/--warn/--bad nên tách riêng, không dùng lại
-     --warn (--warn là màu CẢNH BÁO có ý nghĩa, dùng lẫn sẽ gây hiểu nhầm). */
+  /* Màu 3 pha theo quy ước lưới điện: A vàng, B xanh lá, C đỏ. */
+  --phase-a: #e9b800;
+  --phase-b: #1e9e4a;
+  --phase-c: #d9262c;
   --gear-gray: #98a2b3;
   --gear-orange: #e2793c;
-  --radius: 10px;
-  --shadow-sm: 0 1px 2px rgba(20, 40, 70, 0.05);
-  --shadow-md: 0 4px 14px rgba(20, 40, 70, 0.08);
-  --shadow-lg: 0 20px 60px rgba(10, 20, 35, 0.35);
+  --radius: 8px;
+  --shadow-sm: none;
+  --shadow-md: 0 4px 14px rgba(20, 30, 80, 0.1);
+  --shadow-lg: 0 20px 60px rgba(10, 15, 45, 0.35);
   font-size: 15px;
 }
+
+/* Giao diện tối cho ca đêm: giữ tông navy của thương hiệu, không dùng đen. Trạng thái được chọn
+   lại độ sáng để vẫn đủ tương phản trên nền navy. Xem ui/ui-theme.js. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --header-bg: #121749;
+  --surface: #171d45;
+  --blue-900: #d5dbff;
+  --blue-800: #bfc8ff;
+  --blue-700: #9aa9ff;
+  --blue-100: #252e63;
+  --btn-primary: #4556d6;
+  --btn-primary-hover: #5567e6;
+  --on-accent: #0f1433;
+  --gray-50: #0f1433;
+  --gray-100: #1e2550;
+  --gray-200: #2a3263;
+  --gray-300: #39417a;
+  --gray-600: #aab1d3;
+  --gray-900: #e8eaf6;
+  --ok: #5ad58a;
+  --ok-bg: #12351f;
+  --bad: #ff8a8f;
+  --bad-bg: #43161c;
+  --warn: #f2b35c;
+  --warn-bg: #3a2a12;
+  --accent: #4fd1cb;
+  --accent-bg: #123a3a;
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+:focus-visible { outline: 2px solid var(--blue-700); outline-offset: 2px; }
 
 * { box-sizing: border-box; }
 
@@ -75,61 +116,34 @@ body {
 
 header.app-header {
   position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  background: var(--header-bg);
   color: #fff;
-  padding: 18px 28px;
-  display: grid;
-  /* minmax(0, 1fr) (thay vì 1fr) để 2 cột trái/phải luôn bằng nhau và cột giữa
-     (tên ứng dụng + ghi chú) thực sự canh giữa trang, bất kể nội dung 2 bên
-     (badge kết nối vs. thông tin người dùng) rộng khác nhau. */
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  padding: 12px 24px 16px;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 8px 16px;
-  box-shadow: 0 4px 18px rgba(20, 40, 70, 0.22);
 }
 
-/* Họa tiết lưới chấm mờ phía sau header — gợi liên tưởng mạch/lưới điện, rất nhẹ
-   để không ảnh hưởng độ đọc của chữ phía trên. */
-header.app-header::before {
+/* Thanh cái 3 pha ở mép dưới header: dấu hiệu riêng của app, cùng màu với cột pha A/B/C. */
+header.app-header::after {
   content: "";
   position: absolute;
-  inset: 0;
-  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.14) 1px, transparent 1.4px);
-  background-size: 24px 24px;
-  pointer-events: none;
-}
-header.app-header > * { position: relative; z-index: 1; }
-
-/* Trái: trạng thái kết nối database. Giữa: tên ứng dụng + ghi chú (canh giữa
-   trang). Phải: thông tin người đăng nhập + nút đăng xuất. */
-header.app-header .header-left {
-  justify-self: start;
-  /* PHẢI có display:flex + align-items:center ở đây (giống .header-right bên dưới) —
-     nếu không, nút icon #btnToggleTabLayout (display:inline-flex, canh theo baseline
-     mặc định) và badge #storageBadge (display:inline-block, vertical-align:middle) là
-     2 phần tử inline-level nằm cạnh nhau sẽ bị lệch cao/thấp so với nhau (baseline vs
-     middle khác nhau), dù cả 2 đều "cao 30px"/"canh middle" riêng lẻ. */
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: linear-gradient(to right, var(--phase-a) 33.33%, var(--phase-b) 33.33% 66.66%, var(--phase-c) 66.66%);
 }
 
-header.app-header .header-center {
-  justify-self: center;
-  text-align: center;
-  /* Giới hạn bề rộng cột giữa: nếu không, dòng ghi chú (khá dài) sẽ chiếm gần
-     hết chiều ngang header, đè lên vùng bên phải (email người dùng + nút
-     Đăng xuất) mỗi khi 1 trong 2 bên phải xuống dòng. */
-  max-width: 640px;
-}
+/* Trái: tên ứng dụng, rồi bố cục tab và trạng thái kết nối. Phải: giao diện và tài khoản. */
+header.app-header .header-center { order: -1; }
+header.app-header .header-left { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; max-width: 100%; }
 
 .app-title-row {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 9px;
-  margin-bottom: 2px;
 }
 
 .app-logo-icon {
@@ -141,7 +155,8 @@ header.app-header .header-center {
 }
 
 header.app-header h1 {
-  font-size: 19px;
+  font-size: 17px;
+  font-weight: 700;
   margin: 0;
 }
 
@@ -156,24 +171,12 @@ header.app-header p {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-self: end;
+  margin-left: auto;
 }
 
 @media (max-width: 800px) {
-  header.app-header {
-    /* minmax(0, 1fr), không phải "1fr" trơn — nếu không, cột đơn này sẽ bị ép
-       rộng ra bằng nội dung dài nhất bên trong (badge email người dùng), gây
-       tràn ngang toàn trang trên điện thoại ("grid blowout"). */
-    grid-template-columns: minmax(0, 1fr);
-    justify-items: center;
-    text-align: center;
-  }
-  header.app-header .header-left,
-  header.app-header .header-center,
-  .header-right {
-    justify-self: center;
-    max-width: 100%;
-  }
+  header.app-header .header-center { flex-basis: 100%; }
+  .header-right { margin-left: 0; }
 }
 
 .badge {
@@ -258,7 +261,7 @@ header.app-header p {
 .header-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
 .header-icon-btn[aria-pressed="true"] {
   background: #fff;
-  color: var(--blue-900);
+  color: var(--evn-navy);
   border-color: #fff;
 }
 .header-icon-btn .icon-svg { width: 16px; height: 16px; margin-right: 0; }

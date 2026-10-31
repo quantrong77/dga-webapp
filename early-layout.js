@@ -7,6 +7,14 @@
    tồn tại. Đây là SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng (không phải dữ liệu nghiệp vụ)
    nên lưu ở localStorage, không qua Storage (gsheet/Supabase) — xem setupTabLayoutToggle() ở
    app-core.js (gắn sự kiện bấm nút #btnToggleTabLayout + lưu lại lựa chọn khi đổi). */
+// Giao diện sáng/tối: áp trước khi vẽ trang để không nháy nền trắng. Chưa chọn thì theo hệ điều hành.
+(function () {
+  let saved = null;
+  try { saved = localStorage.getItem("dga_theme"); } catch (e) {}
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = saved === "dark" || saved === "light" ? saved : prefersDark ? "dark" : "light";
+})();
+
 try {
   if (localStorage.getItem("dga_tab_layout") === "sidebar") {
     document.body.classList.add("tabs-sidebar");

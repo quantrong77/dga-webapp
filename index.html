@@ -103,6 +103,8 @@
       <symbol id="icon-hash" viewBox="0 0 24 24"><path d="M9.5 3L7 21M17 3l-2.5 18M4 8.5h16M3 15.5h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-calendar" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-note" viewBox="0 0 24 24"><path d="M5 3.5h11l3 3v13.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
+      <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3 7 7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-gear-loader" viewBox="6 10 100 92">
         <g class="gear-loader-big"><path fill="var(--gear-gray)" d="M 80.16 61.85 L 86.57 60.80 L 86.57 71.20 L 80.16 70.15 L 79.62 72.65 L 78.83 75.09 L 77.79 77.43 L 83.60 80.35 L 77.48 88.77 L 72.92 84.14 L 71.01 85.85 L 68.93 87.36 L 66.72 88.65 L 69.71 94.42 L 59.81 97.64 L 58.83 91.21 L 56.28 91.47 L 53.72 91.47 L 51.17 91.21 L 50.19 97.64 L 40.29 94.42 L 43.28 88.65 L 41.07 87.36 L 38.99 85.85 L 37.08 84.14 L 32.52 88.77 L 26.40 80.35 L 32.21 77.43 L 31.17 75.09 L 30.38 72.65 L 29.84 70.15 L 23.43 71.20 L 23.43 60.80 L 29.84 61.85 L 30.38 59.35 L 31.17 56.91 L 32.21 54.57 L 26.40 51.65 L 32.52 43.23 L 37.08 47.86 L 38.99 46.15 L 41.07 44.64 L 43.28 43.35 L 40.29 37.58 L 50.19 34.36 L 51.17 40.79 L 53.72 40.53 L 56.28 40.53 L 58.83 40.79 L 59.81 34.36 L 69.71 37.58 L 66.72 43.35 L 68.93 44.64 L 71.01 46.15 L 72.92 47.86 L 77.48 43.23 L 83.60 51.65 L 77.79 54.57 L 78.83 56.91 L 79.62 59.35 Z"/></g>
         <g class="gear-loader-blue"><path fill="var(--blue-700)" d="M 43.69 29.96 L 47.61 29.15 L 47.61 36.85 L 43.69 36.04 L 42.86 38.74 L 41.54 41.24 L 44.88 43.43 L 39.43 48.88 L 37.24 45.54 L 34.74 46.86 L 32.04 47.69 L 32.85 51.61 L 25.15 51.61 L 25.96 47.69 L 23.26 46.86 L 20.76 45.54 L 18.57 48.88 L 13.12 43.43 L 16.46 41.24 L 15.14 38.74 L 14.31 36.04 L 10.39 36.85 L 10.39 29.15 L 14.31 29.96 L 15.14 27.26 L 16.46 24.76 L 13.12 22.57 L 18.57 17.12 L 20.76 20.46 L 23.26 19.14 L 25.96 18.31 L 25.15 14.39 L 32.85 14.39 L 32.04 18.31 L 34.74 19.14 L 37.24 20.46 L 39.43 17.12 L 44.88 22.57 L 41.54 24.76 L 42.86 27.26 Z"/></g>
@@ -196,6 +198,9 @@
       </div>
     </div>
     <div class="header-right">
+      <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối">
+        <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg>
+      </button>
       <!-- Chỉ hiện khi Auth.enabled && Auth.current (giống userBadge, xem
            refreshAuthHeaderUI() ở ui-auth.js) — mở modal #changePasswordOverlay bên dưới. -->
       <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu">
@@ -2252,7 +2257,7 @@
         </div>
         <div class="section-title">Kết quả thí nghiệm theo pha</div>
         <div class="table-scroll"><table>
-          <thead><tr><th>Hạng mục</th><th>Pha A</th><th>Pha B</th><th>Pha C</th></tr></thead>
+          <thead><tr><th>Hạng mục</th><th><span class="phase-dot a"></span>Pha A</th><th><span class="phase-dot b"></span>Pha B</th><th><span class="phase-dot c"></span>Pha C</th></tr></thead>
           <tbody>
             <tr><td>Số chế tạo</td><td><input id="t3_serial_A" type="text" aria-label="Số chế tạo pha A" /></td><td><input id="t3_serial_B" type="text" aria-label="Số chế tạo pha B" /></td><td><input id="t3_serial_C" type="text" aria-label="Số chế tạo pha C" /></td></tr>
             <tr><td>Điện áp chọc thủng (kV)</td><td><input id="t3_bdv_A" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) pha A" /></td><td><input id="t3_bdv_B" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) pha B" /></td><td><input id="t3_bdv_C" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) pha C" /></td></tr>
@@ -2274,7 +2279,7 @@
         <div class="hidden" id="t3ResultWrap" style="margin-top:18px;">
           <div class="section-title">Đánh giá: <span id="t3Overall"></span></div>
           <div class="table-scroll"><table>
-            <thead><tr><th>Hạng mục</th><th>Pha A</th><th>Pha B</th><th>Pha C</th><th>Giới hạn</th><th>Đánh giá</th><th>Trên BBTN</th></tr></thead>
+            <thead><tr><th>Hạng mục</th><th><span class="phase-dot a"></span>Pha A</th><th><span class="phase-dot b"></span>Pha B</th><th><span class="phase-dot c"></span>Pha C</th><th>Giới hạn</th><th>Đánh giá</th><th>Trên BBTN</th></tr></thead>
             <tbody id="t3ResultTable"></tbody>
           </table></div>
           <p class="note hidden" id="t3MismatchNote" style="color:var(--warn); font-weight:600;"></p>
@@ -2637,13 +2642,18 @@
           </tr>
           </tbody>
           </table></div>
-          <h3>3.2. Thanh tab ngang hoặc dọc</h3>
+          <h3>3.2. Giao diện sáng hoặc tối</h3>
+          <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên
+          phải để đổi giao diện. Giao diện tối dễ nhìn hơn khi làm việc ban đêm.
+          Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt
+          của hệ điều hành.</p>
+          <h3>3.3. Thanh tab ngang hoặc dọc</h3>
           <p>Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển giữa
           <strong>thanh tab ngang</strong> (mặc định) và <strong>thanh tab dọc bên
           trái</strong>. Ở chế độ dọc, bấm mũi tên để <strong>thu gọn</strong>
           (chỉ còn biểu tượng; rê chuột để xem tên tab). App nhớ lựa chọn của
           bạn.</p>
-          <h3>3.3. Các thao tác dùng chung</h3>
+          <h3>3.4. Các thao tác dùng chung</h3>
           <ul class="rec-list">
           <li><strong>Ô Trạm / Thiết bị:</strong> vừa <strong>gõ để tìm</strong>,
           vừa <strong>bấm ▼ để chọn</strong> trong danh sách đã có. Bạn cũng có
@@ -3701,6 +3711,7 @@
        không quan trọng, TRỪ app-core.js phải nạp SAU CÙNG (xem ghi chú trong file đó). -->
   <script src="ui/ui-auth.js"></script>
   <script src="ui/ui-busy.js"></script>
+  <script src="ui/ui-theme.js"></script>
   <script src="ui/ui-guides.js"></script>
   <script src="ui/ui-dga.js"></script>
   <script src="bbtn/bbtn-export.js"></script>

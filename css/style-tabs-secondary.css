@@ -24,13 +24,13 @@
   height: 32px;
   border-radius: 50%;
   background: var(--blue-700);
-  color: #fff;
+  color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 800;
   font-size: 13px;
-  border: 3px solid #fff;
+  border: 3px solid var(--surface);
   box-shadow: 0 0 0 2px var(--blue-100);
 }
 .process-step.branch .step-num { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-bg); }
@@ -78,7 +78,6 @@
 .note {
   font-size: 12.5px;
   color: var(--gray-600);
-  font-style: italic;
 }
 
 .hidden { display: none !important; }
@@ -108,7 +107,7 @@
 .duval-label { font-size: 4px; fill: var(--gray-600); }
 .duval-point {
   fill: var(--bad);
-  stroke: #fff;
+  stroke: var(--surface);
   stroke-width: 0.6;
   transform-box: fill-box;
   transform-origin: center;
@@ -132,8 +131,6 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--blue-900);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
   margin: 18px 0 8px;
 }
 
@@ -313,7 +310,7 @@ footer.app-footer {
   border: 1px solid var(--gray-300);
   border-left: 4px solid var(--mm-accent);
   border-radius: 10px;
-  background: #fff;
+  background: var(--surface);
   overflow: hidden;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
@@ -468,7 +465,7 @@ footer.app-footer {
   justify-content: center;
   flex: none;
 }
-.sm-steps li strong { color: var(--mm-accent); }
+.sm-steps li strong { color: inherit; }
 
 .sm-note {
   margin: 0;
@@ -504,7 +501,7 @@ footer.app-footer {
   border-radius: var(--radius);
   overflow: hidden;
   cursor: zoom-in;
-  background: #fff;
+  background: var(--surface);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 .qt-img-btn:hover {
@@ -582,8 +579,6 @@ footer.app-footer {
   font-size: 13px;
   font-weight: 700;
   color: var(--gray-600);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
 }
 .about-contact-list {
   list-style: none;

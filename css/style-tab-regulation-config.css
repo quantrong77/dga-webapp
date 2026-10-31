@@ -7,8 +7,6 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--blue-900);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
   margin: 22px 0 10px 0;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--gray-100);

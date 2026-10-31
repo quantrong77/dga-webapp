@@ -55,7 +55,7 @@ label.field {
   height: 16px;
   border-radius: 50%;
   border: 1px solid var(--gray-600);
-  background: #fff;
+  background: var(--surface);
   color: var(--gray-600);
   font-size: 11px;
   font-weight: 700;
@@ -69,7 +69,7 @@ label.field {
 }
 .info-icon-btn:hover, .info-icon-btn[aria-expanded="true"] {
   border-color: var(--blue-700);
-  color: #fff;
+  color: var(--on-accent);
   background: var(--blue-700);
 }
 
@@ -83,7 +83,7 @@ label.field {
   padding: 0;
   border-radius: 6px;
   border: 1px solid var(--gray-300);
-  background: #fff;
+  background: var(--surface);
   color: var(--gray-600);
   cursor: pointer;
   display: inline-flex;
@@ -212,13 +212,21 @@ label.field {
   gap: 8px;
   max-width: calc(100vw - 32px);
   padding: 8px 16px;
-  background: #fff;
+  background: var(--surface);
   color: var(--blue-900);
   border: 1px solid var(--blue-700);
   border-radius: 999px;
-  box-shadow: 0 4px 14px rgba(31, 78, 120, 0.28);
+  box-shadow: var(--shadow-md);
   font-size: 13px;
   font-weight: 600;
 }
 .busy-indicator.hidden { display: none; }
 body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: progress; }
+
+#t3Dropzone { margin-bottom: 14px; }
+
+/* Chấm màu pha ở tiêu đề cột A/B/C, cùng màu với thanh cái ở header. */
+.phase-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; }
+.phase-dot.a { background: var(--phase-a); }
+.phase-dot.b { background: var(--phase-b); }
+.phase-dot.c { background: var(--phase-c); }

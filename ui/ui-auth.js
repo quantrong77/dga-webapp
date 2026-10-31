@@ -122,6 +122,7 @@ function editLogBadgeHtml(rec) {
 
 async function init() {
   setupBusyIndicator();
+  setupTheme();
   setupAuthForms();
   setupChangePassword();
 

@@ -21,7 +21,7 @@
   border-radius: 6px;
   border: 1px solid var(--gray-300);
   flex: none;
-  background: #fff;
+  background: var(--surface);
 }
 .feedback-image-preview-info {
   display: flex;
@@ -63,7 +63,7 @@
   border-radius: 8px;
   border: 1px solid var(--gray-300);
   cursor: zoom-in;
-  background: #fff;
+  background: var(--surface);
 }
 .feedback-card-body { flex: 1 1 auto; min-width: 0; }
 .feedback-card-meta {
@@ -90,13 +90,13 @@ input, select, textarea {
   padding: 8px 10px;
   border: 1px solid var(--gray-300);
   border-radius: 6px;
-  background: #fff;
+  background: var(--surface);
   color: var(--gray-900);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--blue-700);
-  box-shadow: 0 0 0 3px rgba(46, 117, 182, 0.18);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue-700) 25%, transparent);
 }
 
