@@ -200,3 +200,25 @@ label.field {
   padding: 0;
 }
 
+/* Chỉ báo xoay "Đang lưu..." ở giữa cạnh trên màn hình (ui/ui-busy.js), nổi trên cả modal và toast. */
+.busy-indicator {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 16px;
+  background: #fff;
+  color: var(--blue-900);
+  border: 1px solid var(--blue-700);
+  border-radius: 999px;
+  box-shadow: 0 4px 14px rgba(31, 78, 120, 0.28);
+  font-size: 13px;
+  font-weight: 600;
+}
+.busy-indicator.hidden { display: none; }
+body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: progress; }
