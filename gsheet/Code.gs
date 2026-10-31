@@ -234,6 +234,11 @@ const INSTRUMENT_OILTEST_HEADERS = [
   // 2024.js) — KHÔNG dùng cho đánh giá theo tiêu chuẩn nhà sản xuất ở trên. Thêm ở
   // CUỐI (xem lưu ý trên).
   "um_kv",
+  // BBTN 3 pha chung 1 biên bản (bbtn/oil-bbtn.js) — thêm ở CUỐI (xem lưu ý trên). Mỗi pha 1
+  // dòng; bbtn_group_id nối các pha cùng biên bản; bbtn_info là CHUỖI JSON thông tin chung của
+  // biên bản (số chế tạo, loại dầu, lý do, kết luận...) để xuất lại đúng biên bản đó; bbtn_*
+  // còn lại là file PDF đính kèm dùng chung cho cả 3 pha. Bản ghi nhập từng pha lẻ để trống.
+  "bbtn_group_id", "bbtn_info", "bbtn_file_id", "bbtn_url", "bbtn_name",
 ];
 
 // Tài khoản người dùng — mật khẩu KHÔNG lưu gốc, chỉ lưu password_hash (SHA-256

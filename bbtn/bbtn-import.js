@@ -360,5 +360,60 @@ async function extract(file, onProgress) {
   };
 }
 
-window.BbtnImport = { extract };
+// ---------------------------------------------------------------------------
+// Đọc PDF thành dòng chữ cho BBTN dầu 3 pha (xem bbtn/oil-bbtn.js). Khác pdfFileToLines() ở 2
+// điểm mà mẫu này cần: bỏ watermark chữ ký số xoay chéo đè lên bảng số liệu, và ghép mảnh chữ theo
+// khoảng cách thật (PDF ký số hay tách "TI 566" thành "T" + "I 5" + "66"). Số biên bản của file đã
+// ký nằm trong hình ảnh của ô ký số, không có ở lớp chữ nên không đọc được.
+// ---------------------------------------------------------------------------
+const WORD_GAP_PT = 1.5; // khoảng trống ngang lớn hơn mức này mới tính là có dấu cách
+
+async function pdfFileToCleanLines(file) {
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const lines = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const rows = [];
+    for (const item of content.items) {
+      if (!item.str || !item.str.trim()) continue;
+      const t = item.transform;
+      if (Math.abs(t[1]) > 0.01 || Math.abs(t[2]) > 0.01) continue; // chữ xoay = watermark
+      let row = rows.find((r) => Math.abs(r.y - t[5]) <= 2.5);
+      if (!row) {
+        row = { y: t[5], items: [] };
+        rows.push(row);
+      }
+      row.items.push({ x: t[4], w: item.width || 0, str: item.str });
+    }
+    rows.sort((a, b) => b.y - a.y);
+    for (const row of rows) {
+      row.items.sort((a, b) => a.x - b.x);
+      let text = "";
+      let end = null;
+      for (const it of row.items) {
+        if (end !== null && it.x - end > WORD_GAP_PT) text += " ";
+        text += it.str;
+        end = it.x + it.w;
+      }
+      lines.push(text.replace(/\s+/g, " ").trim());
+    }
+  }
+  return lines.filter(Boolean);
+}
+
+/** { lines, viaOCR } — đọc trực tiếp, không có lớp chữ thì mới dùng OCR (giống extract()). */
+async function readLines(file, onProgress) {
+  const lines = await pdfFileToCleanLines(file);
+  if (lines.join("\n").trim().length >= MIN_TEXT_LEN_FOR_DIRECT_READ) return { lines, viaOCR: false };
+  try {
+    const ocrLines = await pdfFileToLinesViaOCR(file, onProgress);
+    if (ocrLines.length) return { lines: ocrLines, viaOCR: true };
+  } catch (err) {
+    // Giống extract(): lỗi OCR thì coi như không đọc được, người gọi báo "không nhận diện được".
+  }
+  return { lines, viaOCR: false };
+}
+
+window.BbtnImport = { extract, readLines };
 window.dispatchEvent(new Event("bbtnimport:ready"));

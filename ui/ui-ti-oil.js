@@ -19,6 +19,9 @@ function tioVerdictPill(v) {
 
 // _editingTioOilTestId: id của thí nghiệm dầu TI/TU đang SỬA (null = đang nhập MỚI).
 let _editingTioOilTestId = null;
+// Các cột BBTN 3 pha của bản ghi đang sửa — form 1 pha không có các ô này nhưng server ghi đè
+// cả dòng, nên phải gửi lại nguyên giá trị cũ để không làm mất liên kết biên bản/file đính kèm.
+let _editingTioOilBbtnFields = {};
 let _allTioOilTests = [];
 
 function tioEquipmentTypeShort(equipmentType) {
@@ -27,6 +30,7 @@ function tioEquipmentTypeShort(equipmentType) {
 
 function onTioEquipmentTypeChange() {
   refreshInstrumentOilManufacturerOptions($("tio_equipmenttype").value);
+  refreshTio3ManufacturerOptions();
 }
 
 function clearTioOilForm() {
@@ -39,6 +43,7 @@ function clearTioOilForm() {
 
 function resetTioOilTestEditState() {
   _editingTioOilTestId = null;
+  _editingTioOilBbtnFields = {};
   $("editingTioOilTestNote").classList.add("hidden");
   $("btnCancelEditTioOilTest").classList.add("hidden");
   $("btnAnalyzeTioOil").textContent = "Đánh giá & Lưu";
@@ -48,6 +53,10 @@ function resetTioOilTestEditState() {
 function onEditTioOilTest(rec) {
   if (!canEditRecord(rec)) return;
   _editingTioOilTestId = rec.id;
+  _editingTioOilBbtnFields = {
+    bbtn_group_id: rec.bbtn_group_id, bbtn_info: rec.bbtn_info,
+    bbtn_file_id: rec.bbtn_file_id, bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name,
+  };
   $("tio_equipmenttype").value = rec.equipment_type || DGA.EQUIPMENT_TYPES.TI;
   refreshInstrumentOilManufacturerOptions($("tio_equipmenttype").value);
   $("tio_tram").value = rec.tram || "";
@@ -77,6 +86,7 @@ async function onAnalyzeTioOil() {
   const manufacturer = $("tio_nsx").value || null;
 
   const tioOilTest = {
+    ..._editingTioOilBbtnFields,
     id: _editingTioOilTestId || undefined,
     equipment_type: equipmentType,
     tram: $("tio_tram").value.trim(),
@@ -210,10 +220,16 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${tioVerdictPill(evalResult.overall)}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
+        ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" title="Xem file BBTN đã đính kèm" style="padding:5px 10px; font-size:12px;">Xem</button>` : ""}
+        ${["A", "B", "C"].includes(rec.phase) ? `<button class="btn ghost" data-action="bbtn3" title="Mở cả 3 pha của biên bản này để xem, sửa hoặc xuất BBTN" style="padding:5px 10px; font-size:12px;">BBTN 3 pha</button>` : ""}
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
       </div></td>
     `;
+    const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
+    if (viewBbtnBtn) viewBbtnBtn.addEventListener("click", () => viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name }));
+    const bbtn3Btn = tr.querySelector('[data-action="bbtn3"]');
+    if (bbtn3Btn) bbtn3Btn.addEventListener("click", () => openTio3FromRecord(rec));
     const editBtn = tr.querySelector('[data-action="edit"]');
     if (editBtn) editBtn.addEventListener("click", () => onEditTioOilTest(rec));
     const delBtn = tr.querySelector('[data-action="del"]');

@@ -2209,6 +2209,72 @@
 
       <!-- ============== DẦU CÁCH ĐIỆN TI/TU — Điều 10/11 QĐ1901 (theo NSX) ============== -->
       <div id="dauInstrumentWrap">
+      <!-- BBTN 3 pha chung 1 biên bản (mẫu PTC3/BM.14) — đọc PDF hoặc nhập tay, tách thành 3 bản ghi
+           A/B/C, xuất lại theo template/template-bbtn-dau-3pha.docx. Xem ui/ui-ti-oil-3pha.js. -->
+      <div class="panel" id="tio3Panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>BBTN dầu 3 pha (A, B, C chung một biên bản)</h2>
+        <p class="note">Tải PDF biên bản để tự điền, hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành 1 bản ghi
+          cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
+        <div class="file-dropzone" id="t3Dropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN 3 pha vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
+          <input id="t3_file" type="file" accept="application/pdf,.pdf" />
+        </div>
+        <p class="note hidden" id="t3ImportNote" role="status"></p>
+        <div class="grid">
+          <label class="field">Trạm
+            <div class="combo-wrap">
+              <input id="t3_tram" type="text" placeholder="Gõ để tìm hoặc nhập trạm mới" autocomplete="off" />
+              <button type="button" id="t3_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+              <div id="t3_tram_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field">Vị trí lắp đặt (thiết bị)<input id="t3_thietbi" type="text" placeholder="VD: TI 566" autocomplete="off" /></label>
+          <label class="field">Nhà sản xuất áp tiêu chuẩn (bắt buộc để đánh giá)
+            <select id="t3_nsx"><option value="">— Chọn nhà sản xuất —</option></select>
+          </label>
+          <label class="field">Hãng sản xuất ghi trên BBTN<input id="t3_hangsx" type="text" placeholder="VD: ARTECHE – SPAIN (CA525)" /></label>
+          <label class="field">Vị trí lấy mẫu<input id="t3_vitrilaymau" type="text" value="Van lấy mẫu" /></label>
+          <label class="field">Điện áp định mức (kV)<input id="t3_udm" type="number" min="0" step="1" /></label>
+          <label class="field">Công suất (VA)<input id="t3_congsuat" type="text" /></label>
+          <label class="field">Năm sản xuất<input id="t3_namsx" type="number" min="1900" step="1" /></label>
+          <label class="field">Năm vận hành<input id="t3_namvanhanh" type="number" min="1900" step="1" /></label>
+          <label class="field">Loại dầu<input id="t3_loaidau" type="text" /></label>
+          <label class="field">Ngày lấy mẫu<input id="t3_ngay" type="date" /></label>
+          <label class="field">Lý do thí nghiệm<input id="t3_lydo" type="text" /></label>
+          <label class="field">Nhiệt độ môi trường (°C)<input id="t3_nhietdo" type="number" step="0.1" /></label>
+          <label class="field">Độ ẩm môi trường (%)<input id="t3_doam" type="number" min="0" step="0.1" /></label>
+        </div>
+        <div class="section-title">Kết quả thí nghiệm theo pha</div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Hạng mục</th><th>Pha A</th><th>Pha B</th><th>Pha C</th></tr></thead>
+          <tbody>
+            <tr><td>Số chế tạo</td><td><input id="t3_serial_A" type="text" aria-label="Số chế tạo pha A" /></td><td><input id="t3_serial_B" type="text" aria-label="Số chế tạo pha B" /></td><td><input id="t3_serial_C" type="text" aria-label="Số chế tạo pha C" /></td></tr>
+            <tr><td>Điện áp chọc thủng (kV)</td><td><input id="t3_bdv_A" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) pha A" /></td><td><input id="t3_bdv_B" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) pha B" /></td><td><input id="t3_bdv_C" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) pha C" /></td></tr>
+            <tr><td>tgδ 90°C (%)</td><td><input id="t3_tgd90_A" type="number" min="0" step="0.001" aria-label="tgδ 90°C (%) pha A" /></td><td><input id="t3_tgd90_B" type="number" min="0" step="0.001" aria-label="tgδ 90°C (%) pha B" /></td><td><input id="t3_tgd90_C" type="number" min="0" step="0.001" aria-label="tgδ 90°C (%) pha C" /></td></tr>
+            <tr><td>tgδ 20°C (%) — tùy chọn</td><td><input id="t3_tgd20_A" type="number" min="0" step="0.001" aria-label="tgδ 20°C (%) — tùy chọn pha A" /></td><td><input id="t3_tgd20_B" type="number" min="0" step="0.001" aria-label="tgδ 20°C (%) — tùy chọn pha B" /></td><td><input id="t3_tgd20_C" type="number" min="0" step="0.001" aria-label="tgδ 20°C (%) — tùy chọn pha C" /></td></tr>
+            <tr><td>Hàm lượng nước (ppm)</td><td><input id="t3_moisture_A" type="number" min="0" step="0.1" aria-label="Hàm lượng nước (ppm) pha A" /></td><td><input id="t3_moisture_B" type="number" min="0" step="0.1" aria-label="Hàm lượng nước (ppm) pha B" /></td><td><input id="t3_moisture_C" type="number" min="0" step="0.1" aria-label="Hàm lượng nước (ppm) pha C" /></td></tr>
+          </tbody>
+        </table></div>
+        <label class="field" style="margin-top:12px;">Ghi chú<input id="t3_ghichu" type="text" /></label>
+        <label class="field">Kết luận (để trống thì app tự viết sau khi đánh giá; sửa được trước khi xuất)
+          <textarea id="t3_ketluan" rows="3"></textarea>
+        </label>
+        <p class="note hidden" id="t3EditingNote" style="color:var(--warn); font-weight:600;">Đang mở biên bản đã lưu — bấm "Đánh giá &amp; Lưu 3 pha" để cập nhật đúng các bản ghi này.</p>
+        <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn primary" id="btnT3Analyze">Đánh giá &amp; Lưu 3 pha</button>
+          <button type="button" class="btn ghost" id="btnT3Export"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+          <button type="button" class="btn ghost" id="btnT3Clear">Xóa form</button>
+        </div>
+        <div class="hidden" id="t3ResultWrap" style="margin-top:18px;">
+          <div class="section-title">Đánh giá: <span id="t3Overall"></span></div>
+          <div class="table-scroll"><table>
+            <thead><tr><th>Hạng mục</th><th>Pha A</th><th>Pha B</th><th>Pha C</th><th>Giới hạn</th><th>Đánh giá</th><th>Trên BBTN</th></tr></thead>
+            <tbody id="t3ResultTable"></tbody>
+          </table></div>
+          <p class="note hidden" id="t3MismatchNote" style="color:var(--warn); font-weight:600;"></p>
+        </div>
+      </div>
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU</h2>
         <p class="note">Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
@@ -3004,6 +3070,37 @@
           lưu</strong> và báo rõ lý do; hãy nhờ Admin cấu hình.</li>
           <li>Kết quả có 3 mức: <strong>Đạt / Cảnh báo / Không đạt</strong>.</li>
           </ul>
+          <h4>BBTN dầu 3 pha (A, B, C chung một biên bản)</h4>
+          <p>Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3
+          cột kết quả pha A, B, C.</p>
+          <ol type="1">
+          <li><strong>Có file PDF:</strong> kéo thả vào ô tải file. App đọc thông
+          tin chung và số liệu từng pha, rồi điền sẵn vào form. Hãy so lại với
+          biên bản trước khi lưu. Biên bản dạng ảnh scan được đọc bằng OCR nên cần
+          so kỹ hơn.</li>
+          <li><strong>Nhập tay:</strong> điền thông tin chung và bảng kết quả theo
+          từng pha. Pha nào không thí nghiệm thì để trống.</li>
+          <li>Chọn <strong>Nhà sản xuất áp tiêu chuẩn</strong> (app tự chọn nếu
+          tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm <strong>Đánh giá
+          &amp; Lưu 3 pha</strong>.</li>
+          </ol>
+          <p>Khi lưu, mỗi pha thành một bản ghi riêng trong lịch sử dầu TI/TU, nên
+          tab <strong>Cảnh báo</strong> và <strong>Xu hướng</strong> theo dõi được
+          từng pha. File PDF được đính kèm chung cho các pha. Bảng đánh giá có cột
+          <strong>Trên BBTN</strong> để đối chiếu với đánh giá in trên biên bản,
+          và app báo nếu hai bên khác nhau. Đánh giá của mỗi hạng mục lấy theo pha
+          xấu nhất.</p>
+          <p>Nếu thiết bị đã có số liệu cùng ngày lấy mẫu, app hỏi trước khi ghi
+          đè, không tạo dòng trùng.</p>
+          <p><strong>Xuất biên bản:</strong> bấm <strong>Xuất BBTN (docx)</strong>
+          để tải file Word theo mẫu, đã điền số liệu, tiêu chuẩn, đánh giá và kết
+          luận. Kết luận do app viết sẵn và sửa được trước khi xuất. Trong Word,
+          bổ sung Phụ lục (tiêu chuẩn nhà sản xuất, số liệu xuất xưởng), số biên
+          bản và ngày ban hành rồi ký.</p>
+          <p>Muốn xem hoặc xuất lại biên bản cũ: ở bảng lịch sử, bấm <strong>BBTN
+          3 pha</strong> trên một dòng bất kỳ của biên bản đó. Các pha nhập lẻ
+          trước đây cũng mở được, gom theo cùng trạm, thiết bị và ngày lấy
+          mẫu.</p>
           <h3>9.4. Sứ xuyên (Bushing)</h3>
           <p>Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab
           <strong>DGA</strong> (khí hòa tan là phương pháp đánh giá chính cho sứ
@@ -3601,6 +3698,7 @@
   <script src="ui/ui-guides.js"></script>
   <script src="ui/ui-dga.js"></script>
   <script src="bbtn/bbtn-export.js"></script>
+  <script src="bbtn/oil-bbtn.js"></script>
   <script src="bbtn/tech-report-export.js"></script>
   <script src="bbtn/bbtn-batch-import.js"></script>
   <script src="ui/ui-standards.js"></script>
@@ -3609,6 +3707,7 @@
   <script src="ui/ui-oil.js"></script>
   <script src="ui/ui-oltc.js"></script>
   <script src="ui/ui-ti-oil.js"></script>
+  <script src="ui/ui-ti-oil-3pha.js"></script>
   <script src="ui/ui-history.js"></script>
   <script src="ui/ui-trend.js"></script>
   <script src="ui/ui-alerts.js"></script>

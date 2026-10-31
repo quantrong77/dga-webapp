@@ -680,16 +680,18 @@ const Storage = {
   },
 
   async addInstrumentOilTest(t) {
-    const record = { ...t, id: t.id || uid(), created_at: new Date().toISOString() };
+    // Có id sẵn = cập nhật bản ghi đã có (sửa, hoặc nhập lại đúng BBTN 3 pha đã lưu): giữ
+    // created_at gốc và ghi đè đúng dòng đó, không tạo dòng trùng.
+    const record = { ...t, id: t.id || uid(), created_at: t.created_at || new Date().toISOString() };
     if (this.mode === "gsheet") {
       return await gsheetPost("addInstrumentOilTest", { record });
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("instrument_oil_tests").insert(record).select();
+      const { data, error } = await sb().from("instrument_oil_tests").upsert(record).select();
       if (error) throw error;
       return data[0];
     }
-    const all = lsGet(LS_KEYS.instrumentOilTests);
+    const all = lsGet(LS_KEYS.instrumentOilTests).filter((r) => r.id !== record.id);
     all.push(record);
     lsSet(LS_KEYS.instrumentOilTests, all);
     return record;

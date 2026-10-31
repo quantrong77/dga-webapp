@@ -96,6 +96,7 @@ function refreshOilManufacturerOptions() {
 // nên KHÔNG có lựa chọn "— Không có / dùng QĐ1901 —" để tránh gây hiểu nhầm là vẫn có
 // ngưỡng mặc định nào đó.
 function refreshInstrumentOilManufacturerOptions(equipmentType) {
+  refreshTio3ManufacturerOptions(); // danh sách NSX của khối BBTN 3 pha, xem ui-ti-oil-3pha.js
   const sel = $("tio_nsx");
   if (!sel) return;
   const names = Array.from(new Set(

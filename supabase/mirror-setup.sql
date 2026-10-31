@@ -167,6 +167,11 @@ alter table oltc_oil_tests
 alter table instrument_oil_tests
   add column if not exists created_by text, add column if not exists updated_by text,
   add column if not exists updated_at timestamptz;
+-- BBTN dầu 3 pha chung 1 biên bản (bbtn/oil-bbtn.js).
+alter table instrument_oil_tests
+  add column if not exists bbtn_group_id text, add column if not exists bbtn_info text,
+  add column if not exists bbtn_file_id text, add column if not exists bbtn_url text,
+  add column if not exists bbtn_name text;
 alter table feedback
   add column if not exists image_file_id text, add column if not exists created_by text,
   add column if not exists updated_by text, add column if not exists updated_at timestamptz;

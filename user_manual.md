@@ -293,6 +293,22 @@ Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) 
 - Nếu chưa chọn hoặc hãng chưa có cấu hình, app **chặn lưu** và báo rõ lý do; hãy nhờ Admin cấu hình.
 - Kết quả có 3 mức: **Đạt / Cảnh báo / Không đạt**.
 
+#### BBTN dầu 3 pha (A, B, C chung một biên bản)
+
+Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.
+
+1. **Có file PDF:** kéo thả vào ô tải file. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Hãy so lại với biên bản trước khi lưu. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
+2. **Nhập tay:** điền thông tin chung và bảng kết quả theo từng pha. Pha nào không thí nghiệm thì để trống.
+3. Chọn **Nhà sản xuất áp tiêu chuẩn** (app tự chọn nếu tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm **Đánh giá & Lưu 3 pha**.
+
+Khi lưu, mỗi pha thành một bản ghi riêng trong lịch sử dầu TI/TU, nên tab **Cảnh báo** và **Xu hướng** theo dõi được từng pha. File PDF được đính kèm chung cho các pha. Bảng đánh giá có cột **Trên BBTN** để đối chiếu với đánh giá in trên biên bản, và app báo nếu hai bên khác nhau. Đánh giá của mỗi hạng mục lấy theo pha xấu nhất.
+
+Nếu thiết bị đã có số liệu cùng ngày lấy mẫu, app hỏi trước khi ghi đè, không tạo dòng trùng.
+
+**Xuất biên bản:** bấm **Xuất BBTN (docx)** để tải file Word theo mẫu, đã điền số liệu, tiêu chuẩn, đánh giá và kết luận. Kết luận do app viết sẵn và sửa được trước khi xuất. Trong Word, bổ sung Phụ lục (tiêu chuẩn nhà sản xuất, số liệu xuất xưởng), số biên bản và ngày ban hành rồi ký.
+
+Muốn xem hoặc xuất lại biên bản cũ: ở bảng lịch sử, bấm **BBTN 3 pha** trên một dòng bất kỳ của biên bản đó. Các pha nhập lẻ trước đây cũng mở được, gom theo cùng trạm, thiết bị và ngày lấy mẫu.
+
 ### 9.4. Sứ xuyên (Bushing)
 
 Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab **DGA** (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).

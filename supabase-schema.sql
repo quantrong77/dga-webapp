@@ -225,7 +225,14 @@ create table if not exists instrument_oil_tests (
   -- 2024.js) — KHÔNG dùng cho đánh giá theo tiêu chuẩn nhà sản xuất ở trên.
   um_kv numeric,
   ghi_chu text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  -- BBTN 3 pha chung 1 biên bản (bbtn/oil-bbtn.js): mỗi pha 1 dòng, bbtn_group_id nối các pha,
+  -- bbtn_info là chuỗi JSON thông tin chung của biên bản, bbtn_* là file PDF đính kèm dùng chung.
+  bbtn_group_id text,
+  bbtn_info text,
+  bbtn_file_id text,
+  bbtn_url text,
+  bbtn_name text
 );
 
 create index if not exists idx_instrument_oiltests_key on instrument_oil_tests (tram, thiet_bi);
