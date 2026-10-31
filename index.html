@@ -18,6 +18,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="image/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
   <!-- Be Vietnam Pro — font Google Fonts hỗ trợ tốt dấu tiếng Việt, dùng cho toàn bộ giao diện -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -190,6 +191,10 @@
            Dashboard ở tab mới, xem setupStorageBadgeLink() ở app-core.js. Nếu chưa cấu
            hình link thì vẫn hiển thị bình thường, bấm vào không có gì xảy ra. -->
       <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
+      <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
+        <span class="sync-dot"></span>
+        <span id="syncStatusText">Đã đồng bộ</span>
+      </button>
     </div>
     <div class="header-center">
       <div class="app-title-row">

@@ -194,6 +194,82 @@ function lsSet(key, value) {
 }
 
 // ---------------------------------------------------------------------------
+// Hàng đợi ngoại tuyến (Offline Sync Queue) & Bộ phát hiện mạng
+// ---------------------------------------------------------------------------
+const LS_SYNC_QUEUE_KEY = "dga_sync_queue_v1";
+
+function lsSyncQueueGet() {
+  try {
+    const raw = localStorage.getItem(LS_SYNC_QUEUE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.warn("localStorage read failed (sync queue)", e);
+    return [];
+  }
+}
+
+function lsSyncQueueSet(queue) {
+  try {
+    localStorage.setItem(LS_SYNC_QUEUE_KEY, JSON.stringify(queue));
+  } catch (e) {
+    console.warn("localStorage write failed (sync queue)", e);
+  }
+}
+
+function isNetworkError(err) {
+  if (typeof navigator !== "undefined" && navigator.onLine === false) return true;
+  if (!err) return false;
+  const msg = String((err && (err.message || err.details || err.hint)) || err || "").toLowerCase();
+  return (
+    msg.includes("failed to fetch") ||
+    msg.includes("network") ||
+    msg.includes("connection") ||
+    msg.includes("err_") ||
+    msg.includes("dns") ||
+    msg.includes("load failed") ||
+    msg.includes("timeout") ||
+    msg.includes("abort") ||
+    msg.includes("offline")
+  );
+}
+
+let _isSyncing = false;
+const _syncListeners = [];
+
+function notifySyncStatus(override) {
+  const queue = lsSyncQueueGet();
+  const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+  const status = {
+    online: override && override.online !== undefined ? override.online : isOnline,
+    syncing: override && override.syncing !== undefined ? override.syncing : _isSyncing,
+    pendingCount: queue.length,
+    mode: typeof Storage !== "undefined" ? Storage.mode : "local",
+  };
+  _syncListeners.forEach((fn) => {
+    try {
+      fn(status);
+    } catch (e) {
+      console.warn("Lỗi listener sync status:", e);
+    }
+  });
+}
+
+function enqueueSyncOp(action, payload) {
+  const queue = lsSyncQueueGet();
+  const item = {
+    id: "sq_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8),
+    action,
+    payload,
+    createdAt: new Date().toISOString(),
+    retries: 0,
+  };
+  queue.push(item);
+  lsSyncQueueSet(queue);
+  notifySyncStatus();
+  return item;
+}
+
+// ---------------------------------------------------------------------------
 // Auth — đăng ký / đăng nhập / phân quyền. CHỈ hỗ trợ ở chế độ Google Sheets
 // (backend xác thực nằm trong gsheet/Code.gs — action register/login/logout/me/
 // listUsers/setUserRole/deleteUser). Ở chế độ Supabase/localStorage, Auth.enabled
@@ -286,6 +362,10 @@ const Auth = {
       authLsSet(this.current);
       return this.current;
     } catch (err) {
+      if (isNetworkError(err)) {
+        console.warn("Mất mạng khi xác thực token — giữ nguyên phiên đăng nhập cục bộ đã lưu.");
+        return this.current;
+      }
       _authToken = null;
       this.current = null;
       authLsSet(null);
@@ -363,17 +443,151 @@ const Auth = {
   },
 };
 
+/** Thực thi lại 1 tác vụ từ hàng đợi đồng bộ lên server (Google Sheets hoặc Supabase). */
+async function executeRemoteSyncItem(item) {
+  const { action, payload } = item;
+  if (Storage.mode === "gsheet") {
+    if (action === "addMeasurement") return await gsheetPost("addMeasurement", payload);
+    if (action === "deleteMeasurement") return await gsheetPost("deleteMeasurement", payload);
+    if (action === "saveStandard") return await gsheetPost("saveStandard", payload);
+    if (action === "deleteStandard") return await gsheetPost("deleteStandard", payload);
+    if (action === "saveStation") return await gsheetPost("saveStation", payload);
+    if (action === "deleteStation") return await gsheetPost("deleteStation", payload);
+    if (action === "addOilTest") return await gsheetPost("addOilTest", payload);
+    if (action === "deleteOilTest") return await gsheetPost("deleteOilTest", payload);
+    if (action === "addOltcOilTest") return await gsheetPost("addOltcOilTest", payload);
+    if (action === "deleteOltcOilTest") return await gsheetPost("deleteOltcOilTest", payload);
+    if (action === "addInstrumentOilTest") return await gsheetPost("addInstrumentOilTest", payload);
+    if (action === "deleteInstrumentOilTest") return await gsheetPost("deleteInstrumentOilTest", payload);
+    if (action === "saveRegulationConfig") return await gsheetPost("saveRegulationConfig", payload);
+    if (action === "deleteRegulationConfig") return await gsheetPost("deleteRegulationConfig", payload);
+    if (action === "addFeedback") return await gsheetPost("addFeedback", payload);
+    if (action === "deleteFeedback") return await gsheetPost("deleteFeedback", payload);
+    if (action === "uploadAttachment") {
+      const res = await gsheetPost("uploadAttachment", payload);
+      if (res && res.url && payload.measurementId) {
+        await gsheetPost("addMeasurement", {
+          record: { id: payload.measurementId, bbtn_url: res.url, bbtn_name: res.name || payload.filename, bbtn_file_id: res.id || null },
+        });
+      }
+      return res;
+    }
+  } else if (Storage.mode === "supabase") {
+    if (action === "addMeasurement") {
+      const { data, error } = await sb().from("measurements").upsert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteMeasurement") {
+      const { error } = await sb().from("measurements").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "saveStandard") {
+      const { data, error } = await sb().from("manufacturer_standards").upsert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteStandard") {
+      const { error } = await sb().from("manufacturer_standards").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "saveStation") {
+      const { data, error } = await sb().from("stations").upsert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteStation") {
+      const { error } = await sb().from("stations").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "addOilTest") {
+      const { data, error } = await sb().from("oil_tests").insert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteOilTest") {
+      const { error } = await sb().from("oil_tests").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "addOltcOilTest") {
+      const { data, error } = await sb().from("oltc_oil_tests").insert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteOltcOilTest") {
+      const { error } = await sb().from("oltc_oil_tests").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "addInstrumentOilTest") {
+      const { data, error } = await sb().from("instrument_oil_tests").upsert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteInstrumentOilTest") {
+      const { error } = await sb().from("instrument_oil_tests").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "saveRegulationConfig") {
+      const { error } = await sb().from("regulation_config").upsert(payload.record);
+      if (error) throw error;
+      return;
+    }
+    if (action === "deleteRegulationConfig") {
+      const { error } = await sb().from("regulation_config").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+    if (action === "addFeedback") {
+      const { data, error } = await sb().from("feedback").insert(payload.record).select();
+      if (error) throw error;
+      return data && data[0];
+    }
+    if (action === "deleteFeedback") {
+      const { error } = await sb().from("feedback").delete().eq("id", payload.id);
+      if (error) throw error;
+      return;
+    }
+  }
+}
+
 const Storage = {
   mode: hasGsheetConfig() ? "gsheet" : hasSupabaseConfig() ? "supabase" : "local",
 
   async listMeasurements() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listMeasurements");
+      try {
+        const data = await gsheetGet("listMeasurements");
+        lsSet(LS_KEYS.measurements, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          console.warn("Mất kết nối mạng: trả về measurements từ bộ nhớ đệm ngoại tuyến (localStorage)");
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.measurements);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("measurements").select("*").order("sample_date", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("measurements").select("*").order("sample_date", { ascending: true });
+        if (error) throw error;
+        lsSet(LS_KEYS.measurements, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          console.warn("Mất kết nối mạng: trả về measurements từ bộ nhớ đệm ngoại tuyến (localStorage)");
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.measurements);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.measurements);
   },
@@ -384,79 +598,203 @@ const Storage = {
     // đúng dòng đó, không được tạo thêm dòng mới trùng thiết bị/ngày đo).
     const isEdit = !!m.id;
     const record = normalizeGasKeys({ ...m, id: m.id || uid(), created_at: m.created_at || new Date().toISOString() });
-    if (this.mode === "gsheet") {
-      // upsertRow() ở Code.gs tự UPDATE nếu id đã tồn tại, INSERT nếu chưa — đúng ngữ nghĩa.
-      return await gsheetPost("addMeasurement", { record });
-    }
-    if (this.mode === "supabase") {
-      // upsert (không phải insert) để lần SỬA/LƯU LẠI ghi đè đúng dòng cũ theo khóa
-      // chính id, thay vì báo lỗi trùng khóa hoặc âm thầm bỏ qua.
-      const { data, error } = await sb().from("measurements").upsert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
+
+    // Lưu ngay vào bộ nhớ cục bộ để UI phản ánh tức thì (Optimistic UI)
     const all = lsGet(LS_KEYS.measurements);
     const idx = isEdit ? all.findIndex((r) => r.id === record.id) : -1;
     if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.measurements, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addMeasurement", { record });
+        return record;
+      }
+      try {
+        const res = await gsheetPost("addMeasurement", { record });
+        return res || record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addMeasurement", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addMeasurement", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("measurements").upsert(record).select();
+        if (error) throw error;
+        if (data && data[0]) {
+          const freshIdx = all.findIndex((r) => r.id === record.id);
+          if (freshIdx >= 0) { all[freshIdx] = data[0]; lsSet(LS_KEYS.measurements, all); }
+          return data[0];
+        }
+        return record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addMeasurement", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteMeasurement(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteMeasurement", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("measurements").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.measurements).filter((r) => r.id !== id);
     lsSet(LS_KEYS.measurements, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteMeasurement", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteMeasurement", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteMeasurement", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteMeasurement", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("measurements").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteMeasurement", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   async listStandards() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listStandards");
+      try {
+        const data = await gsheetGet("listStandards");
+        lsSet(LS_KEYS.standards, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.standards);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("manufacturer_standards").select("*");
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("manufacturer_standards").select("*");
+        if (error) throw error;
+        lsSet(LS_KEYS.standards, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.standards);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.standards);
   },
 
   async saveStandard(s) {
     const record = { ...s, id: s.id || uid() };
-    if (this.mode === "gsheet") {
-      return await gsheetPost("saveStandard", { record });
-    }
-    if (this.mode === "supabase") {
-      const { data, error } = await sb().from("manufacturer_standards").upsert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
     const all = lsGet(LS_KEYS.standards);
     const idx = all.findIndex((r) => r.id === record.id);
     if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.standards, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("saveStandard", { record });
+        return record;
+      }
+      try {
+        return await gsheetPost("saveStandard", { record });
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("saveStandard", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("saveStandard", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("manufacturer_standards").upsert(record).select();
+        if (error) throw error;
+        return data && data[0] ? data[0] : record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("saveStandard", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteStandard(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteStandard", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("manufacturer_standards").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.standards).filter((r) => r.id !== id);
     lsSet(LS_KEYS.standards, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteStandard", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteStandard", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteStandard", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteStandard", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("manufacturer_standards").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteStandard", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   // -------------------------------------------------------------------
@@ -473,11 +811,29 @@ const Storage = {
   async listRegulationConfig() {
     let rows;
     if (this.mode === "gsheet") {
-      rows = await gsheetGet("listRegulationConfig");
+      try {
+        rows = await gsheetGet("listRegulationConfig");
+        lsSet(LS_KEYS.regulationConfig, rows || []);
+      } catch (err) {
+        if (isNetworkError(err)) {
+          rows = lsGet(LS_KEYS.regulationConfig);
+        } else {
+          throw err;
+        }
+      }
     } else if (this.mode === "supabase") {
-      const { data, error } = await sb().from("regulation_config").select("*");
-      if (error) throw error;
-      rows = data || [];
+      try {
+        const { data, error } = await sb().from("regulation_config").select("*");
+        if (error) throw error;
+        rows = data || [];
+        lsSet(LS_KEYS.regulationConfig, rows);
+      } catch (err) {
+        if (isNetworkError(err)) {
+          rows = lsGet(LS_KEYS.regulationConfig);
+        } else {
+          throw err;
+        }
+      }
     } else {
       rows = lsGet(LS_KEYS.regulationConfig);
     }
@@ -500,166 +856,423 @@ const Storage = {
       values_json: JSON.stringify(rec.values || {}),
       updated_at: new Date().toISOString(),
     };
-    if (this.mode === "gsheet") {
-      await gsheetPost("saveRegulationConfig", { record: wire });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("regulation_config").upsert(wire);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.regulationConfig);
     const idx = all.findIndex((r) => r.id === wire.id);
     if (idx >= 0) all[idx] = wire; else all.push(wire);
     lsSet(LS_KEYS.regulationConfig, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("saveRegulationConfig", { record: wire });
+        return;
+      }
+      try {
+        await gsheetPost("saveRegulationConfig", { record: wire });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("saveRegulationConfig", { record: wire });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("saveRegulationConfig", { record: wire });
+        return;
+      }
+      try {
+        const { error } = await sb().from("regulation_config").upsert(wire);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("saveRegulationConfig", { record: wire });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   /** Xóa bản ghi ghi đè — dùng cho nút "Khôi phục mặc định" (xóa override thì lần nạp
    *  sau tự dùng lại hằng số mặc định trong dga-logic.js). */
   async deleteRegulationConfig(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteRegulationConfig", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("regulation_config").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.regulationConfig).filter((r) => r.id !== id);
     lsSet(LS_KEYS.regulationConfig, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteRegulationConfig", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteRegulationConfig", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteRegulationConfig", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteRegulationConfig", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("regulation_config").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteRegulationConfig", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   // Danh mục Trạm (MaTram/TenTram) — dùng để gợi ý/tìm kiếm ở ô "Trạm", không bắt buộc.
   async listStations() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listStations");
+      try {
+        const data = await gsheetGet("listStations");
+        lsSet(LS_KEYS.stations, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.stations);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("stations").select("*");
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("stations").select("*");
+        if (error) throw error;
+        lsSet(LS_KEYS.stations, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.stations);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.stations);
   },
 
   async saveStation(s) {
     const record = { ...s, id: s.id || uid() };
-    if (this.mode === "gsheet") {
-      return await gsheetPost("saveStation", { record });
-    }
-    if (this.mode === "supabase") {
-      const { data, error } = await sb().from("stations").upsert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
     const all = lsGet(LS_KEYS.stations);
     const idx = all.findIndex((r) => r.id === record.id);
     if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.stations, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("saveStation", { record });
+        return record;
+      }
+      try {
+        return await gsheetPost("saveStation", { record });
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("saveStation", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("saveStation", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("stations").upsert(record).select();
+        if (error) throw error;
+        return data && data[0] ? data[0] : record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("saveStation", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteStation(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteStation", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("stations").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.stations).filter((r) => r.id !== id);
     lsSet(LS_KEYS.stations, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteStation", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteStation", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteStation", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteStation", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("stations").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteStation", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   // Thí nghiệm dầu MBA (độ ẩm/tgδ 90°C/điện áp chọc thủng) — Điều 46/47/50, QĐ1901.
   async listOilTests() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listOilTests");
+      try {
+        const data = await gsheetGet("listOilTests");
+        lsSet(LS_KEYS.oilTests, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.oilTests);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("oil_tests").select("*").order("sample_date", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("oil_tests").select("*").order("sample_date", { ascending: true });
+        if (error) throw error;
+        lsSet(LS_KEYS.oilTests, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.oilTests);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.oilTests);
   },
 
   async addOilTest(t) {
     const record = { ...t, id: t.id || uid(), created_at: new Date().toISOString() };
-    if (this.mode === "gsheet") {
-      return await gsheetPost("addOilTest", { record });
-    }
-    if (this.mode === "supabase") {
-      const { data, error } = await sb().from("oil_tests").insert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
     const all = lsGet(LS_KEYS.oilTests);
     all.push(record);
     lsSet(LS_KEYS.oilTests, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addOilTest", { record });
+        return record;
+      }
+      try {
+        return await gsheetPost("addOilTest", { record });
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addOilTest", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addOilTest", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("oil_tests").insert(record).select();
+        if (error) throw error;
+        return data && data[0] ? data[0] : record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addOilTest", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteOilTest(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteOilTest", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("oil_tests").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.oilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oilTests, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteOilTest", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteOilTest", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteOilTest", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteOilTest", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("oil_tests").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteOilTest", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49, QĐ1901. Bảng
   // riêng khỏi oil_tests (dầu thùng dầu chính) vì có thêm điểm lấy mẫu + pha.
   async listOltcOilTests() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listOltcOilTests");
+      try {
+        const data = await gsheetGet("listOltcOilTests");
+        lsSet(LS_KEYS.oltcOilTests, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.oltcOilTests);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("oltc_oil_tests").select("*").order("sample_date", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("oltc_oil_tests").select("*").order("sample_date", { ascending: true });
+        if (error) throw error;
+        lsSet(LS_KEYS.oltcOilTests, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.oltcOilTests);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.oltcOilTests);
   },
 
   async addOltcOilTest(t) {
     const record = { ...t, id: t.id || uid(), created_at: new Date().toISOString() };
-    if (this.mode === "gsheet") {
-      return await gsheetPost("addOltcOilTest", { record });
-    }
-    if (this.mode === "supabase") {
-      const { data, error } = await sb().from("oltc_oil_tests").insert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
     const all = lsGet(LS_KEYS.oltcOilTests);
     all.push(record);
     lsSet(LS_KEYS.oltcOilTests, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addOltcOilTest", { record });
+        return record;
+      }
+      try {
+        return await gsheetPost("addOltcOilTest", { record });
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addOltcOilTest", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addOltcOilTest", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("oltc_oil_tests").insert(record).select();
+        if (error) throw error;
+        return data && data[0] ? data[0] : record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addOltcOilTest", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteOltcOilTest(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteOltcOilTest", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("oltc_oil_tests").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.oltcOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oltcOilTests, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteOltcOilTest", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteOltcOilTest", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteOltcOilTest", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteOltcOilTest", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("oltc_oil_tests").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteOltcOilTest", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   // Thí nghiệm dầu cách điện TI/TU (biến dòng điện/biến điện áp kiểu kín, cách điện
@@ -669,12 +1282,31 @@ const Storage = {
   // điện áp/trạng thái dầu, không có has_membrane_n2/oil_sample_point).
   async listInstrumentOilTests() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listInstrumentOilTests");
+      try {
+        const data = await gsheetGet("listInstrumentOilTests");
+        lsSet(LS_KEYS.instrumentOilTests, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.instrumentOilTests);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("instrument_oil_tests").select("*").order("sample_date", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("instrument_oil_tests").select("*").order("sample_date", { ascending: true });
+        if (error) throw error;
+        lsSet(LS_KEYS.instrumentOilTests, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.instrumentOilTests);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.instrumentOilTests);
   },
@@ -683,32 +1315,82 @@ const Storage = {
     // Có id sẵn = cập nhật bản ghi đã có (sửa, hoặc nhập lại đúng BBTN 3 pha đã lưu): giữ
     // created_at gốc và ghi đè đúng dòng đó, không tạo dòng trùng.
     const record = { ...t, id: t.id || uid(), created_at: t.created_at || new Date().toISOString() };
-    if (this.mode === "gsheet") {
-      return await gsheetPost("addInstrumentOilTest", { record });
-    }
-    if (this.mode === "supabase") {
-      const { data, error } = await sb().from("instrument_oil_tests").upsert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
     const all = lsGet(LS_KEYS.instrumentOilTests).filter((r) => r.id !== record.id);
     all.push(record);
     lsSet(LS_KEYS.instrumentOilTests, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addInstrumentOilTest", { record });
+        return record;
+      }
+      try {
+        return await gsheetPost("addInstrumentOilTest", { record });
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addInstrumentOilTest", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addInstrumentOilTest", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("instrument_oil_tests").upsert(record).select();
+        if (error) throw error;
+        return data && data[0] ? data[0] : record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addInstrumentOilTest", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteInstrumentOilTest(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteInstrumentOilTest", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("instrument_oil_tests").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.instrumentOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.instrumentOilTests, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteInstrumentOilTest", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteInstrumentOilTest", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteInstrumentOilTest", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteInstrumentOilTest", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("instrument_oil_tests").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteInstrumentOilTest", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   // Góp ý người dùng (tab "Người dùng phản hồi") — nội dung tự do + 1 ảnh minh họa tùy
@@ -718,44 +1400,113 @@ const Storage = {
   // sửa vì client không cung cấp tính năng sửa.
   async listFeedback() {
     if (this.mode === "gsheet") {
-      return await gsheetGet("listFeedback");
+      try {
+        const data = await gsheetGet("listFeedback");
+        lsSet(LS_KEYS.feedback, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.feedback);
+        }
+        throw err;
+      }
     }
     if (this.mode === "supabase") {
-      const { data, error } = await sb().from("feedback").select("*").order("created_at", { ascending: true });
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await sb().from("feedback").select("*").order("created_at", { ascending: true });
+        if (error) throw error;
+        lsSet(LS_KEYS.feedback, data || []);
+        return data || [];
+      } catch (err) {
+        if (isNetworkError(err)) {
+          notifySyncStatus({ online: false });
+          return lsGet(LS_KEYS.feedback);
+        }
+        throw err;
+      }
     }
     return lsGet(LS_KEYS.feedback);
   },
 
   async addFeedback(f) {
     const record = { ...f, id: f.id || uid(), created_at: new Date().toISOString() };
-    if (this.mode === "gsheet") {
-      return await gsheetPost("addFeedback", { record });
-    }
-    if (this.mode === "supabase") {
-      const { data, error } = await sb().from("feedback").insert(record).select();
-      if (error) throw error;
-      return data[0];
-    }
     const all = lsGet(LS_KEYS.feedback);
     all.push(record);
     lsSet(LS_KEYS.feedback, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addFeedback", { record });
+        return record;
+      }
+      try {
+        return await gsheetPost("addFeedback", { record });
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addFeedback", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("addFeedback", { record });
+        return record;
+      }
+      try {
+        const { data, error } = await sb().from("feedback").insert(record).select();
+        if (error) throw error;
+        return data && data[0] ? data[0] : record;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("addFeedback", { record });
+          return record;
+        }
+        throw err;
+      }
+    }
     return record;
   },
 
   async deleteFeedback(id) {
-    if (this.mode === "gsheet") {
-      await gsheetPost("deleteFeedback", { id });
-      return;
-    }
-    if (this.mode === "supabase") {
-      const { error } = await sb().from("feedback").delete().eq("id", id);
-      if (error) throw error;
-      return;
-    }
     const all = lsGet(LS_KEYS.feedback).filter((r) => r.id !== id);
     lsSet(LS_KEYS.feedback, all);
+
+    if (this.mode === "gsheet") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteFeedback", { id });
+        return;
+      }
+      try {
+        await gsheetPost("deleteFeedback", { id });
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteFeedback", { id });
+          return;
+        }
+        throw err;
+      }
+    }
+    if (this.mode === "supabase") {
+      if (typeof navigator !== "undefined" && navigator.onLine === false) {
+        enqueueSyncOp("deleteFeedback", { id });
+        return;
+      }
+      try {
+        const { error } = await sb().from("feedback").delete().eq("id", id);
+        if (error) throw error;
+        return;
+      } catch (err) {
+        if (isNetworkError(err)) {
+          enqueueSyncOp("deleteFeedback", { id });
+          return;
+        }
+        throw err;
+      }
+    }
   },
 
   /** Tải lên 1 ảnh minh họa đính kèm góp ý — cùng cơ chế với uploadAttachment() (BBTN) ở
@@ -844,9 +1595,107 @@ const Storage = {
     const map = lsBbtnGetAll();
     return map[measurementId] || null;
   },
+
+  // ---------------------------------------------------------------------------
+  // API quản lý hàng đợi & Tự động đồng bộ (Outbox Processor)
+  // ---------------------------------------------------------------------------
+  async processSyncQueue() {
+    if (_isSyncing) return { syncing: true, pending: lsSyncQueueGet().length };
+    if (this.mode === "local") return { mode: "local", pending: 0 };
+    if (typeof navigator !== "undefined" && navigator.onLine === false) {
+      notifySyncStatus({ online: false });
+      return { offline: true, pending: lsSyncQueueGet().length };
+    }
+
+    const queue = lsSyncQueueGet();
+    if (!queue.length) {
+      notifySyncStatus({ syncing: false, pending: 0 });
+      return { processed: 0, pending: 0 };
+    }
+
+    _isSyncing = true;
+    notifySyncStatus({ syncing: true, pending: queue.length });
+
+    let processedCount = 0;
+    try {
+      while (queue.length > 0) {
+        const item = queue[0];
+        try {
+          await executeRemoteSyncItem(item);
+          queue.shift();
+          lsSyncQueueSet(queue);
+          processedCount++;
+          notifySyncStatus({ syncing: true, pending: queue.length });
+        } catch (err) {
+          if (isNetworkError(err)) {
+            console.warn("Đang đồng bộ thì gặp sự cố mạng, tạm hoãn chờ lần kết nối tiếp theo:", err);
+            break;
+          } else {
+            console.error("Lỗi khi xử lý mục đồng bộ (bỏ qua sau nhiều lần lỗi):", item, err);
+            item.retries = (item.retries || 0) + 1;
+            if (item.retries >= 3) {
+              queue.shift();
+              lsSyncQueueSet(queue);
+            } else {
+              lsSyncQueueSet(queue);
+              break;
+            }
+          }
+        }
+      }
+    } finally {
+      _isSyncing = false;
+      notifySyncStatus();
+    }
+
+    return { processed: processedCount, pending: queue.length };
+  },
+
+  getSyncQueue() {
+    return lsSyncQueueGet();
+  },
+
+  clearSyncQueue() {
+    lsSyncQueueSet([]);
+    notifySyncStatus();
+  },
+
+  getSyncStatus() {
+    const queue = lsSyncQueueGet();
+    const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
+    return {
+      online: isOnline,
+      syncing: _isSyncing,
+      pendingCount: queue.length,
+      mode: this.mode,
+    };
+  },
+
+  onSyncStatusChange(fn) {
+    if (typeof fn === "function") {
+      _syncListeners.push(fn);
+      try {
+        fn(this.getSyncStatus());
+      } catch (e) {}
+    }
+  },
 };
 
 if (typeof window !== "undefined") {
   window.Storage = Storage;
   window.Auth = Auth;
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    Storage,
+    Auth,
+    LS_KEYS,
+    LS_SYNC_QUEUE_KEY,
+    lsSyncQueueGet,
+    lsSyncQueueSet,
+    enqueueSyncOp,
+    isNetworkError,
+    executeRemoteSyncItem,
+  };
 }

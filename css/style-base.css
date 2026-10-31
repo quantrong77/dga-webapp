@@ -266,3 +266,53 @@ header.app-header p {
 }
 .header-icon-btn .icon-svg { width: 16px; height: 16px; margin-right: 0; }
 
+
+/* Badge trạng thái kết nối & Tự động đồng bộ ngoại tuyến (#syncStatusBadge) */
+.badge.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+.badge.sync-badge .sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.badge.sync-badge.online {
+  background: #d7f5df;
+  color: #10692f;
+  border-color: rgba(16, 105, 47, 0.25);
+}
+.badge.sync-badge.online .sync-dot {
+  background: #12b76a;
+  box-shadow: 0 0 0 2px rgba(18, 183, 106, 0.2);
+}
+.badge.sync-badge.offline {
+  background: #fff4e5;
+  color: #b54708;
+  border-color: #fedf89;
+}
+.badge.sync-badge.offline .sync-dot {
+  background: #f79009;
+}
+.badge.sync-badge.syncing {
+  background: #eff8ff;
+  color: #175cd3;
+  border-color: #b2ddff;
+}
+.badge.sync-badge.syncing .sync-dot {
+  background: #2e90fa;
+  animation: sync-pulse 1s infinite alternate;
+}
+@keyframes sync-pulse {
+  0% { opacity: 0.4; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1.2); }
+}

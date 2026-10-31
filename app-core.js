@@ -82,6 +82,8 @@ async function initApp() {
     footerInfo.textContent = "lưu trong localStorage của trình duyệt này — điền config.js để dùng database dùng chung";
   }
   setupStorageBadgeLink();
+  setupAutoSyncUI();
+  registerServiceWorker();
 
   setupTabs();
   setupCauHinhSubtabs();
@@ -1290,6 +1292,105 @@ function parseEditedFields(editedFieldsStr) {
 function gasLabelIcon(gas) {
   const icon = gas === "CO" || gas === "CO2" ? "book" : "flask";
   return `<svg class="gas-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>`;
+}
+
+
+function registerServiceWorker() {
+  if (typeof window !== "undefined" && "serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch((err) => {
+        console.warn("Không đăng ký được Service Worker:", err);
+      });
+    });
+  }
+}
+
+function setupAutoSyncUI() {
+  const badge = $("syncStatusBadge");
+  const text = $("syncStatusText");
+  if (!badge || !text) return;
+
+  function renderStatus(st) {
+    if (Storage.mode === "local") {
+      badge.classList.add("hidden");
+      return;
+    }
+    badge.classList.remove("hidden");
+    badge.className = "badge sync-badge";
+
+    if (st.syncing) {
+      badge.classList.add("syncing");
+      text.textContent = st.pendingCount > 0 ? `Đang đồng bộ (${st.pendingCount})...` : "Đang đồng bộ...";
+      badge.title = `Đang gửi ${st.pendingCount} mục dữ liệu ngoại tuyến lên máy chủ... Bấm để thử lại.`;
+    } else if (!st.online) {
+      badge.classList.add("offline");
+      text.textContent = st.pendingCount > 0 ? `Ngoại tuyến (${st.pendingCount})` : "Ngoại tuyến";
+      badge.title = st.pendingCount > 0
+        ? `Đang không có mạng. Có ${st.pendingCount} mục lưu an toàn trên máy, sẽ tự động đồng bộ khi có kết nối lại. Bấm để thử đồng bộ.`
+        : "Đang không có mạng. Ứng dụng hoạt động bình thường trên bộ nhớ máy.";
+    } else if (st.pendingCount > 0) {
+      badge.classList.add("syncing");
+      text.textContent = `Chờ đồng bộ (${st.pendingCount})`;
+      badge.title = `Có ${st.pendingCount} mục chờ đồng bộ lên máy chủ. Bấm để đồng bộ ngay.`;
+    } else {
+      badge.classList.add("online");
+      text.textContent = "Đã đồng bộ";
+      badge.title = "Đã kết nối máy chủ và đồng bộ toàn bộ dữ liệu mới nhất.";
+    }
+  }
+
+  Storage.onSyncStatusChange(renderStatus);
+
+  badge.addEventListener("click", async () => {
+    const st = Storage.getSyncStatus();
+    if (!st.online) {
+      showToast("Thiết bị đang ngoại tuyến. Dữ liệu được lưu an toàn tại máy và sẽ tự đồng bộ khi có mạng.", "info");
+      return;
+    }
+    if (st.pendingCount > 0) {
+      showToast(`Đang đồng bộ ${st.pendingCount} mục lên máy chủ...`, "info");
+      const res = await Storage.processSyncQueue();
+      if (res && res.processed > 0) {
+        showToast(`Đã đồng bộ thành công ${res.processed} mục lên máy chủ!`, "success");
+        try {
+          await refreshStandardsUI();
+          await refreshHistoryUI();
+        } catch (e) {}
+      }
+    } else {
+      showToast("Toàn bộ dữ liệu đã được đồng bộ với máy chủ.", "success");
+    }
+  });
+
+  window.addEventListener("online", async () => {
+    const pendingBefore = Storage.getSyncStatus().pendingCount;
+    if (pendingBefore > 0) {
+      showToast("Đã có mạng trở lại. Đang tự động đồng bộ dữ liệu...", "info");
+    }
+    const res = await Storage.processSyncQueue();
+    if (res && res.processed > 0) {
+      showToast(`Đã tự động đồng bộ xong ${res.processed} mục lên máy chủ!`, "success");
+      try {
+        await refreshStandardsUI();
+        await refreshHistoryUI();
+      } catch (e) {}
+    }
+  });
+
+  window.addEventListener("offline", () => {
+    showToast("Đã mất kết nối mạng. Ứng dụng chuyển sang chế độ ngoại tuyến (Offline-First). Dữ liệu nhập mới sẽ lưu an toàn trên máy.", "warning");
+  });
+
+  // Tự động kiểm tra đồng bộ ngầm định kỳ mỗi 45 giây nếu online và có queue tồn đọng
+  setInterval(() => {
+    if (typeof navigator !== "undefined" && navigator.onLine && Storage.getSyncStatus().pendingCount > 0) {
+      Storage.processSyncQueue().then((res) => {
+        if (res && res.processed > 0) {
+          try { refreshHistoryUI(); } catch (e) {}
+        }
+      }).catch(() => {});
+    }
+  }, 45000);
 }
 
 document.addEventListener("DOMContentLoaded", init);
