@@ -550,14 +550,47 @@ function drawDuvalPoint(xyMath) {
 // Phân tích & lưu 1 lần đo
 // ---------------------------------------------------------------------
 async function onAnalyze() {
+  const isKphText = (val) => {
+    if (val === null || val === undefined) return false;
+    const s = String(val).trim();
+    return /^(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|D[uư][oớ]i\s*ng[uư][oõ]ng\s*ph[aá]t\s*hi[eệ]n|\bND\b)$/i.test(s);
+  };
+
   const gases = {};
-  DGA.GASES.forEach((g) => (gases[g] = $("g_" + g).value === "" ? 0 : Number($("g_" + g).value)));
-  // N2, O2 (tùy chọn) — KHÔNG thuộc DGA.GASES, giữ null khi để trống (khác 7 khí chính
-  // luôn mặc định 0) vì computeTotalDissolvedGasPercent()/diagnoseAdditionalRatios()
-  // (dga-logic.js) cần phân biệt "chưa nhập" với "đo được 0 ppm" để biết có tính được
-  // tỷ lệ O2/N2 và Tổng hàm lượng khí hòa tan (Bảng 63) hay không.
-  const n2 = $("g_N2").value === "" ? null : Number($("g_N2").value);
-  const o2 = $("g_O2").value === "" ? null : Number($("g_O2").value);
+  const kphGases = {};
+  for (const g of DGA.GASES) {
+    const raw = ($("g_" + g).value || "").trim();
+    if (isKphText(raw)) {
+      gases[g] = 0;
+      kphGases[g] = true;
+    } else if (raw === "") {
+      gases[g] = 0;
+    } else {
+      const n = parseFloat(raw.replace(",", "."));
+      if (!Number.isFinite(n)) {
+        notifyError(`Giá trị khí ${g} không hợp lệ (vui lòng nhập số hoặc "KPH").`);
+        return;
+      }
+      gases[g] = n;
+      if (n === 0) kphGases[g] = true;
+    }
+  }
+
+  const parseExtraGas = (raw, label) => {
+    const s = (raw || "").trim();
+    if (isKphText(s)) return 0;
+    if (s === "") return null;
+    const n = parseFloat(s.replace(",", "."));
+    if (!Number.isFinite(n)) {
+      notifyError(`Giá trị khí ${label} không hợp lệ (vui lòng nhập số hoặc "KPH").`);
+      return null;
+    }
+    return n;
+  };
+  const n2 = parseExtraGas($("g_N2").value, "N2");
+  if (n2 === null && $("g_N2").value.trim() !== "" && !isKphText($("g_N2").value.trim())) return;
+  const o2 = parseExtraGas($("g_O2").value, "O2");
+  if (o2 === null && $("g_O2").value.trim() !== "" && !isKphText($("g_O2").value.trim())) return;
   const bang63VoltageClass = $("f_bang63_voltage").value;
   const bang63Applicable = $("f_bang63_applicable").checked;
 
@@ -663,7 +696,7 @@ async function onAnalyze() {
 
   // 2) TCG + đánh giá tuyệt đối
   const tcg = DGA.computeTCG(gases);
-  const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
+  const evalRows = DGA.evaluateAbsolute(gases, standard.limits, kphGases);
   const overall = DGA.overallVerdict(evalRows);
   const exceedCount = DGA.countExceedTypical(gases, measurement.equipment_type, logicMeasurement);
 
@@ -672,14 +705,17 @@ async function onAnalyze() {
   //    tự rơi về Table 1 nếu không mã nào khớp); MBA/TI/TU/Khác dùng thẳng Table 1/Bảng 66
   //    (với TI/TU, ngưỡng PD 0,2 theo Annex A.4.3 — standard.pdThreshold đã resolve sẵn).
   const ratios = DGA.computeRatios(gases);
-  const diagnosis = DGA.diagnoseGasFault(gases, measurement.equipment_type, standard.pdThreshold);
+  const diagnosis = DGA.diagnoseGasFault(gases, measurement.equipment_type, standard.pdThreshold, kphGases);
   const bushingCodes = measurement.equipment_type === DGA.EQUIPMENT_TYPES.BUSHING
     ? DGA.diagnoseBushingRatios(ratios)
     : [];
-  const applicability = DGA.ratioApplicability(exceedCount);
+  let applicability = DGA.ratioApplicability(exceedCount);
+  if (Object.keys(kphGases).length > 0 && exceedCount === 0) {
+    applicability = "Không có hiệu lực — các khí đều dưới ngưỡng phát hiện (KPH) hoặc trong khoảng điển hình (Điều 54 QĐ1901 & IEC 60599)";
+  }
 
   // 3bis) Chẩn đoán Tam giác Duval 1 (Annex B, Figure B.3)
-  const duval = DGA.diagnoseDuval1(gases);
+  const duval = DGA.diagnoseDuval1(gases, kphGases);
 
   // 3ter) Ngưỡng LOẠI BỎ riêng của nhà sản xuất (nếu có cấu hình) — cảnh báo nghiêm
   //    trọng hơn mức "không đạt" thông thường, độc lập với ngưỡng tuyệt đối ở trên.
@@ -719,7 +755,7 @@ async function onAnalyze() {
     // cách chuẩn hóa đã dùng đúng ở ui-history.js (renderRateTable()).
     const priorGases = recordGases(prior);
     const deltaDays = Math.round((new Date(measurement.sample_date) - new Date(prior.sample_date)) / 86400000);
-    rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type);
+    rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type, kphGases);
     // Chẩn đoán mã khiếm khuyết của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
     // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()) — PHẢI dùng
     // cùng diagnoseGasFault() (cùng bảng theo loại thiết bị) để so sánh cho đúng nghĩa,
@@ -765,8 +801,8 @@ async function onAnalyze() {
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
-  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases };
-  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases });
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases, kphGases };
+  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases, kphGases });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -860,7 +896,7 @@ function evaluateHistoricalCase(record) {
   return { gases, tcg, overall, diagnosis };
 }
 
-function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases }) {
+function renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases, kphGases }) {
   $("resultsPanel").classList.remove("hidden");
 
   if (overallStatus) {
@@ -915,12 +951,16 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   $("r_gasTable").innerHTML = evalRows.map((r) => {
     const c = condemnMap[r.gas];
     const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${c.limit} ⚠</strong>` : c.limit;
-    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.value}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    const valText = r.isKph ? `<span class="pill muted" style="font-size:0.85em;">KPH</span>` : r.value;
+    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${valText}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 
-  $("r_ratio1").textContent = ratios.c2h2_c2h4.toFixed(3);
-  $("r_ratio2").textContent = ratios.ch4_h2.toFixed(3);
-  $("r_ratio3").textContent = ratios.c2h4_c2h6.toFixed(3);
+  const hasKph1 = kphGases && (kphGases["C2H2"] || kphGases["C2H4"]);
+  const hasKph2 = kphGases && (kphGases["CH4"] || kphGases["H2"]);
+  const hasKph3 = kphGases && (kphGases["C2H4"] || kphGases["C2H6"]);
+  $("r_ratio1").textContent = hasKph1 ? "— (KPH)" : ratios.c2h2_c2h4.toFixed(3);
+  $("r_ratio2").textContent = hasKph2 ? "— (KPH)" : ratios.ch4_h2.toFixed(3);
+  $("r_ratio3").textContent = hasKph3 ? "— (KPH)" : ratios.c2h4_c2h6.toFixed(3);
   $("r_pdthreshold").textContent = "< " + standard.pdThreshold;
   $("r_applicability").textContent = applicability;
 
@@ -957,7 +997,10 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
     drawDuvalPoint(duval.xy);
   } else {
     $("r_pctch4").textContent = $("r_pctc2h4").textContent = $("r_pctc2h2").textContent = "—";
-    $("r_duvalzone").textContent = "Không đủ dữ liệu (cần CH4/C2H4/C2H2 > 0)";
+    const duvalNote = (kphGases && (kphGases["C2H2"] || kphGases["C2H4"]))
+      ? "Không áp dụng (khí C2H2/C2H4 dưới ngưỡng phát hiện — KPH)"
+      : "Không đủ dữ liệu (cần CH4/C2H4/C2H2 > 0)";
+    $("r_duvalzone").textContent = duvalNote;
     drawDuvalTriangleBase();
   }
 
@@ -969,8 +1012,8 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
         : "Bảng 65 chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");
     $("r_rateTable").innerHTML = rateRows.map((r) => `
       <tr>
-        <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
-        <td>${r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
+        <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.isKph ? "KPH" : r.after}</td><td>${r.isKph ? "—" : r.delta}</td>
+        <td>${r.isKph ? "—" : r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
         <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${r.verdict}</span>` : r.verdict}</td>
       </tr>
     `).join("");

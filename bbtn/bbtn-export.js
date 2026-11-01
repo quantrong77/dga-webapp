@@ -54,7 +54,7 @@ function bbtnBuildKetLuan(a) {
   // DGA.diagnoseGasFault() (ui-dga.js) đã tự dùng Table A.10 (Annex A.5.3) khi có mã khớp,
   // và chuỗi trả về đã tự ghi rõ "Bảng A.10 (sứ xuyên): ..." nên không cần/không nên ghép
   // thêm nhãn "Bảng 66" phía trước, tránh hiển thị lẫn lộn 2 bảng trong cùng 1 câu.
-  if (a.diagnosis) {
+  if (a.diagnosis && !a.diagnosis.startsWith("Không áp dụng") && a.diagnosis !== (typeof DGA !== "undefined" && DGA.NO_DIAGNOSIS)) {
     const label = a.diagnosis.startsWith("Bảng A.10") ? "Chẩn đoán tỷ số khí: " : "Chẩn đoán tỷ số khí (Bảng 66): ";
     parts.push(label + a.diagnosis + ".");
   }
@@ -117,10 +117,15 @@ function buildBbtnExportData(a) {
     const key = BBTN_GAS_TAG_KEYS[gas];
     const ev = evalByGas[gas];
     const rate = rateByGas[gas];
-    data[key + "_kq"] = ev ? bbtnFormatNum(ev.value) : "";
+    const isKph = Boolean(
+      (ev && ev.isKph) ||
+      (a.kphGases && (a.kphGases[gas] || (Array.isArray(a.kphGases) && a.kphGases.includes(gas)))) ||
+      (m[gas] === "KPH" || m[gas.toLowerCase()] === "KPH")
+    );
+    data[key + "_kq"] = isKph ? "KPH" : ev ? bbtnFormatNum(ev.value) : "";
     data[key + "_tc"] = ev && ev.limit !== null && ev.limit !== undefined ? "< " + bbtnFormatNum(ev.limit) : "";
     data[key + "_toc"] =
-      rate && rate.ratePerMonth !== null && rate.ratePerMonth !== undefined ? bbtnFormatNum(rate.ratePerMonth) + "%" : "";
+      !isKph && rate && rate.ratePerMonth !== null && rate.ratePerMonth !== undefined ? bbtnFormatNum(rate.ratePerMonth) + "%" : "";
     data[key + "_dg"] = ev ? (ev.verdict === "Không có ngưỡng" ? "—" : ev.verdict) : "";
   });
 
@@ -164,4 +169,6 @@ async function exportBbtnDocx(analysis) {
   return fileName;
 }
 
-window.BbtnExport = { exportBbtnDocx, buildBbtnExportData };
+const BbtnExport = { exportBbtnDocx, buildBbtnExportData, bbtnBuildKetLuan, bbtnFormatDateVN, bbtnFormatNum };
+if (typeof window !== "undefined") window.BbtnExport = BbtnExport;
+if (typeof module !== "undefined" && module.exports) module.exports = BbtnExport;

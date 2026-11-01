@@ -260,7 +260,11 @@ const GAS_LINE_PATTERNS = [
   { id: "C2H2", re: /Acetylen\s*C\s*2\s*H\s*2/i },
   { id: "CO", re: /CarbonMonoxit\s*CO(?!\s*2)/i },
   { id: "CO2", re: /Carbondioxit\s*CO\s*2/i },
+  { id: "N2", re: /Nit[oơ]\s*N\s*2/i },
+  { id: "O2", re: /Oxy\s*O\s*2/i },
 ];
+
+const KPH_PATTERN = /(?:^|\s|[^\wÀ-ỹ])(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|D[uư][oớ]i\s*ng[uư][oõ]ng\s*ph[aá]t\s*hi[eệ]n|\bND\b)(?:$|\s|[^\wÀ-ỹ])/i;
 
 function extractGasValues(lines) {
   const values = {};
@@ -270,14 +274,24 @@ function extractGasValues(lines) {
       const m = line.match(gas.re);
       if (!m) continue;
       const rest = line.slice(m.index + m[0].length);
-      const cleaned = rest.replace(/<\s*[\d.,]+/g, "");
+      // Nếu có ký hiệu KPH (Không phát hiện / dưới ngưỡng phát hiện): kết quả đo chính là KPH,
+      // TUYỆT ĐỐI không lấy số ở cột "Tiêu chuẩn" (Limits) kế tiếp (vd: "< 1", "≤ 1", "300").
+      if (KPH_PATTERN.test(rest)) {
+        found = "KPH";
+        break;
+      }
+      // Loại bỏ cột Tiêu chuẩn (dạng "< số", "≤ số", "<= số", hoặc "≥ số") và Tốc độ sinh khí (dạng "xx%")
+      // để chỉ lấy đúng giá trị đo ở cột Kết quả.
+      const cleaned = rest
+        .replace(/[<≤>≥]=?\s*[\d.,]+/g, "")
+        .replace(/[+-]?\s*[\d.,]+\s*%/g, "");
       const nums = cleaned.match(/-?\d+(?:[.,]\d+)?/g);
       if (nums && nums.length) {
         found = parseFloat(nums[0].replace(",", "."));
         break;
       }
     }
-    if (found !== null && !Number.isNaN(found)) values[gas.id] = found;
+    if (found !== null && found !== undefined) values[gas.id] = found;
   }
   return values;
 }
@@ -415,5 +429,9 @@ async function readLines(file, onProgress) {
   return { lines, viaOCR: false };
 }
 
-window.BbtnImport = { extract, readLines };
+const BbtnImport = { extract, readLines, extractGasValues };
+window.BbtnImport = BbtnImport;
+if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
+export { extract, readLines, extractGasValues };
+export default BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));

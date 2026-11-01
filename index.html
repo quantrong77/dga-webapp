@@ -383,13 +383,13 @@
 
         <div class="section-title">Hàm lượng khí hòa tan (ppm)</div>
         <div class="grid gases">
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="g_H2" type="number" min="0" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="g_CH4" type="number" min="0" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="g_C2H6" type="number" min="0" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="g_C2H4" type="number" min="0" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="g_C2H2" type="number" min="0" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="g_CO" type="number" min="0" step="0.01" /></label>
-          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="g_CO2" type="number" min="0" step="0.01" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="g_H2" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="g_CH4" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="g_C2H6" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="g_C2H4" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="g_C2H2" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="g_CO" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="g_CO2" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
         </div>
 
         <!-- ===================== KHÍ BỔ SUNG N2, O2 (tùy chọn) =====================
@@ -402,8 +402,8 @@
              trống thì 2 mục này tự ẩn/bỏ qua, không ảnh hưởng các đánh giá khác. -->
         <div class="section-title">Khí bổ sung N2, O2 (tùy chọn — dùng cho tỷ lệ O2/N2 và Tổng hàm lượng khí hòa tan Bảng 63)</div>
         <div class="grid gases">
-          <label class="field">N2 (ppm) <input id="g_N2" type="number" min="0" step="0.01" /></label>
-          <label class="field">O2 (ppm) <input id="g_O2" type="number" min="0" step="0.01" /></label>
+          <label class="field">N2 (ppm) <input id="g_N2" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
+          <label class="field">O2 (ppm) <input id="g_O2" type="text" inputmode="decimal" placeholder="0 hoặc KPH" /></label>
           <label class="field">Cấp điện áp (áp dụng Bảng 63)
             <select id="f_bang63_voltage">
               <option value="110-220">110 – 220 kV</option>
