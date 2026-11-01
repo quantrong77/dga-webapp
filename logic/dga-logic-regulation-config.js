@@ -123,7 +123,7 @@ function buildRegulationConfigRegistry() {
       title: "IEC 60599:2022 Annex A.2.4 Table A.2 — Khoảng giá trị điển hình 90% (MBA lực), theo loại OLTC",
       citationKey: "IEC_A2", target: IEC_A2_POWER_TRANSFORMER,
       fields: [MBA_SUBTYPES.NO_OLTC, MBA_SUBTYPES.COMM_OLTC].flatMap((subtype) =>
-        GASES.map((g) => ({ path: [subtype, g], label: `${subtype} — ${g}`, unit: "ppm", kind: "number" }))
+        GASES.map((g) => ({ path: [subtype, g], label: `${subtype.replace(/CPC/g, "OLTC")} — ${g}`, unit: "ppm", kind: "number" }))
       ),
     },
     {

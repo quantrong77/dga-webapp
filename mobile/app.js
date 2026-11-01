@@ -463,7 +463,7 @@ function renderLoaiSelect() {
   });
 }
 function renderMbaSubtypeSelect() {
-  $("f_mbasubtype").innerHTML = Object.values(DGA.MBA_SUBTYPES).map((label) => `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`).join("");
+  $("f_mbasubtype").innerHTML = Object.values(DGA.MBA_SUBTYPES).map((label) => `<option value="${escapeHtml(label)}">${escapeHtml(label.replace(/CPC/g, "OLTC"))}</option>`).join("");
 }
 function refreshManufacturerOptions() {
   const sel = $("f_nsx");
