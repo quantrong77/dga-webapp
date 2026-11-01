@@ -470,30 +470,64 @@ Các góp ý đã gửi được hiển thị (mới nhất ở trên) để m�
 
 ## 16. Phân quyền Admin / User và mục Quản trị
 
-| Quyền | User | Admin |
-|---|:-:|:-:|
-| Xem toàn bộ dữ liệu | ✔ | ✔ |
-| Nhập bản ghi mới (khí, dầu MBA, dầu OLTC, dầu TI/TU) | ✔ | ✔ |
-| Sửa bản ghi | Chỉ bản ghi **do mình nhập** | Mọi bản ghi |
-| Xóa bản ghi | ✘ | ✔ |
-| Cấu hình Tiêu chuẩn / Quy định | ✘ (chỉ xem) | ✔ |
-| Quản lý người dùng & Đồng bộ | ✘ | ✔ |
+### 16.1. Bảng phân quyền 3 vai trò (Viewer, User, Admin)
 
-Mỗi bản ghi lưu **người tạo, người sửa cuối và thời điểm** (cột "Người nhập"). Quyền thực sự được kiểm tra lại ở phía máy chủ.
+Ứng dụng hỗ trợ 3 vai trò người dùng với các mức quyền hạn phân định rõ ràng:
 
-### Mục Quản trị trên Header (chỉ Admin)
+| Quyền hạn | Viewer | User | Admin |
+|---|:-:|:-:|:-:|
+| Xem toàn bộ dữ liệu (Khí DGA, Dầu, Lịch sử, Cảnh báo, Xu hướng) | ✔ | ✔ | ✔ |
+| Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU | ✘ | ✔ | ✔ |
+| Sửa bản ghi đo khí / thí nghiệm dầu đã lưu | ✘ | Chỉ bản ghi **do mình nhập** | Mọi bản ghi |
+| Xóa bản ghi dữ liệu | ✘ | ✘ | ✔ |
+| Gửi ý kiến phản hồi kèm ảnh minh họa | ✔ | ✔ | ✔ |
+| Cấu hình Tiêu chuẩn theo nhà sản xuất | ✘ | ✘ (chỉ xem khi tra cứu) | ✔ (Thêm, Sửa, Xóa) |
+| Chỉnh sửa 13 bảng Quy định số học QĐ1901/IEC | ✘ | ✘ (chỉ xem bảng) | ✔ (Lưu bảng, Khôi phục) |
+| Quản lý người dùng (tạo tài khoản, đổi vai trò, đặt lại mật khẩu, xóa) | ✘ | ✘ | ✔ |
+| Đồng bộ dữ liệu sang Bản sao Supabase | ✘ | ✘ | ✔ |
 
-Biểu tượng **Quản trị** trên thanh Menu bar ở đầu trang chỉ hiển thị khi bạn đăng nhập với tài khoản có quyền Admin. Khu vực này gồm 3 subtab:
+Mỗi bản ghi khi lưu đều tự động ghi nhận **người tạo, người sửa cuối cùng và thời điểm thực hiện** (cột "Người nhập" ở bảng Lịch sử đo). Mọi thao tác kiểm tra quyền đều được máy chủ (Apps Script / Supabase) xác thực độc lập.
 
-1. **Người dùng:**
-   - Xem danh sách người dùng: email, vai trò (User / Admin), ngày tạo, lần đăng nhập cuối.
-   - **Đổi vai trò** User ⇄ Admin bằng ô chọn.
-   - **Xóa người dùng** (có hộp thoại xác nhận). Dòng của chính Admin đang đăng nhập được khóa an toàn để tránh tự xóa hoặc hạ quyền chính mình.
-   - **Tạo tài khoản** / **Đặt lại mật khẩu**: hệ thống sinh mật khẩu tạm ngẫu nhiên, chỉ hiện **1 lần duy nhất**. Admin gửi mật khẩu tạm cho người dùng; ở lần đăng nhập đầu tiên, ứng dụng bắt buộc người dùng đổi sang mật khẩu cá nhân mới được vào app.
-2. **Cấu hình:**
-   - Tập hợp toàn bộ cấu hình **Tiêu chuẩn** nhà sản xuất và 13 bảng **Quy định** số học QĐ1901/IEC (xem chi tiết tại [mục 13](#13-cấu-hình-tiêu-chuẩn-theo-nhà-sản-xuất-và-bảng-quy-định-trong-quản-trị--cấu-hình)).
-3. **Bản sao Supabase:**
-   - Hỗ trợ đồng bộ dữ liệu dự phòng sang Supabase (PostgreSQL), giúp sao lưu và tăng tốc độ truy vấn khi cần thiết.
+### 16.2. Hướng dẫn chi tiết các tính năng trong mục Quản trị
+
+Biểu tượng **Quản trị** trên thanh Menu bar ở đầu trang chỉ hiển thị khi tài khoản đang đăng nhập có vai trò **Admin**. Khi mở mục Quản trị, hệ thống cung cấp 3 subtab tác nghiệp chuyên biệt:
+
+#### 1. Subtab "Người dùng" (Quản lý tài khoản & phân quyền)
+
+- **Tạo tài khoản trực tiếp:**
+  - Nhập **Email tài khoản mới** và chọn **Vai trò** (User, Viewer hoặc Admin) ở thanh công cụ trên cùng.
+  - Bấm nút **+ Tạo tài khoản**.
+  - Hệ thống tự động sinh một **mật khẩu tạm ngẫu nhiên** và hiển thị trong hộp thoại thông báo kèm nút **Copy**.
+  - *Lưu ý quan trọng:* Mật khẩu tạm chỉ hiển thị **duy nhất 1 lần**, ứng dụng không lưu lại mật khẩu này. Admin nên gửi email tài khoản qua tin nhắn và đọc mật khẩu tạm qua cuộc gọi (không gửi chung cả hai trong cùng một tin nhắn). Khi người dùng đăng nhập lần đầu bằng mật khẩu tạm, hệ thống sẽ **bắt buộc đổi sang mật khẩu cá nhân** mới được phép vào sử dụng ứng dụng.
+- **Danh sách tài khoản:** Bảng hiển thị thông tin toàn bộ tài khoản: Email, Vai trò hiện tại, Ngày đăng ký và Thời điểm đăng nhập gần nhất.
+- **Đổi vai trò người dùng:** Admin có thể thay đổi trực tiếp vai trò của bất kỳ tài khoản nào (User ⇄ Viewer ⇄ Admin) thông qua menu chọn tại cột Vai trò.
+- **Đặt lại mật khẩu (Reset password):** Khi người dùng quên mật khẩu hoặc cần cấp lại, bấm nút đặt lại mật khẩu ở dòng tương ứng → hệ thống tạo mật khẩu tạm mới để Admin gửi cho người dùng.
+- **Xóa người dùng:** Bấm nút xóa (kèm hộp thoại xác nhận) để thu hồi quyền truy cập của tài khoản không còn hoạt động.
+- **Cơ chế tự bảo vệ:** Dòng tài khoản của chính Admin đang đăng nhập sẽ tự động bị khóa ô chọn vai trò và ẩn nút xóa, ngăn ngừa tình huống Admin vô tình tự hạ quyền hoặc tự xóa tài khoản của chính mình.
+
+#### 2. Subtab "Cấu hình" (Tiêu chuẩn & Quy định)
+
+Subtab này tích hợp toàn bộ các công cụ quản lý thông số kỹ thuật dùng để đánh giá thiết bị:
+
+- **Mục Tiêu chuẩn (theo Nhà sản xuất):**
+  - Cấu hình ngưỡng riêng cho từng hãng chế tạo thay cho ngưỡng mặc định chung.
+  - Hỗ trợ cả 2 nhóm: *Khí hòa tan (DGA)* và *Dầu cách điện (MBA, OLTC, TI/TU)*.
+  - Cung cấp cấu hình **Ngưỡng loại bỏ (condemning limit)** cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU.
+  - Cho phép tra cứu, chỉnh sửa hoặc xóa các tiêu chuẩn hãng đã thiết lập (xem chi tiết tại [mục 13](#13-cấu-hình-tiêu-chuẩn-theo-nhà-sản-xuất-và-bảng-quy-định-trong-quản-trị--cấu-hình)).
+- **Mục Quy định (13 bảng ngưỡng số học):**
+  - Chỉnh sửa trực tiếp 13 bảng ngưỡng số học trích từ QĐ1901/EVNNPT và IEC 60599:2022.
+  - Khi ngành điện hoặc tiêu chuẩn quốc tế có đợt cập nhật ngưỡng số học mới, Admin chỉ cần sửa số trên giao diện và bấm **"Lưu bảng này"** — hệ thống sẽ lập tức áp dụng ngưỡng mới cho toàn bộ tính toán mà không cần lập trình viên phải sửa code hay cập nhật phiên bản web.
+  - Có nút **"Khôi phục mặc định"** để hoàn tác về đúng số liệu gốc ban đầu nếu cần.
+
+#### 3. Subtab "Bản sao Supabase" (Sao lưu & Đồng bộ dự phòng)
+
+Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính:
+
+- **Tự động sao chép song song (Mirroring):** Mọi thao tác thêm mới, chỉnh sửa, xóa dữ liệu (kết quả đo DGA, thí nghiệm dầu, danh sách trạm, tiêu chuẩn hãng, bảng quy định, ý kiến phản hồi) khi lưu vào Google Sheets đều được hệ thống tự động ghi một bản sao sang cơ sở dữ liệu Supabase (PostgreSQL).
+- **Kiểm tra trạng thái kết nối:** Hiển thị trực quan tình trạng sẵn sàng của đường truyền kết nối đến Supabase.
+- **Đồng bộ toàn bộ thủ công (Full Sync):** Nút **"Đồng bộ toàn bộ sang Supabase"** cho phép Admin chủ động quét toàn bộ kho dữ liệu hiện có trên Google Sheets và đẩy sang Supabase, đảm bảo dữ liệu 2 bên luôn khớp nhau 100%.
+- **Nhật ký lỗi đồng bộ (Sync Errors Log):** Bảng ghi nhận chi tiết các lần đồng bộ không thành công (thời điểm, tên bảng, loại thao tác, ID bản ghi và nguyên nhân lỗi) giúp Admin dễ dàng phát hiện và xử lý sự cố đường truyền.
+- **Bảo mật thông tin:** Tài khoản người dùng và mật khẩu đăng nhập hoàn toàn **không bao giờ** bị sao chép sang Supabase, đảm bảo tính bảo mật tuyệt đối cho hệ thống xác thực.
 
 ---
 

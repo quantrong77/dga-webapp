@@ -2880,55 +2880,112 @@
         <details class="mm-node">
           <summary>16. Phân quyền Admin / User và mục Quản trị<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
+          <h3>16.1. Bảng phân quyền 3 vai trò (Viewer, User, Admin)</h3>
+          <p>Ứng dụng hỗ trợ 3 vai trò người dùng với các mức quyền hạn phân định rõ ràng:</p>
           <div class="table-scroll"><table>
           <thead>
           <tr>
-          <th>Quyền</th>
+          <th>Quyền hạn</th>
+          <th style="text-align: center;">Viewer</th>
           <th style="text-align: center;">User</th>
           <th style="text-align: center;">Admin</th>
           </tr>
           </thead>
           <tbody>
           <tr>
-          <td>Xem toàn bộ dữ liệu</td>
+          <td>Xem toàn bộ dữ liệu (Khí DGA, Dầu, Lịch sử, Cảnh báo, Xu hướng)</td>
           <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔</td>
-          </tr>
-          <tr>
-          <td>Nhập bản ghi mới (khí, dầu MBA, dầu OLTC, dầu TI/TU)</td>
           <td style="text-align: center;">✔</td>
           <td style="text-align: center;">✔</td>
           </tr>
           <tr>
-          <td>Sửa bản ghi</td>
+          <td>Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          <tr>
+          <td>Sửa bản ghi đo khí / thí nghiệm dầu đã lưu</td>
+          <td style="text-align: center;">✘</td>
           <td style="text-align: center;">Chỉ bản ghi <strong>do mình nhập</strong></td>
           <td style="text-align: center;">Mọi bản ghi</td>
           </tr>
           <tr>
-          <td>Xóa bản ghi</td>
+          <td>Xóa bản ghi dữ liệu</td>
+          <td style="text-align: center;">✘</td>
           <td style="text-align: center;">✘</td>
           <td style="text-align: center;">✔</td>
           </tr>
           <tr>
-          <td>Cấu hình Tiêu chuẩn / Quy định</td>
-          <td style="text-align: center;">✘ (chỉ xem)</td>
+          <td>Gửi ý kiến phản hồi kèm ảnh minh họa</td>
+          <td style="text-align: center;">✔</td>
+          <td style="text-align: center;">✔</td>
           <td style="text-align: center;">✔</td>
           </tr>
           <tr>
-          <td>Quản lý người dùng &amp; Đồng bộ</td>
+          <td>Cấu hình Tiêu chuẩn theo nhà sản xuất</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✘ (chỉ xem khi tra cứu)</td>
+          <td style="text-align: center;">✔ (Thêm, Sửa, Xóa)</td>
+          </tr>
+          <tr>
+          <td>Chỉnh sửa 13 bảng Quy định số học QĐ1901/IEC</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✘ (chỉ xem bảng)</td>
+          <td style="text-align: center;">✔ (Lưu bảng, Khôi phục)</td>
+          </tr>
+          <tr>
+          <td>Quản lý người dùng (tạo tài khoản, đổi vai trò, đặt lại mật khẩu, xóa)</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">✔</td>
+          </tr>
+          <tr>
+          <td>Đồng bộ dữ liệu sang Bản sao Supabase</td>
+          <td style="text-align: center;">✘</td>
           <td style="text-align: center;">✘</td>
           <td style="text-align: center;">✔</td>
           </tr>
           </tbody>
           </table></div>
-          <p>Mỗi bản ghi lưu <strong>người tạo, người sửa cuối và thời điểm</strong> (cột "Người nhập"). Quyền thực sự được kiểm tra lại ở phía máy chủ.</p>
-          <h3>Mục Quản trị trên Header (chỉ Admin)</h3>
-          <p>Biểu tượng <strong>Quản trị</strong> trên thanh Menu bar ở đầu trang chỉ hiển thị khi bạn đăng nhập với tài khoản có quyền Admin. Khu vực này gồm 3 subtab:</p>
-          <ol type="1">
-          <li><strong>Người dùng:</strong> - Xem danh sách người dùng: email, vai trò (User / Admin), ngày tạo, lần đăng nhập cuối. - <strong>Đổi vai trò</strong> User ⇄ Admin bằng ô chọn. - <strong>Xóa người dùng</strong> (có hộp thoại xác nhận). Dòng của chính Admin đang đăng nhập được khóa an toàn để tránh tự xóa hoặc hạ quyền chính mình. - <strong>Tạo tài khoản</strong> / <strong>Đặt lại mật khẩu</strong>: hệ thống sinh mật khẩu tạm ngẫu nhiên, chỉ hiện <strong>1 lần duy nhất</strong>. Admin gửi mật khẩu tạm cho người dùng; ở lần đăng nhập đầu tiên, ứng dụng bắt buộc người dùng đổi sang mật khẩu cá nhân mới được vào app.</li>
-          <li><strong>Cấu hình:</strong> - Tập hợp toàn bộ cấu hình <strong>Tiêu chuẩn</strong> nhà sản xuất và 13 bảng <strong>Quy định</strong> số học QĐ1901/IEC (xem chi tiết tại mục 13).</li>
-          <li><strong>Bản sao Supabase:</strong> - Hỗ trợ đồng bộ dữ liệu dự phòng sang Supabase (PostgreSQL), giúp sao lưu và tăng tốc độ truy vấn khi cần thiết.</li>
-          </ol>
+          <p>Mỗi bản ghi khi lưu đều tự động ghi nhận <strong>người tạo, người sửa cuối cùng và thời điểm thực hiện</strong> (cột "Người nhập" ở bảng Lịch sử đo). Mọi thao tác kiểm tra quyền đều được máy chủ (Apps Script / Supabase) xác thực độc lập.</p>
+          <h3>16.2. Hướng dẫn chi tiết các tính năng trong mục Quản trị</h3>
+          <p>Biểu tượng <strong>Quản trị</strong> trên thanh Menu bar ở đầu trang chỉ hiển thị khi tài khoản đang đăng nhập có vai trò <strong>Admin</strong>. Khi mở mục Quản trị, hệ thống cung cấp 3 subtab tác nghiệp chuyên biệt:</p>
+          <h4>1. Subtab "Người dùng" (Quản lý tài khoản &amp; phân quyền)</h4>
+          <ul class="rec-list">
+          <li><strong>Tạo tài khoản trực tiếp:</strong></li>
+          <li>Nhập <strong>Email tài khoản mới</strong> và chọn <strong>Vai trò</strong> (User, Viewer hoặc Admin) ở thanh công cụ trên cùng.</li>
+          <li>Bấm nút <strong>+ Tạo tài khoản</strong>.</li>
+          <li>Hệ thống tự động sinh một <strong>mật khẩu tạm ngẫu nhiên</strong> và hiển thị trong hộp thoại thông báo kèm nút <strong>Copy</strong>.</li>
+          <li><em>Lưu ý quan trọng:</em> Mật khẩu tạm chỉ hiển thị <strong>duy nhất 1 lần</strong>, ứng dụng không lưu lại mật khẩu này. Admin nên gửi email tài khoản qua tin nhắn và đọc mật khẩu tạm qua cuộc gọi (không gửi chung cả hai trong cùng một tin nhắn). Khi người dùng đăng nhập lần đầu bằng mật khẩu tạm, hệ thống sẽ <strong>bắt buộc đổi sang mật khẩu cá nhân</strong> mới được phép vào sử dụng ứng dụng.</li>
+          <li><strong>Danh sách tài khoản:</strong> Bảng hiển thị thông tin toàn bộ tài khoản: Email, Vai trò hiện tại, Ngày đăng ký và Thời điểm đăng nhập gần nhất.</li>
+          <li><strong>Đổi vai trò người dùng:</strong> Admin có thể thay đổi trực tiếp vai trò của bất kỳ tài khoản nào (User ⇄ Viewer ⇄ Admin) thông qua menu chọn tại cột Vai trò.</li>
+          <li><strong>Đặt lại mật khẩu (Reset password):</strong> Khi người dùng quên mật khẩu hoặc cần cấp lại, bấm nút đặt lại mật khẩu ở dòng tương ứng → hệ thống tạo mật khẩu tạm mới để Admin gửi cho người dùng.</li>
+          <li><strong>Xóa người dùng:</strong> Bấm nút xóa (kèm hộp thoại xác nhận) để thu hồi quyền truy cập của tài khoản không còn hoạt động.</li>
+          <li><strong>Cơ chế tự bảo vệ:</strong> Dòng tài khoản của chính Admin đang đăng nhập sẽ tự động bị khóa ô chọn vai trò và ẩn nút xóa, ngăn ngừa tình huống Admin vô tình tự hạ quyền hoặc tự xóa tài khoản của chính mình.</li>
+          </ul>
+          <h4>2. Subtab "Cấu hình" (Tiêu chuẩn &amp; Quy định)</h4>
+          <p>Subtab này tích hợp toàn bộ các công cụ quản lý thông số kỹ thuật dùng để đánh giá thiết bị:</p>
+          <ul class="rec-list">
+          <li><strong>Mục Tiêu chuẩn (theo Nhà sản xuất):</strong></li>
+          <li>Cấu hình ngưỡng riêng cho từng hãng chế tạo thay cho ngưỡng mặc định chung.</li>
+          <li>Hỗ trợ cả 2 nhóm: <em>Khí hòa tan (DGA)</em> và <em>Dầu cách điện (MBA, OLTC, TI/TU)</em>.</li>
+          <li>Cung cấp cấu hình <strong>Ngưỡng loại bỏ (condemning limit)</strong> cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU.</li>
+          <li>Cho phép tra cứu, chỉnh sửa hoặc xóa các tiêu chuẩn hãng đã thiết lập (xem chi tiết tại mục 13).</li>
+          <li><strong>Mục Quy định (13 bảng ngưỡng số học):</strong></li>
+          <li>Chỉnh sửa trực tiếp 13 bảng ngưỡng số học trích từ QĐ1901/EVNNPT và IEC 60599:2022.</li>
+          <li>Khi ngành điện hoặc tiêu chuẩn quốc tế có đợt cập nhật ngưỡng số học mới, Admin chỉ cần sửa số trên giao diện và bấm <strong>"Lưu bảng này"</strong> — hệ thống sẽ lập tức áp dụng ngưỡng mới cho toàn bộ tính toán mà không cần lập trình viên phải sửa code hay cập nhật phiên bản web.</li>
+          <li>Có nút <strong>"Khôi phục mặc định"</strong> để hoàn tác về đúng số liệu gốc ban đầu nếu cần.</li>
+          </ul>
+          <h4>3. Subtab "Bản sao Supabase" (Sao lưu &amp; Đồng bộ dự phòng)</h4>
+          <p>Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính:</p>
+          <ul class="rec-list">
+          <li><strong>Tự động sao chép song song (Mirroring):</strong> Mọi thao tác thêm mới, chỉnh sửa, xóa dữ liệu (kết quả đo DGA, thí nghiệm dầu, danh sách trạm, tiêu chuẩn hãng, bảng quy định, ý kiến phản hồi) khi lưu vào Google Sheets đều được hệ thống tự động ghi một bản sao sang cơ sở dữ liệu Supabase (PostgreSQL).</li>
+          <li><strong>Kiểm tra trạng thái kết nối:</strong> Hiển thị trực quan tình trạng sẵn sàng của đường truyền kết nối đến Supabase.</li>
+          <li><strong>Đồng bộ toàn bộ thủ công (Full Sync):</strong> Nút <strong>"Đồng bộ toàn bộ sang Supabase"</strong> cho phép Admin chủ động quét toàn bộ kho dữ liệu hiện có trên Google Sheets và đẩy sang Supabase, đảm bảo dữ liệu 2 bên luôn khớp nhau 100%.</li>
+          <li><strong>Nhật ký lỗi đồng bộ (Sync Errors Log):</strong> Bảng ghi nhận chi tiết các lần đồng bộ không thành công (thời điểm, tên bảng, loại thao tác, ID bản ghi và nguyên nhân lỗi) giúp Admin dễ dàng phát hiện và xử lý sự cố đường truyền.</li>
+          <li><strong>Bảo mật thông tin:</strong> Tài khoản người dùng và mật khẩu đăng nhập hoàn toàn <strong>không bao giờ</strong> bị sao chép sang Supabase, đảm bảo tính bảo mật tuyệt đối cho hệ thống xác thực.</li>
+          </ul>
 
           </div>
         </details>
