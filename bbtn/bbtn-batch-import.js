@@ -340,10 +340,12 @@ async function onBatchSave() {
       nam_sx: $("f_namsx").value ? Number($("f_namsx").value) : null,
       nam_van_hanh: $("f_namvanhanh").value ? Number($("f_namvanhanh").value) : null,
       dien_ap_dm: $("f_dienapdm").value.trim(),
-      so_che_tao: $("f_sochetao").value.trim(),
-      loai_dau: $("f_loaidau").value.trim(),
+      so_che_tao: (row.parsed && row.parsed.soCheTao) || $("f_sochetao").value.trim(),
+      loai_dau: (row.parsed && row.parsed.loaiDau) || $("f_loaidau").value.trim(),
       ket_cau_cach_dien: $("f_ketcaucachdien").value.trim(),
       hien_trang_van_hanh: $("f_hientrangvanhanh").value.trim(),
+      n2: row.gases && row.gases.N2 !== undefined ? (row.gases.N2 === "KPH" ? 0 : Number(row.gases.N2)) : null,
+      o2: row.gases && row.gases.O2 !== undefined ? (row.gases.O2 === "KPH" ? 0 : Number(row.gases.O2)) : null,
       ...row.gases,
     };
 

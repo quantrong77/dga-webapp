@@ -266,6 +266,19 @@ async function onBbtnFileSelected(e) {
     $("f_loaidau").value = data.loaiDau;
     filled.push("Loại dầu cách điện");
   }
+  if (data.soCheTao || data.loaiDau) {
+    const wrap = $("nameplateFieldsWrap");
+    const btn = $("btnToggleNameplateFields");
+    if (wrap && wrap.classList.contains("hidden")) {
+      wrap.classList.remove("hidden");
+      if (btn) {
+        btn.setAttribute("aria-pressed", "false");
+        btn.title = "Ẩn phần này";
+        const iconUse = btn.querySelector("use");
+        if (iconUse) iconUse.setAttribute("href", "#icon-eye");
+      }
+    }
+  }
   if (data.pha) {
     $("f_pha").value = data.pha;
     filled.push("Pha");

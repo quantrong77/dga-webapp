@@ -107,21 +107,117 @@ function guessSampleDateISO(fullText) {
   return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
 }
 
+const VN_DIACRITICS_MAP = {
+  a: "àáảãạăằắẳẵặâầấẩẫậ", e: "èéẻẽẹêềếểễệ", i: "ìíỉĩị", o: "òóỏõọôồốổỗộơờớởỡợ",
+  u: "ùúủũụưừứửữự", y: "ỳýỷỹỵ", d: "đ",
+  A: "ÀÁẢÃẠĂẰẮẲẴẶÂẦẤẨẪẬ", E: "ÈÉẺẼẸÊỀẾỂỄỆ", I: "ÌÍỈĨỊ", O: "ÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢ",
+  U: "ÙÚỦŨỤƯỪỨỬỮỰ", Y: "ỲÝỶỸỴ", D: "Đ",
+};
+function stripVnDiacritics(str) {
+  let out = String(str || "");
+  Object.keys(VN_DIACRITICS_MAP).forEach((ascii) => {
+    const chars = VN_DIACRITICS_MAP[ascii];
+    for (let i = 0; i < chars.length; i++) {
+      if (out.indexOf(chars[i]) !== -1) out = out.split(chars[i]).join(ascii);
+    }
+  });
+  return out;
+}
+
+function extractSoCheTao(lines, foldedLines, pha) {
+  for (let i = 0; i < lines.length; i++) {
+    const m = foldedLines[i].match(/(?:S?o\s*che\s*tao|Serial\s*(?:N\s*o|Number)|So\s*may|So\s*se\s*ri|S\/N)\b[^:]*[:.]?/i);
+    if (!m) continue;
+    let rest = lines[i].slice(m.index + m[0].length).trim();
+    const stopMatch = stripVnDiacritics(rest).match(
+      /(?:Nam\s*(?:dua\s*vao\s*)?van\s*hanh|Year\s*of\s*operation|Nam\s*san\s*xuat|Year\s*of\s*(?:mfg|manufacture)|Cong\s*suat|Rated\s*power|Dien\s*ap|Rated\s*voltage|\s{2,}\S)/i
+    );
+    if (stopMatch) rest = rest.slice(0, stopMatch.index).trim();
+
+    if (!rest && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      const nextFolded = foldedLines[i + 1];
+      if (!/(?:Loai\s*dau|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc)/i.test(nextFolded)) {
+        rest = nextLine;
+      }
+    }
+
+    let combined = rest;
+    if (i + 1 < lines.length && !/(?:Loai\s*dau|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua)/i.test(foldedLines[i + 1])) {
+      combined += " " + lines[i + 1].trim();
+    }
+
+    combined = combined.replace(/p\s+ha\s+([ABC])/gi, "pha $1").replace(/(\d+)\s*\/\s*(\d+)/g, "$1/$2");
+
+    const phaseMatch = {};
+    const re = /pha\s*([ABC])\s*[:.\-]?\s*([^\s,;]+)/gi;
+    let pm;
+    while ((pm = re.exec(combined)) !== null) {
+      phaseMatch[pm[1].toUpperCase()] = pm[2].trim();
+    }
+
+    if (pha && phaseMatch[pha.toUpperCase()]) {
+      return phaseMatch[pha.toUpperCase()];
+    }
+    if (Object.keys(phaseMatch).length > 0) {
+      return Object.entries(phaseMatch).map(([p, s]) => `Pha ${p}: ${s}`).join(", ");
+    }
+
+    if (rest) {
+      return rest.replace(/^[:.\-\s]+|[,;.\-\s]+$/g, "").trim();
+    }
+  }
+  return null;
+}
+
+function extractLoaiDau(lines, foldedLines) {
+  for (let i = 0; i < lines.length; i++) {
+    // Bỏ qua dòng tiêu đề biên bản (vd: "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN")
+    if (/(?:Bien\s*ban|Bao\s*cao|BM\.\d+)/i.test(foldedLines[i])) continue;
+    const m = foldedLines[i].match(/(?:L?oai\s*dau|Chung\s*loai\s*dau|Ten\s*dau|Oil\s*type|Type\s*of\s*oil|Dau\s*cach\s*dien\s*[:.-])\b[^:]*[:.]?/i);
+    if (!m) continue;
+    let rest = lines[i].slice(m.index + m[0].length).trim();
+    const stopMatch = stripVnDiacritics(rest).match(
+      /(?:Ngay\s*(?:lay\s*mau|thi\s*nghiem)|Date(?:\s*of\s*sampling)?|Khoi\s*luong|Volume|Weight|Ly\s*do|Purpose|Nhiet\s*do|Temp|Do\s*am|Humidity|\s{2,}\S)/i
+    );
+    if (stopMatch) rest = rest.slice(0, stopMatch.index).trim();
+
+    // Nếu ô nhãn ở cuối dòng hoặc giá trị nằm ở hàng dưới
+    if (!rest && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      const nextFolded = foldedLines[i + 1];
+      if (!/(?:Bien\s*ban|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc)/i.test(nextFolded)) {
+        rest = nextLine;
+      }
+    }
+
+    if (rest) {
+      return rest.replace(/^[:.\-\s]+|[,;.\-\s]+$/g, "").trim();
+    }
+  }
+
+  const full = lines.join(" ");
+  const mKnown = full.match(/\b(Nynas\s+Nytro(?:\s+[\w\d]+)?|Shell\s+Diala(?:\s+[\w\d\-]+)?|Apar(?:\s+[\w\d]+)?|Ergon(?:\s+Hyvolt(?:\s+[\w\d]+)?)?|Dầu khoáng|Mineral\s+oil|Dầu Silicone|Dầu ester)\b/i);
+  if (mKnown) return mKnown[1].trim();
+
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // 3) Trích 7 giá trị khí hòa tan (ppm) từ bảng "KẾT QUẢ THÍ NGHIỆM" — tìm dòng có
 //    tên khí, rồi lấy SỐ ĐẦU TIÊN xuất hiện sau tên khí trên chính dòng đó, sau khi
 //    đã loại bỏ các cụm "< số" (đó là cột "Tiêu chuẩn/Limits", không phải kết quả đo).
 // ---------------------------------------------------------------------------
 const GAS_LINE_PATTERNS = [
-  { id: "H2", re: /Hydrogen\s*H\s*2/i },
-  { id: "CH4", re: /Methane\s*CH\s*4/i },
-  { id: "C2H6", re: /Ethan\s*C\s*2\s*H\s*6/i },
-  { id: "C2H4", re: /Ethylen\s*C\s*2\s*H\s*4/i },
-  { id: "C2H2", re: /Acetylen\s*C\s*2\s*H\s*2/i },
-  { id: "CO", re: /CarbonMonoxit\s*CO(?!\s*2)/i },
-  { id: "CO2", re: /Carbondioxit\s*CO\s*2/i },
-  { id: "N2", re: /Nit[oơ]\s*N\s*2/i },
-  { id: "O2", re: /Oxy\s*O\s*2/i },
+  { id: "H2", re: /\b(?:Hydrogen|Hydro)\b\s*(?:\(?\s*H\s*2\s*\)?|\/H2)?|(?<![A-Za-z0-9])H\s*2(?![A-Za-z0-9])/i },
+  { id: "CH4", re: /\b(?:Methane|Metan)\b\s*(?:\(?\s*CH\s*4\s*\)?|\/CH4)?|(?<![A-Za-z0-9])CH\s*4(?![A-Za-z0-9])/i },
+  { id: "C2H6", re: /\b(?:Ethane?|Etan)\b\s*(?:\(?\s*C\s*2\s*H\s*6\s*\)?|\/C2H6)?|(?<![A-Za-z0-9])C\s*2\s*H\s*6(?![A-Za-z0-9])/i },
+  { id: "C2H4", re: /\b(?:Ethylene?|Etilen)\b\s*(?:\(?\s*C\s*2\s*H\s*4\s*\)?|\/C2H4)?|(?<![A-Za-z0-9])C\s*2\s*H\s*4(?![A-Za-z0-9])/i },
+  { id: "C2H2", re: /\b(?:Acetylene?|Axetilen)\b\s*(?:\(?\s*C\s*2\s*H\s*2\s*\)?|\/C2H2)?|(?<![A-Za-z0-9])C\s*2\s*H\s*2(?![A-Za-z0-9])/i },
+  { id: "CO", re: /\b(?:Carbon\s*Monoxit|Carbon\s*Monoxide|Cacbon\s*Monoxit)\b\s*(?:\(?\s*CO\s*\)?|\/CO)?|(?<![A-Za-z0-9])CO(?![A-Za-z0-9])/i },
+  { id: "CO2", re: /\b(?:Carbon\s*Dioxit|Carbon\s*Dioxide|Cacbon\s*Dioxit)\b\s*(?:\(?\s*CO\s*2\s*\)?|\/CO2)?|(?<![A-Za-z0-9])CO\s*2(?![A-Za-z0-9])/i },
+  { id: "N2", re: /\b(?:Nitrogen|Nit[oơ])\b\s*(?:\(?\s*N\s*2\s*\)?|\/N2)?|(?<![A-Za-z0-9])N\s*2(?![A-Za-z0-9])/i },
+  { id: "O2", re: /\b(?:Oxygen|Oxy)\b\s*(?:\(?\s*O\s*2\s*\)?|\/O2)?|(?<![A-Za-z0-9])O\s*2(?![A-Za-z0-9])/i },
 ];
 
 const KPH_PATTERN = /(?:^|\s|[^\wÀ-ỹ])(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|D[uư][oớ]i\s*ng[uư][oõ]ng\s*ph[aá]t\s*hi[eệ]n|\bND\b)(?:$|\s|[^\wÀ-ỹ])/i;
@@ -163,6 +259,7 @@ function extractGasValues(lines) {
 async function extract(file) {
   const lines = await pdfFileToLines(file);
   const fullText = lines.join("\n");
+  const foldedLines = lines.map(stripVnDiacritics);
 
   const tram = extractLabelValue(lines, /Tên dự án\/tên trạm[^:]*:/i, /\s{2,}\S/);
   const viTri = extractLabelValue(lines, /Vị trí lắp đặt[^:]*:/i, /\s{2,}\S/);
@@ -170,16 +267,18 @@ async function extract(file) {
   const loai = guessEquipmentType(fullText);
   const thietbi = guessDeviceCode(viTri) || guessDeviceCode(fullText);
   const pha = guessPhase(fullText);
+  const soCheTao = extractSoCheTao(lines, foldedLines, pha);
+  const loaiDau = extractLoaiDau(lines, foldedLines);
   const ngay = guessSampleDateISO(fullText);
   const gases = extractGasValues(lines);
 
   const matchedCount =
-    [tram, thietbi, loai, pha, ngay].filter(Boolean).length + Object.keys(gases).length;
+    [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau].filter(Boolean).length + Object.keys(gases).length;
 
-  return { tram, thietbi, loai, pha, ngay, hangSanXuat, gases, matchedCount };
+  return { tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, loaiDau, gases, matchedCount };
 }
 
-const BbtnImport = { extract, extractGasValues };
+const BbtnImport = { extract, extractGasValues, extractSoCheTao, extractLoaiDau };
 window.BbtnImport = BbtnImport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));

@@ -2,19 +2,25 @@ const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
 
-function loadExtractGasValues() {
+function loadBbtnHelpers() {
   const code = fs.readFileSync(path.join(__dirname, "..", "bbtn", "bbtn-import.js"), "utf8");
-  // Extract GAS_LINE_PATTERNS, KPH_PATTERN, and extractGasValues
-  const m1 = code.indexOf("const GAS_LINE_PATTERNS =");
+  const m1 = code.indexOf("const VN_DIACRITICS_RE =");
   const m2 = code.indexOf("// Các trường \"Thông số kỹ thuật");
   const subCode = code.slice(m1, m2);
   const sandbox = {};
   vm.createContext(sandbox);
-  vm.runInContext(subCode + "\nthis.extractGasValues = extractGasValues;", sandbox);
-  return sandbox.extractGasValues;
+  vm.runInContext(
+    subCode +
+    "\nthis.stripVnDiacritics = stripVnDiacritics;" +
+    "\nthis.extractGasValues = extractGasValues;" +
+    "\nthis.extractSoCheTao = extractSoCheTao;" +
+    "\nthis.extractLoaiDau = extractLoaiDau;",
+    sandbox
+  );
+  return sandbox;
 }
 
-const extractGasValues = loadExtractGasValues();
+const { stripVnDiacritics, extractGasValues, extractSoCheTao, extractLoaiDau } = loadBbtnHelpers();
 
 describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí", () => {
   test("trích số bình thường khi có số liệu", () => {
@@ -62,7 +68,7 @@ describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí
       "5 Acetylen C2H2 ppm KPH 1 Đạt",
     ];
     const res = extractGasValues(lines);
-    expect(res.C2H2).toBe("KPH"); // Không được đọc nhầm thành 1
+    expect(res.C2H2).toBe("KPH");
   });
 
   test("trường hợp hỗn hợp: một số khí có số liệu, C2H2 ghi KPH", () => {
@@ -85,14 +91,110 @@ describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí
     expect(res.CO2).toBe(350);
   });
 
-  test("trích được cả N2 và O2 nếu có trong biên bản", () => {
-    const lines = [
+  test("trích được cả N2 và O2 với các định dạng khác nhau (có ngoặc, không ngoặc, tiếng Anh/Việt)", () => {
+    // Dạng chuẩn không ngoặc
+    const lines1 = [
       "8 Nitơ N2 ppm 14500",
       "9 Oxy O2 ppm 5200",
     ];
-    const res = extractGasValues(lines);
-    expect(res.N2).toBe(14500);
-    expect(res.O2).toBe(5200);
+    const res1 = extractGasValues(lines1);
+    expect(res1.N2).toBe(14500);
+    expect(res1.O2).toBe(5200);
+
+    // Dạng có ngoặc đơn (N2), (O2)
+    const lines2 = [
+      "8. Nitơ (N2) ppm 14500 < 15000",
+      "9. Oxy (O2) ppm 5200 < 6000",
+    ];
+    const res2 = extractGasValues(lines2);
+    expect(res2.N2).toBe(14500);
+    expect(res2.O2).toBe(5200);
+
+    // Dạng rút gọn chỉ ghi N2, O2
+    const lines3 = [
+      "8. N2 ppm 13800",
+      "9. O2 ppm 4900",
+    ];
+    const res3 = extractGasValues(lines3);
+    expect(res3.N2).toBe(13800);
+    expect(res3.O2).toBe(4900);
+
+    // Dạng tiếng Anh Nitrogen, Oxygen
+    const lines4 = [
+      "8. Nitrogen (N2) ppm 14200",
+      "9. Oxygen (O2) ppm 5100",
+    ];
+    const res4 = extractGasValues(lines4);
+    expect(res4.N2).toBe(14200);
+    expect(res4.O2).toBe(5100);
+
+    // Dạng KPH cho N2 / O2
+    const lines5 = [
+      "8. Nitơ N2 ppm KPH < 15000",
+      "9. Oxy (O2) ppm KPH < 6000",
+    ];
+    const res5 = extractGasValues(lines5);
+    expect(res5.N2).toBe("KPH");
+    expect(res5.O2).toBe("KPH");
+  });
+});
+
+describe("BbtnImport — Tự động đọc Loại dầu và Số chế tạo", () => {
+  test("trích Loại dầu từ các dòng thông tin khác nhau", () => {
+    const l1 = ["Loại dầu (Type ): Nynas Nytro 10XN Ngày lấy mẫu (Date): 1 5 /09/2026"];
+    expect(extractLoaiDau(l1, l1.map(stripVnDiacritics))).toBe("Nynas Nytro 10XN");
+
+    const l2 = ["Loại dầu: Dầu khoáng"];
+    expect(extractLoaiDau(l2, l2.map(stripVnDiacritics))).toBe("Dầu khoáng");
+
+    const l3 = ["Loại dầu cách điện: Shell Diala S4 ZX-I Ngày lấy mẫu: 10/10/2026"];
+    expect(extractLoaiDau(l3, l3.map(stripVnDiacritics))).toBe("Shell Diala S4 ZX-I");
+
+    const l4 = ["Chủng loại dầu (Oil type): Ergon Hyvolt II  Lý do thí nghiệm: Định kỳ"];
+    expect(extractLoaiDau(l4, l4.map(stripVnDiacritics))).toBe("Ergon Hyvolt II");
+
+    // Dạng bảng ô ở hàng dưới
+    const l5 = ["Loại dầu (Type):", "Nynas Nytro 10XN"];
+    expect(extractLoaiDau(l5, l5.map(stripVnDiacritics))).toBe("Nynas Nytro 10XN");
+
+    // Dòng tiêu đề biên bản không bị nhận nhầm là loại dầu
+    const l6 = [
+      "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN",
+      "(Insulation oil test report)",
+      "Loại dầu (Type ): Nynas Nytro 10XN Ngày lấy mẫu (Date): 15/09/2026",
+    ];
+    expect(extractLoaiDau(l6, l6.map(stripVnDiacritics))).toBe("Nynas Nytro 10XN");
+  });
+
+  test("trích Số chế tạo đơn lẻ và phân tách theo từng pha", () => {
+    // Đơn lẻ
+    const l1 = ["Số chế tạo (Serial No): 123456 Năm vận hành: 2018"];
+    expect(extractSoCheTao(l1, l1.map(stripVnDiacritics), null)).toBe("123456");
+
+    const l2 = ["Số chế tạo (Serial No): 123456 Năm đưa vào vận hành (Year of operation): 2018"];
+    expect(extractSoCheTao(l2, l2.map(stripVnDiacritics), null)).toBe("123456");
+
+    const l3 = ["Số chế tạo: MBA-AT1-2022"];
+    expect(extractSoCheTao(l3, l3.map(stripVnDiacritics), null)).toBe("MBA-AT1-2022");
+
+    // 3 pha: tách đúng pha yêu cầu
+    const l4 = [
+      "Số chế tạo (Serial No): p ha A: 16019123/1, p ha B: 16019123 /4, Năm vận hành (Year of operation): 20 17",
+      "p ha C: 16019123 /5",
+    ];
+    expect(extractSoCheTao(l4, l4.map(stripVnDiacritics), "A")).toBe("16019123/1");
+    expect(extractSoCheTao(l4, l4.map(stripVnDiacritics), "B")).toBe("16019123/4");
+    expect(extractSoCheTao(l4, l4.map(stripVnDiacritics), "C")).toBe("16019123/5");
+
+    // Khi không chỉ định pha cụ thể: gộp các pha rõ ràng
+    expect(extractSoCheTao(l4, l4.map(stripVnDiacritics), null)).toBe("Pha A: 16019123/1, Pha B: 16019123/4, Pha C: 16019123/5");
+
+    // Dạng ô nhãn ở hàng trên, số ở hàng dưới
+    const l5 = [
+      "Số chế tạo (Serial No): Năm vận hành: 2017",
+      "7891011",
+    ];
+    expect(extractSoCheTao(l5, l5.map(stripVnDiacritics), null)).toBe("7891011");
   });
 });
 

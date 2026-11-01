@@ -98,7 +98,7 @@ async function pdfFileToLinesViaOCR(file, onProgress) {
       await page.render({ canvasContext: ctx, viewport }).promise;
       const { data } = await worker.recognize(canvas);
       (data.text || "")
-        .split("\n")
+        .split("\r\n")
         .map((s) => s.replace(/\s+/g, " ").trim())
         .filter(Boolean)
         .forEach((s) => lines.push(s));
@@ -253,15 +253,15 @@ function guessDoAm(foldedFullText) {
 //    đã loại bỏ các cụm "< số" (đó là cột "Tiêu chuẩn/Limits", không phải kết quả đo).
 // ---------------------------------------------------------------------------
 const GAS_LINE_PATTERNS = [
-  { id: "H2", re: /Hydrogen\s*H\s*2/i },
-  { id: "CH4", re: /Methane\s*CH\s*4/i },
-  { id: "C2H6", re: /Ethan\s*C\s*2\s*H\s*6/i },
-  { id: "C2H4", re: /Ethylen\s*C\s*2\s*H\s*4/i },
-  { id: "C2H2", re: /Acetylen\s*C\s*2\s*H\s*2/i },
-  { id: "CO", re: /CarbonMonoxit\s*CO(?!\s*2)/i },
-  { id: "CO2", re: /Carbondioxit\s*CO\s*2/i },
-  { id: "N2", re: /Nit[oơ]\s*N\s*2/i },
-  { id: "O2", re: /Oxy\s*O\s*2/i },
+  { id: "H2", re: /\b(?:Hydrogen|Hydro)\b\s*(?:\(?\s*H\s*2\s*\)?|\/H2)?|(?<![A-Za-z0-9])H\s*2(?![A-Za-z0-9])/i },
+  { id: "CH4", re: /\b(?:Methane|Metan)\b\s*(?:\(?\s*CH\s*4\s*\)?|\/CH4)?|(?<![A-Za-z0-9])CH\s*4(?![A-Za-z0-9])/i },
+  { id: "C2H6", re: /\b(?:Ethane?|Etan)\b\s*(?:\(?\s*C\s*2\s*H\s*6\s*\)?|\/C2H6)?|(?<![A-Za-z0-9])C\s*2\s*H\s*6(?![A-Za-z0-9])/i },
+  { id: "C2H4", re: /\b(?:Ethylene?|Etilen)\b\s*(?:\(?\s*C\s*2\s*H\s*4\s*\)?|\/C2H4)?|(?<![A-Za-z0-9])C\s*2\s*H\s*4(?![A-Za-z0-9])/i },
+  { id: "C2H2", re: /\b(?:Acetylene?|Axetilen)\b\s*(?:\(?\s*C\s*2\s*H\s*2\s*\)?|\/C2H2)?|(?<![A-Za-z0-9])C\s*2\s*H\s*2(?![A-Za-z0-9])/i },
+  { id: "CO", re: /\b(?:Carbon\s*Monoxit|Carbon\s*Monoxide|Cacbon\s*Monoxit)\b\s*(?:\(?\s*CO\s*\)?|\/CO)?|(?<![A-Za-z0-9])CO(?![A-Za-z0-9])/i },
+  { id: "CO2", re: /\b(?:Carbon\s*Dioxit|Carbon\s*Dioxide|Cacbon\s*Dioxit)\b\s*(?:\(?\s*CO\s*2\s*\)?|\/CO2)?|(?<![A-Za-z0-9])CO\s*2(?![A-Za-z0-9])/i },
+  { id: "N2", re: /\b(?:Nitrogen|Nit[oơ])\b\s*(?:\(?\s*N\s*2\s*\)?|\/N2)?|(?<![A-Za-z0-9])N\s*2(?![A-Za-z0-9])/i },
+  { id: "O2", re: /\b(?:Oxygen|Oxy)\b\s*(?:\(?\s*O\s*2\s*\)?|\/O2)?|(?<![A-Za-z0-9])O\s*2(?![A-Za-z0-9])/i },
 ];
 
 const KPH_PATTERN = /(?:^|\s|[^\wÀ-ỹ])(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|D[uư][oớ]i\s*ng[uư][oõ]ng\s*ph[aá]t\s*hi[eệ]n|\bND\b)(?:$|\s|[^\wÀ-ỹ])/i;
@@ -296,6 +296,88 @@ function extractGasValues(lines) {
   return values;
 }
 
+function extractSoCheTao(lines, foldedLines, pha) {
+  for (let i = 0; i < lines.length; i++) {
+    const m = foldedLines[i].match(/(?:S?o\s*che\s*tao|Serial\s*(?:N\s*o|Number)|So\s*may|So\s*se\s*ri|S\/N)\b[^:]*[:.]?/i);
+    if (!m) continue;
+    let rest = lines[i].slice(m.index + m[0].length).trim();
+    const stopMatch = stripVnDiacritics(rest).match(
+      /(?:Nam\s*(?:dua\s*vao\s*)?van\s*hanh|Year\s*of\s*operation|Nam\s*san\s*xuat|Year\s*of\s*(?:mfg|manufacture)|Cong\s*suat|Rated\s*power|Dien\s*ap|Rated\s*voltage|\s{2,}\S)/i
+    );
+    if (stopMatch) rest = rest.slice(0, stopMatch.index).trim();
+
+    // Nếu ô nhãn ở cuối dòng hoặc giá trị nằm ở hàng dưới (bảng cột dọc)
+    if (!rest && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      const nextFolded = foldedLines[i + 1];
+      if (!/(?:Loai\s*dau|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc)/i.test(nextFolded)) {
+        rest = nextLine;
+      }
+    }
+
+    let combined = rest;
+    if (i + 1 < lines.length && !/(?:Loai\s*dau|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua)/i.test(foldedLines[i + 1])) {
+      combined += " " + lines[i + 1].trim();
+    }
+
+    // Chuẩn hóa "p ha" -> "pha" và gộp khoảng trống trong số hiệu "16019123 /4" -> "16019123/4"
+    combined = combined.replace(/p\s+ha\s+([ABC])/gi, "pha $1").replace(/(\d+)\s*\/\s*(\d+)/g, "$1/$2");
+
+    const phaseMatch = {};
+    const re = /pha\s*([ABC])\s*[:.\-]?\s*([^\s,;]+)/gi;
+    let pm;
+    while ((pm = re.exec(combined)) !== null) {
+      phaseMatch[pm[1].toUpperCase()] = pm[2].trim();
+    }
+
+    if (pha && phaseMatch[pha.toUpperCase()]) {
+      return phaseMatch[pha.toUpperCase()];
+    }
+    if (Object.keys(phaseMatch).length > 0) {
+      return Object.entries(phaseMatch).map(([p, s]) => `Pha ${p}: ${s}`).join(", ");
+    }
+
+    if (rest) {
+      return rest.replace(/^[:.\-\s]+|[,;.\-\s]+$/g, "").trim();
+    }
+  }
+  return null;
+}
+
+function extractLoaiDau(lines, foldedLines) {
+  for (let i = 0; i < lines.length; i++) {
+    // Bỏ qua dòng tiêu đề biên bản (vd: "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN")
+    if (/(?:Bien\s*ban|Bao\s*cao|BM\.\d+)/i.test(foldedLines[i])) continue;
+    const m = foldedLines[i].match(/(?:L?oai\s*dau|Chung\s*loai\s*dau|Ten\s*dau|Oil\s*type|Type\s*of\s*oil|Dau\s*cach\s*dien\s*[:.-])\b[^:]*[:.]?/i);
+    if (!m) continue;
+    let rest = lines[i].slice(m.index + m[0].length).trim();
+    const stopMatch = stripVnDiacritics(rest).match(
+      /(?:Ngay\s*(?:lay\s*mau|thi\s*nghiem)|Date(?:\s*of\s*sampling)?|Khoi\s*luong|Volume|Weight|Ly\s*do|Purpose|Nhiet\s*do|Temp|Do\s*am|Humidity|\s{2,}\S)/i
+    );
+    if (stopMatch) rest = rest.slice(0, stopMatch.index).trim();
+
+    // Nếu ô nhãn ở cuối dòng hoặc giá trị nằm ở hàng dưới
+    if (!rest && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      const nextFolded = foldedLines[i + 1];
+      if (!/(?:Bien\s*ban|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc)/i.test(nextFolded)) {
+        rest = nextLine;
+      }
+    }
+
+    if (rest) {
+      return rest.replace(/^[:.\-\s]+|[,;.\-\s]+$/g, "").trim();
+    }
+  }
+
+  // Dự phòng: dò theo các nhãn hiệu / chủng loại dầu máy biến áp thông dụng trong văn bản
+  const full = lines.join(" ");
+  const mKnown = full.match(/\b(Nynas\s+Nytro(?:\s+[\w\d]+)?|Shell\s+Diala(?:\s+[\w\d\-]+)?|Apar(?:\s+[\w\d]+)?|Ergon(?:\s+Hyvolt(?:\s+[\w\d]+)?)?|Dầu khoáng|Mineral\s+oil|Dầu Silicone|Dầu ester)\b/i);
+  if (mKnown) return mKnown[1].trim();
+
+  return null;
+}
+
 // Các trường "Thông số kỹ thuật thiết bị" (dùng khi xuất báo cáo phân tích kỹ thuật)
 // nằm chung 1 hàng theo cặp trong mẫu PTC3/BM.15 — VD "Hãng sản xuất (Manufacturer):
 // HAEFELY    Năm sản xuất: 2000" — nên dùng đúng cơ chế stopRe (dừng trước nhãn kế
@@ -321,7 +403,7 @@ function extractYearAfterLabel(fullText, labelRe) {
 async function extract(file, onProgress) {
   let lines = await pdfFileToLines(file);
   let viaOCR = false;
-  if (lines.join("\n").trim().length < MIN_TEXT_LEN_FOR_DIRECT_READ) {
+  if (lines.join("\r\n").trim().length < MIN_TEXT_LEN_FOR_DIRECT_READ) {
     // Không đọc được lớp text thật (nhiều khả năng là ảnh scan/chụp) — thử OCR. Nếu
     // OCR cũng không ra dòng nào (ảnh quá mờ, hoặc lỗi tải thư viện/dữ liệu ngôn ngữ),
     // GIỮ NGUYÊN kết quả rỗng từ pdf.js thay vì ném lỗi — extract() vẫn trả về bình
@@ -338,9 +420,9 @@ async function extract(file, onProgress) {
       // được, KHÔNG làm hỏng luồng đọc trực tiếp (lines rỗng từ pdf.js vẫn được dùng).
     }
   }
-  const fullText = lines.join("\n");
+  const fullText = lines.join("\r\n");
   const foldedLines = lines.map(stripVnDiacritics);
-  const foldedFullText = foldedLines.join("\n");
+  const foldedFullText = foldedLines.join("\r\n");
 
   // Chữ cái ĐẦU mỗi nhãn để "?" (tuỳ chọn) vì thực tế đã kiểm chứng: khi đọc bằng OCR,
   // ký tự đầu tiên của 1 ô bảng (sát viền kẻ khung bên trái) thỉnh thoảng bị rụng mất
@@ -350,15 +432,15 @@ async function extract(file, onProgress) {
   const tram = extractLabelValue(lines, foldedLines, /T?en du an\/t?en tram[^:]*:/i, /\s{2,}\S/);
   const viTri = extractLabelValue(lines, foldedLines, /V?i tri lap dat[^:]*:/i, /\s{2,}\S/);
   const hangSanXuat = extractLabelValue(lines, foldedLines, /H?ang san xuat[^:]*:/i, /Nam san xuat/i);
-  const soCheTao = extractLabelValue(lines, foldedLines, /S?o che tao[^:]*:/i, /Nam van hanh/i);
   const dienApDm = extractLabelValue(lines, foldedLines, /D?ien ap dinh muc[^:]*:/i, /Cong suat/i);
-  const loaiDau = extractLabelValue(lines, foldedLines, /L?oai dau[^:]*:/i, /Ngay lay mau/i);
   const namSx = extractYearAfterLabel(foldedFullText, /Nam san xuat[^:]*:\s*(\d{4})/i);
   const namVanHanh = extractYearAfterLabel(foldedFullText, /Nam (?:van hanh|dua vao van hanh)[^:]*:\s*(\d{4})/i);
   const lyDoThiNghiem = extractLabelValue(lines, foldedLines, /L?y do thi nghiem[^:]*:/i, /\s{2,}\S/);
   const loai = guessEquipmentType(foldedFullText);
   const thietbi = guessDeviceCode(viTri) || guessDeviceCode(fullText);
   const pha = guessPhase(foldedFullText);
+  const soCheTao = extractSoCheTao(lines, foldedLines, pha);
+  const loaiDau = extractLoaiDau(lines, foldedLines);
   const ngay = guessSampleDateISO(foldedFullText);
   const ngayThiNghiem = guessTestDateISO(foldedFullText);
   const nhietDo = guessNhietDo(foldedFullText);
@@ -366,7 +448,7 @@ async function extract(file, onProgress) {
   const gases = extractGasValues(lines);
 
   const matchedCount =
-    [tram, thietbi, loai, pha, ngay].filter(Boolean).length + Object.keys(gases).length;
+    [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau].filter(Boolean).length + Object.keys(gases).length;
 
   return {
     tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, namSx, namVanHanh, loaiDau,
@@ -419,7 +501,7 @@ async function pdfFileToCleanLines(file) {
 /** { lines, viaOCR } — đọc trực tiếp, không có lớp chữ thì mới dùng OCR (giống extract()). */
 async function readLines(file, onProgress) {
   const lines = await pdfFileToCleanLines(file);
-  if (lines.join("\n").trim().length >= MIN_TEXT_LEN_FOR_DIRECT_READ) return { lines, viaOCR: false };
+  if (lines.join("\r\n").trim().length >= MIN_TEXT_LEN_FOR_DIRECT_READ) return { lines, viaOCR: false };
   try {
     const ocrLines = await pdfFileToLinesViaOCR(file, onProgress);
     if (ocrLines.length) return { lines: ocrLines, viaOCR: true };
@@ -429,9 +511,9 @@ async function readLines(file, onProgress) {
   return { lines, viaOCR: false };
 }
 
-const BbtnImport = { extract, readLines, extractGasValues };
+const BbtnImport = { extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau };
 window.BbtnImport = BbtnImport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
-export { extract, readLines, extractGasValues };
+export { extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau };
 export default BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));
