@@ -203,6 +203,89 @@ function extractLoaiDau(lines, foldedLines) {
   return null;
 }
 
+// Trích "Điện áp định mức" từ thông tin kỹ thuật thiết bị (VD: "550 kV", "220 kV", "500/220/35 kV",
+// hoặc OCR bị tách số "5 5 0 kV"). Dừng trước nhãn kế tiếp trên cùng hàng (Công suất, Năm sản xuất...).
+function extractDienApDm(lines, foldedLines) {
+  if (!lines || !lines.length) return null;
+  const fLines = foldedLines || lines.map(stripVnDiacritics);
+
+  for (let i = 0; i < lines.length; i++) {
+    const folded = fLines[i];
+    const m = folded.match(/(?:D?ien\s*ap\s*(?:dinh\s*muc)?|Rated\s*voltage|\bUm\b|\bUn\b)[^:.]*[:.]?/i);
+    if (!m) continue;
+
+    if (/(?:choc\s*thung|breakdown|chiu\s*dung|withstand|thu\s*nghiem|ket\s*qua|ket\s*luan)/i.test(folded)) continue;
+
+    let rest = lines[i].slice(m.index + m[0].length).trim();
+    const stopMatch = stripVnDiacritics(rest).match(
+      /(?:Cong\s*suat|Rated\s*power|Nam\s*san\s*xuat|Year|Tan\s*so|Freq|Dong\s*dien|Current|Ti\s*so|Ratio|Cap\s*chinh\s*xac|So\s*che\s*tao|Serial|\s{2,}\S)/i
+    );
+    if (stopMatch) rest = rest.slice(0, stopMatch.index).trim();
+
+    if (!rest && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim();
+      const nextFolded = fLines[i + 1];
+      if (!/(?:Bien\s*ban|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc|Cong\s*suat|Nam)/i.test(nextFolded)) {
+        if (/(\d+(?:\s*\d+)*\s*(?:kV|V)|\b\d{2,3}\b)/i.test(nextFolded)) {
+          rest = nextLine;
+        }
+      }
+    }
+
+    if (rest) {
+      rest = rest.replace(/^[:.\-\s]+|[,;.\-\s]+$/g, "").trim();
+      rest = rest.replace(/(\d)\s+(?=\d)/g, "$1");
+      rest = rest.replace(/\bk\s+V\b/gi, "kV");
+      rest = rest.replace(/\s+/g, " ").trim();
+      if (rest) return rest;
+    }
+  }
+
+  const full = lines.join(" ").replace(/(\d)\s+(?=\d)/g, "$1");
+  const mVolt = full.match(/\b(550|525|500|242|230|220|121|115|110|35|22|10)\s*kV\b/i);
+  if (mVolt) return mVolt[0];
+
+  return null;
+}
+
+// Ánh xạ "Điện áp định mức" (hoặc trạm/thiết bị) sang cấp điện áp Bảng 63 ("110-220" hoặc "500").
+function mapVoltageToBang63Class(dienApText, tram, thietbi) {
+  const norm = (s) => (s ? String(s).replace(/(\d)\s+(?=\d)/g, "$1").replace(/\s+/g, " ") : "");
+  const vText = norm(dienApText);
+
+  if (vText) {
+    const nums = [];
+    const re = /(\d+(?:[.,]\d+)?)\s*(?:kV|k\s*V)?/gi;
+    let m;
+    while ((m = re.exec(vText)) !== null) {
+      const val = parseFloat(m[1].replace(",", "."));
+      if (!isNaN(val)) nums.push(val);
+    }
+    if (nums.length > 0) {
+      const maxV = Math.max(...nums);
+      if (maxV >= 500) return "500";
+      if (maxV >= 110) return "110-220";
+      if (maxV > 0) return "110-220";
+    }
+    if (/500|525|550/i.test(vText)) return "500";
+    if (/110|220|230/i.test(vText)) return "110-220";
+  }
+
+  const tText = norm(tram);
+  if (tText) {
+    if (/500\s*kV/i.test(tText)) return "500";
+    if (/(?:220|110)\s*kV/i.test(tText)) return "110-220";
+  }
+
+  const tbText = norm(thietbi);
+  if (tbText) {
+    if (/500\s*kV|\b500\b|\b(?:TI|TU|CVT|MC|DCL|AT|T)?\s*5\d{2}\b/i.test(tbText)) return "500";
+    if (/(?:220|110)\s*kV|\b(?:TI|TU|CVT|MC|DCL|AT|T)?\s*[12]\d{2}\b/i.test(tbText)) return "110-220";
+  }
+
+  return null;
+}
+
 // ---------------------------------------------------------------------------
 // 3) Trích 7 giá trị khí hòa tan (ppm) từ bảng "KẾT QUẢ THÍ NGHIỆM" — tìm dòng có
 //    tên khí, rồi lấy SỐ ĐẦU TIÊN xuất hiện sau tên khí trên chính dòng đó, sau khi
@@ -264,8 +347,10 @@ async function extract(file) {
   const tram = extractLabelValue(lines, /Tên dự án\/tên trạm[^:]*:/i, /\s{2,}\S/);
   const viTri = extractLabelValue(lines, /Vị trí lắp đặt[^:]*:/i, /\s{2,}\S/);
   const hangSanXuat = extractLabelValue(lines, /Hãng sản xuất[^:]*:/i, /Năm sản xuất/i);
+  const dienApDm = extractDienApDm(lines, foldedLines);
   const loai = guessEquipmentType(fullText);
   const thietbi = guessDeviceCode(viTri) || guessDeviceCode(fullText);
+  const bang63VoltageClass = mapVoltageToBang63Class(dienApDm, tram, thietbi);
   const pha = guessPhase(fullText);
   const soCheTao = extractSoCheTao(lines, foldedLines, pha);
   const loaiDau = extractLoaiDau(lines, foldedLines);
@@ -273,12 +358,12 @@ async function extract(file) {
   const gases = extractGasValues(lines);
 
   const matchedCount =
-    [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau].filter(Boolean).length + Object.keys(gases).length;
+    [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau, dienApDm].filter(Boolean).length + Object.keys(gases).length;
 
-  return { tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, loaiDau, gases, matchedCount };
+  return { tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, bang63VoltageClass, loaiDau, gases, matchedCount };
 }
 
-const BbtnImport = { extract, extractGasValues, extractSoCheTao, extractLoaiDau };
+const BbtnImport = { extract, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class };
 window.BbtnImport = BbtnImport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));

@@ -14,13 +14,15 @@ function loadBbtnHelpers() {
     "\nthis.stripVnDiacritics = stripVnDiacritics;" +
     "\nthis.extractGasValues = extractGasValues;" +
     "\nthis.extractSoCheTao = extractSoCheTao;" +
-    "\nthis.extractLoaiDau = extractLoaiDau;",
+    "\nthis.extractLoaiDau = extractLoaiDau;" +
+    "\nthis.extractDienApDm = extractDienApDm;" +
+    "\nthis.mapVoltageToBang63Class = mapVoltageToBang63Class;",
     sandbox
   );
   return sandbox;
 }
 
-const { stripVnDiacritics, extractGasValues, extractSoCheTao, extractLoaiDau } = loadBbtnHelpers();
+const { stripVnDiacritics, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class } = loadBbtnHelpers();
 
 describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí", () => {
   test("trích số bình thường khi có số liệu", () => {
@@ -195,6 +197,73 @@ describe("BbtnImport — Tự động đọc Loại dầu và Số chế tạo",
       "7891011",
     ];
     expect(extractSoCheTao(l5, l5.map(stripVnDiacritics), null)).toBe("7891011");
+  });
+
+  test("trích Điện áp định mức từ các dòng định dạng khác nhau", () => {
+    // Tiêu chuẩn có nhãn Rated voltage và stop trước Công suất
+    const l1 = ["Điện áp định mức (Rated voltage): 550 kV Công suất (Rated power): 15-15-30-30-30-30-15-15"];
+    expect(extractDienApDm(l1, l1.map(stripVnDiacritics))).toBe("550 kV");
+
+    // Lỗi font/OCR tách rời các chữ số: "5 5 0 kV" -> "550 kV"
+    const l2 = ["Điện áp định mức (Rated voltage): 5 5 0 kV Công suất: 15VA"];
+    expect(extractDienApDm(l2, l2.map(stripVnDiacritics))).toBe("550 kV");
+
+    // Điện áp 220 kV bị tách số và tách kV
+    const l3 = ["Điện áp định mức: 2 2 0 k V"];
+    expect(extractDienApDm(l3, l3.map(stripVnDiacritics))).toBe("220 kV");
+
+    // Điện áp 110 kV
+    const l4 = ["Điện áp định mức (Rated voltage): 1 1 0 kV Năm sản xuất: 2015"];
+    expect(extractDienApDm(l4, l4.map(stripVnDiacritics))).toBe("110 kV");
+
+    // Máy biến áp đa cuộn dây
+    const l5 = ["Điện áp định mức: 500/220/35 kV Năm sản xuất: 2020"];
+    expect(extractDienApDm(l5, l5.map(stripVnDiacritics))).toBe("500/220/35 kV");
+
+    // Dạng bảng ô ở hàng dưới
+    const l6 = [
+      "Điện áp định mức (Rated voltage):",
+      "550 kV",
+    ];
+    expect(extractDienApDm(l6, l6.map(stripVnDiacritics))).toBe("550 kV");
+
+    // Nhãn Um
+    const l7 = ["Um: 220 kV  Năm vận hành: 2018"];
+    expect(extractDienApDm(l7, l7.map(stripVnDiacritics))).toBe("220 kV");
+
+    // Không nhầm lẫn với hạng mục "Điện áp chọc thủng"
+    const l8 = ["1. Điện áp chọc thủng (Breakdown voltage): 75 kV Đạt"];
+    expect(extractDienApDm(l8, l8.map(stripVnDiacritics))).toBeNull();
+  });
+
+  test("ánh xạ mapVoltageToBang63Class từ điện áp định mức, trạm và thiết bị", () => {
+    // 500 kV
+    expect(mapVoltageToBang63Class("550 kV")).toBe("500");
+    expect(mapVoltageToBang63Class("500 kV")).toBe("500");
+    expect(mapVoltageToBang63Class("525 kV")).toBe("500");
+    expect(mapVoltageToBang63Class("5 5 0 kV")).toBe("500");
+    expect(mapVoltageToBang63Class("500/220/35 kV")).toBe("500");
+
+    // 110-220 kV
+    expect(mapVoltageToBang63Class("220 kV")).toBe("110-220");
+    expect(mapVoltageToBang63Class("230 kV")).toBe("110-220");
+    expect(mapVoltageToBang63Class("110 kV")).toBe("110-220");
+    expect(mapVoltageToBang63Class("115 kV")).toBe("110-220");
+    expect(mapVoltageToBang63Class("220/110/22 kV")).toBe("110-220");
+    expect(mapVoltageToBang63Class("22 kV")).toBe("110-220");
+
+    // Dự phòng theo tên trạm
+    expect(mapVoltageToBang63Class(null, "Trạm 500kV Vĩnh Tân")).toBe("500");
+    expect(mapVoltageToBang63Class("", "TBA 500 kV Pleiku")).toBe("500");
+    expect(mapVoltageToBang63Class(null, "Trạm 220kV Bảo Lộc")).toBe("110-220");
+    expect(mapVoltageToBang63Class(null, "TBA 110kV Tháp Chàm")).toBe("110-220");
+
+    // Dự phòng theo ngăn lộ thiết bị (quy ước EVN: 5xx = 500kV, 2xx = 220kV, 1xx = 110kV)
+    expect(mapVoltageToBang63Class(null, null, "TI 566")).toBe("500");
+    expect(mapVoltageToBang63Class(null, null, "571")).toBe("500");
+    expect(mapVoltageToBang63Class(null, null, "TI 271")).toBe("110-220");
+    expect(mapVoltageToBang63Class(null, null, "171")).toBe("110-220");
+    expect(mapVoltageToBang63Class(null, null, "MC 272")).toBe("110-220");
   });
 });
 

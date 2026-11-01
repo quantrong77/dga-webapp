@@ -1,3 +1,17 @@
+function syncDienApDmToBang63Voltage() {
+  const el = $("f_dienapdm");
+  const b63 = $("f_bang63_voltage");
+  if (!b63) return;
+  const tram = $("f_tram") ? $("f_tram").value : "";
+  const thietbi = $("f_thietbi") ? $("f_thietbi").value : "";
+  const helper = (window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class);
+  if (!helper) return;
+  const vClass = helper(el ? el.value : "", tram, thietbi);
+  if (vClass) {
+    b63.value = vClass;
+  }
+}
+
 /* app-core.js — Lõi khởi động app (initApp: nạp dữ liệu, gắn toàn bộ event
    listener của mọi tab) + tiện ích dùng chung (combo box tự viết, chuyển tab,
    escapeHtml). NẠP FILE NÀY SAU CÙNG (sau mọi ui-*.js) trong index.html — dòng cuối
@@ -426,6 +440,14 @@ async function initApp() {
   // bắn "change" khi chọn) lẫn lúc gõ tay rồi rời khỏi ô (blur mặc định của trình
   // duyệt cũng bắn "change" nếu giá trị đã đổi).
   ["f_tram", "f_thietbi", "f_pha"].forEach((id) => $(id).addEventListener("change", updateLanDoSuggestion));
+  if ($("f_dienapdm")) {
+    $("f_dienapdm").addEventListener("input", syncDienApDmToBang63Voltage);
+    $("f_dienapdm").addEventListener("change", syncDienApDmToBang63Voltage);
+  }
+  ["f_tram", "f_thietbi"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("change", syncDienApDmToBang63Voltage);
+  });
   $("btnViewBbtn").addEventListener("click", () => viewBbtn(_editingMeasurementAttachment));
   $("btnRemoveBbtn").addEventListener("click", () => {
     if (!confirm("Bỏ file Biên bản thí nghiệm đã đính kèm khỏi lần đo này?")) return;

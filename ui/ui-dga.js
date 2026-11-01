@@ -254,6 +254,12 @@ async function onBbtnFileSelected(e) {
     $("f_dienapdm").value = data.dienApDm;
     filled.push("Điện áp định mức");
   }
+  const vClass = data.bang63VoltageClass ||
+    (window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class && window.BbtnImport.mapVoltageToBang63Class(data.dienApDm, data.tram, data.thietbi));
+  if (vClass && $("f_bang63_voltage")) {
+    $("f_bang63_voltage").value = vClass;
+    filled.push(`Cấp điện áp Bảng 63 (${vClass === "500" ? "500 kV" : "110–220 kV"})`);
+  }
   if (data.namSx) {
     $("f_namsx").value = data.namSx;
     filled.push("Năm sản xuất");
@@ -266,7 +272,7 @@ async function onBbtnFileSelected(e) {
     $("f_loaidau").value = data.loaiDau;
     filled.push("Loại dầu cách điện");
   }
-  if (data.soCheTao || data.loaiDau) {
+  if (data.soCheTao || data.loaiDau || data.dienApDm) {
     const wrap = $("nameplateFieldsWrap");
     const btn = $("btnToggleNameplateFields");
     if (wrap && wrap.classList.contains("hidden")) {
@@ -394,7 +400,15 @@ async function onNameplateFileSelected(e) {
   if (data.kieuMay) { $("f_kieumay").value = data.kieuMay; filled.push("Kiểu máy"); }
   if (data.soCheTao) { $("f_sochetao").value = data.soCheTao; filled.push("Số chế tạo"); }
   if (data.namSx) { $("f_namsx").value = data.namSx; filled.push("Năm sản xuất"); }
-  if (data.dienApDm) { $("f_dienapdm").value = data.dienApDm; filled.push("Điện áp định mức"); }
+  if (data.dienApDm) {
+    $("f_dienapdm").value = data.dienApDm;
+    filled.push("Điện áp định mức");
+    const npVClass = window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class && window.BbtnImport.mapVoltageToBang63Class(data.dienApDm, $("f_tram") ? $("f_tram").value : "", $("f_thietbi") ? $("f_thietbi").value : "");
+    if (npVClass && $("f_bang63_voltage")) {
+      $("f_bang63_voltage").value = npVClass;
+      filled.push(`Cấp điện áp Bảng 63 (${npVClass === "500" ? "500 kV" : "110–220 kV"})`);
+    }
+  }
   if (data.loaiDau) { $("f_loaidau").value = data.loaiDau; filled.push("Loại dầu cách điện"); }
   if (data.rawText) {
     const rawLower = data.rawText.toLowerCase();
