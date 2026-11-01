@@ -1320,17 +1320,17 @@ function setupAutoSyncUI() {
 
     if (st.syncing) {
       badge.classList.add("syncing");
-      text.textContent = st.pendingCount > 0 ? `Đang đồng bộ (${st.pendingCount})...` : "Đang đồng bộ...";
-      badge.title = `Đang gửi ${st.pendingCount} mục dữ liệu ngoại tuyến lên máy chủ... Bấm để thử lại.`;
+      text.textContent = "Đang đồng bộ";
+      badge.title = st.pendingCount > 0 ? `Đang đồng bộ ${st.pendingCount} mục lên máy chủ...` : "Đang đồng bộ";
     } else if (!st.online) {
       badge.classList.add("offline");
-      text.textContent = st.pendingCount > 0 ? `Ngoại tuyến (${st.pendingCount})` : "Ngoại tuyến";
-      badge.title = st.pendingCount > 0
-        ? `Đang không có mạng. Có ${st.pendingCount} mục lưu an toàn trên máy, sẽ tự động đồng bộ khi có kết nối lại. Bấm để thử đồng bộ.`
-        : "Đang không có mạng. Ứng dụng hoạt động bình thường trên bộ nhớ máy.";
+      text.textContent = st.pendingCount > 0
+        ? `Chạy offline, tự đồng bộ khi có mạng (${st.pendingCount})`
+        : "Chạy offline, tự đồng bộ khi có mạng";
+      badge.title = "Chạy offline, tự đồng bộ khi có mạng";
     } else if (st.pendingCount > 0) {
       badge.classList.add("syncing");
-      text.textContent = `Chờ đồng bộ (${st.pendingCount})`;
+      text.textContent = "Đang đồng bộ";
       badge.title = `Có ${st.pendingCount} mục chờ đồng bộ lên máy chủ. Bấm để đồng bộ ngay.`;
     } else {
       badge.classList.add("online");
@@ -1341,14 +1341,18 @@ function setupAutoSyncUI() {
 
   Storage.onSyncStatusChange(renderStatus);
 
+  if (typeof navigator !== "undefined" && !navigator.onLine && Storage.mode !== "local") {
+    showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
+  }
+
   badge.addEventListener("click", async () => {
     const st = Storage.getSyncStatus();
     if (!st.online) {
-      showToast("Thiết bị đang ngoại tuyến. Dữ liệu được lưu an toàn tại máy và sẽ tự đồng bộ khi có mạng.", "info");
+      showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
       return;
     }
     if (st.pendingCount > 0) {
-      showToast(`Đang đồng bộ ${st.pendingCount} mục lên máy chủ...`, "info");
+      showToast("Đang đồng bộ", "info");
       const res = await Storage.processSyncQueue();
       if (res && res.processed > 0) {
         showToast(`Đã đồng bộ thành công ${res.processed} mục lên máy chủ!`, "success");
@@ -1363,10 +1367,7 @@ function setupAutoSyncUI() {
   });
 
   window.addEventListener("online", async () => {
-    const pendingBefore = Storage.getSyncStatus().pendingCount;
-    if (pendingBefore > 0) {
-      showToast("Đã có mạng trở lại. Đang tự động đồng bộ dữ liệu...", "info");
-    }
+    showToast("Đang đồng bộ", "info");
     const res = await Storage.processSyncQueue();
     if (res && res.processed > 0) {
       showToast(`Đã tự động đồng bộ xong ${res.processed} mục lên máy chủ!`, "success");
@@ -1378,7 +1379,7 @@ function setupAutoSyncUI() {
   });
 
   window.addEventListener("offline", () => {
-    showToast("Đã mất kết nối mạng. Ứng dụng chuyển sang chế độ ngoại tuyến (Offline-First). Dữ liệu nhập mới sẽ lưu an toàn trên máy.", "warning");
+    showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
   });
 
   // Tự động kiểm tra đồng bộ ngầm định kỳ mỗi 45 giây nếu online và có queue tồn đọng
