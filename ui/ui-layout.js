@@ -15,6 +15,8 @@ function setupTabLayoutToggle() {
   const btn = $("btnToggleTabLayout");
   if (!btn) return;
   applyTabLayout(document.body.classList.contains("tabs-sidebar"));
+  if (btn._hasTabLayoutListener) return;
+  btn._hasTabLayoutListener = true;
   btn.addEventListener("click", () => {
     const next = !document.body.classList.contains("tabs-sidebar");
     applyTabLayout(next);
@@ -24,23 +26,25 @@ function setupTabLayoutToggle() {
 
 const SIDEBAR_COLLAPSE_STORAGE_KEY = "dga_sidebar_collapsed";
 
+function getSidebarCollapseBtn() {
+  return $("btnCollapseSidebar") || $("btnToggleSidebarCollapse");
+}
+
 function applySidebarCollapse(isCollapsed) {
   document.body.classList.toggle("sidebar-collapsed", isCollapsed);
-  const btn = $("btnToggleSidebarCollapse");
+  const btn = getSidebarCollapseBtn();
   if (!btn) return;
   btn.setAttribute("aria-pressed", String(isCollapsed));
   btn.title = isCollapsed ? "Mở rộng sidebar (hiện chữ)" : "Thu gọn sidebar (chỉ hiện icon)";
   btn.setAttribute("aria-label", btn.title);
-  const use = btn.querySelector("use");
-  if (use) {
-    use.setAttribute("href", isCollapsed ? "#icon-chevrons-right" : "#icon-chevrons-left");
-  }
 }
 
 function setupSidebarCollapseToggle() {
-  const btn = $("btnToggleSidebarCollapse");
+  const btn = getSidebarCollapseBtn();
   if (!btn) return;
   applySidebarCollapse(document.body.classList.contains("sidebar-collapsed"));
+  if (btn._hasCollapseListener) return;
+  btn._hasCollapseListener = true;
   btn.addEventListener("click", () => {
     const next = !document.body.classList.contains("sidebar-collapsed");
     applySidebarCollapse(next);

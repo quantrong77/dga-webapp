@@ -103,6 +103,8 @@ async function initApp() {
 
   setupTabs();
   setupStickyHeaderObserver();
+  setupTabLayoutToggle();
+  setupSidebarCollapseToggle();
   setupCauHinhSubtabs();
   setupQuyTrinhSubtabs();
   setupQuantriSubtabs();
