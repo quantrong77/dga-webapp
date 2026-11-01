@@ -14,7 +14,7 @@ nav.tabs {
   border-bottom: 1px solid var(--gray-300);
   overflow-x: auto;
   position: sticky;
-  top: 0;
+  top: var(--header-height, 60px);
   z-index: 40;
   /* "Bóng cuộn" 2 mép trái/phải — BÁO HIỆU còn tab bị tràn ngoài vùng nhìn thấy khi cụm
      nút không đủ chỗ (xem ghi chú .tabs-inner ngay dưới: lúc đó margin:auto co về 0,
@@ -99,6 +99,9 @@ body.tabs-sidebar {
 body.tabs-sidebar header.app-header {
   grid-column: 1 / -1;
   grid-row: 1;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 body.tabs-sidebar main {
   grid-column: 2;
@@ -135,22 +138,10 @@ body.tabs-sidebar footer.app-footer {
 body.tabs-sidebar nav.tabs {
   grid-column: 1;
   grid-row: 2;
-  /* max-height:100vh (KHÔNG phải height:100vh cố định) + position:sticky top:0: sidebar
-     dính lên đỉnh màn hình khi cuộn, và tự cuộn riêng bên trong (overflow-y:auto) nếu
-     chính danh sách tab (~10-11 nút) cao hơn 1 màn hình — nhưng vẫn để chiều cao THỰC TẾ
-     co theo đúng nội dung của nó khi ngắn hơn 100vh (trường hợp thường gặp). Trước đây
-     dùng "height:100vh" CỐ ĐỊNH — khiến khối nav LUÔN cao đúng 1 màn hình bất kể track
-     (hàng) của grid đang cao bao nhiêu; CSS Grid không tự cắt (clip) phần tử con tràn quá
-     track của nó, nên khi cuộn xuống gần cuối trang, khối nav (cao 100vh, sticky) tràn
-     xuống đè lên đúng phần footer.app-footer nằm ở hàng dưới (row 3) — vì phần tử có
-     position (sticky) luôn vẽ ĐÈ LÊN phần tử position:static (footer) dù đứng trước
-     trong DOM, che gần hết chữ footer, chỉ còn sót lại vài ký tự bên phải. Đổi sang
-     max-height: nội dung nav (~500-600px, ít hơn 900px) sẽ tự dừng "dính" đúng tại đáy
-     hàng 2 (đáy của main) — không bao giờ tràn sang hàng 3 (footer) nữa. */
   position: sticky;
-  top: 0;
+  top: var(--header-height, 60px);
   align-self: start;
-  max-height: 100vh;
+  max-height: calc(100vh - var(--header-height, 60px));
   flex-direction: column;
   align-items: stretch;
   padding: 14px 10px;
@@ -254,7 +245,7 @@ body.tabs-sidebar.sidebar-collapsed nav.tabs button {
   }
   body.tabs-sidebar nav.tabs {
     position: sticky;
-    top: 0;
+    top: var(--header-height, 60px);
     height: auto;
     flex-direction: row;
     align-items: center;

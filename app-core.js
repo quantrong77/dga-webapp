@@ -100,6 +100,7 @@ async function initApp() {
   registerServiceWorker();
 
   setupTabs();
+  setupStickyHeaderObserver();
   setupCauHinhSubtabs();
   setupQuyTrinhSubtabs();
   setupHandbookLightbox();
@@ -1111,6 +1112,31 @@ function setupBatchDropzone() {
 function toggleMbaSubtypeField() {
   const isMba = $("f_loai").value === DGA.EQUIPMENT_TYPES.MBA;
   $("f_mbasubtype_wrap").classList.toggle("hidden", !isMba);
+}
+
+/** Tự động đồng bộ chiều cao thật của header.app-header vào biến CSS --header-height
+ *  để thanh tab (nav.tabs) và sidebar (body.tabs-sidebar nav.tabs) luôn ghim dính chính xác
+ *  ngay dưới header khi cuộn trang, không bị khoảng trống và không bị đè lên nhau, kể cả khi
+ *  màn hình co giãn hoặc header xuống dòng. */
+function setupStickyHeaderObserver() {
+  const header = document.querySelector("header.app-header");
+  if (!header || !document.documentElement) return;
+  const updateHeight = () => {
+    try {
+      const h = header.getBoundingClientRect().height;
+      if (h > 0) {
+        document.documentElement.style.setProperty("--header-height", `${Math.round(h)}px`);
+      }
+    } catch (_) {}
+  };
+  updateHeight();
+  if (typeof ResizeObserver !== "undefined") {
+    try {
+      new ResizeObserver(updateHeight).observe(header);
+    } catch (_) {}
+  } else if (typeof window !== "undefined") {
+    window.addEventListener("resize", updateHeight);
+  }
 }
 
 function setupTabs() {

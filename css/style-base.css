@@ -6,6 +6,7 @@
 
 :root {
   color-scheme: light;
+  --header-height: 60px;
   /* Lấy từ logo EVNNPT: navy làm màu thương hiệu. Đỏ thương hiệu KHÔNG dùng cho giao diện vì
      trong app này đỏ nghĩa là "Không đạt/Báo động". */
   --evn-navy: #1b2470;
@@ -115,7 +116,10 @@ body {
 }
 
 header.app-header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   background: var(--header-bg);
   color: #fff;
   padding: 12px 24px 16px;
