@@ -11,19 +11,19 @@
 1. [App dùng để làm gì?](#1-app-dùng-để-làm-gì)
 2. [Bắt đầu: mở app và đăng nhập](#2-bắt-đầu-mở-app-và-đăng-nhập)
 3. [Làm quen giao diện](#3-làm-quen-giao-diện)
-4. [Nhập và đánh giá một lần đo khí hòa tan (tab DGA)](#4-nhập-và-đánh-giá-một-lần-đo-khí-hòa-tan-tab-dga)
+4. [Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)](#4-nhập-và-đánh-giá-một-lần-đo-khí-hòa-tan-tab-khí-hòa-tan)
 5. [Đọc kết quả đánh giá](#5-đọc-kết-quả-đánh-giá)
 6. [Nhập nhanh từ Biên bản thí nghiệm (PDF) và ảnh tấm nhãn](#6-nhập-nhanh-từ-biên-bản-thí-nghiệm-pdf-và-ảnh-tấm-nhãn)
 7. [Nhập hàng loạt nhiều biên bản của cùng một thiết bị](#7-nhập-hàng-loạt-nhiều-biên-bản-của-cùng-một-thiết-bị)
 8. [Xuất Biên bản thí nghiệm và Báo cáo phân tích kỹ thuật (.docx)](#8-xuất-biên-bản-thí-nghiệm-và-báo-cáo-phân-tích-kỹ-thuật-docx)
-9. [Thí nghiệm dầu cách điện (tab Dầu cách điện)](#9-thí-nghiệm-dầu-cách-điện-tab-dầu-cách-điện)
+9. [Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)](#9-thí-nghiệm-dầu-cách-điện-tab-lý-hóa-dầu)
 10. [Xem lại, sửa, xóa và so sánh (tab Lịch sử đo)](#10-xem-lại-sửa-xóa-và-so-sánh-tab-lịch-sử-đo)
 11. [Theo dõi thiết bị bất thường (tab Cảnh báo)](#11-theo-dõi-thiết-bị-bất-thường-tab-cảnh-báo)
 12. [Xem xu hướng và dự báo (tab Xu hướng)](#12-xem-xu-hướng-và-dự-báo-tab-xu-hướng)
-13. [Cấu hình tiêu chuẩn theo nhà sản xuất và bảng quy định (tab Cấu hình)](#13-cấu-hình-tiêu-chuẩn-theo-nhà-sản-xuất-và-bảng-quy-định-tab-cấu-hình)
+13. [Cấu hình tiêu chuẩn theo nhà sản xuất và bảng quy định (trong Quản trị → Cấu hình)](#13-cấu-hình-tiêu-chuẩn-theo-nhà-sản-xuất-và-bảng-quy-định-trong-quản-trị--cấu-hình)
 14. [Tra cứu quy trình lấy mẫu và đánh giá (tab Quy trình)](#14-tra-cứu-quy-trình-lấy-mẫu-và-đánh-giá-tab-quy-trình)
-15. [Góp ý cho ứng dụng (tab Người dùng phản hồi)](#15-góp-ý-cho-ứng-dụng-tab-người-dùng-phản-hồi)
-16. [Phân quyền Admin / User và tab Quản trị](#16-phân-quyền-admin--user-và-tab-quản-trị)
+15. [Góp ý cho ứng dụng (mục Phản hồi trên Menu bar)](#15-góp-ý-cho-ứng-dụng-mục-phản-hồi-trên-menu-bar)
+16. [Phân quyền Admin / User và mục Quản trị](#16-phân-quyền-admin--user-và-mục-quản-trị)
 17. [Bản di động](#17-bản-di-động)
 18. [Câu hỏi thường gặp và xử lý sự cố](#18-câu-hỏi-thường-gặp-và-xử-lý-sự-cố)
 19. [Lưu ý quan trọng khi dùng kết quả](#19-lưu-ý-quan-trọng-khi-dùng-kết-quả)
@@ -58,24 +58,26 @@ App làm được những việc chính:
 
 ### 2.1. Mở app
 
-Mở đường link do quản trị viên cung cấp bằng **Chrome, Edge hoặc Safari** (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file `index.html` bằng trình duyệt.
+Mở đường link do quản trị viên cung cấp bằng **Chrome, Edge hoặc Safari** (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file `index.html` bằng trình duyệt (hoặc qua máy chủ cục bộ `npm start` tại `http://localhost:8080`).
 
 Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 
 | Huy hiệu | Ý nghĩa |
 |---|---|
-| "Database" | Dữ liệu lưu dùng chung trên database của đơn vị |
+| "Database" / "Supabase" | Dữ liệu lưu dùng chung trên database của đơn vị (bấm vào để mở nhanh Google Sheet hoặc Supabase Dashboard) |
 | "Chế độ thử nghiệm" (kèm **banner đỏ** đầu trang) | Dữ liệu chỉ lưu trong trình duyệt của máy này |
 
 > ⚠ Ở **chế độ thử nghiệm**, dữ liệu chỉ nằm trên trình duyệt hiện tại — **mất nếu xóa lịch sử duyệt web** và người khác không thấy được. Chỉ dùng để thử.
 
-### 2.2. Đăng ký và đăng nhập (chế độ Google Sheets)
+### 2.2. Đăng ký và đăng nhập (chế độ Google Sheets / Supabase)
 
 1. Khi mở app sẽ hiện hộp thoại **"Đánh giá Dầu cách điện"**.
 2. **Lần đầu:** bấm **Đăng ký** → nhập email + mật khẩu (tối thiểu 6 ký tự) → bấm **Đăng ký**.
 3. **Các lần sau:** nhập email + mật khẩu → bấm **Đăng nhập**.
 4. Nếu app có bật **Đăng nhập bằng Google**, nút này hiện ở đầu hộp thoại — bấm và chọn tài khoản Google.
 5. Lần sau mở lại app, phiên đăng nhập được **tự khôi phục**.
+
+**Đổi mật khẩu:** người dùng đã đăng nhập có thể đổi mật khẩu qua nút đổi mật khẩu ở góc trên.
 
 **Đăng xuất:** bấm vào **tên/email của bạn** ở góc trên bên phải → xác nhận.
 
@@ -89,19 +91,29 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 
 ### 3.1. Các tab
 
+Giao diện được phân bố khoa học thành hai khu vực điều hướng: **Thanh bên (Sidebar)** chứa các tab tác nghiệp kỹ thuật thường xuyên và **Thanh Menu bar trên cùng (Header)** chứa các tiện ích toàn cục (dạng icon tinh gọn, khi trỏ chuột vào sẽ hiển thị tooltip tên chức năng).
+
+#### Các tab ở Thanh bên (Sidebar):
+
 | Tab | Dùng để |
 |---|---|
-| **DGA** | Nhập và đánh giá một lần đo khí hòa tan (tab chính) |
-| **Dầu cách điện** | Nhập và đánh giá thí nghiệm dầu |
-| **Lịch sử đo** | Xem lại, sửa, xóa; so sánh 2 lần đo bất kỳ |
+| **Hướng dẫn** | Xem hướng dẫn sử dụng này ngay trong app (được đặt ở vị trí đầu tiên trong thanh bên để tiện tra cứu nhanh) |
+| **Khí hòa tan** | Nhập và đánh giá một lần đo khí hòa tan (tab chính) |
+| **Lý-Hóa dầu** | Nhập và đánh giá thí nghiệm dầu |
 | **Cảnh báo** | Danh sách thiết bị đang ở mức Cảnh báo/Báo động |
+| **Lịch sử đo** | Xem lại, sửa, xóa; so sánh 2 lần đo bất kỳ |
 | **Xu hướng** | Đồ thị theo thời gian + dự báo |
 | **Quy trình** | Hướng dẫn lấy mẫu dầu, sơ đồ quy trình đánh giá DGA |
-| **Cấu hình** | Tiêu chuẩn theo nhà sản xuất; chỉnh bảng quy định |
+
+#### Các chức năng trên thanh Menu bar (Header — dạng icon):
+
+| Tab | Dùng để |
+|---|---|
 | **Giới thiệu** | Thông tin chung và căn cứ pháp lý |
-| **Hướng dẫn** | Xem hướng dẫn sử dụng này ngay trong app |
-| **Người dùng phản hồi** | Gửi góp ý |
-| **Quản trị** | Quản lý người dùng — **chỉ Admin** mới thấy |
+| **Phản hồi** | Gửi góp ý cho ứng dụng |
+| **Quản trị** | Quản lý người dùng, Cấu hình (Tiêu chuẩn & Quy định), Bản sao Supabase — **chỉ Admin** mới thấy |
+
+> **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định 13 bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
 
 ### 3.2. Giao diện sáng hoặc tối
 
@@ -111,16 +123,21 @@ Bấm **biểu tượng mặt trăng/mặt trời** ở góc trên bên phải �
 
 Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển giữa **thanh tab ngang** (mặc định) và **thanh tab dọc bên trái**. Ở chế độ dọc, bấm mũi tên để **thu gọn** (chỉ còn biểu tượng; rê chuột để xem tên tab). App nhớ lựa chọn của bạn.
 
-### 3.4. Các thao tác dùng chung
+### 3.4. Thanh tiêu đề cố định (Sticky Header)
+
+Khi bạn cuộn màn hình xuống phía dưới để đọc kết quả phân tích DGA hoặc xem danh sách bảng biểu dài, **thanh tiêu đề và thanh tác vụ trên cùng luôn giữ cố định (Sticky Header)**. Điều này giúp bạn luôn quan sát được trạng thái lưu trữ database, trạng thái tài khoản đang đăng nhập và có thể chuyển đổi nhanh giữa các chức năng mà không cần phải cuộn chuột ngược lại lên đầu trang.
+
+### 3.5. Các thao tác dùng chung
 
 - **Ô Trạm / Thiết bị:** vừa **gõ để tìm**, vừa **bấm ▼ để chọn** trong danh sách đã có. Bạn cũng có thể **gõ tên mới** (không bắt buộc phải chọn từ danh sách).
+- **Khung kéo thả file (Dropzone):** Cả khung kéo thả 1 file BBTN (PDF) và khung kéo thả hàng loạt nhiều file PDF đều được tăng chiều cao rộng rãi và có hiệu ứng viền sáng (focus border) nổi bật khi bạn rê file vào, giúp thao tác kéo thả dễ dàng và chuẩn xác.
 - **Biểu tượng "i":** bấm để xem giải thích chi tiết; đóng bằng **×** hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.
 - **Thông báo nhanh (toast)** hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), **màu đỏ khi có lỗi hoặc thiếu thông tin** (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.
 - Khi thấy **"Vui lòng chờ! Đang nạp dữ liệu…"**, hãy chờ danh sách Trạm/Thiết bị và lịch sử tải xong.
 
 ---
 
-## 4. Nhập và đánh giá một lần đo khí hòa tan (tab DGA)
+## 4. Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)
 
 ### Bước 1 — Chọn loại thiết bị
 
@@ -133,7 +150,7 @@ Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển g
 | **Trạm** | Gõ/chọn tên trạm |
 | **Thiết bị (tên/mã)** | Gõ/chọn tên thiết bị, ví dụ `TI174`, `MBA T1` |
 | **Ngăn OLTC (thông dầu/khí với thùng chính)** | *Chỉ hiện với MBA/Kháng dầu.* Tick nếu thiết bị có OLTC mà ngăn OLTC **thông dầu/khí** với thùng chính (thông tin này được lưu cùng lần đo). Với số liệu ngưỡng mặc định hiện tại, ô này chưa làm đổi ngưỡng đánh giá |
-| **Nhà sản xuất (tùy chọn)** | Chọn hãng nếu đã có tiêu chuẩn riêng ở tab Cấu hình; để trống = dùng ngưỡng mặc định QĐ1901/IEC |
+| **Nhà sản xuất (tùy chọn)** | Chọn hãng nếu đã có tiêu chuẩn riêng ở mục Cấu hình (trong Quản trị); để trống = dùng ngưỡng mặc định QĐ1901/IEC |
 | **Pha** | A, B, C hoặc **Chung** (dùng chung cả 3 pha) |
 | **Lần đo** | Tự gợi ý số thứ tự kế tiếp theo nhóm Trạm + Thiết bị + Pha; sửa được nếu cần |
 | **Ngày lấy mẫu** | Ngày lấy mẫu dầu |
@@ -216,12 +233,17 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
 
 ## 6. Nhập nhanh từ Biên bản thí nghiệm (PDF) và ảnh tấm nhãn
 
-### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN)
+### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song
 
-1. Ở tab **DGA**, mục **"Biên bản thí nghiệm (PDF, tùy chọn)"**: **kéo thả** file PDF vào khung, hoặc bấm khung để chọn file.
-2. App tự đọc và **điền sẵn** vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và **7 khí hòa tan**.
-3. **Kiểm tra lại toàn bộ** các ô đã điền, sửa nếu cần, rồi bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
-4. Sau này có thể bấm **Xem BBTN đã lưu** để mở lại file, hoặc **Bỏ file** để gỡ đính kèm.
+1. Ở tab **Khí hòa tan**, mục **"Biên bản thí nghiệm (PDF, tùy chọn)"**: **kéo thả** file PDF vào khung (đã được tăng chiều cao và có viền sáng focus khi rê chuột), hoặc bấm khung để chọn file.
+2. **Khung hiển thị Biên bản đối chiếu song song (Split View):** Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới):
+   - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc.
+   - Nút **"Mở tab mới"** giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần.
+   - Nút **"✕ Ẩn"** hoặc **"Hiện BBTN đối chiếu"** để đóng hoặc mở lại khung xem bất kỳ lúc nào.
+3. App tự đọc và **điền sẵn** vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và **7 khí hòa tan**.
+4. **Đối chiếu và xác nhận số liệu:** So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.
+5. Bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
+6. Sau này khi sửa hoặc xem lại lần đo, bạn có thể bấm **Xem BBTN đã lưu** hoặc **Hiện BBTN đối chiếu** để mở lại file PDF đối chiếu trực tiếp song song với form.
 
 Việc đọc PDF chạy **hoàn toàn trên trình duyệt của bạn**, file không bị gửi đi đâu để "đọc".
 
@@ -240,7 +262,7 @@ Trong khối **"Thông số kỹ thuật thiết bị"**, kéo thả **ảnh ch�
 Dùng khi cần **nhập bổ sung dữ liệu lịch sử** (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích & Lưu" từng lần.
 
 1. **Điền trước** ở form phía trên: **Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất** (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho **tất cả** file trong đợt; riêng **Pha, Ngày lấy mẫu và 7 khí** được đọc riêng từ mỗi file.
-2. Ở khối **"Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị"**: kéo thả nhiều file PDF, hoặc bấm **Chọn cả thư mục…**.
+2. Ở khối **"Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị"**: kéo thả nhiều file PDF vào khung (đã được đồng bộ kích thước tăng chiều cao x1.5 và hiệu ứng viền sáng), hoặc bấm **Chọn cả thư mục…**.
 3. Tick/bỏ tick **"Đính kèm PDF gốc vào từng lần đo"** (mặc định đang tick).
 4. Xem **bảng xem trước**: mỗi file có một trạng thái:
    - **Sẵn sàng** — có thể nhập.
@@ -270,7 +292,7 @@ Sau khi bấm **Phân tích & Lưu**, ở đầu khối **"2. Kết quả đánh
 
 ---
 
-## 9. Thí nghiệm dầu cách điện (tab Dầu cách điện)
+## 9. Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)
 
 Ba chỉ tiêu được đánh giá: **Độ ẩm dầu (ppm)**, **Tổn hao điện môi tgδ ở 90°C (%)**, **Điện áp chọc thủng (kV)**.
 
@@ -293,7 +315,7 @@ Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) 
 
 **QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU** (chỉ dẫn chiếu "theo quy định nhà sản xuất"). Vì vậy:
 
-- Bạn **bắt buộc phải chọn một Nhà sản xuất** đã được cấu hình đủ tiêu chuẩn **2 tầng (Bình thường / Loại bỏ)** ở tab **Cấu hình → Tiêu chuẩn**.
+- Bạn **bắt buộc phải chọn một Nhà sản xuất** đã được cấu hình đủ tiêu chuẩn **2 tầng (Bình thường / Loại bỏ)** ở mục **Quản trị → Cấu hình → Tiêu chuẩn**.
 - Nếu chưa chọn hoặc hãng chưa có cấu hình, app **chặn lưu** và báo rõ lý do; hãy nhờ Admin cấu hình.
 - Kết quả có 3 mức: **Đạt / Cảnh báo / Không đạt**.
 
@@ -301,7 +323,7 @@ Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) 
 
 Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.
 
-1. **Có file PDF:** kéo thả vào ô tải file. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Hãy so lại với biên bản trước khi lưu. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
+1. **Có file PDF:** kéo thả vào ô tải file. Giao diện tự động mở **Khung hiển thị Biên bản đối chiếu song song** bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm **Đánh giá & Lưu 3 pha**. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
 2. **Nhập tay:** điền thông tin chung và bảng kết quả theo từng pha. Pha nào không thí nghiệm thì để trống.
 3. Chọn **Nhà sản xuất áp tiêu chuẩn** (app tự chọn nếu tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm **Đánh giá & Lưu 3 pha**.
 
@@ -315,7 +337,7 @@ Muốn xem hoặc xuất lại biên bản cũ: ở bảng lịch sử, bấm **
 
 ### 9.4. Sứ xuyên (Bushing)
 
-Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab **DGA** (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).
+Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab **Khí hòa tan** (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).
 
 ---
 
@@ -355,7 +377,7 @@ Bảng kết quả gồm: giá trị trước, sau, chênh lệch (Δ), **tốc 
 
 ## 11. Theo dõi thiết bị bất thường (tab Cảnh báo)
 
-Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab DGA/Dầu cách điện, không tự đặt ngưỡng riêng.
+Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.
 
 - **Thống kê nhanh:** tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.
 - **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.
@@ -391,11 +413,13 @@ Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu
 
 ---
 
-## 13. Cấu hình tiêu chuẩn theo nhà sản xuất và bảng quy định (tab Cấu hình)
+## 13. Cấu hình tiêu chuẩn theo nhà sản xuất và bảng quy định (trong Quản trị → Cấu hình)
 
-Tab có hai mục, chuyển bằng nút **Tiêu chuẩn / Quy định** ở đầu tab. Bấm biểu tượng **"i"** cạnh tiêu đề để xem hướng dẫn chi tiết.
+Chức năng **Cấu hình** trước đây là tab riêng ở thanh bên, nay đã được chuyển vào mục **Quản trị** trên thanh Menu bar trên cùng (dành riêng cho Admin). Để truy cập: bấm biểu tượng **Quản trị** ở Header → chọn subtab **Cấu hình**.
 
-> Phần này thường do **Admin** thực hiện. Người dùng thường chủ yếu chỉ cần xem.
+Mục Cấu hình gồm hai phần con, chuyển bằng nút **Tiêu chuẩn / Quy định** ở đầu trang. Bấm biểu tượng **"i"** cạnh tiêu đề để xem hướng dẫn chi tiết.
+
+> Phần này thường do **Admin** thực hiện. Người dùng thường chủ yếu chỉ xem trong các bảng tra cứu.
 
 ### 13.1. Mục "Tiêu chuẩn" — ngưỡng riêng theo nhà sản xuất
 
@@ -416,7 +440,7 @@ Cho phép chỉnh **13 bảng ngưỡng đơn giản** trích từ QĐ1901/IEC 6
 - Sửa số liệu + nguồn tham chiếu → bấm **Lưu bảng này** (dùng khi quy định được cập nhật, không cần sửa code).
 - **Khôi phục mặc định:** trả bảng về đúng số liệu gốc tích hợp sẵn.
 - **Không** gồm logic tra mã Bảng 66/Table A.10 và ranh giới Tam giác Duval — các phần này cố định theo văn bản gốc.
-- Chỉ **Admin** sửa/lưu được (chế độ Google Sheets); mọi người dùng đã đăng nhập đều xem được.
+- Chỉ **Admin** sửa/lưu được (chế độ Google Sheets / Supabase); mọi người dùng đã đăng nhập đều xem được.
 
 ---
 
@@ -437,36 +461,78 @@ Tab có hai mục con:
 
 ---
 
-## 15. Góp ý cho ứng dụng (tab Người dùng phản hồi)
+## 15. Góp ý cho ứng dụng (mục Phản hồi trên Menu bar)
+
+Để gửi ý kiến đóng góp hoặc phản ánh sự cố, bấm vào biểu tượng **Phản hồi** (icon bóng thoại trên thanh Menu bar ở đầu trang — trước đây là tab *Người dùng phản hồi*).
 
 1. Nhập nội dung góp ý.
-2. (Tùy chọn) Đính kèm **1 ảnh minh họa** bằng một trong ba cách: chọn file, **kéo thả**, hoặc **dán trực tiếp (Ctrl+V)** ảnh vừa chụp màn hình. Bấm **Bỏ ảnh** nếu muốn gỡ.
+2. (Tùy chọn) Đính kèm **1 ảnh minh họa** bằng một trong ba cách: chọn file, **kéo thả**, hoặc **dán trực tiếp (Ctrl+V)** ảnh vừa chụp màn hình vào khung. Bấm **Bỏ ảnh** nếu muốn gỡ.
 3. Bấm **Gửi góp ý**.
 
 Các góp ý đã gửi được hiển thị (mới nhất ở trên) để mọi người cùng xem, tránh đề xuất trùng nhau; bấm ảnh để phóng to. Góp ý **không sửa lại được** sau khi gửi; chỉ Admin xóa được.
 
 ---
 
-## 16. Phân quyền Admin / User và tab Quản trị
+## 16. Phân quyền Admin / User và mục Quản trị
 
-| Quyền | User | Admin |
-|---|:-:|:-:|
-| Xem toàn bộ dữ liệu | ✔ | ✔ |
-| Nhập bản ghi mới (khí, dầu MBA, dầu OLTC, dầu TI/TU) | ✔ | ✔ |
-| Sửa bản ghi | Chỉ bản ghi **do mình nhập** | Mọi bản ghi |
-| Xóa bản ghi | ✘ | ✔ |
-| Cấu hình Tiêu chuẩn / Quy định | ✘ (chỉ xem) | ✔ |
-| Quản lý người dùng | ✘ | ✔ |
+### 16.1. Bảng phân quyền 3 vai trò (Viewer, User, Admin)
 
-Mỗi bản ghi lưu **người tạo, người sửa cuối và thời điểm** (cột "Người nhập"). Quyền thực sự được kiểm tra lại ở phía máy chủ.
+Ứng dụng hỗ trợ 3 vai trò người dùng với các mức quyền hạn phân định rõ ràng:
 
-### Tab Quản trị (chỉ Admin)
+| Quyền hạn | Viewer | User | Admin |
+|---|:-:|:-:|:-:|
+| Xem toàn bộ dữ liệu (Khí DGA, Dầu, Lịch sử, Cảnh báo, Xu hướng) | ✔ | ✔ | ✔ |
+| Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU | ✘ | ✔ | ✔ |
+| Sửa bản ghi đo khí / thí nghiệm dầu đã lưu | ✘ | Chỉ bản ghi **do mình nhập** | Mọi bản ghi |
+| Xóa bản ghi dữ liệu | ✘ | ✘ | ✔ |
+| Gửi ý kiến phản hồi kèm ảnh minh họa | ✔ | ✔ | ✔ |
+| Cấu hình Tiêu chuẩn theo nhà sản xuất | ✘ | ✘ (chỉ xem khi tra cứu) | ✔ (Thêm, Sửa, Xóa) |
+| Chỉnh sửa 13 bảng Quy định số học QĐ1901/IEC | ✘ | ✘ (chỉ xem bảng) | ✔ (Lưu bảng, Khôi phục) |
+| Quản lý người dùng (tạo tài khoản, đổi vai trò, đặt lại mật khẩu, xóa) | ✘ | ✘ | ✔ |
+| Đồng bộ dữ liệu sang Bản sao Supabase | ✘ | ✘ | ✔ |
 
-- Xem danh sách người dùng: email, vai trò, ngày tạo, lần đăng nhập cuối.
-- **Đổi vai trò** User ⇄ Admin bằng ô chọn.
-- **Xóa người dùng** (có xác nhận).
-- Dòng của chính Admin đang đăng nhập bị khóa đổi vai trò và ẩn nút xóa để tránh tự khóa mình.
-- **Tạo tài khoản** / **Đặt lại mật khẩu**: app sinh mật khẩu tạm, chỉ hiện **1 lần**. Gửi tách riêng: email qua tin nhắn, mật khẩu tạm đọc qua cuộc gọi. Người dùng bắt buộc đổi mật khẩu ở lần đăng nhập đầu.
+Mỗi bản ghi khi lưu đều tự động ghi nhận **người tạo, người sửa cuối cùng và thời điểm thực hiện** (cột "Người nhập" ở bảng Lịch sử đo). Mọi thao tác kiểm tra quyền đều được máy chủ (Apps Script / Supabase) xác thực độc lập.
+
+### 16.2. Hướng dẫn chi tiết các tính năng trong mục Quản trị
+
+Biểu tượng **Quản trị** trên thanh Menu bar ở đầu trang chỉ hiển thị khi tài khoản đang đăng nhập có vai trò **Admin**. Khi mở mục Quản trị, hệ thống cung cấp 3 subtab tác nghiệp chuyên biệt:
+
+#### 1. Subtab "Người dùng" (Quản lý tài khoản & phân quyền)
+
+- **Tạo tài khoản trực tiếp:**
+  - Nhập **Email tài khoản mới** và chọn **Vai trò** (User, Viewer hoặc Admin) ở thanh công cụ trên cùng.
+  - Bấm nút **+ Tạo tài khoản**.
+  - Hệ thống tự động sinh một **mật khẩu tạm ngẫu nhiên** và hiển thị trong hộp thoại thông báo kèm nút **Copy**.
+  - *Lưu ý quan trọng:* Mật khẩu tạm chỉ hiển thị **duy nhất 1 lần**, ứng dụng không lưu lại mật khẩu này. Admin nên gửi email tài khoản qua tin nhắn và đọc mật khẩu tạm qua cuộc gọi (không gửi chung cả hai trong cùng một tin nhắn). Khi người dùng đăng nhập lần đầu bằng mật khẩu tạm, hệ thống sẽ **bắt buộc đổi sang mật khẩu cá nhân** mới được phép vào sử dụng ứng dụng.
+- **Danh sách tài khoản:** Bảng hiển thị thông tin toàn bộ tài khoản: Email, Vai trò hiện tại, Ngày đăng ký và Thời điểm đăng nhập gần nhất.
+- **Đổi vai trò người dùng:** Admin có thể thay đổi trực tiếp vai trò của bất kỳ tài khoản nào (User ⇄ Viewer ⇄ Admin) thông qua menu chọn tại cột Vai trò.
+- **Đặt lại mật khẩu (Reset password):** Khi người dùng quên mật khẩu hoặc cần cấp lại, bấm nút đặt lại mật khẩu ở dòng tương ứng → hệ thống tạo mật khẩu tạm mới để Admin gửi cho người dùng.
+- **Xóa người dùng:** Bấm nút xóa (kèm hộp thoại xác nhận) để thu hồi quyền truy cập của tài khoản không còn hoạt động.
+- **Cơ chế tự bảo vệ:** Dòng tài khoản của chính Admin đang đăng nhập sẽ tự động bị khóa ô chọn vai trò và ẩn nút xóa, ngăn ngừa tình huống Admin vô tình tự hạ quyền hoặc tự xóa tài khoản của chính mình.
+
+#### 2. Subtab "Cấu hình" (Tiêu chuẩn & Quy định)
+
+Subtab này tích hợp toàn bộ các công cụ quản lý thông số kỹ thuật dùng để đánh giá thiết bị:
+
+- **Mục Tiêu chuẩn (theo Nhà sản xuất):**
+  - Cấu hình ngưỡng riêng cho từng hãng chế tạo thay cho ngưỡng mặc định chung.
+  - Hỗ trợ cả 2 nhóm: *Khí hòa tan (DGA)* và *Dầu cách điện (MBA, OLTC, TI/TU)*.
+  - Cung cấp cấu hình **Ngưỡng loại bỏ (condemning limit)** cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU.
+  - Cho phép tra cứu, chỉnh sửa hoặc xóa các tiêu chuẩn hãng đã thiết lập (xem chi tiết tại [mục 13](#13-cấu-hình-tiêu-chuẩn-theo-nhà-sản-xuất-và-bảng-quy-định-trong-quản-trị--cấu-hình)).
+- **Mục Quy định (13 bảng ngưỡng số học):**
+  - Chỉnh sửa trực tiếp 13 bảng ngưỡng số học trích từ QĐ1901/EVNNPT và IEC 60599:2022.
+  - Khi ngành điện hoặc tiêu chuẩn quốc tế có đợt cập nhật ngưỡng số học mới, Admin chỉ cần sửa số trên giao diện và bấm **"Lưu bảng này"** — hệ thống sẽ lập tức áp dụng ngưỡng mới cho toàn bộ tính toán mà không cần lập trình viên phải sửa code hay cập nhật phiên bản web.
+  - Có nút **"Khôi phục mặc định"** để hoàn tác về đúng số liệu gốc ban đầu nếu cần.
+
+#### 3. Subtab "Bản sao Supabase" (Sao lưu & Đồng bộ dự phòng)
+
+Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính:
+
+- **Tự động sao chép song song (Mirroring):** Mọi thao tác thêm mới, chỉnh sửa, xóa dữ liệu (kết quả đo DGA, thí nghiệm dầu, danh sách trạm, tiêu chuẩn hãng, bảng quy định, ý kiến phản hồi) khi lưu vào Google Sheets đều được hệ thống tự động ghi một bản sao sang cơ sở dữ liệu Supabase (PostgreSQL).
+- **Kiểm tra trạng thái kết nối:** Hiển thị trực quan tình trạng sẵn sàng của đường truyền kết nối đến Supabase.
+- **Đồng bộ toàn bộ thủ công (Full Sync):** Nút **"Đồng bộ toàn bộ sang Supabase"** cho phép Admin chủ động quét toàn bộ kho dữ liệu hiện có trên Google Sheets và đẩy sang Supabase, đảm bảo dữ liệu 2 bên luôn khớp nhau 100%.
+- **Nhật ký lỗi đồng bộ (Sync Errors Log):** Bảng ghi nhận chi tiết các lần đồng bộ không thành công (thời điểm, tên bảng, loại thao tác, ID bản ghi và nguyên nhân lỗi) giúp Admin dễ dàng phát hiện và xử lý sự cố đường truyền.
+- **Bảo mật thông tin:** Tài khoản người dùng và mật khẩu đăng nhập hoàn toàn **không bao giờ** bị sao chép sang Supabase, đảm bảo tính bảo mật tuyệt đối cho hệ thống xác thực.
 
 ---
 
@@ -486,7 +552,7 @@ Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu ch
 Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nếu là lỗi kết nối database, thông báo đã kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho Admin. Admin xem hướng dẫn xử lý ở `README.md`.
 
 **Thấy thông báo "Đã xảy ra lỗi không lường trước" hoặc "Thao tác không hoàn tất".**
-Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở tab **Người dùng phản hồi** hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").
+Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở mục **Phản hồi** (icon trên Menu bar) hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").
 
 **Mở app thấy trắng/không có dữ liệu cũ.**
 Kiểm tra huy hiệu trạng thái góc trên bên trái. Nếu đang ở *"Chế độ thử nghiệm"*, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.
@@ -498,7 +564,7 @@ Chờ dòng *"Vui lòng chờ! Đang nạp dữ liệu…"* biến mất. Nếu 
 Cần có **lần đo trước** của cùng **Trạm + Thiết bị + Pha**. Kiểm tra tên Trạm/Thiết bị và Pha đã trùng khớp với lần đo trước chưa.
 
 **Không lưu được thí nghiệm dầu TI/TU.**
-Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu TI/TU đủ 2 tầng. Nhờ Admin cấu hình ở **Cấu hình → Tiêu chuẩn**.
+Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu TI/TU đủ 2 tầng. Nhờ Admin cấu hình ở **Quản trị → Cấu hình → Tiêu chuẩn**.
 
 **Không thấy nút "Xuất báo cáo phân tích kỹ thuật".**
 Nút này chỉ hiện khi trạng thái tổng thể **khác "Bình thường"**.
@@ -535,4 +601,4 @@ Chrome hoặc Edge (đầy đủ nhất). Safari dùng được; Firefox không 
 
 ---
 
-*Nếu phát hiện lỗi hoặc muốn đề xuất tính năng, hãy dùng tab **Người dùng phản hồi** trong ứng dụng.*
+*Nếu phát hiện lỗi hoặc muốn đề xuất tính năng, hãy dùng mục **Phản hồi** (icon trên Menu bar) trong ứng dụng.*

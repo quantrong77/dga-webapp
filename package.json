@@ -4,6 +4,7 @@
   "private": true,
   "description": "Công cụ đánh giá DGA dầu cách điện (web app tĩnh). package.json này CHỈ phục vụ công cụ phát triển (kiểm thử Jest, typecheck, đồng bộ bản di động, dựng tab Hướng dẫn) — app vẫn chạy trực tiếp từ index.html, không có bước build.",
   "scripts": {
+    "start": "node scripts/serve.js",
     "test": "jest",
     "typecheck": "tsc -p tsconfig.json",
     "sync-mobile": "node scripts/sync-mobile.js",

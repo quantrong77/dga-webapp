@@ -1,3 +1,17 @@
+function syncDienApDmToBang63Voltage() {
+  const el = $("f_dienapdm");
+  const b63 = $("f_bang63_voltage");
+  if (!b63) return;
+  const tram = $("f_tram") ? $("f_tram").value : "";
+  const thietbi = $("f_thietbi") ? $("f_thietbi").value : "";
+  const helper = (window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class);
+  if (!helper) return;
+  const vClass = helper(el ? el.value : "", tram, thietbi);
+  if (vClass) {
+    b63.value = vClass;
+  }
+}
+
 /* app-core.js — Lõi khởi động app (initApp: nạp dữ liệu, gắn toàn bộ event
    listener của mọi tab) + tiện ích dùng chung (combo box tự viết, chuyển tab,
    escapeHtml). NẠP FILE NÀY SAU CÙNG (sau mọi ui-*.js) trong index.html — dòng cuối
@@ -52,6 +66,8 @@ async function initApp() {
     $("userBadge").classList.remove("hidden");
     $("btnOpenChangePassword").classList.remove("hidden");
     $("navQuanTri").classList.toggle("hidden", Auth.current.role !== "admin");
+  } else if (!Auth.enabled) {
+    $("navQuanTri").classList.remove("hidden");
   }
 
   // Badge "Đã kết nối database" chỉ hiện với Admin (chi tiết vận hành/hạ tầng, không
@@ -82,10 +98,16 @@ async function initApp() {
     footerInfo.textContent = "lưu trong localStorage của trình duyệt này — điền config.js để dùng database dùng chung";
   }
   setupStorageBadgeLink();
+  setupAutoSyncUI();
+  registerServiceWorker();
 
   setupTabs();
+  setupStickyHeaderObserver();
+  setupTabLayoutToggle();
+  setupSidebarCollapseToggle();
   setupCauHinhSubtabs();
   setupQuyTrinhSubtabs();
+  setupQuantriSubtabs();
   setupHandbookLightbox();
   setupMindmap();
   setupOverviewMindmap();
@@ -400,6 +422,23 @@ async function initApp() {
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
   setupBbtnDropzone();
+  if ($("btnBbtnNewTab")) {
+    $("btnBbtnNewTab").addEventListener("click", () => {
+      const frame = $("bbtnPreviewFrame");
+      if (!frame) return;
+      const target = frame.dataset.originalUrl || frame.src;
+      if (target && target !== "about:blank") {
+        window.open(target, "_blank", "noopener");
+      }
+    });
+  }
+  if ($("btnCloseBbtnPreview")) {
+    $("btnCloseBbtnPreview").addEventListener("click", hideBbtnPreview);
+  }
+  if ($("btnToggleBbtnPreview")) {
+    $("btnToggleBbtnPreview").addEventListener("click", toggleBbtnPreview);
+  }
+
   $("f_nameplate").addEventListener("change", onNameplateFileSelected);
   setupNameplateDropzone();
   setupInfoPopovers();
@@ -424,6 +463,14 @@ async function initApp() {
   // bắn "change" khi chọn) lẫn lúc gõ tay rồi rời khỏi ô (blur mặc định của trình
   // duyệt cũng bắn "change" nếu giá trị đã đổi).
   ["f_tram", "f_thietbi", "f_pha"].forEach((id) => $(id).addEventListener("change", updateLanDoSuggestion));
+  if ($("f_dienapdm")) {
+    $("f_dienapdm").addEventListener("input", syncDienApDmToBang63Voltage);
+    $("f_dienapdm").addEventListener("change", syncDienApDmToBang63Voltage);
+  }
+  ["f_tram", "f_thietbi"].forEach((id) => {
+    const el = $(id);
+    if (el) el.addEventListener("change", syncDienApDmToBang63Voltage);
+  });
   $("btnViewBbtn").addEventListener("click", () => viewBbtn(_editingMeasurementAttachment));
   $("btnRemoveBbtn").addEventListener("click", () => {
     if (!confirm("Bỏ file Biên bản thí nghiệm đã đính kèm khỏi lần đo này?")) return;
@@ -552,179 +599,23 @@ async function initApp() {
   toggleMbaSubtypeField();
   toggleStandardTypeFields();
   drawDuvalTriangleBase();
+  const bbtnZone = $("bbtnDropzone");
+  if (bbtnZone && $("tab-dga") && !$("tab-dga").classList.contains("hidden")) {
+    bbtnZone.focus();
+  }
 }
 
 // ---------------------------------------------------------------------
-// Combo box tự viết: ô nhập text + nút ▼ + danh sách gợi ý (thay <datalist>
-// gốc — <datalist> của trình duyệt không tìm bỏ dấu tiếng Việt được và giới
-// hạn số dòng hiển thị). Vẫn cho gõ tự do bất kỳ giá trị nào không có trong
-// danh sách (không ép buộc phải chọn 1 mục có sẵn).
-// ---------------------------------------------------------------------
-function normalizeSearch(s) {
-  return (s || "")
-    .toString()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "") // bỏ các dấu thanh/dấu phụ đã tách rời sau NFD
-    .replace(/đ|Đ/g, "d") // "đ"/"Đ" không tách bằng NFD nên thay thủ công
-    .toLowerCase()
-    .trim();
-}
+/* Combo box và popover thông tin đã được tách sang ui/ui-combobox.js */
 
-/** Hiện/ẩn thông báo "Vui lòng chờ! Đang nạp dữ liệu..." ở mọi khung Trạm/Thiết bị
- *  đang gắn class "combo-loading-hint" (DGA, Dầu cách điện MBA, Dầu OLTC — xem
- *  index.html) — dùng querySelectorAll thay vì liệt kê từng id để tự động áp dụng
- *  cho cả 3 nơi cùng lúc, khỏi phải sửa thêm nếu sau này có thêm khung Trạm/Thiết bị
- *  mới (chỉ cần gắn đúng class này). Gọi ở initApp() (xem phía trên), KHÔNG gọi lại ở
- *  mỗi lần refreshStationsUI()/refreshHistoryUI() thường (vd sau khi lưu 1 bản ghi)
- *  để tránh chớp thông báo không cần thiết ngoài lần tải đầu tiên. */
-function setComboLoading(isLoading) {
-  document.querySelectorAll(".combo-loading-hint").forEach((el) => {
-    el.classList.toggle("hidden", !isLoading);
-  });
-}
 
-function setupCombo({ input, toggleBtn, listEl, getOptions }) {
-  if (!input || !toggleBtn || !listEl) return;
-  let currentOptions = [];
-
-  function render(filterText) {
-    const norm = normalizeSearch(filterText);
-    const all = getOptions();
-    currentOptions = !norm
-      ? all
-      : all.filter((o) => normalizeSearch(o.label).includes(norm) || normalizeSearch(o.value).includes(norm));
-    if (currentOptions.length === 0) {
-      listEl.innerHTML = `<div class="combo-empty">Không tìm thấy mục nào khớp — cứ gõ tiếp để dùng làm giá trị mới</div>`;
-    } else {
-      listEl.innerHTML = currentOptions
-        .map((o, i) => `<div class="combo-item" data-idx="${i}">${escapeHtml(o.label)}</div>`)
-        .join("");
-    }
-  }
-
-  function open(filterText) {
-    render(filterText);
-    listEl.classList.remove("hidden");
-  }
-  function close() {
-    listEl.classList.add("hidden");
-  }
-
-  input.addEventListener("input", () => open(input.value));
-  input.addEventListener("focus", () => open(input.value));
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") close();
-  });
-  toggleBtn.addEventListener("click", () => {
-    if (listEl.classList.contains("hidden")) {
-      input.focus();
-      open("");
-    } else {
-      close();
-    }
-  });
-  // mousedown (không phải click) để chọn được TRƯỚC khi input mất focus (blur
-  // sẽ đóng danh sách trước khi sự kiện click kịp bắn nếu dùng "click").
-  listEl.addEventListener("mousedown", (e) => {
-    const item = e.target.closest(".combo-item");
-    if (!item) return;
-    e.preventDefault();
-    const opt = currentOptions[Number(item.dataset.idx)];
-    if (opt) {
-      input.value = opt.value;
-      close();
-      input.dispatchEvent(new Event("change"));
-    }
-  });
-  document.addEventListener("click", (e) => {
-    if (!input.contains(e.target) && !toggleBtn.contains(e.target) && !listEl.contains(e.target)) close();
-  });
-}
-
-/** Gắn sự kiện cho MỌI nút icon "i" (class="info-icon-btn", có aria-controls trỏ tới id
- *  1 div.info-popover ngay trong HTML — xem ví dụ "Điểm lấy mẫu OLTC" ở index.html/tab
- *  OLTC) — bấm icon để mở/đóng khung giải thích thêm ngay dưới trường đó. Dùng 1 hàm
- *  chung cho tất cả các icon loại này thay vì viết lặp lại: thêm 1 icon mới ở HTML chỉ
- *  cần đúng 2 thuộc tính (aria-controls + id khớp trên div.info-popover), không cần sửa
- *  gì thêm ở đây. Chỉ cho phép 1 khung mở tại 1 thời điểm; bấm ra ngoài hoặc bấm nút "×"
- *  trong khung đều đóng lại. */
-function setupInfoPopovers() {
-  const closeAll = () => {
-    document.querySelectorAll(".info-popover:not(.hidden)").forEach((panel) => {
-      panel.classList.add("hidden");
-      const btn = document.querySelector(`.info-icon-btn[aria-controls="${panel.id}"]`);
-      if (btn) btn.setAttribute("aria-expanded", "false");
-    });
-  };
-  document.querySelectorAll(".info-icon-btn[aria-controls]").forEach((btn) => {
-    const panel = document.getElementById(btn.getAttribute("aria-controls"));
-    if (!panel) return;
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const willShow = panel.classList.contains("hidden");
-      closeAll();
-      if (willShow) {
-        panel.classList.remove("hidden");
-        btn.setAttribute("aria-expanded", "true");
-      }
-    });
-    const closeBtn = panel.querySelector(".info-popover-close");
-    if (closeBtn) closeBtn.addEventListener("click", closeAll);
-  });
-  document.addEventListener("click", (e) => {
-    if (e.target.closest(".info-popover") || e.target.closest(".info-icon-btn")) return;
-    closeAll();
-  });
-}
 
 /** Khóa localStorage lưu lựa chọn bố cục thanh tab (xem setupTabLayoutToggle() ngay
  *  dưới) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng, không phải dữ liệu
  *  nghiệp vụ, nên KHÔNG lưu qua Storage (gsheet/Supabase) như measurements. */
-const TAB_LAYOUT_STORAGE_KEY = "dga_tab_layout";
+/* Bố cục tab và sidebar collapse đã được tách sang ui/ui-layout.js */
 
-/** Bật/tắt bố cục thanh tab dọc (sidebar) trên <body> + đồng bộ trạng thái nút
- *  #btnToggleTabLayout (aria-pressed + title) cho khớp. */
-function applyTabLayout(isSidebar) {
-  document.body.classList.toggle("tabs-sidebar", isSidebar);
-  const btn = $("btnToggleTabLayout");
-  if (!btn) return;
-  btn.setAttribute("aria-pressed", String(isSidebar));
-  btn.title = isSidebar ? "Chuyển thanh tab về ngang (phía trên)" : "Chuyển thanh tab sang cột dọc (bên trái)";
-}
 
-/** Gắn sự kiện cho nút #btnToggleTabLayout ở header — đổi thanh tab giữa "ngang"
- *  (mặc định, phía trên) và "dọc" (sidebar bên trái, xem khối CSS "body.tabs-sidebar"
- *  ở css/style-nav-layout.css), lưu lại lựa chọn vào localStorage để lần sau mở lại vẫn giữ nguyên.
- *  Lựa chọn đã lưu được áp dụng SỚM ở ngay đầu <body> (xem index.html) để tránh nháy
- *  layout lúc tải trang — hàm này chỉ cần đồng bộ lại nút cho khớp trạng thái đó rồi
- *  gắn sự kiện bấm. */
-function setupTabLayoutToggle() {
-  const btn = $("btnToggleTabLayout");
-  if (!btn) return;
-  applyTabLayout(document.body.classList.contains("tabs-sidebar"));
-  btn.addEventListener("click", () => {
-    const next = !document.body.classList.contains("tabs-sidebar");
-    applyTabLayout(next);
-    try { localStorage.setItem(TAB_LAYOUT_STORAGE_KEY, next ? "sidebar" : "top"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  });
-}
-
-/** Khóa localStorage lưu trạng thái thu gọn sidebar — chỉ có tác dụng hiển thị khi
- *  đang ở bố cục dọc (xem CSS "body.tabs-sidebar.sidebar-collapsed" ở css/style-nav-layout.css), lưu
- *  riêng khóa với TAB_LAYOUT_STORAGE_KEY vì đây là 2 lựa chọn độc lập nhau (người dùng
- *  có thể chọn dọc nhưng không thu gọn, hoặc từng thu gọn rồi tạm quay về ngang mà vẫn
- *  muốn nhớ trạng thái thu gọn cho lần sau bật lại "dọc"). */
-const SIDEBAR_COLLAPSE_STORAGE_KEY = "dga_sidebar_collapsed";
-
-/** Bật/tắt trạng thái thu gọn sidebar trên <body> + đồng bộ nút #btnCollapseSidebar
- *  (aria-pressed + title) cho khớp. */
-function applySidebarCollapse(isCollapsed) {
-  document.body.classList.toggle("sidebar-collapsed", isCollapsed);
-  const btn = $("btnCollapseSidebar");
-  if (!btn) return;
-  btn.setAttribute("aria-pressed", String(isCollapsed));
-  btn.title = isCollapsed ? "Mở rộng sidebar" : "Thu gọn sidebar";
-}
 
 /** Gắn sự kiện cho nút #btnCollapseSidebar trong <nav class="tabs"> — thu gọn sidebar
  *  (chỉ còn 1 cột icon hẹp) để "mở rộng màn hình" cho nội dung chính, hoặc mở lại như
@@ -932,364 +823,124 @@ function setupLichSuViewToggle() {
   setLichSuView(saved === "oil" || saved === "oltc" ? "oil" : "gas");
 }
 
-function setupSidebarCollapseToggle() {
-  const btn = $("btnCollapseSidebar");
-  if (!btn) return;
-  applySidebarCollapse(document.body.classList.contains("sidebar-collapsed"));
-  btn.addEventListener("click", () => {
-    const next = !document.body.classList.contains("sidebar-collapsed");
-    applySidebarCollapse(next);
-    try { localStorage.setItem(SIDEBAR_COLLAPSE_STORAGE_KEY, next ? "1" : "0"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  });
-}
 
-/** Gắn sự kiện kéo-thả (drag & drop) cho ô chọn BBTN (PDF) ở tab "DGA" — #bbtnDropzone
- *  bọc quanh input[type=file] #f_bbtn thật (xem index.html), input đó đã phủ opacity:0
- *  toàn bộ khung nên bấm chọn tay vẫn hoạt động bình thường không cần thêm gì; hàm này
- *  chỉ thêm phần kéo-thả. Khi thả file: gán file vào input thật bằng DataTransfer rồi tự
- *  bắn sự kiện "change" — TÁI DÙNG đúng luồng xử lý sẵn có (onBbtnFileSelected() ở
- *  ui-dga.js: tự động đọc BBTN điền form, cập nhật nhãn tên file...) như khi người dùng
- *  bấm chọn file thủ công, không viết trùng logic ở đây. */
-function setupBbtnDropzone() {
-  const zone = $("bbtnDropzone");
-  const input = $("f_bbtn");
-  if (!zone || !input) return;
 
-  ["dragenter", "dragover"].forEach((evt) => {
-    zone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.add("dragover");
-    });
-  });
-  ["dragleave", "dragend"].forEach((evt) => {
-    zone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.remove("dragover");
-    });
-  });
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    zone.classList.remove("dragover");
-    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!file) return;
-    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-    if (!isPdf) {
-      const note = $("bbtnImportNote");
-      note.textContent = `Chỉ nhận file PDF — "${file.name}" không phải PDF, vui lòng kéo-thả lại đúng file Biên bản thí nghiệm (PDF).`;
-      note.classList.remove("hidden");
-      return;
-    }
-    // DataTransfer: cách chuẩn để gán 1 File (lấy từ sự kiện "drop") vào lại 1
-    // input[type=file] thật — input.files chỉ đọc (readonly) nên không gán trực tiếp
-    // được, phải đi qua DataTransfer.items.add() rồi gán .files của nó.
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-}
+/* Các bộ điều khiển kéo-thả dropzone đã được tách sang ui/ui-dropzone.js */
 
-/** Kéo-thả ẢNH CHỤP TẤM NHÃN THIẾT BỊ (nameplate) vào ô #nameplateDropzone — cùng cơ
- *  chế với setupBbtnDropzone() ở trên, khác chỗ: chấp nhận ảnh (JPG/PNG/...) hoặc PDF
- *  thay vì chỉ PDF, xem accept="image/*,application/pdf" ở input#f_nameplate trong
- *  index.html. Khi thả file: gán vào input thật rồi tự bắn "change" — tái dùng đúng luồng
- *  xử lý sẵn có (onNameplateFileSelected() ở ui-dga.js). */
-function setupNameplateDropzone() {
-  const zone = $("nameplateDropzone");
-  const input = $("f_nameplate");
-  if (!zone || !input) return;
 
-  ["dragenter", "dragover"].forEach((evt) => {
-    zone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.add("dragover");
-    });
-  });
-  ["dragleave", "dragend"].forEach((evt) => {
-    zone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.remove("dragover");
-    });
-  });
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    zone.classList.remove("dragover");
-    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if (!file) return;
-    const isImageOrPdf = /^image\//.test(file.type) || file.type === "application/pdf" || /\.pdf$/i.test(file.name);
-    if (!isImageOrPdf) {
-      const note = $("nameplateImportNote");
-      note.textContent = `Chỉ nhận ảnh (JPG/PNG...) hoặc PDF — "${file.name}" không đúng định dạng, vui lòng kéo-thả lại đúng ảnh chụp tấm nhãn thiết bị.`;
-      note.classList.remove("hidden");
-      return;
-    }
-    const dt = new DataTransfer();
-    dt.items.add(file);
-    input.files = dt.files;
-    input.dispatchEvent(new Event("change", { bubbles: true }));
-  });
-}
-
-/** Kéo-thả NHIỀU file cùng lúc cho panel "Nhập hàng loạt" (#batchDropzone) — cùng
- *  cơ chế với setupBbtnDropzone() ở trên (dragenter/dragover/dragleave/dragend/drop),
- *  khác chỗ: nhận toàn bộ danh sách file thả vào (không chỉ file đầu tiên) và không
- *  chặn sớm nếu có file không phải PDF — handleBatchFileList() ở bbtn-batch-import.js
- *  đã tự lọc/báo cáo từng file không hợp lệ trong bảng xem trước. */
-function setupBatchDropzone() {
-  const zone = $("batchDropzone");
-  if (!zone) return;
-
-  ["dragenter", "dragover"].forEach((evt) => {
-    zone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.add("dragover");
-    });
-  });
-  ["dragleave", "dragend"].forEach((evt) => {
-    zone.addEventListener(evt, (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      zone.classList.remove("dragover");
-    });
-  });
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    zone.classList.remove("dragover");
-    const files = e.dataTransfer && e.dataTransfer.files;
-    if (!files || !files.length) return;
-    handleBatchFileList(files);
-  });
-}
 
 function toggleMbaSubtypeField() {
   const isMba = $("f_loai").value === DGA.EQUIPMENT_TYPES.MBA;
   $("f_mbasubtype_wrap").classList.toggle("hidden", !isMba);
 }
 
-function setupTabs() {
-  document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
-      btn.classList.add("active");
-      $("tab-" + btn.dataset.tab).classList.remove("hidden");
-      // Khi cụm nút tab không đủ chỗ (tràn ngang ở chế độ tab NGANG, hoặc tràn dọc ở chế
-      // độ sidebar — xem ghi chú CSS "nav.tabs"/".tabs-inner"), nút vừa bấm có thể đang
-      // nằm ngoài (hoặc chỉ lộ 1 phần trong) vùng nhìn thấy của nav.tabs — ví dụ bấm tab
-      // "Quản trị"/"Cấu hình" ở cuối cụm lúc màn hình hẹp. Cuộn nhẹ (chỉ cuộn
-      // TỐI THIỂU cần thiết nhờ "nearest", không giật cả trang) để nút luôn hiện đầy đủ
-      // sau khi chọn, thay vì vẫn bị che 1 phần như trước khi bấm.
-      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-    });
-  });
-}
+/* Sticky header, tab navigation và subtabs đã được tách sang ui/ui-layout.js */
 
-/** Tab "Cấu hình" gộp 2 nội dung cũ ("Tiêu chuẩn theo nhà sản xuất" + "Cấu hình quy định")
- *  vào 1 tab duy nhất trên nav.tabs để thu gọn thanh tab — chọn nội dung nào hiện bằng
- *  cụm nút .cauhinh-subtab-btn (data-subtab="tieuchuan"|"quydinh") ngay trong tab, khớp
- *  với .cauhinh-subpanel có id="cauhinh-"+subtab tương ứng (xem index.html). Đây là lựa
- *  chọn NỘI DUNG CON bên trong 1 tab — độc lập hoàn toàn với setupTabs() (điều hướng giữa
- *  CÁC TAB với nhau) — nên không đụng gì đến .tab-btn/.tab-panel/nav.tabs, và hoạt động
- *  giống hệt nhau dù đang ở bố cục tab NGANG hay SIDEBAR (chỉ nav.tabs đổi bố cục, còn nội
- *  dung bên trong 1 tab — kể cả cụm subtab này — nằm trong <main>, không phụ thuộc bố cục
- *  nav.tabs đang chọn). Mặc định luôn mở "Tiêu chuẩn" trước mỗi lần tải lại trang (đúng
- *  thứ tự tab cũ: Tiêu chuẩn đứng trước Quy định) — không cần nhớ lựa chọn qua
- *  localStorage vì đây chỉ là điều hướng trong phiên xem hiện tại. */
-function setupCauHinhSubtabs() {
-  const btns = document.querySelectorAll(".cauhinh-subtab-btn");
-  if (!btns.length) return;
-  btns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.subtab;
-      document.querySelectorAll(".cauhinh-subtab-btn").forEach((b) => {
-        b.classList.toggle("active", b === btn);
-        b.setAttribute("aria-selected", b === btn ? "true" : "false");
-      });
-      document.querySelectorAll(".cauhinh-subpanel").forEach((p) => {
-        p.classList.toggle("hidden", p.id !== "cauhinh-" + key);
+
+
+
+/* Tiện ích DOM, format và diff trường đã được tách sang ui/ui-utils.js */
+
+
+
+
+function registerServiceWorker() {
+  if (typeof window !== "undefined" && "serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch((err) => {
+        console.warn("Không đăng ký được Service Worker:", err);
       });
     });
-  });
-}
-
-/** Tab "Quy trình" gộp 2 nội dung cũ ("Quy trình lấy mẫu" + "Quy trình đánh giá") vào 1
- *  tab duy nhất trên nav.tabs để thu gọn thanh tab — CÙNG CƠ CHẾ với setupCauHinhSubtabs()
- *  ở trên (chọn nội dung con bằng cụm nút dạng "segmented control" ngay trong tab, độc lập
- *  hoàn toàn với setupTabs() điều hướng giữa CÁC TAB với nhau), chỉ dùng riêng lớp
- *  .quytrinh-subtab-btn/.quytrinh-subpanel (thay vì .cauhinh-*) để 2 cụm subtab của 2 tab
- *  khác nhau không lẫn vào nhau. Mặc định luôn mở "Lấy mẫu dầu" trước mỗi lần tải lại
- *  trang (đúng thứ tự tab cũ trên thanh tab: quymau đứng trước quytrinh) — không cần nhớ
- *  lựa chọn qua localStorage vì chỉ là điều hướng trong phiên xem hiện tại. */
-function setupQuyTrinhSubtabs() {
-  const btns = document.querySelectorAll(".quytrinh-subtab-btn");
-  if (!btns.length) return;
-  btns.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const key = btn.dataset.subtab;
-      document.querySelectorAll(".quytrinh-subtab-btn").forEach((b) => {
-        b.classList.toggle("active", b === btn);
-        b.setAttribute("aria-selected", b === btn ? "true" : "false");
-      });
-      document.querySelectorAll(".quytrinh-subpanel").forEach((p) => {
-        p.classList.toggle("hidden", p.id !== "quytrinh-" + key);
-      });
-    });
-  });
-}
-
-function escapeHtml(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-/** URL đọc từ database (bbtn_url, image_url...) chỉ được mở/hiển thị nếu là http(s) — chặn
- *  "javascript:"/"data:text/html"... do ai đó ghi thẳng vào database qua API để chạy mã độc
- *  khi người khác bấm "Xem". Trả về URL gốc nếu an toàn, null nếu không. */
-function safeHttpUrl(url) {
-  try {
-    const u = new URL(String(url), location.href);
-    return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
-  } catch (e) {
-    return null;
   }
 }
 
-/** Xác thực dữ liệu đầu vào: không đại lượng nào ở đây (nồng độ khí ppm, %, kV, °C, năm,
- *  lần đo, ngưỡng cấu hình...) có thể ÂM về mặt vật lý — người dùng gõ nhầm dấu "-" hoặc
- *  paste nhầm số âm là lỗi nhập liệu, không phải giá trị hợp lệ. Dùng CHUNG cho mọi form
- *  nhập số liệu (DGA, dầu MBA, dầu OLTC, cấu hình tiêu chuẩn NSX — xem các lời gọi ở
- *  ui-dga.js/ui-oil.js/ui-oltc.js/ui-standards.js). fields: mảng [{label, value}]; value
- *  có thể là number|null|undefined|NaN — bỏ qua khi không phải số (nghĩa là "chưa nhập").
- *  Trả về nhãn tiếng Việt của trường ÂM đầu tiên tìm thấy, hoặc null nếu tất cả hợp lệ. */
-function findNegativeValueField(fields) {
-  for (const { label, value } of fields) {
-    if (typeof value === "number" && !Number.isNaN(value) && value < 0) return label;
+function setupAutoSyncUI() {
+  const badge = $("syncStatusBadge");
+  const text = $("syncStatusText");
+  if (!badge || !text) return;
+
+  function renderStatus(st) {
+    if (Storage.mode === "local") {
+      badge.classList.add("hidden");
+      return;
+    }
+    badge.classList.remove("hidden");
+    badge.className = "badge sync-badge";
+
+    if (st.syncing) {
+      badge.classList.add("syncing");
+      text.textContent = "Đang đồng bộ";
+      badge.title = st.pendingCount > 0 ? `Đang đồng bộ ${st.pendingCount} mục lên máy chủ...` : "Đang đồng bộ";
+    } else if (!st.online) {
+      badge.classList.add("offline");
+      text.textContent = st.pendingCount > 0
+        ? `Chạy offline, tự đồng bộ khi có mạng (${st.pendingCount})`
+        : "Chạy offline, tự đồng bộ khi có mạng";
+      badge.title = "Chạy offline, tự đồng bộ khi có mạng";
+    } else if (st.pendingCount > 0) {
+      badge.classList.add("syncing");
+      text.textContent = "Đang đồng bộ";
+      badge.title = `Có ${st.pendingCount} mục chờ đồng bộ lên máy chủ. Bấm để đồng bộ ngay.`;
+    } else {
+      badge.classList.add("online");
+      text.textContent = "Đã đồng bộ";
+      badge.title = "Đã kết nối máy chủ và đồng bộ toàn bộ dữ liệu mới nhất.";
+    }
   }
-  return null;
-}
 
-function alertIfNegative(fields) {
-  const negativeField = findNegativeValueField(fields);
-  if (negativeField) {
-    notifyError(`Giá trị "${negativeField}" không hợp lệ: không được nhập số âm.`);
-    return true;
+  Storage.onSyncStatusChange(renderStatus);
+
+  if (typeof navigator !== "undefined" && !navigator.onLine && Storage.mode !== "local") {
+    showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
   }
-  return false;
-}
 
-/** Cảnh báo (KHÔNG chặn lưu, khác alertIfNegative ở trên) khi để TRỐNG 1/nhiều trong 7
- *  khí chính (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) lúc nhập/sửa số liệu ở tab DGA. Lý do
- *  cần cảnh báo riêng: để trống 1 ô khí sẽ tự động tính là 0 ppm khi lưu (xem onAnalyze()
- *  ở ui-dga.js — num() ở dga-logic.js coi mọi giá trị rỗng/không phải số là 0), và 0 ppm
- *  đó VẪN được đưa vào TCG/so sánh tiêu chuẩn/Bảng 66/Duval/vẽ đồ thị xu hướng y như thể
- *  đã đo được 0 ppm thật — khác N2/O2 (2 khí BỔ SUNG, không thuộc DGA.GASES) vốn để trống
- *  thì giữ đúng là "chưa đo", tự ẩn khỏi các phép tính cần cả 2 khí đó (xem ghi chú ở
- *  onAnalyze()). Vì nhiều khí (đặc biệt C2H2) trong thực tế thường ĐÚNG LÀ đo được 0 ppm
- *  ở thiết bị bình thường, không thể coi "trống" là lỗi nhập liệu để chặn lưu như số âm —
- *  chỉ nhắc người dùng tự kiểm tra lại BBTN/số liệu gốc xem khí đó thực sự đo được 0 ppm
- *  hay đơn giản là CHƯA ĐO (quên nhập) trước khi tin vào kết quả đánh giá/đồ thị. Đọc
- *  thẳng DOM (không dùng object "gases" đã build ở onAnalyze() vì lúc đó "" đã bị đổi
- *  thành 0, không còn phân biệt được nữa) để biết CHÍNH XÁC ô nào người dùng để trống. */
-function findEmptyMainGasLabels() {
-  return DGA.GASES.filter((g) => $("g_" + g) && $("g_" + g).value.trim() === "");
-}
-
-function warnIfEmptyMainGas() {
-  const empty = findEmptyMainGasLabels();
-  if (empty.length === 0) return;
-  alert(
-    `Lưu ý: khí ${empty.join(", ")} đang để TRỐNG — hệ thống sẽ tự động tính là 0 ppm và vẫn dùng ` +
-    `giá trị này để đánh giá/vẽ đồ thị xu hướng như đã đo được 0 ppm.\n\n` +
-    `Vui lòng kiểm tra lại BBTN/số liệu gốc: nếu khí này CHƯA ĐO (không phải đo được 0), hãy quay lại ` +
-    `sửa cho đúng sau khi lưu — số liệu vẫn được lưu lại bình thường ngay bây giờ.`
-  );
-}
-
-// ---------------------------------------------------------------------------
-// Lưu vết CHỈNH SỬA số liệu khí — khi người dùng SỬA 1 lần đo đã lưu (không phải nhập
-// mới), so sánh 7 khí chính + N2/O2 giữa bản ghi GỐC và giá trị vừa nhập để biết ĐÚNG
-// những ô nào đã bị chỉnh sửa, dùng tô nền đỏ cảnh báo + ghi log kèm timestamp ở tab
-// "Lịch sử đo" (xem onAnalyze() ở ui-dga.js gọi diffTrackedGasFields(), và
-// refreshHistoryUI() ở ui-history.js đọc lại rec.edited_fields/edit_log để hiển thị).
-// KHÔNG theo dõi các trường khác (Ghi chú, thông số kỹ thuật...) — chỉ số liệu khí là
-// dữ liệu đo đạc gốc, quan trọng nhất về mặt truy xuất nguồn gốc/tính toàn vẹn.
-// ---------------------------------------------------------------------------
-
-const EDIT_TRACKED_GAS_FIELDS = ["H2", "CH4", "C2H6", "C2H4", "C2H2", "CO", "CO2", "N2", "O2"];
-
-function editTrackedFieldOldValue(oldRec, field) {
-  if (field === "N2") return oldRec.n2 ?? oldRec.N2 ?? null;
-  if (field === "O2") return oldRec.o2 ?? oldRec.O2 ?? null;
-  return recordGases(oldRec)[field] ?? null;
-}
-
-function editTrackedFieldNewValue(field, gases, n2, o2) {
-  if (field === "N2") return n2;
-  if (field === "O2") return o2;
-  return gases[field] ?? null;
-}
-
-function numOrNullForDiff(v) {
-  return v === null || v === undefined || v === "" ? null : Number(v);
-}
-
-/** So sánh giá trị 9 trường số liệu chính (7 khí + N2/O2) giữa bản ghi GỐC (trước khi
- *  sửa, "oldRec") và giá trị MỚI đang chuẩn bị lưu ("gases"/"n2"/"o2") — dùng khi SỬA 1
- *  lần đo đã lưu. Trả về { editedFields, editLogEntry }:
- *  - editedFields: chuỗi "H2:12|CO2:2000" (field:GIÁ TRỊ CŨ, chỉ những field ĐÃ ĐỔI) —
- *    dùng để tô nền đỏ ĐÚNG ô đã sửa và hiện tooltip "giá trị trước khi sửa" ở tab "Lịch
- *    sử đo", không cần phân tích lại edit_log dạng văn bản.
- *  - editLogEntry: 1 dòng log dạng "<thời điểm>: H2: 12 → 18; CO2: 2000 → 2500" — nối
- *    vào edit_log (lưu TOÀN BỘ lịch sử các lần sửa, không chỉ lần gần nhất).
- *  Cả 2 đều rỗng nếu không field nào thực sự đổi giá trị (vd chỉ sửa Ghi chú) — không
- *  coi đó là "đã sửa số liệu". */
-function diffTrackedGasFields(oldRec, gases, n2, o2) {
-  const changes = [];
-  EDIT_TRACKED_GAS_FIELDS.forEach((field) => {
-    const oldVal = numOrNullForDiff(editTrackedFieldOldValue(oldRec, field));
-    const newVal = numOrNullForDiff(editTrackedFieldNewValue(field, gases, n2, o2));
-    if (oldVal === newVal) return; // cả 2 cùng null, hoặc cùng 1 số — không đổi
-    changes.push({ field, oldVal, newVal });
+  badge.addEventListener("click", async () => {
+    const st = Storage.getSyncStatus();
+    if (!st.online) {
+      showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
+      return;
+    }
+    if (st.pendingCount > 0) {
+      showToast("Đang đồng bộ", "info");
+      const res = await Storage.processSyncQueue();
+      if (res && res.processed > 0) {
+        showToast(`Đã đồng bộ thành công ${res.processed} mục lên máy chủ!`, "success");
+        try {
+          await refreshStandardsUI();
+          await refreshHistoryUI();
+        } catch (e) {}
+      }
+    } else {
+      showToast("Toàn bộ dữ liệu đã được đồng bộ với máy chủ.", "success");
+    }
   });
-  if (changes.length === 0) return { editedFields: "", editLogEntry: "" };
-  const editedFields = changes.map((c) => `${c.field}:${c.oldVal ?? ""}`).join("|");
-  const changeText = changes.map((c) => `${c.field}: ${c.oldVal ?? "—"} → ${c.newVal ?? "—"}`).join("; ");
-  const editLogEntry = `${new Date().toLocaleString("vi-VN")}: ${changeText}`;
-  return { editedFields, editLogEntry };
-}
 
-/** Phân tích chuỗi "H2:12|CO2:2000" (rec.edited_fields, xem diffTrackedGasFields() trên)
- *  thành Map<field, giá trị cũ dạng chuỗi> — dùng ở refreshHistoryUI() (ui-history.js)
- *  để biết field nào cần tô đỏ và hiện giá trị cũ trong tooltip. Trả về Map rỗng nếu
- *  chưa từng sửa số liệu (edited_fields rỗng/không có). */
-function parseEditedFields(editedFieldsStr) {
-  const map = new Map();
-  if (!editedFieldsStr) return map;
-  String(editedFieldsStr).split("|").forEach((part) => {
-    const idx = part.indexOf(":");
-    if (idx < 0) return;
-    map.set(part.slice(0, idx), part.slice(idx + 1));
+  window.addEventListener("online", async () => {
+    showToast("Đang đồng bộ", "info");
+    const res = await Storage.processSyncQueue();
+    if (res && res.processed > 0) {
+      showToast(`Đã tự động đồng bộ xong ${res.processed} mục lên máy chủ!`, "success");
+      try {
+        await refreshStandardsUI();
+        await refreshHistoryUI();
+      } catch (e) {}
+    }
   });
-  return map;
-}
 
-/** Icon nhỏ cạnh TÊN 1 khí hòa tan cụ thể — dùng ở mọi nơi hiển thị tên khí đứng riêng
- *  (ô nhập DGA, bảng kết quả/lịch sử/tốc độ tăng khí, checkbox "Xu hướng", pill "Chỉ
- *  tiêu vượt ngưỡng" tab "Cảnh báo"), KHÔNG dùng trong câu văn khuyến cáo (những câu đó
- *  là chuỗi thuần từ dga-logic.js, không có HTML). 5 khí sinh ra từ phân hủy DẦU cách
- *  điện (H2, CH4, C2H6, C2H4, C2H2) dùng icon-flask (giống icon tab "DGA"); CO/CO2 sinh
- *  ra từ phân hủy GIẤY CÁCH ĐIỆN (cellulose, không phải dầu) nên dùng icon-book (trang
- *  giấy) để phân biệt đúng nguồn gốc — không phải icon chọn ngẫu nhiên. */
-function gasLabelIcon(gas) {
-  const icon = gas === "CO" || gas === "CO2" ? "book" : "flask";
-  return `<svg class="gas-icon" aria-hidden="true"><use href="#icon-${icon}"></use></svg>`;
+  window.addEventListener("offline", () => {
+    showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
+  });
+
+  // Tự động kiểm tra đồng bộ ngầm định kỳ mỗi 45 giây nếu online và có queue tồn đọng
+  setInterval(() => {
+    if (typeof navigator !== "undefined" && navigator.onLine && Storage.getSyncStatus().pendingCount > 0) {
+      Storage.processSyncQueue().then((res) => {
+        if (res && res.processed > 0) {
+          try { refreshHistoryUI(); } catch (e) {}
+        }
+      }).catch(() => {});
+    }
+  }, 45000);
 }
 
 document.addEventListener("DOMContentLoaded", init);

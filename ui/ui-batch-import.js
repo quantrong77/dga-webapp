@@ -339,11 +339,16 @@ async function onBatchSave() {
       kieu_may: $("f_kieumay").value.trim(),
       nam_sx: $("f_namsx").value ? Number($("f_namsx").value) : null,
       nam_van_hanh: $("f_namvanhanh").value ? Number($("f_namvanhanh").value) : null,
-      dien_ap_dm: $("f_dienapdm").value.trim(),
-      so_che_tao: $("f_sochetao").value.trim(),
-      loai_dau: $("f_loaidau").value.trim(),
+      dien_ap_dm: (row.parsed && row.parsed.dienApDm) || $("f_dienapdm").value.trim(),
+      so_che_tao: (row.parsed && row.parsed.soCheTao) || $("f_sochetao").value.trim(),
+      loai_dau: (row.parsed && row.parsed.loaiDau) || $("f_loaidau").value.trim(),
       ket_cau_cach_dien: $("f_ketcaucachdien").value.trim(),
       hien_trang_van_hanh: $("f_hientrangvanhanh").value.trim(),
+      bang63_voltage_class: (row.parsed && row.parsed.bang63VoltageClass) ||
+        (window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class && window.BbtnImport.mapVoltageToBang63Class((row.parsed && row.parsed.dienApDm) || $("f_dienapdm").value, tram, thietbi)) ||
+        $("f_bang63_voltage").value,
+      n2: row.gases && row.gases.N2 !== undefined ? (row.gases.N2 === "KPH" ? 0 : Number(row.gases.N2)) : null,
+      o2: row.gases && row.gases.O2 !== undefined ? (row.gases.O2 === "KPH" ? 0 : Number(row.gases.O2)) : null,
       ...row.gases,
     };
 

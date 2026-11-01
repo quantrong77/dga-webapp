@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sơ đồ Kiến trúc Giao diện & Luồng Điều hướng — DGA Web App</title>
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #334155;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --primary: #0284c7;
+      --primary-hover: #0369a1;
+      --accent: #06b6d4;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --purple: #8b5cf6;
+      --card-radius: 12px;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.5;
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    header.app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .header-title h1 {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .badge-primary { background: rgba(2, 132, 199, 0.2); color: var(--accent); border: 1px solid rgba(2, 132, 199, 0.4); }
+    .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.4); }
+
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+      background: #090d16;
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .nav-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .nav-tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    .nav-tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(2, 132, 199, 0.3);
+    }
+
+    .view-panel { display: none; }
+    .view-panel.active { display: block; }
+
+    /* Flow Canvas Styles */
+    .flow-container {
+      background: #0b1120;
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
+      padding: 24px;
+      position: relative;
+      overflow-x: auto;
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+    .flow-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .flow-legend {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    svg.flow-svg {
+      width: 100%;
+      min-width: 1100px;
+      height: 720px;
+      border-radius: 8px;
+    }
+    .node-rect {
+      rx: 8;
+      ry: 8;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      stroke-width: 1.5;
+    }
+    .node-rect:hover {
+      filter: brightness(1.2) drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
+      stroke: var(--accent);
+      stroke-width: 2.5;
+    }
+    .node-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      fill: #ffffff;
+      pointer-events: none;
+    }
+    .node-sub {
+      font-size: 11px;
+      fill: #94a3b8;
+      pointer-events: none;
+    }
+    .flow-line {
+      stroke: #475569;
+      stroke-width: 1.5;
+      fill: none;
+      marker-end: url(#arrow);
+    }
+    .flow-line-active {
+      stroke: var(--accent);
+      stroke-width: 2;
+      stroke-dasharray: 4;
+      animation: dash 1s linear infinite;
+    }
+    @keyframes dash {
+      to { stroke-dashoffset: -8; }
+    }
+
+    /* Screen Wireframes Grid */
+    .wireframe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 24px;
+      margin-top: 16px;
+    }
+    .wf-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .wf-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    .wf-header {
+      padding: 14px 18px;
+      background: rgba(15, 23, 42, 0.6);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wf-header h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .wf-body {
+      padding: 18px;
+      flex: 1;
+    }
+    .mock-screen {
+      background: #090d16;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      color: #cbd5e1;
+      margin-bottom: 14px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+    .mock-bar {
+      height: 18px;
+      background: #1e293b;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      gap: 6px;
+    }
+    .mock-btn {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      font-size: 10px;
+    }
+    .mock-btn.ghost { background: #334155; }
+    .mock-input {
+      background: #0f172a;
+      border: 1px solid #475569;
+      border-radius: 4px;
+      height: 20px;
+      margin-bottom: 6px;
+      padding: 0 6px;
+      display: flex;
+      align-items: center;
+      color: #94a3b8;
+    }
+    .mock-split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .mock-preview-box {
+      border: 1px dashed #0284c7;
+      background: rgba(2, 132, 199, 0.08);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      text-align: center;
+      color: #38bdf8;
+    }
+    .wf-features {
+      list-style: none;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 12px;
+    }
+    .wf-features li {
+      margin-bottom: 6px;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .wf-features li::before {
+      content: "•";
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* Architecture Matrix Table */
+    .table-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--card-radius);
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    table.arch-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    table.arch-table th {
+      background: #090d16;
+      color: #94a3b8;
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+    table.arch-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #e2e8f0;
+    }
+    table.arch-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .code-tag {
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #38bdf8;
+      font-size: 11.5px;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-dialog {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 650px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-title">
+      <h1>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Sơ đồ Mockup & Luồng Điều hướng Giao diện DGA Web App
+      </h1>
+      <span style="font-size: 13px; color: var(--text-muted); margin-left: 34px;">
+        Đánh giá Phân tích Khí hòa tan (DGA) & Thí nghiệm Dầu cách điện theo QĐ 1901/EVNNPT & IEC 60599
+      </span>
+    </div>
+    <div class="nav-tabs">
+      <button class="nav-tab-btn active" onclick="switchView('flow')">Sơ đồ Luồng (Flow Map)</button>
+      <button class="nav-tab-btn" onclick="switchView('wireframes')">Khung Giao diện (Wireframes)</button>
+      <button class="nav-tab-btn" onclick="switchView('matrix')">Ma trận Kiến trúc (Matrix)</button>
+    </div>
+  </header>
+
+  <!-- VIEW 1: FLOW MAP (SVG INTERACTIVE) -->
+  <section id="view-flow" class="view-panel active">
+    <div class="flow-container">
+      <div class="flow-toolbar">
+        <div><strong>Điều hướng trực quan:</strong> Nhấp vào bất kỳ khối màn hình nào để xem chi tiết thông số và luồng dữ liệu.</div>
+        <div class="flow-legend">
+          <div class="legend-item"><div class="legend-color" style="background:#e11d48"></div> Xác thực / Khởi động</div>
+          <div class="legend-item"><div class="legend-color" style="background:#0284c7"></div> Tác nghiệp Kỹ thuật (Sidebar)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#8b5cf6"></div> Quản trị & Cấu hình (Admin)</div>
+          <div class="legend-item"><div class="legend-color" style="background:#10b981"></div> Báo cáo & Xuất dữ liệu</div>
+        </div>
+      </div>
+
+      <svg class="flow-svg" viewBox="0 0 1160 680" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+          </marker>
+          <marker id="arrow-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 10 5 L 0 9 z" fill="#38bdf8" />
+          </marker>
+        </defs>
+
+        <!-- Connecting Lines -->
+        <!-- Auth to Main Layout -->
+        <path d="M 170 120 L 170 180" class="flow-line-active" marker-end="url(#arrow-cyan)"/>
+        <!-- Main Layout to Tabs -->
+        <path d="M 170 240 L 170 290" class="flow-line"/>
+        <path d="M 170 290 L 80 340" class="flow-line"/>
+        <path d="M 170 290 L 250 340" class="flow-line"/>
+        <path d="M 170 290 L 420 340" class="flow-line"/>
+        <path d="M 170 290 L 590 340" class="flow-line"/>
+        <path d="M 170 290 L 760 340" class="flow-line"/>
+        <path d="M 170 290 L 930 340" class="flow-line"/>
+        <path d="M 170 290 L 1080 340" class="flow-line"/>
+
+        <!-- DGA Screen (Tab 2) to Sub-features -->
+        <path d="M 250 420 L 200 480" class="flow-line"/>
+        <path d="M 250 420 L 320 480" class="flow-line"/>
+        <path d="M 250 420 L 250 560" class="flow-line"/>
+
+        <!-- Oil Screen (Tab 3) to Sub-tabs -->
+        <path d="M 420 420 L 390 480" class="flow-line"/>
+        <path d="M 420 420 L 450 480" class="flow-line"/>
+
+        <!-- History to Comparison -->
+        <path d="M 760 420 L 760 480" class="flow-line"/>
+
+        <!-- Header Nav to Admin -->
+        <path d="M 310 210 L 900 210" class="flow-line"/>
+
+        <!-- NODE 1: AUTH OVERLAY -->
+        <g onclick="showNodeModal('auth')">
+          <rect x="70" y="40" width="200" height="80" class="node-rect" fill="#1e1b4b" stroke="#e11d48"/>
+          <text x="90" y="70" class="node-title">1. Màn hình Xác thực</text>
+          <text x="90" y="90" class="node-sub">Email/Pass • Google Sign-In</text>
+          <text x="90" y="105" class="node-sub">Khôi phục phiên (dga_auth_v1)</text>
+        </g>
+
+        <!-- NODE 2: APP SHELL & LAYOUT -->
+        <g onclick="showNodeModal('shell')">
+          <rect x="50" y="180" width="240" height="65" class="node-rect" fill="#0f172a" stroke="#38bdf8"/>
+          <text x="70" y="208" class="node-title">Khung Giao diện Chính (Shell)</text>
+          <text x="70" y="228" class="node-sub">Sidebar 7 Tabs • Header Icon Actions</text>
+        </g>
+
+        <!-- NODE: HEADER ACTIONS -->
+        <g onclick="showNodeModal('header')">
+          <rect x="900" y="180" width="200" height="65" class="node-rect" fill="#2e1065" stroke="#8b5cf6"/>
+          <text x="920" y="208" class="node-title">Menu Bar / Header Icons</text>
+          <text x="920" y="228" class="node-sub">Quản trị • Giới thiệu • Góp ý • Theme</text>
+        </g>
+
+        <!-- SIDEBAR TABS ROW -->
+        <!-- Tab: Hướng dẫn -->
+        <g onclick="showNodeModal('tab_huongdan')">
+          <rect x="20" y="340" width="130" height="80" class="node-rect" fill="#1e293b" stroke="#64748b"/>
+          <text x="35" y="372" class="node-title">0. Hướng dẫn</text>
+          <text x="35" y="392" class="node-sub">19 Mục tra cứu</text>
+          <text x="35" y="407" class="node-sub">User Manual</text>
+        </g>
+
+        <!-- Tab: Khí hòa tan (Core) -->
+        <g onclick="showNodeModal('tab_nhap')">
+          <rect x="170" y="340" width="160" height="80" class="node-rect" fill="#0c4a6e" stroke="#0284c7" stroke-width="2"/>
+          <text x="185" y="370" class="node-title">1. Khí hòa tan (DGA)</text>
+          <text x="185" y="390" class="node-sub">Form 7 khí • Bảng 66</text>
+          <text x="185" y="405" class="node-sub">Duval 1,4,5 • Bảng 63</text>
+        </g>
+
+        <!-- Tab: Lý-Hóa dầu -->
+        <g onclick="showNodeModal('tab_dau')">
+          <rect x="350" y="340" width="150" height="80" class="node-rect" fill="#1e293b" stroke="#0284c7"/>
+          <text x="365" y="370" class="node-title">2. Lý-Hóa dầu</text>
+          <text x="365" y="390" class="node-sub">MBA • OLTC • TI 3 pha</text>
+          <text x="365" y="405" class="node-sub">IEC 60422:2024</text>
+        </g>
+
+        <!-- Tab: Cảnh báo -->
+        <g onclick="showNodeModal('tab_canhbao')">
+          <rect x="520" y="340" width="140" height="80" class="node-rect" fill="#1e293b" stroke="#f59e0b"/>
+          <text x="535" y="370" class="node-title">3. Cảnh báo</text>
+          <text x="535" y="390" class="node-sub">KPI 4 mức thiết bị</text>
+          <text x="535" y="405" class="node-sub">Báo động vượt ngưỡng</text>
+        </g>
+
+        <!-- Tab: Lịch sử đo -->
+        <g onclick="showNodeModal('tab_lichsu')">
+          <rect x="680" y="340" width="150" height="80" class="node-rect" fill="#1e293b" stroke="#0284c7"/>
+          <text x="695" y="370" class="node-title">4. Lịch sử đo</text>
+          <text x="695" y="390" class="node-sub">Bộ lọc Trạm/Thiết bị</text>
+          <text x="695" y="405" class="node-sub">Lưu vết sửa số liệu diff</text>
+        </g>
+
+        <!-- Tab: Xu hướng -->
+        <g onclick="showNodeModal('tab_xuhuong')">
+          <rect x="850" y="340" width="140" height="80" class="node-rect" fill="#1e293b" stroke="#06b6d4"/>
+          <text x="865" y="370" class="node-title">5. Xu hướng</text>
+          <text x="865" y="390" class="node-sub">Đồ thị Chart.js đa khí</text>
+          <text x="865" y="405" class="node-sub">Dự báo ngoại suy năm</text>
+        </g>
+
+        <!-- Tab: Quy trình -->
+        <g onclick="showNodeModal('tab_quytrinh')">
+          <rect x="1010" y="340" width="135" height="80" class="node-rect" fill="#1e293b" stroke="#64748b"/>
+          <text x="1025" y="370" class="node-title">6. Quy trình</text>
+          <text x="1025" y="390" class="node-sub">Lấy mẫu Điều 6-10</text>
+          <text x="1025" y="405" class="node-sub">Sơ đồ tư duy IEC</text>
+        </g>
+
+        <!-- DGA SUB-FEATURES -->
+        <!-- Side-by-Side BBTN Preview -->
+        <g onclick="showNodeModal('split_preview')">
+          <rect x="130" y="480" width="130" height="60" class="node-rect" fill="#042f2e" stroke="#14b8a6"/>
+          <text x="142" y="506" class="node-title">Khung BBTN PDF</text>
+          <text x="142" y="525" class="node-sub">Đối chiếu song song</text>
+        </g>
+
+        <!-- Export Docx -->
+        <g onclick="showNodeModal('export_docx')">
+          <rect x="270" y="480" width="140" height="60" class="node-rect" fill="#064e3b" stroke="#10b981"/>
+          <text x="282" y="506" class="node-title">Xuất Báo cáo Docx</text>
+          <text x="282" y="525" class="node-sub">BBTN & Phân tích KT</text>
+        </g>
+
+        <!-- Duval SVG Triangle -->
+        <g onclick="showNodeModal('duval')">
+          <rect x="190" y="570" width="140" height="60" class="node-rect" fill="#312e81" stroke="#6366f1"/>
+          <text x="202" y="596" class="node-title">Tam giác Duval</text>
+          <text x="202" y="615" class="node-sub">SVG Tọa độ 1, 4, 5</text>
+        </g>
+
+        <!-- HISTORY COMPARISON -->
+        <g onclick="showNodeModal('history_cmp')">
+          <rect x="690" y="480" width="150" height="60" class="node-rect" fill="#1e293b" stroke="#0284c7"/>
+          <text x="702" y="506" class="node-title">So sánh 2 lần đo</text>
+          <text x="702" y="525" class="node-sub">Tính tốc độ sinh khí B65</text>
+        </g>
+
+        <!-- ADMIN EXPANSION -->
+        <g onclick="showNodeModal('admin_details')">
+          <rect x="910" y="480" width="190" height="70" class="node-rect" fill="#3b0764" stroke="#a855f7"/>
+          <text x="925" y="506" class="node-title">Cấu hình 13 Bảng Ngưỡng</text>
+          <text x="925" y="524" class="node-sub">Tiêu chuẩn NSX • User RBAC</text>
+          <text x="925" y="538" class="node-sub">Đồng bộ Bản sao Supabase</text>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- VIEW 2: SCREEN WIREFRAMES (HIGH FIDELITY) -->
+  <section id="view-wireframes" class="view-panel">
+    <div class="wireframe-grid">
+
+      <!-- WIREFRAME 1: AUTH MODAL -->
+      <div class="wf-card">
+        <div class="wf-header">
+          <h3>Màn hình Xác thực (#authOverlay)</h3>
+          <span class="badge badge-primary">Modal Chặn</span>
+        </div>
+        <div class="wf-body">
+          <div class="mock-screen">
+            <div style="text-align: center; margin-bottom: 10px; font-weight: bold; color: #fff;">Đăng nhập / Đăng ký DGA</div>
+            <div class="mock-btn" style="width: 100%; text-align: center; margin-bottom: 8px; background: #fff; color: #333;">Sign in with Google</div>
+            <div style="text-align: center; color: #64748b; margin-bottom: 8px;">— hoặc đăng nhập bằng email —</div>
+            <div class="mock-input">Email: ksthinghiem@ptc.evn.vn</div>
+            <div class="mock-input">Mật khẩu: ••••••••••</div>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+              <span class="mock-btn">Đăng nhập</span>
+              <span class="mock-btn ghost">Đăng ký</span>
+            </div>
+          </div>
+          <ul class="wf-features">
+            <li>Tự động khôi phục token phiên qua khóa <span class="code-tag">dga_auth_v1</span>.</li>
+            <li>Khóa tạm 15 phút nếu nhập sai mật khẩu 5 lần liên tiếp.</li>
+            <li>Bắt buộc đổi mật khẩu riêng ở lần đăng nhập đầu tiên với mật khẩu tạm do Admin cấp.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WIREFRAME 2: DGA INPUT & SPLIT PREVIEW -->
+      <div class="wf-card" style="grid-column: span 2;">
+        <div class="wf-header">
+          <h3>Tab Khí hòa tan (#tab-nhap) & Khung đối chiếu BBTN PDF (#bbtnPreviewCol)</h3>
+          <span class="badge badge-success">Màn hình Tác nghiệp Chính</span>
+        </div>
+        <div class="wf-body">
+          <div class="mock-screen">
+            <div class="mock-bar">
+              <span style="font-weight: bold; color: #38bdf8;">1. THÔNG TIN LẦN ĐO</span>
+              <span style="margin-left: auto;" class="mock-btn ghost">Hiện/Ẩn BBTN đối chiếu</span>
+            </div>
+            <div class="mock-split">
+              <!-- Left: Inputs -->
+              <div>
+                <div class="mock-input">Trạm: TBA 500kV Pleiku [▼]</div>
+                <div class="mock-input">Thiết bị: MBA AT1 (500kV) [▼] | Pha: 3 pha</div>
+                <div class="mock-input" style="border-style: dashed; justify-content: center; color: #38bdf8;">Kéo thả BBTN PDF hoặc ảnh tấm nhãn máy</div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 6px;">
+                  <div class="mock-input">H2: 12</div>
+                  <div class="mock-input">CH4: 25</div>
+                  <div class="mock-input">C2H6: 8</div>
+                  <div class="mock-input">C2H4: 4</div>
+                  <div class="mock-input">C2H2: 0</div>
+                  <div class="mock-input">CO: 220</div>
+                  <div class="mock-input">CO2: 1450</div>
+                  <div class="mock-input">TCG: 1719</div>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                  <span class="mock-btn">Phân tích & Lưu</span>
+                  <span class="mock-btn ghost">Xóa form</span>
+                  <span class="mock-btn ghost">Xuất BBTN (docx)</span>
+                </div>
+              </div>
+              <!-- Right: Split PDF Preview -->
+              <div class="mock-preview-box">
+                <div style="font-weight: bold; margin-bottom: 4px;">Khung xem trước BBTN (PDF)</div>
+                <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px;">BBTN_PTC3_BM15_AT1.pdf [Đã nạp file]</div>
+                <div style="background: #1e293b; width: 90%; height: 90px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 10px;">
+                  [ Iframe PDF Content / Google Drive Fallback ]
+                </div>
+                <div style="margin-top: 6px; display: flex; gap: 6px;">
+                  <span class="mock-btn ghost" style="font-size: 9px;">Mở tab mới ↗</span>
+                  <span class="mock-btn ghost" style="font-size: 9px;">✕ Ẩn</span>
+                </div>
+              </div>
+            </div>
+            <!-- Bottom Result Bar -->
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 6px; padding: 8px; margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <span><strong>Kết luận:</strong> <span class="badge badge-success">Bình thường / Đạt</span> (TCG & 7 khí đều nằm trong giới hạn cho phép Bảng 64)</span>
+              <span class="mock-btn ghost">Tam giác Duval: Phóng điện cục bộ (PD)</span>
+            </div>
+          </div>
+          <ul class="wf-features">
+            <li>Tự động bóc tách số liệu từ file PDF (mẫu PTC3/BM.15) và biển nhãn máy (OCR Tesseract.js).</li>
+            <li>Khung xem trước PDF bố cục song song 2 cột (<span class="code-tag">has-preview</span>) giúp kỹ sư đối soát số liệu trước khi lưu.</li>
+            <li>Chẩn đoán đa thuật toán: Bảng 66 (3 tỷ số khí), Duval Triangle 1, 4, 5, và Bảng 63 (tổng hàm lượng khí TDGC).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WIREFRAME 3: OIL TESTS -->
+      <div class="wf-card">
+        <div class="wf-header">
+          <h3>Tab Lý-Hóa dầu (#tab-dau)</h3>
+          <span class="badge badge-primary">Thí nghiệm Dầu</span>
+        </div>
+        <div class="wf-body">
+          <div class="mock-screen">
+            <div class="mock-bar">
+              <span class="mock-btn">Dầu MBA</span>
+              <span class="mock-btn ghost">Dầu OLTC</span>
+              <span class="mock-btn ghost">TI 3 pha</span>
+              <span class="mock-btn ghost">TI/TU 1 pha</span>
+            </div>
+            <div class="mock-input">Cấp điện áp: 220 kV | Trạng thái: Đang vận hành</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0;">
+              <div class="mock-input">Điện áp chọc thủng (kV): 62.5</div>
+              <div class="mock-input">Độ ẩm (ppm): 14.2</div>
+              <div class="mock-input">tgδ ở 90°C (%): 0.45</div>
+              <div class="mock-input">Tạp chất cơ học: Không có</div>
+            </div>
+            <div class="mock-btn" style="margin-top: 6px;">Đánh giá & Lưu chỉ tiêu dầu</div>
+          </div>
+          <ul class="wf-features">
+            <li>Đánh giá theo QĐ 1901 (Bảng 54, 55, 58) kết hợp tiêu chuẩn mới nhất **IEC 60422:2024** (Bảng 5 Category A/B/C & Bảng 7 Category D/E).</li>
+            <li>Hỗ trợ phân hệ nhập biên bản gộp 3 pha A, B, C cho biến dòng điện (TI).</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WIREFRAME 4: ALERTS DASHBOARD -->
+      <div class="wf-card">
+        <div class="wf-header">
+          <h3>Tab Cảnh báo (#tab-canhbao)</h3>
+          <span class="badge badge-warning">Giám sát Bất thường</span>
+        </div>
+        <div class="wf-body">
+          <div class="mock-screen">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 8px;">
+              <div style="background: #1e293b; padding: 4px; border-radius: 4px; text-align: center;">Tổng: <strong>142</strong></div>
+              <div style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px; border-radius: 4px; text-align: center;">Tốt: <strong>135</strong></div>
+              <div style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 4px; border-radius: 4px; text-align: center;">C/Báo: <strong>5</strong></div>
+              <div style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 4px; border-radius: 4px; text-align: center;">B/Động: <strong>2</strong></div>
+            </div>
+            <div class="mock-input">Lọc theo trạm: [ Tất cả các trạm ▼ ]</div>
+            <div style="background: #1e293b; border-radius: 4px; padding: 6px; font-size: 10px; margin-top: 6px;">
+              <div style="display: flex; justify-content: space-between; color: #ef4444; font-weight: bold;">
+                <span>TBA 220kV Chư Sê — MBA AT2</span>
+                <span>BÁO ĐỘNG</span>
+              </div>
+              <div style="color: #94a3b8;">C2H2 = 38 ppm (Vượt ngưỡng 20 ppm Bảng 64). Hồ quang điện năng lượng cao.</div>
+            </div>
+          </div>
+          <ul class="wf-features">
+            <li>Tự động tổng hợp từ toàn bộ lịch sử đo khí và dầu.</li>
+            <li>Cảnh báo vượt ngưỡng tuyệt đối B64/B12 và vượt tốc độ sinh khí năm B65.</li>
+            <li>Nút "Xuất Excel" kết xuất báo cáo nhanh danh sách thiết bị cần theo dõi.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WIREFRAME 5: HISTORY & AUDIT TRAIL -->
+      <div class="wf-card">
+        <div class="wf-header">
+          <h3>Tab Lịch sử đo (#tab-lichsu)</h3>
+          <span class="badge badge-primary">Dữ liệu & Kiểm toán</span>
+        </div>
+        <div class="wf-body">
+          <div class="mock-screen">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 6px;">
+              <div class="mock-input">Trạm: Pleiku 2 [▼]</div>
+              <div class="mock-input">Thiết bị: AT1 [▼]</div>
+            </div>
+            <div style="background: #1e293b; border-radius: 4px; padding: 6px; font-size: 10px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 4px; margin-bottom: 4px;">
+                <span><strong>Lần 4</strong> (15/10/2026)</span>
+                <span style="color: #38bdf8;">✎ 2 lần sửa</span>
+                <span class="badge badge-success">Đạt</span>
+              </div>
+              <div style="color: #94a3b8;">Người tạo: ksthinghiem@ptc.vn | Sửa cuối: admin@ptc.vn</div>
+            </div>
+            <div style="margin-top: 8px; display: flex; gap: 6px;">
+              <span class="mock-btn ghost">So sánh tốc độ tăng khí</span>
+              <span class="mock-btn ghost">Sắp xếp lại Lần đo</span>
+            </div>
+          </div>
+          <ul class="wf-features">
+            <li>Lưu vết chỉnh sửa số liệu độc lập: tô đỏ cảnh báo và hiển thị lịch sử thay đổi qua tooltip.</li>
+            <li>Công cụ so sánh trực tiếp tốc độ gia tăng khí giữa 2 lần đo bất kỳ.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- WIREFRAME 6: TRENDS & FORECASTING -->
+      <div class="wf-card">
+        <div class="wf-header">
+          <h3>Tab Xu hướng (#tab-xuhuong)</h3>
+          <span class="badge badge-primary">Biểu đồ & Dự báo</span>
+        </div>
+        <div class="wf-body">
+          <div class="mock-screen">
+            <div class="mock-input">Chọn khí vẽ: [✔ H2] [✔ CH4] [✔ C2H2] [✔ TCG]</div>
+            <div style="height: 80px; background: #1e293b; border-radius: 4px; display: flex; align-items: flex-end; padding: 8px; gap: 8px; justify-content: space-around;">
+              <div style="height: 30%; width: 12px; background: #38bdf8;"></div>
+              <div style="height: 45%; width: 12px; background: #38bdf8;"></div>
+              <div style="height: 60%; width: 12px; background: #38bdf8;"></div>
+              <div style="height: 75%; width: 12px; background: #f59e0b; border-style: dashed;"></div>
+            </div>
+            <div style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
+              <span class="mock-input" style="flex: 1;">Dự báo ngoại suy: 2 năm</span>
+              <span class="mock-btn ghost">Cập nhật</span>
+            </div>
+          </div>
+          <ul class="wf-features">
+            <li>Thư viện Chart.js hiển thị động diễn biến hàm lượng khí theo thời gian.</li>
+            <li>Mô hình ngoại suy tuyến tính dự báo thời điểm vượt ngưỡng để lên kế hoạch bảo dưỡng.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- VIEW 3: ARCHITECTURE & DATA MATRIX -->
+  <section id="view-matrix" class="view-panel">
+    <div class="table-container">
+      <table class="arch-table">
+        <thead>
+          <tr>
+            <th>Màn hình / Khối Chức năng</th>
+            <th>Bộ chọn DOM (Selector)</th>
+            <th>Module Logic & UI Phụ trách</th>
+            <th>Quyền hạn (RBAC)</th>
+            <th>Nguồn dữ liệu & Tương tác Backend</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Màn hình Xác thực</strong><br><span style="font-size:11px; color:#94a3b8;">Đăng nhập / Đăng ký / Google Auth</span></td>
+            <td><span class="code-tag">#authOverlay</span><br><span class="code-tag">#btnAuthLogin</span></td>
+            <td><span class="code-tag">ui/ui-auth.js</span><br><span class="code-tag">storage/storage-auth.js</span></td>
+            <td>Công khai (Tất cả)</td>
+            <td>Google Identity Services / Apps Script Auth / Token <span class="code-tag">dga_auth_v1</span></td>
+          </tr>
+          <tr>
+            <td><strong>Khí hòa tan (DGA Core)</strong><br><span style="font-size:11px; color:#94a3b8;">Nhập 7 khí, chẩn đoán, Duval</span></td>
+            <td><span class="code-tag">#tab-nhap</span><br><span class="code-tag">#btnAnalyze</span></td>
+            <td><span class="code-tag">ui/ui-dga.js</span><br><span class="code-tag">logic/dga-logic-gas.js</span></td>
+            <td>Kỹ sư & Quản trị</td>
+            <td>Bảng <span class="code-tag">measurements</span> (Google Sheet / Supabase / localStorage)</td>
+          </tr>
+          <tr>
+            <td><strong>Khung đối chiếu BBTN</strong><br><span style="font-size:11px; color:#94a3b8;">Xem trước PDF song song cạnh bảng số liệu</span></td>
+            <td><span class="code-tag">#bbtnPreviewCol</span><br><span class="code-tag">#bbtnPreviewFrame</span></td>
+            <td><span class="code-tag">ui/ui-dga.js</span><br><span class="code-tag">bbtn/bbtn-import.js</span></td>
+            <td>Kỹ sư & Quản trị</td>
+            <td>Blob URL bộ nhớ tạm / File attachment / Google Drive viewer fallback</td>
+          </tr>
+          <tr>
+            <td><strong>Lý-Hóa dầu</strong><br><span style="font-size:11px; color:#94a3b8;">Độ ẩm, BDV, tgδ90, TI 3 pha</span></td>
+            <td><span class="code-tag">#tab-dau</span><br><span class="code-tag">#btnAnalyzeOil</span></td>
+            <td><span class="code-tag">ui/ui-oil.js</span><br><span class="code-tag">ui/ui-ti-oil-3pha.js</span></td>
+            <td>Kỹ sư & Quản trị</td>
+            <td>Bảng <span class="code-tag">oil_tests</span>, <span class="code-tag">oltc_oil_tests</span></td>
+          </tr>
+          <tr>
+            <td><strong>Cảnh báo Thiết bị</strong><br><span style="font-size:11px; color:#94a3b8;">Thống kê KPI, danh sách báo động</span></td>
+            <td><span class="code-tag">#tab-canhbao</span><br><span class="code-tag">#btnExportAlertsExcel</span></td>
+            <td><span class="code-tag">ui/ui-alerts.js</span></td>
+            <td>Xem (Viewer) & Kỹ sư</td>
+            <td>Tính toán trực tiếp tại client từ tổng hợp dữ liệu lịch sử DGA và Dầu</td>
+          </tr>
+          <tr>
+            <td><strong>Lịch sử đo & So sánh</strong><br><span style="font-size:11px; color:#94a3b8;">Tìm kiếm, tính tốc độ sinh khí, diff log</span></td>
+            <td><span class="code-tag">#tab-lichsu</span><br><span class="code-tag">#btnCompareRate</span></td>
+            <td><span class="code-tag">ui/ui-history.js</span></td>
+            <td>Viewer (Xem) / Sửa bản ghi của mình / Admin xóa</td>
+            <td>Đọc từ bộ nhớ đệm <span class="code-tag">Storage.listMeasurements()</span></td>
+          </tr>
+          <tr>
+            <td><strong>Xu hướng & Dự báo</strong><br><span style="font-size:11px; color:#94a3b8;">Đồ thị động Chart.js, hồi quy tuyến tính</span></td>
+            <td><span class="code-tag">#tab-xuhuong</span><br><span class="code-tag">#trendChart</span></td>
+            <td><span class="code-tag">ui/ui-trend.js</span><br><span class="code-tag">logic/dga-logic-forecast.js</span></td>
+            <td>Kỹ sư & Quản trị</td>
+            <td>Chuỗi dữ liệu thời gian của thiết bị đã chọn trong lịch sử</td>
+          </tr>
+          <tr>
+            <td><strong>Quản trị & Cấu hình Quy định</strong><br><span style="font-size:11px; color:#94a3b8;">Quản lý User, Tiêu chuẩn NSX, 13 bảng</span></td>
+            <td><span class="code-tag">#tab-quantri</span><br><span class="code-tag">#navQuanTri</span></td>
+            <td><span class="code-tag">ui/ui-admin.js</span><br><span class="code-tag">ui/ui-standards.js</span></td>
+            <td>Chỉ Quản trị viên (Admin)</td>
+            <td>Bảng <span class="code-tag">users</span>, <span class="code-tag">standards</span>, <span class="code-tag">regulation_config</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Node Detail Modal -->
+  <div id="nodeModal" class="modal-overlay" onclick="closeNodeModal(event)">
+    <div class="modal-dialog" onclick="event.stopPropagation()">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 id="modalNodeTitle" style="color: #38bdf8;">Thông tin Màn hình</h3>
+        <button onclick="closeNodeModal()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✕</button>
+      </div>
+      <div id="modalNodeContent" style="font-size: 13px; color: #cbd5e1; line-height: 1.6;"></div>
+    </div>
+  </div>
+
+  <script>
+    function switchView(viewName) {
+      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+      if (viewName === 'flow') {
+        document.querySelectorAll('.nav-tab-btn')[0].classList.add('active');
+        document.getElementById('view-flow').classList.add('active');
+      } else if (viewName === 'wireframes') {
+        document.querySelectorAll('.nav-tab-btn')[1].classList.add('active');
+        document.getElementById('view-wireframes').classList.add('active');
+      } else if (viewName === 'matrix') {
+        document.querySelectorAll('.nav-tab-btn')[2].classList.add('active');
+        document.getElementById('view-matrix').classList.add('active');
+      }
+    }
+
+    const nodeData = {
+      auth: {
+        title: "1. Màn hình Xác thực (#authOverlay)",
+        content: "<p><strong>Chức năng:</strong> Chặn tương tác trước khi người dùng có phiên làm việc hợp lệ. Hỗ trợ xác thực qua Google Sign-In hoặc Email/Mật khẩu lưu trong Google Sheets / Supabase.</p><p style='margin-top:8px;'><strong>Cơ chế bảo mật:</strong> Token phiên được lưu trong <code>localStorage['dga_auth_v1']</code>. Tài khoản bị tạm khóa 15 phút nếu nhập sai quá 5 lần. Buộc đổi mật khẩu với tài khoản có cờ <code>mustChangePassword</code>.</p>"
+      },
+      shell: {
+        title: "Khung Giao diện Chính (Shell Architecture)",
+        content: "<p><strong>Cấu trúc:</strong> Chia làm 2 vùng điều hướng chính: <strong>Thanh bên (Sidebar)</strong> chứa 7 tab tác nghiệp thường xuyên (Hướng dẫn, Khí hòa tan, Lý-Hóa dầu, Cảnh báo, Lịch sử, Xu hướng, Quy trình) và <strong>Header Actions</strong> chứa các nút chức năng quản trị, phản hồi, giới thiệu, đổi theme sáng/tối.</p>"
+      },
+      tab_nhap: {
+        title: "Tab Khí hòa tan (#tab-nhap) — Core DGA",
+        content: "<p><strong>Chức năng:</strong> Nhập số liệu 7 chất khí hòa tan (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) cùng các khí bổ sung N2, O2. Hỗ trợ kéo thả BBTN PDF hoặc biển nhãn ảnh để tự động trích xuất số liệu.</p><p style='margin-top:8px;'><strong>Đánh giá đa tiêu chuẩn:</strong> Đối chiếu đồng thời Bảng 64 (MBA), Bảng 12 (TI/TU), Bảng 66 (3 tỷ số khí), Bảng 63 (TDGC) và Tam giác Duval 1, 4, 5.</p>"
+      },
+      split_preview: {
+        title: "Khung Xem trước BBTN Đối chiếu Song song (#bbtnPreviewCol)",
+        content: "<p><strong>Điểm nhấn UX:</strong> Khi người dùng nạp file PDF hoặc xem lại bản ghi cũ có đính kèm BBTN, khung preview sẽ tự động mở ra bên cạnh form nhập liệu. Bố cục 2 cột cho phép kỹ sư vừa nhìn biên bản gốc vừa kiểm tra số liệu đã trích xuất trước khi bấm 'Phân tích & Lưu'.</p>"
+      },
+      export_docx: {
+        title: "Xuất Báo cáo Kỹ thuật & Biên bản Word (.docx)",
+        content: "<p><strong>Định dạng chuẩn:</strong> Xuất file .docx bằng thư viện <code>docxtemplater</code> chạy thuần túy tại client. Hỗ trợ 2 mẫu: Biên bản thí nghiệm chuẩn PTC3/BM.15 và Báo cáo phân tích kỹ thuật sự cố thiết bị.</p>"
+      },
+      duval: {
+        title: "Tam giác Duval (Duval Triangle 1, 4, 5)",
+        content: "<p><strong>Trực quan hóa:</strong> Dựng hình tam giác đều SVG thuần túy (không qua thư viện nặng). Tự động tính tỷ lệ % 3 khí chuẩn hóa và chấm điểm tọa độ kèm vùng lỗi (PD, T1, T2, T3, D1, D2, DT).</p>"
+      },
+      tab_dau: {
+        title: "Tab Lý-Hóa dầu (#tab-dau)",
+        content: "<p><strong>4 Phân hệ:</strong><br>1. Dầu MBA chính (BDV, Độ ẩm, tgδ90, tgδ20 theo IEC 60422:2024 Category A/B/C).<br>2. Dầu bộ đổi nấc có tải OLTC (Bảng 49 QĐ 1901).<br>3. BBTN dầu 3 pha A, B, C gộp chung.<br>4. Dầu biến dòng điện TI/TU 1 pha.</p>"
+      },
+      tab_canhbao: {
+        title: "Tab Cảnh báo (#tab-canhbao)",
+        content: "<p><strong>Giám sát tình trạng:</strong> Hiển thị 4 thẻ KPI thống kê tổng quan. Bảng danh sách cảnh báo gom cụm các thiết bị có nguy cơ sự cố (vượt nồng độ tuyệt đối hoặc vượt tốc độ sinh khí năm). Cho phép xuất báo cáo Excel.</p>"
+      },
+      tab_lichsu: {
+        title: "Tab Lịch sử đo (#tab-lichsu)",
+        content: "<p><strong>Quản lý & Lưu vết:</strong> Cho phép lọc theo trạm biến áp, thiết bị. Tích hợp tính năng so sánh tốc độ gia tăng giữa 2 lần đo bất kỳ. Huy hiệu lưu vết (✎ N lần sửa) hiển thị chi tiết lịch sử sửa số liệu khí.</p>"
+      },
+      history_cmp: {
+        title: "So sánh Tốc độ Sinh khí Lịch sử",
+        content: "<p><strong>Căn cứ:</strong> Bảng 65 QĐ 1901/EVNNPT. Cho phép kỹ sư chọn 2 mốc thời gian bất kỳ của cùng một thiết bị để tính tốc độ tăng khí quy đổi theo năm (ppm/năm) và cảnh báo khi vượt ngưỡng gia tăng điển hình.</p>"
+      },
+      admin_details: {
+        title: "Quản trị & Cấu hình Quy định (#tab-quantri)",
+        content: "<p><strong>Chỉ dành cho Admin:</strong><br>• Quản lý người dùng: Phân quyền Admin / Kỹ sư / Viewer, kích hoạt/vô hiệu hóa, cấp mật khẩu tạm.<br>• Tiêu chuẩn NSX: Cấu hình ngưỡng Normal/Reject riêng theo từng hãng sản xuất.<br>• 13 Bảng Quy định: Cho phép tùy biến các ngưỡng số liệu của QĐ1901 và IEC 60599/60422.<br>• Bản sao Supabase: Quản lý kiến trúc lưu trữ kép (Dual Database).</p>"
+      },
+      tab_huongdan: {
+        title: "Tab Hướng dẫn (#tab-huongdan)",
+        content: "<p><strong>Cẩm nang điện tử:</strong> Tích hợp toàn bộ nội dung tài liệu Hướng dẫn sử dụng (User Manual) và Knowledge Base dưới dạng 19 khối accordion có thể mở/thu gọn tương tác.</p>"
+      },
+      header: {
+        title: "Menu Bar & Header Actions",
+        content: "<p><strong>Tiện ích toàn cục:</strong><br>• Nút Quản trị (chỉ hiện với Admin).<br>• Nút Giới thiệu (về phiên bản, bản quyền, căn cứ tiêu chuẩn).<br>• Nút Góp ý / Phản hồi (gửi ý kiến đóng góp trực tiếp vào database).<br>• Nút Chuyển đổi Theme Sáng/Tối (Dark/Light Mode).</p>"
+      }
+    };
+
+    function showNodeModal(nodeKey) {
+      const data = nodeData[nodeKey];
+      if (!data) return;
+      document.getElementById('modalNodeTitle').innerText = data.title;
+      document.getElementById('modalNodeContent').innerHTML = data.content;
+      document.getElementById('nodeModal').classList.add('active');
+    }
+
+    function closeNodeModal() {
+      document.getElementById('nodeModal').classList.remove('active');
+    }
+  </script>
+</body>
+</html>

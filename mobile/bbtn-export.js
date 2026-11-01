@@ -71,10 +71,15 @@ function buildBbtnExportData(a) {
     const key = BBTN_GAS_TAG_KEYS[gas];
     const ev = evalByGas[gas];
     const rate = rateByGas[gas];
-    data[key + "_kq"] = ev ? bbtnFormatNum(ev.value) : "";
+    const isKph = Boolean(
+      (ev && ev.isKph) ||
+      (a.kphGases && (a.kphGases[gas] || (Array.isArray(a.kphGases) && a.kphGases.includes(gas)))) ||
+      (m[gas] === "KPH" || m[gas.toLowerCase()] === "KPH")
+    );
+    data[key + "_kq"] = isKph ? "KPH" : ev ? bbtnFormatNum(ev.value) : "";
     data[key + "_tc"] = ev && ev.limit !== null && ev.limit !== undefined ? "< " + bbtnFormatNum(ev.limit) : "";
     data[key + "_toc"] =
-      rate && rate.ratePerMonth !== null && rate.ratePerMonth !== undefined ? bbtnFormatNum(rate.ratePerMonth) + "%" : "";
+      !isKph && rate && rate.ratePerMonth !== null && rate.ratePerMonth !== undefined ? bbtnFormatNum(rate.ratePerMonth) + "%" : "";
     data[key + "_dg"] = ev ? (ev.verdict === "Không có ngưỡng" ? "—" : ev.verdict) : "";
   });
 
@@ -118,4 +123,6 @@ async function exportBbtnDocx(analysis) {
   return fileName;
 }
 
-window.BbtnExport = { exportBbtnDocx, buildBbtnExportData };
+const BbtnExport = { exportBbtnDocx, buildBbtnExportData, bbtnBuildKetLuan, bbtnFormatDateVN, bbtnFormatNum };
+if (typeof window !== "undefined") window.BbtnExport = BbtnExport;
+if (typeof module !== "undefined" && module.exports) module.exports = BbtnExport;

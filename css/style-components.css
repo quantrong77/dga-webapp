@@ -22,7 +22,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px 18px;
+  gap: 16px 20px;
 }
 .grid.gases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .field-wide { grid-column: 1 / -1; }
@@ -36,11 +36,45 @@
 label.field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gray-600);
+  gap: 6px;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  letter-spacing: 0.01em;
 }
+
+/* Chuẩn hóa các ô nhập liệu (Input, Select, Textarea) theo thang Refactoring UI */
+input, select, textarea {
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  line-height: var(--leading-normal);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--blue-700);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 3px rgba(44, 63, 184, 0.18);
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-tertiary);
+  font-weight: var(--font-normal);
+}
+
+input:disabled, select:disabled, textarea:disabled {
+  background: var(--surface-sunken);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
 
 /* Nút icon "i" nhỏ cạnh nhãn 1 trường (vd. "Điểm lấy mẫu OLTC") để mở khung giải
    thích thêm bên dưới — xem .info-popover và setupInfoPopovers() ở app-core.js. */
@@ -100,14 +134,16 @@ label.field {
 .field-icon-toggle-btn .icon-svg { width: 15px; height: 15px; margin-right: 0; }
 .info-popover {
   position: relative;
-  padding: 10px 32px 10px 12px;
-  background: var(--blue-100);
-  border: 1px solid var(--blue-700);
-  border-radius: var(--radius);
-  font-size: 12.5px;
-  font-weight: 400;
-  line-height: 1.55;
-  color: var(--gray-900);
+  padding: 12px 34px 12px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--blue-700);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-2);
+  font-size: var(--text-xs);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-relaxed);
+  color: var(--text-primary);
 }
 .info-popover.hidden { display: none; }
 .info-popover p { margin: 0 0 8px; }
@@ -134,13 +170,15 @@ label.field {
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 2px;
-  padding: 7px 10px;
-  background: var(--blue-100);
-  border-radius: 6px;
-  font-size: 12.5px;
-  font-weight: 500;
-  color: var(--gray-900);
+  margin-top: 4px;
+  padding: 8px 12px;
+  background: var(--blue-50);
+  border: 1px solid color-mix(in srgb, var(--blue-700) 25%, transparent);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-1);
 }
 .bbtn-current .icon-svg { flex: none; color: var(--blue-700); }
 .bbtn-current #bbtnCurrentName {
@@ -158,13 +196,13 @@ label.field {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border: 1.5px dashed var(--gray-300);
-  border-radius: var(--radius);
-  background: var(--gray-50);
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 .file-dropzone:hover { border-color: var(--blue-700); }
 .file-dropzone.dragover {
@@ -200,6 +238,42 @@ label.field {
   padding: 0;
 }
 
+/* Ô kéo-thả file BBTN đơn (#bbtnDropzone) và hàng loạt (#batchDropzone) — chiều cao tăng gấp 1.5 lần (từ ~40px lên 60px) và focus nổi bật */
+#bbtnDropzone.file-dropzone,
+#batchDropzone.file-dropzone {
+  min-height: 60px;
+  padding: 16px 20px;
+  gap: 14px;
+  border-width: 2px;
+  border-color: var(--blue-700);
+  background: var(--blue-50);
+  box-shadow: var(--shadow-1);
+}
+#bbtnDropzone.file-dropzone .icon-svg,
+#batchDropzone.file-dropzone .icon-svg {
+  width: 28px;
+  height: 28px;
+  color: var(--blue-700);
+}
+#bbtnDropzone.file-dropzone .file-dropzone-text,
+#batchDropzone.file-dropzone .file-dropzone-text {
+  font-size: 13.5px;
+  color: var(--gray-700);
+}
+#bbtnDropzone.file-dropzone:focus,
+#bbtnDropzone.file-dropzone:focus-within,
+#bbtnDropzone.file-dropzone.is-focused,
+#batchDropzone.file-dropzone:focus,
+#batchDropzone.file-dropzone:focus-within,
+#batchDropzone.file-dropzone.is-focused {
+  outline: 2px solid var(--blue-700);
+  outline-offset: 2px;
+  border-color: var(--blue-700);
+  border-style: solid;
+  box-shadow: 0 0 0 4px rgba(44, 63, 184, 0.22);
+  background: var(--blue-100);
+}
+
 /* Chỉ báo xoay "Đang lưu..." ở giữa cạnh trên màn hình (ui/ui-busy.js), nổi trên cả modal và toast. */
 .busy-indicator {
   position: fixed;
@@ -230,3 +304,122 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 .phase-dot.a { background: var(--phase-a); }
 .phase-dot.b { background: var(--phase-b); }
 .phase-dot.c { background: var(--phase-c); }
+
+/* ===================== KHUNG ĐỐI CHIẾU BBTN (SPLIT VIEW) =====================
+   Khi người dùng kéo-thả hoặc chọn file BBTN (PDF), giao diện tự động chia đôi:
+   cột trái là form nhập liệu, cột phải hiển thị nội dung file PDF song song để
+   người dùng đối chiếu số liệu trích xuất/gõ tay với văn bản gốc trước khi lưu. */
+.dga-input-split-layout {
+  display: block;
+  width: 100%;
+}
+.dga-input-split-layout.has-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.dga-input-main-col {
+  min-width: 0;
+}
+.bbtn-preview-col {
+  min-width: 0;
+  position: sticky;
+  top: 76px;
+  z-index: 15;
+}
+.bbtn-preview-col.hidden {
+  display: none !important;
+}
+.bbtn-preview-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md, 0 4px 16px rgba(0, 0, 0, 0.08));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: calc(100vh - 96px);
+  min-height: 560px;
+  max-height: 920px;
+}
+.bbtn-preview-header {
+  padding: 8px 12px;
+  background: var(--surface-sunken, #f1f5f9);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bbtn-preview-title {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--blue-900, #1b2470);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.bbtn-preview-filename {
+  font-size: 12px;
+  color: var(--text-secondary, #475569);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+  font-family: monospace;
+}
+.bbtn-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+}
+.bbtn-preview-actions .btn {
+  padding: 3px 8px;
+  font-size: 11.5px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bbtn-preview-body {
+  flex: 1;
+  position: relative;
+  background: #525659;
+  overflow: hidden;
+  min-height: 420px;
+}
+.bbtn-preview-frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.bbtn-preview-footer {
+  padding: 8px 12px;
+  background: var(--surface-sunken, #f1f5f9);
+  border-top: 1px solid var(--border);
+  font-size: 11.5px;
+  color: var(--text-secondary, #475569);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.4;
+}
+@media (max-width: 1100px) {
+  .dga-input-split-layout.has-preview {
+    grid-template-columns: 1fr;
+  }
+  .bbtn-preview-col {
+    position: static;
+    max-height: none;
+    margin-top: 16px;
+  }
+  .bbtn-preview-panel {
+    height: 70vh;
+    min-height: 460px;
+  }
+}

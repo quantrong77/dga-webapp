@@ -26,6 +26,8 @@ let _removeBbtnOnSave = false;
 // onExportBbtn() bên dưới và bbtn-export.js. null khi chưa phân tích lần nào trong
 // phiên làm việc này (bấm "Xuất BBTN" lúc đó sẽ báo yêu cầu phân tích trước).
 let _lastAnalysis = null;
+// _currentBbtnBlobUrl: URL blob của file PDF BBTN đang hiển thị trong khung đối chiếu song song
+let _currentBbtnBlobUrl = null;
 
 // f_kieumay..f_hientrangvanhanh: 8 trường "thông số kỹ thuật thiết bị" (nameplate) —
 // không dùng để tính toán DGA, chỉ lưu kèm bản ghi để điền vào Báo cáo phân tích kỹ
@@ -42,6 +44,7 @@ const TECH_SPEC_FIELD_IDS = [
 const BBTN_EXTRA_FIELD_IDS = ["f_ngaythinghiem", "f_lydothinghiem", "f_nhietdo", "f_doam"];
 
 function clearForm() {
+  hideBbtnPreview();
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
   TECH_SPEC_FIELD_IDS.forEach((id) => ($(id).value = ""));
   BBTN_EXTRA_FIELD_IDS.forEach((id) => ($(id).value = ""));
@@ -66,6 +69,7 @@ function clearForm() {
 }
 
 function resetMeasurementEditState() {
+  hideBbtnPreview();
   _editingMeasurementId = null;
   _editingOriginalRecord = null;
   _editingMeasurementAttachment = null;
@@ -111,6 +115,171 @@ function updateLanDoSuggestion() {
  *  rồi tự bắn "change", xem setupBbtnDropzone() ở app-core.js) — xem onBbtnFileSelected()
  *  bên dưới. Gọi lại mỗi khi $("f_bbtn").value bị xóa (clearForm(),
  *  resetMeasurementEditState()) để nhãn quay về chữ hướng dẫn mặc định. */
+
+/** Hiển thị khung xem trước BBTN (PDF) bên cạnh vùng số liệu để người dùng đối chiếu */
+function showBbtnPreview(fileOrUrl, fileName, badgeText, originalUrl) {
+  const col = $("bbtnPreviewCol");
+  const layout = $("dgaInputSplitLayout");
+  const frame = $("bbtnPreviewFrame");
+  const nameEl = $("bbtnPreviewFileName");
+  const badgeEl = $("bbtnPreviewBadge");
+  const toggleBtn = $("btnToggleBbtnPreview");
+  const toggleBtnText = $("btnToggleBbtnPreviewText");
+  if (!col || !layout || !frame) return;
+
+  if (_currentBbtnBlobUrl) {
+    try { URL.revokeObjectURL(_currentBbtnBlobUrl); } catch (_) {}
+    _currentBbtnBlobUrl = null;
+  }
+
+  let srcUrl = "";
+  let name = fileName || "";
+
+  if (fileOrUrl instanceof File || fileOrUrl instanceof Blob) {
+    name = name || fileOrUrl.name || "Biên bản thí nghiệm.pdf";
+    try {
+      _currentBbtnBlobUrl = URL.createObjectURL(fileOrUrl);
+      srcUrl = _currentBbtnBlobUrl;
+    } catch (e) {
+      console.warn("Không tạo được blob URL cho BBTN:", e);
+    }
+  } else if (typeof fileOrUrl === "string" && fileOrUrl) {
+    srcUrl = fileOrUrl;
+    name = name || "Biên bản thí nghiệm.pdf";
+  }
+
+  if (srcUrl) {
+    frame.src = srcUrl;
+    if (originalUrl) {
+      frame.dataset.originalUrl = originalUrl;
+    } else if (typeof fileOrUrl === "string" && fileOrUrl && !fileOrUrl.startsWith("blob:")) {
+      frame.dataset.originalUrl = fileOrUrl;
+    } else {
+      delete frame.dataset.originalUrl;
+    }
+    if (nameEl) {
+      nameEl.textContent = name;
+      nameEl.title = name;
+    }
+    if (badgeEl && badgeText) badgeEl.textContent = badgeText;
+    layout.classList.add("has-preview");
+    col.classList.remove("hidden");
+    if (toggleBtn) {
+      toggleBtn.classList.remove("hidden");
+      if (toggleBtnText) toggleBtnText.textContent = "Ẩn BBTN đối chiếu";
+    }
+  }
+}
+
+/** Ẩn khung xem trước BBTN */
+function hideBbtnPreview() {
+  const col = $("bbtnPreviewCol");
+  const layout = $("dgaInputSplitLayout");
+  const frame = $("bbtnPreviewFrame");
+  const toggleBtn = $("btnToggleBbtnPreview");
+  const toggleBtnText = $("btnToggleBbtnPreviewText");
+  if (col) col.classList.add("hidden");
+  if (layout) layout.classList.remove("has-preview");
+  if (frame) {
+    frame.src = "about:blank";
+    delete frame.dataset.originalUrl;
+  }
+  if (_currentBbtnBlobUrl) {
+    try { URL.revokeObjectURL(_currentBbtnBlobUrl); } catch (_) {}
+    _currentBbtnBlobUrl = null;
+  }
+  const hasFile = ($("f_bbtn") && $("f_bbtn").files && $("f_bbtn").files[0]) ||
+                  (_editingMeasurementAttachment && _editingMeasurementAttachment.bbtn_url);
+  if (toggleBtn) {
+    if (hasFile) {
+      toggleBtn.classList.remove("hidden");
+      if (toggleBtnText) toggleBtnText.textContent = "Hiện BBTN đối chiếu";
+    } else {
+      toggleBtn.classList.add("hidden");
+    }
+  }
+}
+
+/** Chuyển đổi ẩn/hiện khung xem trước BBTN */
+function toggleBbtnPreview() {
+  const col = $("bbtnPreviewCol");
+  if (!col) return;
+  if (col.classList.contains("hidden")) {
+    const file = $("f_bbtn") && $("f_bbtn").files && $("f_bbtn").files[0];
+    if (file) {
+      showBbtnPreview(file, file.name, "Đã nạp file");
+    } else if (_editingMeasurementAttachment && _editingMeasurementAttachment.bbtn_url) {
+      viewBbtnInPreview(_editingMeasurementAttachment);
+    }
+  } else {
+    hideBbtnPreview();
+  }
+}
+
+/** Mở BBTN ở khung đối chiếu từ attachment */
+async function viewBbtnInPreview(att) {
+  if (!att || !att.bbtn_url) return;
+  const url = String(att.bbtn_url);
+  const name = att.bbtn_name || "Biên bản thí nghiệm.pdf";
+  if (url.startsWith("local:")) {
+    const measurementId = url.slice("local:".length);
+    const local = Storage.getLocalAttachment(measurementId);
+    if (!local) return;
+    try {
+      const res = await fetch(local.dataUrl);
+      const blob = await res.blob();
+      showBbtnPreview(blob, name, "BBTN đã lưu");
+    } catch (e) {
+      console.warn("Không mở được local attachment:", e);
+    }
+    return;
+  }
+  const safe = safeHttpUrl(url);
+  if (!safe) return;
+
+  // Thử tải qua fetch nếu có CORS (ví dụ Supabase storage public URL)
+  try {
+    const res = await fetch(safe, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      showBbtnPreview(blob, name, "BBTN đã lưu", safe);
+      return;
+    }
+  } catch (_) {
+    // Không thể fetch trực tiếp (CORS hoặc CSP connect-src)
+  }
+
+  // Nếu không thể nhúng (do CSP frame-src / X-Frame-Options của Google Drive / cloud),
+  // hiển thị thẻ hướng dẫn trong iframe bằng HTML blob và cung cấp nút mở ở tab mới an toàn
+  const safeName = typeof escapeHtml === "function" ? escapeHtml(name) : name;
+  const safeUrl = typeof escapeHtml === "function" ? escapeHtml(safe) : safe;
+  const htmlDoc = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; margin: 0; background: #f8fafc; color: #334155; text-align: center; padding: 24px; box-sizing: border-box; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px 20px; max-width: 380px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); }
+    .icon { font-size: 32px; margin-bottom: 10px; }
+    h3 { font-size: 14px; margin: 0 0 8px 0; color: #0f172a; word-break: break-all; }
+    p { font-size: 12px; color: #64748b; line-height: 1.5; margin: 0 0 16px 0; }
+    a.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: 600; }
+    a.btn:hover { background: #0369a1; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📄</div>
+    <h3>${safeName}</h3>
+    <p>Biên bản này được lưu trữ trên dịch vụ đám mây từ xa. Vui lòng bấm để mở xem toàn màn hình ở tab mới:</p>
+    <a class="btn" href="${safeUrl}" target="_blank" rel="noopener">Mở xem Biên bản ở tab mới ↗</a>
+  </div>
+</body>
+</html>`;
+  const blob = new Blob([htmlDoc], { type: "text/html" });
+  showBbtnPreview(blob, name, "Link đám mây", safe);
+}
+
 function renderBbtnDropzoneLabel() {
   const zone = $("bbtnDropzone");
   const label = $("bbtnDropzoneText");
@@ -185,8 +354,10 @@ async function onBbtnFileSelected(e) {
   const note = $("bbtnImportNote");
   if (!file) {
     note.classList.add("hidden");
+    hideBbtnPreview();
     return;
   }
+  showBbtnPreview(file, file.name, "Đang đọc BBTN...");
   if (!window.BbtnImport) {
     note.textContent = "Không tự động đọc được BBTN (thư viện đọc PDF chưa tải xong) — vui lòng nhập tay các trường bên dưới.";
     note.classList.remove("hidden");
@@ -254,6 +425,12 @@ async function onBbtnFileSelected(e) {
     $("f_dienapdm").value = data.dienApDm;
     filled.push("Điện áp định mức");
   }
+  const vClass = data.bang63VoltageClass ||
+    (window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class && window.BbtnImport.mapVoltageToBang63Class(data.dienApDm, data.tram, data.thietbi));
+  if (vClass && $("f_bang63_voltage")) {
+    $("f_bang63_voltage").value = vClass;
+    filled.push(`Cấp điện áp Bảng 63 (${vClass === "500" ? "500 kV" : "110–220 kV"})`);
+  }
   if (data.namSx) {
     $("f_namsx").value = data.namSx;
     filled.push("Năm sản xuất");
@@ -265,6 +442,19 @@ async function onBbtnFileSelected(e) {
   if (data.loaiDau) {
     $("f_loaidau").value = data.loaiDau;
     filled.push("Loại dầu cách điện");
+  }
+  if (data.soCheTao || data.loaiDau || data.dienApDm) {
+    const wrap = $("nameplateFieldsWrap");
+    const btn = $("btnToggleNameplateFields");
+    if (wrap && wrap.classList.contains("hidden")) {
+      wrap.classList.remove("hidden");
+      if (btn) {
+        btn.setAttribute("aria-pressed", "false");
+        btn.title = "Ẩn phần này";
+        const iconUse = btn.querySelector("use");
+        if (iconUse) iconUse.setAttribute("href", "#icon-eye");
+      }
+    }
   }
   if (data.pha) {
     $("f_pha").value = data.pha;
@@ -306,6 +496,7 @@ async function onBbtnFileSelected(e) {
   // dùng gõ tay/chọn combo) — gọi lại thủ công để "Lần đo" cũng được gợi ý đúng theo
   // lịch sử đã lưu, đúng tinh thần của tính năng này (nhập bổ sung lần đo LỊCH SỬ).
   updateLanDoSuggestion();
+  showBbtnPreview(file, file.name, filled.length ? ("Đã trích xuất (" + filled.length + " mục)") : "Đã tải file");
 
   if (!filled.length) {
     note.textContent = "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
@@ -381,7 +572,15 @@ async function onNameplateFileSelected(e) {
   if (data.kieuMay) { $("f_kieumay").value = data.kieuMay; filled.push("Kiểu máy"); }
   if (data.soCheTao) { $("f_sochetao").value = data.soCheTao; filled.push("Số chế tạo"); }
   if (data.namSx) { $("f_namsx").value = data.namSx; filled.push("Năm sản xuất"); }
-  if (data.dienApDm) { $("f_dienapdm").value = data.dienApDm; filled.push("Điện áp định mức"); }
+  if (data.dienApDm) {
+    $("f_dienapdm").value = data.dienApDm;
+    filled.push("Điện áp định mức");
+    const npVClass = window.BbtnImport && window.BbtnImport.mapVoltageToBang63Class && window.BbtnImport.mapVoltageToBang63Class(data.dienApDm, $("f_tram") ? $("f_tram").value : "", $("f_thietbi") ? $("f_thietbi").value : "");
+    if (npVClass && $("f_bang63_voltage")) {
+      $("f_bang63_voltage").value = npVClass;
+      filled.push(`Cấp điện áp Bảng 63 (${npVClass === "500" ? "500 kV" : "110–220 kV"})`);
+    }
+  }
   if (data.loaiDau) { $("f_loaidau").value = data.loaiDau; filled.push("Loại dầu cách điện"); }
   if (data.rawText) {
     const rawLower = data.rawText.toLowerCase();
@@ -420,6 +619,11 @@ function onEditMeasurement(rec) {
   renderBbtnDropzoneLabel();
   $("bbtnImportNote").classList.add("hidden");
   renderBbtnCurrent();
+  if (rec.bbtn_url) {
+    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+  } else {
+    hideBbtnPreview();
+  }
   $("f_tram").value = rec.tram || "";
   $("f_thietbi").value = rec.thiet_bi || "";
   $("f_loai").value = rec.equipment_type || "";
@@ -550,14 +754,47 @@ function drawDuvalPoint(xyMath) {
 // Phân tích & lưu 1 lần đo
 // ---------------------------------------------------------------------
 async function onAnalyze() {
+  const isKphText = (val) => {
+    if (val === null || val === undefined) return false;
+    const s = String(val).trim();
+    return /^(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|D[uư][oớ]i\s*ng[uư][oõ]ng\s*ph[aá]t\s*hi[eệ]n|\bND\b)$/i.test(s);
+  };
+
   const gases = {};
-  DGA.GASES.forEach((g) => (gases[g] = $("g_" + g).value === "" ? 0 : Number($("g_" + g).value)));
-  // N2, O2 (tùy chọn) — KHÔNG thuộc DGA.GASES, giữ null khi để trống (khác 7 khí chính
-  // luôn mặc định 0) vì computeTotalDissolvedGasPercent()/diagnoseAdditionalRatios()
-  // (dga-logic.js) cần phân biệt "chưa nhập" với "đo được 0 ppm" để biết có tính được
-  // tỷ lệ O2/N2 và Tổng hàm lượng khí hòa tan (Bảng 63) hay không.
-  const n2 = $("g_N2").value === "" ? null : Number($("g_N2").value);
-  const o2 = $("g_O2").value === "" ? null : Number($("g_O2").value);
+  const kphGases = {};
+  for (const g of DGA.GASES) {
+    const raw = ($("g_" + g).value || "").trim();
+    if (isKphText(raw)) {
+      gases[g] = 0;
+      kphGases[g] = true;
+    } else if (raw === "") {
+      gases[g] = 0;
+    } else {
+      const n = parseFloat(raw.replace(",", "."));
+      if (!Number.isFinite(n)) {
+        notifyError(`Giá trị khí ${g} không hợp lệ (vui lòng nhập số hoặc "KPH").`);
+        return;
+      }
+      gases[g] = n;
+      if (n === 0) kphGases[g] = true;
+    }
+  }
+
+  const parseExtraGas = (raw, label) => {
+    const s = (raw || "").trim();
+    if (isKphText(s)) return 0;
+    if (s === "") return null;
+    const n = parseFloat(s.replace(",", "."));
+    if (!Number.isFinite(n)) {
+      notifyError(`Giá trị khí ${label} không hợp lệ (vui lòng nhập số hoặc "KPH").`);
+      return null;
+    }
+    return n;
+  };
+  const n2 = parseExtraGas($("g_N2").value, "N2");
+  if (n2 === null && $("g_N2").value.trim() !== "" && !isKphText($("g_N2").value.trim())) return;
+  const o2 = parseExtraGas($("g_O2").value, "O2");
+  if (o2 === null && $("g_O2").value.trim() !== "" && !isKphText($("g_O2").value.trim())) return;
   const bang63VoltageClass = $("f_bang63_voltage").value;
   const bang63Applicable = $("f_bang63_applicable").checked;
 
@@ -663,7 +900,7 @@ async function onAnalyze() {
 
   // 2) TCG + đánh giá tuyệt đối
   const tcg = DGA.computeTCG(gases);
-  const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
+  const evalRows = DGA.evaluateAbsolute(gases, standard.limits, kphGases);
   const overall = DGA.overallVerdict(evalRows);
   const exceedCount = DGA.countExceedTypical(gases, measurement.equipment_type, logicMeasurement);
 
@@ -672,14 +909,17 @@ async function onAnalyze() {
   //    tự rơi về Table 1 nếu không mã nào khớp); MBA/TI/TU/Khác dùng thẳng Table 1/Bảng 66
   //    (với TI/TU, ngưỡng PD 0,2 theo Annex A.4.3 — standard.pdThreshold đã resolve sẵn).
   const ratios = DGA.computeRatios(gases);
-  const diagnosis = DGA.diagnoseGasFault(gases, measurement.equipment_type, standard.pdThreshold);
+  const diagnosis = DGA.diagnoseGasFault(gases, measurement.equipment_type, standard.pdThreshold, kphGases);
   const bushingCodes = measurement.equipment_type === DGA.EQUIPMENT_TYPES.BUSHING
     ? DGA.diagnoseBushingRatios(ratios)
     : [];
-  const applicability = DGA.ratioApplicability(exceedCount);
+  let applicability = DGA.ratioApplicability(exceedCount);
+  if (Object.keys(kphGases).length > 0 && exceedCount === 0) {
+    applicability = "Không có hiệu lực — các khí đều dưới ngưỡng phát hiện (KPH) hoặc trong khoảng điển hình (Điều 54 QĐ1901 & IEC 60599)";
+  }
 
   // 3bis) Chẩn đoán Tam giác Duval 1 (Annex B, Figure B.3)
-  const duval = DGA.diagnoseDuval1(gases);
+  const duval = DGA.diagnoseDuval1(gases, kphGases);
 
   // 3ter) Ngưỡng LOẠI BỎ riêng của nhà sản xuất (nếu có cấu hình) — cảnh báo nghiêm
   //    trọng hơn mức "không đạt" thông thường, độc lập với ngưỡng tuyệt đối ở trên.
@@ -719,7 +959,7 @@ async function onAnalyze() {
     // cách chuẩn hóa đã dùng đúng ở ui-history.js (renderRateTable()).
     const priorGases = recordGases(prior);
     const deltaDays = Math.round((new Date(measurement.sample_date) - new Date(prior.sample_date)) / 86400000);
-    rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type);
+    rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, measurement.equipment_type, kphGases);
     // Chẩn đoán mã khiếm khuyết của lần đo liền trước — dùng để phát hiện "đổi loại lỗi"
     // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()) — PHẢI dùng
     // cùng diagnoseGasFault() (cùng bảng theo loại thiết bị) để so sánh cho đúng nghĩa,
@@ -765,8 +1005,8 @@ async function onAnalyze() {
     overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows,
   });
 
-  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases };
-  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases });
+  _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases, kphGases };
+  renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases, kphGases });
 
   // 6) Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được (xem canSaveEntry()); khi
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
@@ -818,18 +1058,7 @@ async function onAnalyze() {
   }
 }
 
-function storageErrorMessage(err) {
-  const base = (err && err.message) || String(err);
-  if (Storage.mode === "gsheet") {
-    return "Lỗi kết nối Google Sheets: " + base +
-      "\n\nKiểm tra: URL trong config.js đúng chưa, Apps Script đã Deploy > New deployment với " +
-      "\"Who has access: Anyone\" chưa, và Google Sheet chưa bị xóa/đổi quyền.";
-  }
-  if (Storage.mode === "supabase") {
-    return "Lỗi kết nối Supabase: " + base;
-  }
-  return "Lỗi lưu dữ liệu: " + base;
-}
+// storageErrorMessage(err) moved to storage/storage-core.js
 
 function verdictPill(v) {
   if (v === "Đạt") return `<span class="pill ok">Đạt</span>`;
@@ -860,7 +1089,7 @@ function evaluateHistoricalCase(record) {
   return { gases, tcg, overall, diagnosis };
 }
 
-function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases }) {
+function renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows, tcgRate, prior, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly, similarCases, kphGases }) {
   $("resultsPanel").classList.remove("hidden");
 
   if (overallStatus) {
@@ -915,12 +1144,16 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
   $("r_gasTable").innerHTML = evalRows.map((r) => {
     const c = condemnMap[r.gas];
     const condemnCell = !c ? "—" : c.exceeded ? `<strong style="color:var(--bad);">${c.limit} ⚠</strong>` : c.limit;
-    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.value}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
+    const valText = r.isKph ? `<span class="pill muted" style="font-size:0.85em;">KPH</span>` : r.value;
+    return `<tr><td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${valText}</td><td>${escapeHtml(r.limit ?? "—")}</td><td>${condemnCell}</td><td>${verdictPill(r.verdict)}</td></tr>`;
   }).join("");
 
-  $("r_ratio1").textContent = ratios.c2h2_c2h4.toFixed(3);
-  $("r_ratio2").textContent = ratios.ch4_h2.toFixed(3);
-  $("r_ratio3").textContent = ratios.c2h4_c2h6.toFixed(3);
+  const hasKph1 = kphGases && (kphGases["C2H2"] || kphGases["C2H4"]);
+  const hasKph2 = kphGases && (kphGases["CH4"] || kphGases["H2"]);
+  const hasKph3 = kphGases && (kphGases["C2H4"] || kphGases["C2H6"]);
+  $("r_ratio1").textContent = hasKph1 ? "— (KPH)" : ratios.c2h2_c2h4.toFixed(3);
+  $("r_ratio2").textContent = hasKph2 ? "— (KPH)" : ratios.ch4_h2.toFixed(3);
+  $("r_ratio3").textContent = hasKph3 ? "— (KPH)" : ratios.c2h4_c2h6.toFixed(3);
   $("r_pdthreshold").textContent = "< " + standard.pdThreshold;
   $("r_applicability").textContent = applicability;
 
@@ -957,7 +1190,10 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
     drawDuvalPoint(duval.xy);
   } else {
     $("r_pctch4").textContent = $("r_pctc2h4").textContent = $("r_pctc2h2").textContent = "—";
-    $("r_duvalzone").textContent = "Không đủ dữ liệu (cần CH4/C2H4/C2H2 > 0)";
+    const duvalNote = (kphGases && (kphGases["C2H2"] || kphGases["C2H4"]))
+      ? "Không áp dụng (khí C2H2/C2H4 dưới ngưỡng phát hiện — KPH)"
+      : "Không đủ dữ liệu (cần CH4/C2H4/C2H2 > 0)";
+    $("r_duvalzone").textContent = duvalNote;
     drawDuvalTriangleBase();
   }
 
@@ -969,8 +1205,8 @@ function renderResults({ tcg, evalRows, overall, diagnosis, standard, ratios, ap
         : "Bảng 65 chỉ QĐ1901 quy định chính thức cho MBA — với loại thiết bị này chỉ dùng để THAM KHẢO.");
     $("r_rateTable").innerHTML = rateRows.map((r) => `
       <tr>
-        <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.after}</td><td>${r.delta}</td>
-        <td>${r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
+        <td>${gasLabelIcon(r.gas)}${r.gas}</td><td>${r.before}</td><td>${r.isKph ? "KPH" : r.after}</td><td>${r.isKph ? "—" : r.delta}</td>
+        <td>${r.isKph ? "—" : r.ratePerYear}</td><td>${r.rangeLo} – ${r.rangeHi}</td>
         <td>${r.verdict.startsWith("⚠") ? `<span class="pill warn">${r.verdict}</span>` : r.verdict}</td>
       </tr>
     `).join("");

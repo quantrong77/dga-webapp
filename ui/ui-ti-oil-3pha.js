@@ -4,6 +4,93 @@
    này chỉ lo giao diện. Xem ui-auth.js đầu file đó để biết quy ước chia sẻ scope giữa các file. */
 
 const TIO3_TEMPLATE_URL = "template/template-bbtn-dau-3pha.docx";
+
+let _currentT3BlobUrl = null;
+
+function showT3Preview(fileOrUrl, fileName, badgeText) {
+  const col = $("t3PreviewCol");
+  const layout = $("t3SplitLayout");
+  const frame = $("t3PreviewFrame");
+  const nameEl = $("t3PreviewFileName");
+  const badgeEl = $("t3PreviewBadge");
+  const toggleBtn = $("btnToggleT3Preview");
+  const toggleBtnText = $("btnToggleT3PreviewText");
+  if (!col || !layout || !frame) return;
+
+  if (_currentT3BlobUrl) {
+    try { URL.revokeObjectURL(_currentT3BlobUrl); } catch (_) {}
+    _currentT3BlobUrl = null;
+  }
+
+  let srcUrl = "";
+  let name = fileName || "";
+
+  if (fileOrUrl instanceof File || fileOrUrl instanceof Blob) {
+    name = name || fileOrUrl.name || "BBTN_3pha.pdf";
+    try {
+      _currentT3BlobUrl = URL.createObjectURL(fileOrUrl);
+      srcUrl = _currentT3BlobUrl;
+    } catch (e) {
+      console.warn("Không tạo được blob URL cho T3:", e);
+    }
+  } else if (typeof fileOrUrl === "string" && fileOrUrl) {
+    srcUrl = fileOrUrl;
+    name = name || "BBTN_3pha.pdf";
+  }
+
+  if (srcUrl) {
+    frame.src = srcUrl;
+    if (nameEl) {
+      nameEl.textContent = name;
+      nameEl.title = name;
+    }
+    if (badgeEl && badgeText) badgeEl.textContent = badgeText;
+    layout.classList.add("has-preview");
+    col.classList.remove("hidden");
+    if (toggleBtn) {
+      toggleBtn.classList.remove("hidden");
+      if (toggleBtnText) toggleBtnText.textContent = "Ẩn BBTN đối chiếu";
+    }
+  }
+}
+
+function hideT3Preview() {
+  const col = $("t3PreviewCol");
+  const layout = $("t3SplitLayout");
+  const frame = $("t3PreviewFrame");
+  const toggleBtn = $("btnToggleT3Preview");
+  const toggleBtnText = $("btnToggleT3PreviewText");
+  if (col) col.classList.add("hidden");
+  if (layout) layout.classList.remove("has-preview");
+  if (frame) frame.src = "about:blank";
+  if (_currentT3BlobUrl) {
+    try { URL.revokeObjectURL(_currentT3BlobUrl); } catch (_) {}
+    _currentT3BlobUrl = null;
+  }
+  const hasFile = $("t3_file") && $("t3_file").files && $("t3_file").files[0];
+  if (toggleBtn) {
+    if (hasFile) {
+      toggleBtn.classList.remove("hidden");
+      if (toggleBtnText) toggleBtnText.textContent = "Hiện BBTN đối chiếu";
+    } else {
+      toggleBtn.classList.add("hidden");
+    }
+  }
+}
+
+function toggleT3Preview() {
+  const col = $("t3PreviewCol");
+  if (!col) return;
+  if (col.classList.contains("hidden")) {
+    const file = $("t3_file") && $("t3_file").files && $("t3_file").files[0];
+    if (file) {
+      showT3Preview(file, file.name, "Đã nạp file");
+    }
+  } else {
+    hideT3Preview();
+  }
+}
+
 const TIO3_TEXT_FIELDS = {
   tram: "t3_tram", thietBi: "t3_thietbi", hangSx: "t3_hangsx", viTriLayMau: "t3_vitrilaymau", uDm: "t3_udm",
   congSuat: "t3_congsuat", namSx: "t3_namsx", namVanHanh: "t3_namvanhanh", loaiDau: "t3_loaidau",
@@ -246,6 +333,7 @@ async function onTio3Export() {
 }
 
 function tio3ClearForm() {
+  hideT3Preview();
   Object.values(TIO3_TEXT_FIELDS).forEach((id) => { $(id).value = ""; });
   $("t3_vitrilaymau").value = "Van lấy mẫu";
   $("t3_nsx").value = "";
@@ -276,7 +364,11 @@ function tio3RenderFileLabel() {
 async function onTio3FileSelected() {
   tio3RenderFileLabel();
   const file = $("t3_file").files && $("t3_file").files[0];
-  if (!file) return;
+  if (!file) {
+    hideT3Preview();
+    return;
+  }
+  showT3Preview(file, file.name, "Đang đọc BBTN...");
   const note = $("t3ImportNote");
   note.classList.remove("hidden");
   if (!window.BbtnImport || !window.BbtnImport.readLines) {
@@ -367,6 +459,20 @@ function setupTio3Phase() {
   $("btnT3Analyze").addEventListener("click", onTio3Analyze);
   $("btnT3Export").addEventListener("click", onTio3Export);
   $("btnT3Clear").addEventListener("click", tio3ClearForm);
+  if ($("btnT3NewTab")) {
+    $("btnT3NewTab").addEventListener("click", () => {
+      const frame = $("t3PreviewFrame");
+      if (frame && frame.src && frame.src !== "about:blank") {
+        window.open(frame.src, "_blank", "noopener");
+      }
+    });
+  }
+  if ($("btnCloseT3Preview")) {
+    $("btnCloseT3Preview").addEventListener("click", hideT3Preview);
+  }
+  if ($("btnToggleT3Preview")) {
+    $("btnToggleT3Preview").addEventListener("click", toggleT3Preview);
+  }
   $("t3_file").addEventListener("change", onTio3FileSelected);
   $("dau_equipmenttype").addEventListener("change", refreshTio3ManufacturerOptions);
 

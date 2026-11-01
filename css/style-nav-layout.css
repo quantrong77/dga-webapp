@@ -11,10 +11,10 @@
 nav.tabs {
   display: flex;
   padding: 10px 24px 0;
-  border-bottom: 1px solid var(--gray-300);
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   position: sticky;
-  top: 0;
+  top: var(--header-height, 60px);
   z-index: 40;
   /* "Bóng cuộn" 2 mép trái/phải — BÁO HIỆU còn tab bị tràn ngoài vùng nhìn thấy khi cụm
      nút không đủ chỗ (xem ghi chú .tabs-inner ngay dưới: lúc đó margin:auto co về 0,
@@ -57,23 +57,24 @@ nav.tabs button {
   align-items: center;
   border: none;
   background: transparent;
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gray-600);
+  padding: 11px 16px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 3px solid transparent;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 nav.tabs button:hover {
-  background: var(--gray-100);
+  background: var(--surface-sunken);
   color: var(--blue-900);
 }
 nav.tabs button.active {
   color: var(--blue-900);
-  border-bottom-color: var(--blue-900);
+  border-bottom-color: var(--blue-700);
+  font-weight: var(--font-bold);
 }
 nav.tabs button .tab-icon { opacity: 0.82; }
 nav.tabs button:hover .tab-icon,
@@ -99,6 +100,9 @@ body.tabs-sidebar {
 body.tabs-sidebar header.app-header {
   grid-column: 1 / -1;
   grid-row: 1;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
 body.tabs-sidebar main {
   grid-column: 2;
@@ -135,22 +139,10 @@ body.tabs-sidebar footer.app-footer {
 body.tabs-sidebar nav.tabs {
   grid-column: 1;
   grid-row: 2;
-  /* max-height:100vh (KHÔNG phải height:100vh cố định) + position:sticky top:0: sidebar
-     dính lên đỉnh màn hình khi cuộn, và tự cuộn riêng bên trong (overflow-y:auto) nếu
-     chính danh sách tab (~10-11 nút) cao hơn 1 màn hình — nhưng vẫn để chiều cao THỰC TẾ
-     co theo đúng nội dung của nó khi ngắn hơn 100vh (trường hợp thường gặp). Trước đây
-     dùng "height:100vh" CỐ ĐỊNH — khiến khối nav LUÔN cao đúng 1 màn hình bất kể track
-     (hàng) của grid đang cao bao nhiêu; CSS Grid không tự cắt (clip) phần tử con tràn quá
-     track của nó, nên khi cuộn xuống gần cuối trang, khối nav (cao 100vh, sticky) tràn
-     xuống đè lên đúng phần footer.app-footer nằm ở hàng dưới (row 3) — vì phần tử có
-     position (sticky) luôn vẽ ĐÈ LÊN phần tử position:static (footer) dù đứng trước
-     trong DOM, che gần hết chữ footer, chỉ còn sót lại vài ký tự bên phải. Đổi sang
-     max-height: nội dung nav (~500-600px, ít hơn 900px) sẽ tự dừng "dính" đúng tại đáy
-     hàng 2 (đáy của main) — không bao giờ tràn sang hàng 3 (footer) nữa. */
   position: sticky;
-  top: 0;
+  top: var(--header-height, 60px);
   align-self: start;
-  max-height: 100vh;
+  max-height: calc(100vh - var(--header-height, 60px));
   flex-direction: column;
   align-items: stretch;
   padding: 14px 10px;
@@ -254,7 +246,7 @@ body.tabs-sidebar.sidebar-collapsed nav.tabs button {
   }
   body.tabs-sidebar nav.tabs {
     position: sticky;
-    top: 0;
+    top: var(--header-height, 60px);
     height: auto;
     flex-direction: row;
     align-items: center;
@@ -304,19 +296,21 @@ main {
 body.tabs-sidebar main { max-width: none; }
 
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  padding: 20px 22px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-1);
 }
 
 .panel h2 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--blue-900);
-  margin: 0 0 14px 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
 }
@@ -336,28 +330,30 @@ body.tabs-sidebar main { max-width: none; }
    hướng sang tab khác — tránh nhầm lẫn 2 tầng điều hướng cùng 1 kiểu nút. */
 .cauhinh-subtabs {
   display: inline-flex;
-  gap: 3px;
-  padding: 3px;
-  background: var(--gray-100);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
 }
 .cauhinh-subtab-btn {
   border: none;
   background: transparent;
-  color: var(--gray-600);
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 7px 18px;
-  border-radius: calc(var(--radius) - 3px);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .cauhinh-subtab-btn:hover { color: var(--blue-900); }
 .cauhinh-subtab-btn.active {
   background: var(--surface);
   color: var(--blue-900);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
 }
 .cauhinh-subpanel.hidden { display: none; }
 
@@ -368,31 +364,66 @@ body.tabs-sidebar main { max-width: none; }
    app-core.js. */
 .quytrinh-subtabs {
   display: inline-flex;
-  gap: 3px;
-  padding: 3px;
-  background: var(--gray-100);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
 }
 .quytrinh-subtab-btn {
   border: none;
   background: transparent;
-  color: var(--gray-600);
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 7px 18px;
-  border-radius: calc(var(--radius) - 3px);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .quytrinh-subtab-btn:hover { color: var(--blue-900); }
 .quytrinh-subtab-btn.active {
   background: var(--surface);
   color: var(--blue-900);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
 }
 .quytrinh-subpanel.hidden { display: none; }
 
+
+/* Tab "Quản trị" — phân mục con bằng segmented control: Người dùng | Cấu hình | Bản sao Supabase */
+.quantri-subtabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
+}
+.quantri-subtab-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.quantri-subtab-btn:hover { color: var(--blue-900); }
+.quantri-subtab-btn.active {
+  background: var(--surface);
+  color: var(--blue-900);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
+}
+.quantri-subpanel.hidden { display: none; }
 /* Hiệu ứng mờ dần + trượt nhẹ khi 1 tab/panel được hiện ra (chuyển tab, hoặc kết
    quả phân tích xuất hiện) — CSS animation tự chạy lại mỗi lần phần tử chuyển từ
    display:none sang hiển thị, không cần JS can thiệp. */

@@ -180,13 +180,15 @@ function num(v) {
  * Đánh giá từng khí so với ngưỡng áp dụng (limits).
  * @returns {Array<{gas, value, limit, verdict}>}
  */
-function evaluateAbsolute(gases, limits) {
+function evaluateAbsolute(gases, limits, kphGases) {
+  const isKph = (g) => Boolean(kphGases && (kphGases[g] || (Array.isArray(kphGases) && kphGases.includes(g))));
   return GASES.map((gas) => {
     const value = num(gases[gas]);
     const limit = limits[gas];
     const hasLimit = limit !== undefined && limit !== null && limit !== "";
-    const verdict = !hasLimit ? "Không có ngưỡng" : value <= limit ? "Đạt" : "Không đạt";
-    return { gas, value, limit: hasLimit ? limit : null, verdict };
+    const gasIsKph = isKph(gas);
+    const verdict = !hasLimit ? "Không có ngưỡng" : (gasIsKph || value <= limit) ? "Đạt" : "Không đạt";
+    return { gas, value, limit: hasLimit ? limit : null, verdict, isKph: gasIsKph };
   });
 }
 
@@ -325,7 +327,16 @@ const BUSHING_CODE_LABELS = {
  * @param {number} pdThreshold ngưỡng CH4/H2 cho PD khi dùng/rơi về Table 1
  * @returns {string}
  */
-function diagnoseGasFault(gases, equipmentType, pdThreshold) {
+function diagnoseGasFault(gases, equipmentType, pdThreshold, kphGases) {
+  const isKph = (g) => Boolean(kphGases && (kphGases[g] || (Array.isArray(kphGases) && kphGases.includes(g))));
+  // Nếu có truyền kphGases và có khí liên quan KPH trong khi không khí nào vượt giá trị điển hình:
+  // theo Điều 54 QĐ1901 & IEC 60599 mục 6.1(c), tỷ số khí không có hiệu lực chẩn đoán sự cố.
+  if (kphGases && (isKph("C2H2") || isKph("C2H4") || isKph("CH4") || isKph("H2") || isKph("C2H6"))) {
+    const exceedCount = countExceedTypical(gases, equipmentType);
+    if (exceedCount === 0) {
+      return "Không áp dụng (các khí đều trong khoảng điển hình / dưới ngưỡng phát hiện — Điều 54 QĐ1901 & IEC 60599)";
+    }
+  }
   const ratios = computeRatios(gases);
   if (equipmentType === EQUIPMENT_TYPES.BUSHING) {
     const codes = diagnoseBushingRatios(ratios);
@@ -435,7 +446,11 @@ function duvalPlotXY(pct) {
 /**
  * Hàm tiện ích tổng hợp: từ 1 bộ khí -> % chuẩn hóa + phân vùng (hoặc null nếu không đủ dữ liệu).
  */
-function diagnoseDuval1(gases) {
+function diagnoseDuval1(gases, kphGases) {
+  const isKph = (g) => Boolean(kphGases && (kphGases[g] || (Array.isArray(kphGases) && kphGases.includes(g))));
+  if (kphGases && isKph("C2H2") && isKph("C2H4")) {
+    return null;
+  }
   const pct = normalizeDuval(gases);
   if (!pct) return null;
   const result = classifyDuval1(pct);
@@ -453,18 +468,21 @@ function diagnoseDuval1(gases) {
  * @param {object} rateRanges { gas: [lo, hi] } ppm/năm — mặc định Bảng 65 hoặc NSX nếu có cấu hình
  * @param {string} equipmentType dùng để ghi chú áp dụng chính thức (MBA) hay tham khảo (khác)
  */
-function computeRateOfChange(prevGases, currGases, deltaDays, rateRanges, equipmentType) {
+function computeRateOfChange(prevGases, currGases, deltaDays, rateRanges, equipmentType, kphGases) {
   if (!deltaDays || deltaDays <= 0) return null;
   const official = equipmentType === EQUIPMENT_TYPES.MBA;
+  const isKph = (g) => Boolean(kphGases && (kphGases[g] || (Array.isArray(kphGases) && kphGases.includes(g))));
   return GASES.map((gas) => {
     const before = num(prevGases[gas]);
     const after = num(currGases[gas]);
     const delta = after - before;
-    const ratePerYear = (delta / deltaDays) * 365;
-    const ratePerMonth = before === 0 ? null : (delta / before) / (deltaDays / 30) * 100;
-    const [lo, hi] = rateRanges[gas] || QD1901_BANG65_RATE[gas];
+    const gasIsKph = isKph(gas);
+    const ratePerYear = gasIsKph ? 0 : (delta / deltaDays) * 365;
+    const ratePerMonth = gasIsKph || before === 0 ? null : (delta / before) / (deltaDays / 30) * 100;
+    const [lo, hi] = (rateRanges && rateRanges[gas]) || QD1901_BANG65_RATE[gas];
     let verdict;
-    if (delta < 0) verdict = "Giảm — có thể do lọc/xử lý/thay dầu, hoặc khiếm khuyết cũ ngừng phát triển";
+    if (gasIsKph) verdict = "Dưới ngưỡng phát hiện (KPH) — bình thường";
+    else if (delta < 0) verdict = "Giảm — có thể do lọc/xử lý/thay dầu, hoặc khiếm khuyết cũ ngừng phát triển";
     else if (ratePerYear > hi) verdict = `⚠ Vượt cận trên ${REGULATION_CITATIONS.BANG65_RATE} — nghi khiếm khuyết đang phát triển`;
     else if (ratePerYear < lo) verdict = `Dưới cận dưới ${REGULATION_CITATIONS.BANG65_RATE} — tốc độ thấp, bình thường`;
     else verdict = `Trong khoảng điển hình ${REGULATION_CITATIONS.BANG65_RATE}`;
@@ -474,6 +492,7 @@ function computeRateOfChange(prevGases, currGases, deltaDays, rateRanges, equipm
       ratePerMonth: ratePerMonth === null ? null : round1(ratePerMonth),
       rangeLo: lo, rangeHi: hi, verdict,
       officialForEquipment: official,
+      isKph: gasIsKph,
     };
   });
 }
@@ -720,7 +739,7 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
 // ---------------------------------------------------------------------------
 
 function diagnosisIsConclusive(diagnosis) {
-  return !!diagnosis && diagnosis !== NO_DIAGNOSIS;
+  return !!diagnosis && diagnosis !== NO_DIAGNOSIS && !diagnosis.startsWith("Không áp dụng");
 }
 
 /**

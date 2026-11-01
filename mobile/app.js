@@ -463,7 +463,7 @@ function renderLoaiSelect() {
   });
 }
 function renderMbaSubtypeSelect() {
-  $("f_mbasubtype").innerHTML = Object.values(DGA.MBA_SUBTYPES).map((label) => `<option value="${escapeHtml(label)}">${escapeHtml(label)}</option>`).join("");
+  $("f_mbasubtype").innerHTML = Object.values(DGA.MBA_SUBTYPES).map((label) => `<option value="${escapeHtml(label)}">${escapeHtml(label.replace(/CPC/g, "OLTC"))}</option>`).join("");
 }
 function refreshManufacturerOptions() {
   const sel = $("f_nsx");
@@ -495,7 +495,7 @@ function renderGasGrid() {
   $("gasGrid").innerHTML = DGA.GASES.map((g) =>
     `<div class="gas-field">
       <label>${g} <span class="gas-hint">/ ${GAS_LIMITS_HINT[g]}</span></label>
-      <input id="g_${g}" type="number" step="0.01" min="0" class="input" placeholder="0" />
+      <input id="g_${g}" type="text" inputmode="decimal" class="input" placeholder="0 hoặc KPH" />
     </div>`
   ).join("");
 }

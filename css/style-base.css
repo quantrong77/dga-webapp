@@ -6,73 +6,165 @@
 
 :root {
   color-scheme: light;
-  /* Lấy từ logo EVNNPT: navy làm màu thương hiệu. Đỏ thương hiệu KHÔNG dùng cho giao diện vì
-     trong app này đỏ nghĩa là "Không đạt/Báo động". */
+  --header-height: 60px;
+
+  /* ===================== Refactoring UI Tokens ===================== */
+  /* Thang khoảng cách chuẩn (Spacing Scale): 4, 8, 12, 16, 24, 32, 48, 64px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Thang cỡ chữ chuẩn (Typography Scale) */
+  --text-xs: 12px;
+  --text-sm: 13.5px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+
+  /* Trọng số font (Font Weights) */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* Chiều cao dòng (Line Heights) */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Bán kính bo góc (Border Radii) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  --radius: var(--radius-lg);
+
+  /* Thang đổ bóng 5 cấp độ (Two-part shadow scale: ambient + directional) */
+  --shadow-1: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-2: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-3: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+  --shadow-4: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+  --shadow-5: 0 25px 50px -12px rgba(15, 23, 42, 0.22);
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-5);
+
+  /* Các lớp bề mặt & đường viền ngữ nghĩa (Semantic Surfaces & Borders) */
+  --surface-page: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+
+  /* Thương hiệu EVNNPT: navy làm màu chủ đạo */
   --evn-navy: #1b2470;
   --header-bg: var(--evn-navy);
-  --surface: #ffffff;
-  --blue-900: #1b2470; /* chữ nhấn: tiêu đề, tab đang chọn */
+  --blue-900: #1b2470; /* tiêu đề chính, thương hiệu */
   --blue-800: #232e8c;
-  --blue-700: #2c3fb8; /* hành động: liên kết, viền nút, focus */
-  --blue-100: #e9ebfa;
+  --blue-700: #2c3fb8; /* hành động, liên kết, viền focus */
+  --blue-100: #eef2ff; /* nền nhấn nhẹ */
+  --blue-50: #f5f7ff;
   --btn-primary: #1b2470;
   --btn-primary-hover: #232e8c;
-  --on-accent: #ffffff; /* chữ trên nền --blue-700 và nền trạng thái */
-  --gray-50: #f4f5fa;
-  --gray-100: #e9ebf3;
-  --gray-200: #dde0ec;
-  --gray-300: #cdd1e0;
-  --gray-600: #4f5674;
-  --gray-900: #171b33;
-  --ok: #12703a;
-  --ok-bg: #e3f4e9;
-  --bad: #b3121d;
-  --bad-bg: #fcebec;
-  --warn: #a44a00;
-  --warn-bg: #fdf0df;
-  --accent: #0a7f7a;
-  --accent-bg: #e3f6f5;
-  /* Màu 3 pha theo quy ước lưới điện: A vàng, B xanh lá, C đỏ. */
+  --on-accent: #ffffff;
+
+  /* Tương thích ngược hệ màu gray-* */
+  --gray-50: var(--surface-page);
+  --gray-100: var(--surface-sunken);
+  --gray-200: var(--border);
+  --gray-300: var(--border-strong);
+  --gray-600: var(--text-secondary);
+  --gray-900: var(--text-primary);
+
+  /* Trạng thái phân tích & chỉ thị kỹ thuật */
+  --ok: #15803d;
+  --ok-bg: #f0fdf4;
+  --ok-border: #bbf7d0;
+  --bad: #b91c1c;
+  --bad-bg: #fef2f2;
+  --bad-border: #fecaca;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --warn-border: #fde68a;
+  --accent: #0f766e;
+  --accent-bg: #f0fdfa;
+  --accent-border: #99f6e4;
+
+  /* Màu 3 pha theo quy ước lưới điện: A vàng, B xanh lá, C đỏ */
   --phase-a: #e9b800;
   --phase-b: #1e9e4a;
   --phase-c: #d9262c;
   --gear-gray: #98a2b3;
   --gear-orange: #e2793c;
-  --radius: 8px;
-  --shadow-sm: none;
-  --shadow-md: 0 4px 14px rgba(20, 30, 80, 0.1);
-  --shadow-lg: 0 20px 60px rgba(10, 15, 45, 0.35);
   font-size: 15px;
 }
 
-/* Giao diện tối cho ca đêm: giữ tông navy của thương hiệu, không dùng đen. Trạng thái được chọn
-   lại độ sáng để vẫn đủ tương phản trên nền navy. Xem ui/ui-theme.js. */
+/* Giao diện tối cho ca đêm: giữ tông navy thương hiệu, chuẩn WCAG tương phản cao */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --header-bg: #121749;
+  --surface-page: #0f1433;
   --surface: #171d45;
+  --surface-raised: #1f2757;
+  --surface-sunken: #12173b;
+  --border: #28326b;
+  --border-strong: #3b488e;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+
   --blue-900: #d5dbff;
   --blue-800: #bfc8ff;
   --blue-700: #9aa9ff;
   --blue-100: #252e63;
+  --blue-50: #1b2149;
   --btn-primary: #4556d6;
   --btn-primary-hover: #5567e6;
   --on-accent: #0f1433;
-  --gray-50: #0f1433;
-  --gray-100: #1e2550;
-  --gray-200: #2a3263;
-  --gray-300: #39417a;
-  --gray-600: #aab1d3;
-  --gray-900: #e8eaf6;
-  --ok: #5ad58a;
-  --ok-bg: #12351f;
-  --bad: #ff8a8f;
-  --bad-bg: #43161c;
-  --warn: #f2b35c;
-  --warn-bg: #3a2a12;
-  --accent: #4fd1cb;
-  --accent-bg: #123a3a;
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+
+  --gray-50: var(--surface-page);
+  --gray-100: var(--surface-sunken);
+  --gray-200: var(--border);
+  --gray-300: var(--border-strong);
+  --gray-600: var(--text-secondary);
+  --gray-900: var(--text-primary);
+
+  --ok: #4ade80;
+  --ok-bg: #052e16;
+  --ok-border: #166534;
+  --bad: #f87171;
+  --bad-bg: #450a0a;
+  --bad-border: #991b1b;
+  --warn: #fbbf24;
+  --warn-bg: #451a03;
+  --warn-border: #92400e;
+  --accent: #2dd4bf;
+  --accent-bg: #042f2e;
+  --accent-border: #115e59;
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-4: 0 20px 25px -5px rgba(0, 0, 0, 0.55);
+  --shadow-5: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-5);
 }
 
 :focus-visible { outline: 2px solid var(--blue-700); outline-offset: 2px; }
@@ -95,8 +187,10 @@ html {
 body {
   margin: 0;
   font-family: "Be Vietnam Pro", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--gray-50);
-  color: var(--gray-900);
+  background: var(--surface-page);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Thanh cuộn tùy biến (Chrome/Edge) — chi tiết nhỏ giúp giao diện đỡ mặc định/đơn điệu */
@@ -115,7 +209,10 @@ body {
 }
 
 header.app-header {
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 10px rgba(10, 15, 45, 0.2);
   background: var(--header-bg);
   color: #fff;
   padding: 12px 24px 16px;
@@ -134,9 +231,18 @@ header.app-header::after {
   bottom: 0;
   height: 4px;
   background: linear-gradient(to right, var(--phase-a) 33.33%, var(--phase-b) 33.33% 66.66%, var(--phase-c) 66.66%);
+  z-index: 1;
+  pointer-events: none;
 }
 
-/* Trái: tên ứng dụng, rồi bố cục tab và trạng thái kết nối. Phải: giao diện và tài khoản. */
+/* Trái: tên ứng dụng, rồi bố cục tab và trạng thái kết nối. Phải: giao diện và tài khoản.
+   Đặt z-index: 10 để các nút icon và tooltip luôn nổi TRÊN thanh cái 3 pha (z-index: 1 ở ::after). */
+header.app-header .header-left,
+header.app-header .header-center,
+header.app-header .header-right {
+  position: relative;
+  z-index: 10;
+}
 header.app-header .header-center { order: -1; }
 header.app-header .header-left { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; max-width: 100%; }
 
@@ -243,12 +349,22 @@ header.app-header p {
    trắng như .badge.user-badge ở trên mới đủ tương phản, thay vì màu --blue-700 gần
    như biến mất trên nền đó. aria-pressed="true" (đang ở chế độ dọc) đảo màu nền/chữ
    để nhận biết nhanh trạng thái đang bật — xem setupTabLayoutToggle() ở app-core.js. */
-.header-icon-btn {
+/* Vách ngăn phân cách giữa các cụm nút trên Header */
+.header-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.22);
+  margin: 0 4px;
   flex: none;
-  width: 30px;
-  height: 30px;
+}
+
+.header-icon-btn {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
@@ -256,13 +372,173 @@ header.app-header p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-.header-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
-.header-icon-btn[aria-pressed="true"] {
-  background: #fff;
+.header-icon-btn:hover,
+.header-icon-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+  z-index: 30;
+}
+.header-icon-btn:active {
+  transform: translateY(1px);
+}
+.header-icon-btn[aria-pressed="true"],
+.header-icon-btn.active {
+  background: #ffffff;
   color: var(--evn-navy);
-  border-color: #fff;
+  border-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 .header-icon-btn .icon-svg { width: 16px; height: 16px; margin-right: 0; }
 
+/* Tooltip hiển thị chức năng khi trỏ chuột vào các nút icon trên Header (Menu bar).
+   Thiết kế mũi tên hướng lên icon, nổi hoàn toàn trên thanh dải màu 3 pha và không bị che khuất. */
+.header-icon-btn[data-tooltip]::before {
+  content: "";
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  border-width: 0 5px 6px 5px;
+  border-style: solid;
+  border-color: transparent transparent #0f172a transparent;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 1001;
+}
+.header-icon-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 11px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 1000;
+}
+.header-icon-btn[data-tooltip]:hover::before,
+.header-icon-btn[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.header-icon-btn[data-tooltip]:hover::after,
+.header-icon-btn[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Neo tooltip cho các nút ở sát mép phải header để không bị tràn viền màn hình */
+.header-right .header-icon-btn:last-of-type[data-tooltip]::after,
+#btnToggleTheme[data-tooltip]::after,
+#btnOpenChangePassword[data-tooltip]::after {
+  left: auto;
+  right: 0;
+  transform: translateY(-2px);
+}
+.header-right .header-icon-btn:last-of-type[data-tooltip]::before,
+#btnToggleTheme[data-tooltip]::before,
+#btnOpenChangePassword[data-tooltip]::before {
+  left: auto;
+  right: 11px;
+  transform: translateY(-2px);
+}
+.header-right .header-icon-btn:last-of-type[data-tooltip]:hover::after,
+.header-right .header-icon-btn:last-of-type[data-tooltip]:focus-visible::after,
+#btnToggleTheme[data-tooltip]:hover::after,
+#btnToggleTheme[data-tooltip]:focus-visible::after,
+#btnOpenChangePassword[data-tooltip]:hover::after,
+#btnOpenChangePassword[data-tooltip]:focus-visible::after {
+  transform: translateY(0);
+}
+.header-right .header-icon-btn:last-of-type[data-tooltip]:hover::before,
+.header-right .header-icon-btn:last-of-type[data-tooltip]:focus-visible::before,
+#btnToggleTheme[data-tooltip]:hover::before,
+#btnToggleTheme[data-tooltip]:focus-visible::before,
+#btnOpenChangePassword[data-tooltip]:hover::before,
+#btnOpenChangePassword[data-tooltip]:focus-visible::before {
+  transform: translateY(0);
+}
+
+/* Neo tooltip cho nút sát mép trái header (#btnToggleTabLayout) */
+.header-left .header-icon-btn[data-tooltip]::after {
+  left: 0;
+  transform: translateY(-2px);
+}
+.header-left .header-icon-btn[data-tooltip]::before {
+  left: 11px;
+  transform: translateY(-2px);
+}
+.header-left .header-icon-btn[data-tooltip]:hover::after,
+.header-left .header-icon-btn[data-tooltip]:focus-visible::after {
+  transform: translateY(0);
+}
+.header-left .header-icon-btn[data-tooltip]:hover::before,
+.header-left .header-icon-btn[data-tooltip]:focus-visible::before {
+  transform: translateY(0);
+}
+/* Badge trạng thái kết nối & Tự động đồng bộ ngoại tuyến (#syncStatusBadge) */
+.badge.sync-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+.badge.sync-badge .sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: none;
+}
+.badge.sync-badge.online {
+  background: #d7f5df;
+  color: #10692f;
+  border-color: rgba(16, 105, 47, 0.25);
+}
+.badge.sync-badge.online .sync-dot {
+  background: #12b76a;
+  box-shadow: 0 0 0 2px rgba(18, 183, 106, 0.2);
+}
+.badge.sync-badge.offline {
+  background: #fff4e5;
+  color: #b54708;
+  border-color: #fedf89;
+}
+.badge.sync-badge.offline .sync-dot {
+  background: #f79009;
+}
+.badge.sync-badge.syncing {
+  background: #eff8ff;
+  color: #175cd3;
+  border-color: #b2ddff;
+}
+.badge.sync-badge.syncing .sync-dot {
+  background: #2e90fa;
+  animation: sync-pulse 1s infinite alternate;
+}
+@keyframes sync-pulse {
+  0% { opacity: 0.4; transform: scale(0.85); }
+  100% { opacity: 1; transform: scale(1.2); }
+}

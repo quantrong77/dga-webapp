@@ -1,0 +1,33 @@
+{
+  "name": "Đánh giá Dầu cách điện — QĐ1901/EVNNPT",
+  "short_name": "DGAOil",
+  "description": "Công cụ đánh giá DGA dầu cách điện máy biến áp và thiết bị điện theo QĐ1901/EVNNPT và IEC 60599",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d3559",
+  "theme_color": "#0d3559",
+  "icons": [
+    {
+      "src": "image/favicon-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "image/favicon-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "image/app-icon-96.webp",
+      "sizes": "96x96",
+      "type": "image/webp"
+    },
+    {
+      "src": "image/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
+

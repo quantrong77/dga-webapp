@@ -9,10 +9,12 @@
  *   npm run build-guide          ghi lại index.html
  *   npm run build-guide:check    chỉ kiểm tra (thoát mã 1 nếu index.html đã lỗi thời)
  *
- * Cần cài pandoc (https://pandoc.org) — chỉ máy người CẬP NHẬT hướng dẫn cần, người dùng app không cần. */
+ * Tự động dùng pandoc nếu có trong PATH; nếu không có, tự động dùng bộ phân tích cú pháp Markdown JavaScript tích hợp sẵn.
+ */
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
+const { mdToHtml } = require("./md-to-html");
 
 const ROOT = path.resolve(__dirname, "..");
 const MANUAL = path.join(ROOT, "user_manual.md");
@@ -40,23 +42,31 @@ function parseSections(md) {
 }
 
 function pandocToHtml(markdown) {
-  const r = spawnSync("pandoc", ["-f", "markdown-auto_identifiers", "-t", "html", "--wrap=auto"], {
-    input: markdown, encoding: "utf8",
-  });
-  if (r.error || r.status !== 0) {
-    throw new Error("Không chạy được pandoc (cần cài pandoc và có trong PATH): " + ((r.error && r.error.message) || r.stderr));
-  }
-  return norm(r.stdout);
+  try {
+    const r = spawnSync("pandoc", ["-f", "markdown-auto_identifiers", "-t", "html", "--wrap=auto"], {
+      input: markdown, encoding: "utf8",
+    });
+    if (!r.error && r.status === 0) {
+      return norm(r.stdout);
+    }
+  } catch (e) {}
+  // Fallback to pure JS converter when pandoc is not installed
+  return mdToHtml(markdown);
 }
 
 function decorate(html) {
-  return html
-    .replace(/<table>/g, '<div class="table-scroll"><table>')
-    .replace(/<\/table>/g, "</table></div>")
-    .replace(/<blockquote>\s*<p>([\s\S]*?)<\/p>\s*<\/blockquote>/g, '<p class="sm-note">$1</p>')
-    .replace(/<ul>/g, '<ul class="rec-list">')
-    // Link nội bộ kiểu (#6-...) của Markdown không có tác dụng trong tab (không phải trang riêng) — giữ chữ, bỏ link.
-    .replace(/<a\s+href="#[^"]*">([\s\S]*?)<\/a>/g, "$1");
+  // If html already has <div class="table-scroll">, don't double wrap
+  let out = html;
+  if (!out.includes('<div class="table-scroll">')) {
+    out = out.replace(/<table>/g, '<div class="table-scroll"><table>').replace(/<\/table>/g, "</table></div>");
+  }
+  if (!out.includes('<p class="sm-note">')) {
+    out = out.replace(/<blockquote>\s*<p>([\s\S]*?)<\/p>\s*<\/blockquote>/g, '<p class="sm-note">$1</p>');
+  }
+  if (!out.includes('<ul class="rec-list">')) {
+    out = out.replace(/<ul>/g, '<ul class="rec-list">');
+  }
+  return out.replace(/<a\s+href="#[^"]*">([\s\S]*?)<\/a>/g, "$1");
 }
 
 function renderSection(sec) {

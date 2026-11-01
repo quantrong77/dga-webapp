@@ -44,6 +44,10 @@ Tính năng:
 - Lưu trữ toàn bộ lịch sử đo, xem lại/lọc theo trạm hoặc thiết bị.
 - Tab **"Người dùng phản hồi"**: góp ý tự do cho ứng dụng (ý kiến + 1 ảnh minh họa tùy
   chọn), lưu lại và hiển thị cho cả nhóm cùng xem, tránh đề xuất trùng nhau.
+- **Khung hiển thị Biên bản đối chiếu song song (Split View)**: Kéo-thả hoặc chọn file PDF BBTN tự động mở khung xem tài liệu gốc bên cạnh form nhập liệu để so sánh, xác nhận số liệu trước khi lưu.
+- **BBTN dầu 3 pha TI/TU (PTC3/BM.14)**: Nhập PDF hoặc nhập tay chung 1 biên bản cho 3 pha A, B, C; tự tách 3 bản ghi độc lập; đánh giá theo 2 tầng ngưỡng NSX; đối chiếu cột "Trên BBTN" và xuất lại Word.
+- **Kiến trúc 3 tầng (Three-Tier Architecture)** & **Offline-First PWA (Service Worker v4)**: Hoạt động bền bỉ khi mất mạng, tự động đồng bộ khi có kết nối trở lại.
+- *Xem tài liệu chi tiết toàn bộ tính năng và tiện ích tại [Features-web-app.md](./Features-web-app.md).*
 
 > **Lưu ý về nguồn dữ liệu IEC**: các bảng Annex A (A.2, A.6, A.9) và bảng ranh
 > giới vùng của Tam giác Duval (Annex B, Figure B.3) được trích trực tiếp và
