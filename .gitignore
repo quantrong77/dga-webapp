@@ -11,3 +11,4 @@ node_modules/
 *.bak
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+coverage/

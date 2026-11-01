@@ -8,8 +8,11 @@ function escapeHtml(s) {
  *  "javascript:"/"data:text/html"... do ai đó ghi thẳng vào database qua API để chạy mã độc
  *  khi người khác bấm "Xem". Trả về URL gốc nếu an toàn, null nếu không. */
 function safeHttpUrl(url) {
+  if (!url) return null;
+  const str = String(url).trim();
+  if (!str || !/^https?:\/\//i.test(str)) return null;
   try {
-    const u = new URL(String(url), location.href);
+    const u = new URL(str);
     return u.protocol === "https:" || u.protocol === "http:" ? u.href : null;
   } catch (e) {
     return null;
