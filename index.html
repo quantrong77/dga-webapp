@@ -271,8 +271,8 @@
          DOM ở đây — không phụ thuộc thứ tự các <section id="tab-..."> bên dưới (mỗi nút
          tự tìm đúng section theo data-tab, xem addEventListener(".tab-btn"), app-core.js). -->
     <div class="tabs-inner">
-      <button class="tab-btn active" data-tab="nhap" title="DGA"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg><span class="tab-label">DGA</span></button>
-      <button class="tab-btn" data-tab="dau" title="Dầu cách điện"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg><span class="tab-label">Dầu cách điện</span></button>
+      <button class="tab-btn active" data-tab="nhap" title="Khí hòa tan"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg><span class="tab-label">Khí hòa tan</span></button>
+      <button class="tab-btn" data-tab="dau" title="Lý-Hóa dầu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg><span class="tab-label">Lý-Hóa dầu</span></button>
       <button class="tab-btn" data-tab="canhbao" title="Cảnh báo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg><span class="tab-label">Cảnh báo</span></button>
       <button class="tab-btn" data-tab="lichsu" title="Lịch sử đo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="tab-label">Lịch sử đo</span></button>
       <button class="tab-btn" data-tab="xuhuong" title="Xu hướng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg><span class="tab-label">Xu hướng</span></button>
@@ -887,7 +887,7 @@
         </div>
         <p class="note">Tự động rà soát TOÀN BỘ thiết bị đã có dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và
           liệt kê những thiết bị mà LẦN ĐO GẦN NHẤT đang ở mức Cảnh báo/Báo động — theo đúng nguyên tắc đang dùng ở
-          tab "DGA"/"Dầu cách điện" (xem thêm tab "Quy trình đánh giá"). Công cụ hỗ trợ tham khảo, không thay thế
+          tab "Khí hòa tan"/"Lý-Hóa dầu" (xem thêm tab "Quy trình đánh giá"). Công cụ hỗ trợ tham khảo, không thay thế
           nguyên tắc đánh giá tổng thể tại Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/diễn biến vận hành...).</p>
 
         <!-- Đang nạp dữ liệu khí/dầu MBA/dầu OLTC để tổng hợp cảnh báo (ẩn khi
@@ -1577,7 +1577,7 @@
         <h2>Quy trình nghiệp vụ đánh giá DGA</h2>
         <p class="note">Chuyển thể từ lưu đồ đánh giá kết quả DGA (Hình 1 — Flow chart, mục 9, IEC 60599:2022) kết
           hợp nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/QĐ-EVNNPT. Đây chính là thuật toán mà công cụ này áp
-          dụng để tính khối "Trạng thái tổng thể" hiển thị đầu mục 2 "Kết quả đánh giá" ở tab "DGA" cho mỗi lần đo.
+          dụng để tính khối "Trạng thái tổng thể" hiển thị đầu mục 2 "Kết quả đánh giá" ở tab "Khí hòa tan" cho mỗi lần đo.
           Thuật toán CHỈ mang tính hỗ trợ tự động — KHÔNG thay thế đánh giá tổng thể của kỹ sư có thẩm quyền theo
           Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/giá trị xuất xưởng/hướng dẫn nhà sản xuất/diễn biến vận
           hành thực tế — những yếu tố phần mềm không có đủ dữ liệu để tự động hóa).</p>
@@ -1591,7 +1591,7 @@
             <h3>Nhập &amp; lưu kết quả đo</h3>
             <p>Nhập nồng độ 7 khí hòa tan (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) cho 1 lần đo tại 1 Trạm/Thiết bị/Pha
               cụ thể.</p>
-            <p class="maps-to">Thực hiện ở: <strong>Tab "DGA"</strong>, mục "Thông tin lần đo".</p>
+            <p class="maps-to">Thực hiện ở: <strong>Tab "Khí hòa tan"</strong>, mục "Thông tin lần đo".</p>
           </div>
           <div class="process-step">
             <div class="step-num">2</div>
@@ -1980,8 +1980,8 @@
         </div>
       </div>
 
-      <p class="note hidden" id="dauNoOilSupportNote">Tab "Dầu cách điện" hiện chưa hỗ trợ
-        nhập thí nghiệm dầu cho loại thiết bị này — vui lòng dùng tab "DGA" để nhập kết
+      <p class="note hidden" id="dauNoOilSupportNote">Tab "Lý-Hóa dầu" hiện chưa hỗ trợ
+        nhập thí nghiệm dầu cho loại thiết bị này — vui lòng dùng tab "Khí hòa tan" để nhập kết
         quả khí hòa tan (áp dụng được cho mọi loại thiết bị, kể cả Sứ xuyên/Khác).</p>
 
       <div id="dauMbaWrap">
@@ -2679,7 +2679,7 @@
           </div>
         </details>
         <details class="mm-node">
-          <summary>4. Nhập và đánh giá một lần đo khí hòa tan (tab DGA)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <summary>4. Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
           <h3>Bước 1 — Chọn loại thiết bị</h3>
           <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: TI, TU, MBA/Kháng
@@ -2932,7 +2932,7 @@
           <div class="sm-body">
           <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN)</h3>
           <ol type="1">
-          <li>Ở tab <strong>DGA</strong>, mục <strong>“Biên bản thí nghiệm (PDF,
+          <li>Ở tab <strong>Khí hòa tan</strong>, mục <strong>“Biên bản thí nghiệm (PDF,
           tùy chọn)”</strong>: <strong>kéo thả</strong> file PDF vào khung, hoặc
           bấm khung để chọn file.</li>
           <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị,
@@ -3050,7 +3050,7 @@
           </div>
         </details>
         <details class="mm-node">
-          <summary>9. Thí nghiệm dầu cách điện (tab Dầu cách điện)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
+          <summary>9. Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
           <p>Ba chỉ tiêu được đánh giá: <strong>Độ ẩm dầu (ppm)</strong>,
           <strong>Tổn hao điện môi tgδ ở 90°C (%)</strong>, <strong>Điện áp chọc
@@ -3186,8 +3186,8 @@
           <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết
           bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê
           các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo
-          động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab DGA/Dầu cách
-          điện, không tự đặt ngưỡng riêng.</p>
+          động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa
+          dầu, không tự đặt ngưỡng riêng.</p>
           <ul class="rec-list">
           <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số
           thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.</li>

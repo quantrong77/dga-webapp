@@ -11,12 +11,12 @@
 1. [App dùng để làm gì?](#1-app-dùng-để-làm-gì)
 2. [Bắt đầu: mở app và đăng nhập](#2-bắt-đầu-mở-app-và-đăng-nhập)
 3. [Làm quen giao diện](#3-làm-quen-giao-diện)
-4. [Nhập và đánh giá một lần đo khí hòa tan (tab DGA)](#4-nhập-và-đánh-giá-một-lần-đo-khí-hòa-tan-tab-dga)
+4. [Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)](#4-nhập-và-đánh-giá-một-lần-đo-khí-hòa-tan-tab-khí-hòa-tan)
 5. [Đọc kết quả đánh giá](#5-đọc-kết-quả-đánh-giá)
 6. [Nhập nhanh từ Biên bản thí nghiệm (PDF) và ảnh tấm nhãn](#6-nhập-nhanh-từ-biên-bản-thí-nghiệm-pdf-và-ảnh-tấm-nhãn)
 7. [Nhập hàng loạt nhiều biên bản của cùng một thiết bị](#7-nhập-hàng-loạt-nhiều-biên-bản-của-cùng-một-thiết-bị)
 8. [Xuất Biên bản thí nghiệm và Báo cáo phân tích kỹ thuật (.docx)](#8-xuất-biên-bản-thí-nghiệm-và-báo-cáo-phân-tích-kỹ-thuật-docx)
-9. [Thí nghiệm dầu cách điện (tab Dầu cách điện)](#9-thí-nghiệm-dầu-cách-điện-tab-dầu-cách-điện)
+9. [Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)](#9-thí-nghiệm-dầu-cách-điện-tab-lý-hóa-dầu)
 10. [Xem lại, sửa, xóa và so sánh (tab Lịch sử đo)](#10-xem-lại-sửa-xóa-và-so-sánh-tab-lịch-sử-đo)
 11. [Theo dõi thiết bị bất thường (tab Cảnh báo)](#11-theo-dõi-thiết-bị-bất-thường-tab-cảnh-báo)
 12. [Xem xu hướng và dự báo (tab Xu hướng)](#12-xem-xu-hướng-và-dự-báo-tab-xu-hướng)
@@ -91,8 +91,8 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 
 | Tab | Dùng để |
 |---|---|
-| **DGA** | Nhập và đánh giá một lần đo khí hòa tan (tab chính) |
-| **Dầu cách điện** | Nhập và đánh giá thí nghiệm dầu |
+| **Khí hòa tan** | Nhập và đánh giá một lần đo khí hòa tan (tab chính) |
+| **Lý-Hóa dầu** | Nhập và đánh giá thí nghiệm dầu |
 | **Lịch sử đo** | Xem lại, sửa, xóa; so sánh 2 lần đo bất kỳ |
 | **Cảnh báo** | Danh sách thiết bị đang ở mức Cảnh báo/Báo động |
 | **Xu hướng** | Đồ thị theo thời gian + dự báo |
@@ -120,7 +120,7 @@ Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển g
 
 ---
 
-## 4. Nhập và đánh giá một lần đo khí hòa tan (tab DGA)
+## 4. Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)
 
 ### Bước 1 — Chọn loại thiết bị
 
@@ -218,7 +218,7 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
 
 ### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN)
 
-1. Ở tab **DGA**, mục **"Biên bản thí nghiệm (PDF, tùy chọn)"**: **kéo thả** file PDF vào khung, hoặc bấm khung để chọn file.
+1. Ở tab **Khí hòa tan**, mục **"Biên bản thí nghiệm (PDF, tùy chọn)"**: **kéo thả** file PDF vào khung, hoặc bấm khung để chọn file.
 2. App tự đọc và **điền sẵn** vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và **7 khí hòa tan**.
 3. **Kiểm tra lại toàn bộ** các ô đã điền, sửa nếu cần, rồi bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
 4. Sau này có thể bấm **Xem BBTN đã lưu** để mở lại file, hoặc **Bỏ file** để gỡ đính kèm.
@@ -270,7 +270,7 @@ Sau khi bấm **Phân tích & Lưu**, ở đầu khối **"2. Kết quả đánh
 
 ---
 
-## 9. Thí nghiệm dầu cách điện (tab Dầu cách điện)
+## 9. Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)
 
 Ba chỉ tiêu được đánh giá: **Độ ẩm dầu (ppm)**, **Tổn hao điện môi tgδ ở 90°C (%)**, **Điện áp chọc thủng (kV)**.
 
@@ -315,7 +315,7 @@ Muốn xem hoặc xuất lại biên bản cũ: ở bảng lịch sử, bấm **
 
 ### 9.4. Sứ xuyên (Bushing)
 
-Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab **DGA** (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).
+Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab **Khí hòa tan** (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).
 
 ---
 
@@ -355,7 +355,7 @@ Bảng kết quả gồm: giá trị trước, sau, chênh lệch (Δ), **tốc 
 
 ## 11. Theo dõi thiết bị bất thường (tab Cảnh báo)
 
-Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab DGA/Dầu cách điện, không tự đặt ngưỡng riêng.
+Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.
 
 - **Thống kê nhanh:** tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.
 - **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.
