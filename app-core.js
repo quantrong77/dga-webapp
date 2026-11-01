@@ -722,6 +722,7 @@ function applyTabLayout(isSidebar) {
   if (!btn) return;
   btn.setAttribute("aria-pressed", String(isSidebar));
   btn.title = isSidebar ? "Chuyển thanh tab về ngang (phía trên)" : "Chuyển thanh tab sang cột dọc (bên trái)";
+  btn.setAttribute("data-tooltip", isSidebar ? "Chuyển tab ngang" : "Chuyển tab dọc");
 }
 
 /** Gắn sự kiện cho nút #btnToggleTabLayout ở header — đổi thanh tab giữa "ngang"

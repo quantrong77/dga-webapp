@@ -136,7 +136,7 @@ header.app-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  overflow: hidden;
+  /* Bỏ overflow: hidden để tooltip nổi tự do */
   background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
   color: #fff;
   padding: 18px 28px;
@@ -159,32 +159,103 @@ header.app-header {
   flex: none;
 }
 
-/* Tooltip hiển thị chức năng khi trỏ chuột vào các nút icon trên Header (Menu bar) */
-.header-icon-btn[data-tooltip]::after {
-  content: attr(data-tooltip);
+/* Tooltip hiển thị chức năng khi trỏ chuột vào các nút icon trên Header (Menu bar).
+   Thiết kế mũi tên hướng lên icon, nổi hoàn toàn trên thanh dải màu 3 pha và không bị che khuất. */
+.header-icon-btn[data-tooltip]::before {
+  content: "";
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 5px);
   left: 50%;
   transform: translateX(-50%) translateY(-2px);
-  background: rgba(15, 23, 42, 0.95);
-  color: #ffffff;
-  font-size: 11.5px;
-  font-weight: 500;
-  white-space: nowrap;
-  padding: 4px 8px;
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-width: 0 5px 6px 5px;
+  border-style: solid;
+  border-color: transparent transparent #0f172a transparent;
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
-  z-index: 100;
+  z-index: 1001;
+}
+.header-icon-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 11px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  background: #0f172a;
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 5px 9px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 1000;
+}
+.header-icon-btn[data-tooltip]:hover::before,
+.header-icon-btn[data-tooltip]:focus-visible::before {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
 }
 .header-icon-btn[data-tooltip]:hover::after,
 .header-icon-btn[data-tooltip]:focus-visible::after {
   opacity: 1;
   visibility: visible;
   transform: translateX(-50%) translateY(0);
+}
+
+.header-right .header-icon-btn:last-of-type[data-tooltip]::after,
+#btnToggleTheme[data-tooltip]::after,
+#btnOpenChangePassword[data-tooltip]::after {
+  left: auto;
+  right: 0;
+  transform: translateY(-2px);
+}
+.header-right .header-icon-btn:last-of-type[data-tooltip]::before,
+#btnToggleTheme[data-tooltip]::before,
+#btnOpenChangePassword[data-tooltip]::before {
+  left: auto;
+  right: 11px;
+  transform: translateY(-2px);
+}
+.header-right .header-icon-btn:last-of-type[data-tooltip]:hover::after,
+.header-right .header-icon-btn:last-of-type[data-tooltip]:focus-visible::after,
+#btnToggleTheme[data-tooltip]:hover::after,
+#btnToggleTheme[data-tooltip]:focus-visible::after,
+#btnOpenChangePassword[data-tooltip]:hover::after,
+#btnOpenChangePassword[data-tooltip]:focus-visible::after {
+  transform: translateY(0);
+}
+.header-right .header-icon-btn:last-of-type[data-tooltip]:hover::before,
+.header-right .header-icon-btn:last-of-type[data-tooltip]:focus-visible::before,
+#btnToggleTheme[data-tooltip]:hover::before,
+#btnToggleTheme[data-tooltip]:focus-visible::before,
+#btnOpenChangePassword[data-tooltip]:hover::before,
+#btnOpenChangePassword[data-tooltip]:focus-visible::before {
+  transform: translateY(0);
+}
+
+.header-left .header-icon-btn[data-tooltip]::after {
+  left: 0;
+  transform: translateY(-2px);
+}
+.header-left .header-icon-btn[data-tooltip]::before {
+  left: 11px;
+  transform: translateY(-2px);
+}
+.header-left .header-icon-btn[data-tooltip]:hover::after,
+.header-left .header-icon-btn[data-tooltip]:focus-visible::after {
+  transform: translateY(0);
+}
+.header-left .header-icon-btn[data-tooltip]:hover::before,
+.header-left .header-icon-btn[data-tooltip]:focus-visible::before {
+  transform: translateY(0);
 }
 
 
@@ -198,7 +269,7 @@ header.app-header::before {
   background-size: 24px 24px;
   pointer-events: none;
 }
-header.app-header > * { position: relative; z-index: 1; }
+header.app-header > * { position: relative; z-index: 10; }
 
 /* Trái: trạng thái kết nối database. Giữa: tên ứng dụng + ghi chú (canh giữa
    trang). Phải: thông tin người đăng nhập + nút đăng xuất. */
@@ -345,7 +416,11 @@ header.app-header p {
   justify-content: center;
   transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.header-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
+.header-icon-btn:hover,
+.header-icon-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.24);
+  z-index: 30;
+}
 .header-icon-btn[aria-pressed="true"] {
   background: #fff;
   color: var(--blue-900);
