@@ -11,7 +11,7 @@
 nav.tabs {
   display: flex;
   padding: 10px 24px 0;
-  border-bottom: 1px solid var(--gray-300);
+  border-bottom: 1px solid var(--border);
   overflow-x: auto;
   position: sticky;
   top: var(--header-height, 60px);
@@ -57,23 +57,24 @@ nav.tabs button {
   align-items: center;
   border: none;
   background: transparent;
-  padding: 10px 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--gray-600);
+  padding: 11px 16px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
   cursor: pointer;
   border-bottom: 3px solid transparent;
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
 }
 nav.tabs button:hover {
-  background: var(--gray-100);
+  background: var(--surface-sunken);
   color: var(--blue-900);
 }
 nav.tabs button.active {
   color: var(--blue-900);
-  border-bottom-color: var(--blue-900);
+  border-bottom-color: var(--blue-700);
+  font-weight: var(--font-bold);
 }
 nav.tabs button .tab-icon { opacity: 0.82; }
 nav.tabs button:hover .tab-icon,
@@ -295,19 +296,21 @@ main {
 body.tabs-sidebar main { max-width: none; }
 
 .panel {
-  background: var(--surface);
-  border: 1px solid var(--gray-300);
-  border-radius: var(--radius);
-  padding: 20px 22px;
-  margin-bottom: 20px;
-  box-shadow: var(--shadow-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-1);
 }
 
 .panel h2 {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--blue-900);
-  margin: 0 0 14px 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
 }
@@ -327,28 +330,30 @@ body.tabs-sidebar main { max-width: none; }
    hướng sang tab khác — tránh nhầm lẫn 2 tầng điều hướng cùng 1 kiểu nút. */
 .cauhinh-subtabs {
   display: inline-flex;
-  gap: 3px;
-  padding: 3px;
-  background: var(--gray-100);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
 }
 .cauhinh-subtab-btn {
   border: none;
   background: transparent;
-  color: var(--gray-600);
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 7px 18px;
-  border-radius: calc(var(--radius) - 3px);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .cauhinh-subtab-btn:hover { color: var(--blue-900); }
 .cauhinh-subtab-btn.active {
   background: var(--surface);
   color: var(--blue-900);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
 }
 .cauhinh-subpanel.hidden { display: none; }
 
@@ -359,28 +364,30 @@ body.tabs-sidebar main { max-width: none; }
    app-core.js. */
 .quytrinh-subtabs {
   display: inline-flex;
-  gap: 3px;
-  padding: 3px;
-  background: var(--gray-100);
-  border-radius: var(--radius);
-  margin-bottom: 16px;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
 }
 .quytrinh-subtab-btn {
   border: none;
   background: transparent;
-  color: var(--gray-600);
-  font-size: 13.5px;
-  font-weight: 600;
-  padding: 7px 18px;
-  border-radius: calc(var(--radius) - 3px);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 .quytrinh-subtab-btn:hover { color: var(--blue-900); }
 .quytrinh-subtab-btn.active {
   background: var(--surface);
   color: var(--blue-900);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
 }
 .quytrinh-subpanel.hidden { display: none; }
 

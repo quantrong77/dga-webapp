@@ -7,73 +7,164 @@
 :root {
   color-scheme: light;
   --header-height: 60px;
-  /* Lấy từ logo EVNNPT: navy làm màu thương hiệu. Đỏ thương hiệu KHÔNG dùng cho giao diện vì
-     trong app này đỏ nghĩa là "Không đạt/Báo động". */
+
+  /* ===================== Refactoring UI Tokens ===================== */
+  /* Thang khoảng cách chuẩn (Spacing Scale): 4, 8, 12, 16, 24, 32, 48, 64px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  /* Thang cỡ chữ chuẩn (Typography Scale) */
+  --text-xs: 12px;
+  --text-sm: 13.5px;
+  --text-base: 15px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 30px;
+
+  /* Trọng số font (Font Weights) */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* Chiều cao dòng (Line Heights) */
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* Bán kính bo góc (Border Radii) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+  --radius: var(--radius-lg);
+
+  /* Thang đổ bóng 5 cấp độ (Two-part shadow scale: ambient + directional) */
+  --shadow-1: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-2: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  --shadow-3: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+  --shadow-4: 0 20px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+  --shadow-5: 0 25px 50px -12px rgba(15, 23, 42, 0.22);
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-5);
+
+  /* Các lớp bề mặt & đường viền ngữ nghĩa (Semantic Surfaces & Borders) */
+  --surface-page: #f8fafc;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #94a3b8;
+
+  /* Thương hiệu EVNNPT: navy làm màu chủ đạo */
   --evn-navy: #1b2470;
   --header-bg: var(--evn-navy);
-  --surface: #ffffff;
-  --blue-900: #1b2470; /* chữ nhấn: tiêu đề, tab đang chọn */
+  --blue-900: #1b2470; /* tiêu đề chính, thương hiệu */
   --blue-800: #232e8c;
-  --blue-700: #2c3fb8; /* hành động: liên kết, viền nút, focus */
-  --blue-100: #e9ebfa;
+  --blue-700: #2c3fb8; /* hành động, liên kết, viền focus */
+  --blue-100: #eef2ff; /* nền nhấn nhẹ */
+  --blue-50: #f5f7ff;
   --btn-primary: #1b2470;
   --btn-primary-hover: #232e8c;
-  --on-accent: #ffffff; /* chữ trên nền --blue-700 và nền trạng thái */
-  --gray-50: #f4f5fa;
-  --gray-100: #e9ebf3;
-  --gray-200: #dde0ec;
-  --gray-300: #cdd1e0;
-  --gray-600: #4f5674;
-  --gray-900: #171b33;
-  --ok: #12703a;
-  --ok-bg: #e3f4e9;
-  --bad: #b3121d;
-  --bad-bg: #fcebec;
-  --warn: #a44a00;
-  --warn-bg: #fdf0df;
-  --accent: #0a7f7a;
-  --accent-bg: #e3f6f5;
-  /* Màu 3 pha theo quy ước lưới điện: A vàng, B xanh lá, C đỏ. */
+  --on-accent: #ffffff;
+
+  /* Tương thích ngược hệ màu gray-* */
+  --gray-50: var(--surface-page);
+  --gray-100: var(--surface-sunken);
+  --gray-200: var(--border);
+  --gray-300: var(--border-strong);
+  --gray-600: var(--text-secondary);
+  --gray-900: var(--text-primary);
+
+  /* Trạng thái phân tích & chỉ thị kỹ thuật */
+  --ok: #15803d;
+  --ok-bg: #f0fdf4;
+  --ok-border: #bbf7d0;
+  --bad: #b91c1c;
+  --bad-bg: #fef2f2;
+  --bad-border: #fecaca;
+  --warn: #b45309;
+  --warn-bg: #fffbeb;
+  --warn-border: #fde68a;
+  --accent: #0f766e;
+  --accent-bg: #f0fdfa;
+  --accent-border: #99f6e4;
+
+  /* Màu 3 pha theo quy ước lưới điện: A vàng, B xanh lá, C đỏ */
   --phase-a: #e9b800;
   --phase-b: #1e9e4a;
   --phase-c: #d9262c;
   --gear-gray: #98a2b3;
   --gear-orange: #e2793c;
-  --radius: 8px;
-  --shadow-sm: none;
-  --shadow-md: 0 4px 14px rgba(20, 30, 80, 0.1);
-  --shadow-lg: 0 20px 60px rgba(10, 15, 45, 0.35);
   font-size: 15px;
 }
 
-/* Giao diện tối cho ca đêm: giữ tông navy của thương hiệu, không dùng đen. Trạng thái được chọn
-   lại độ sáng để vẫn đủ tương phản trên nền navy. Xem ui/ui-theme.js. */
+/* Giao diện tối cho ca đêm: giữ tông navy thương hiệu, chuẩn WCAG tương phản cao */
 :root[data-theme="dark"] {
   color-scheme: dark;
   --header-bg: #121749;
+  --surface-page: #0f1433;
   --surface: #171d45;
+  --surface-raised: #1f2757;
+  --surface-sunken: #12173b;
+  --border: #28326b;
+  --border-strong: #3b488e;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-tertiary: #64748b;
+
   --blue-900: #d5dbff;
   --blue-800: #bfc8ff;
   --blue-700: #9aa9ff;
   --blue-100: #252e63;
+  --blue-50: #1b2149;
   --btn-primary: #4556d6;
   --btn-primary-hover: #5567e6;
   --on-accent: #0f1433;
-  --gray-50: #0f1433;
-  --gray-100: #1e2550;
-  --gray-200: #2a3263;
-  --gray-300: #39417a;
-  --gray-600: #aab1d3;
-  --gray-900: #e8eaf6;
-  --ok: #5ad58a;
-  --ok-bg: #12351f;
-  --bad: #ff8a8f;
-  --bad-bg: #43161c;
-  --warn: #f2b35c;
-  --warn-bg: #3a2a12;
-  --accent: #4fd1cb;
-  --accent-bg: #123a3a;
-  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+
+  --gray-50: var(--surface-page);
+  --gray-100: var(--surface-sunken);
+  --gray-200: var(--border);
+  --gray-300: var(--border-strong);
+  --gray-600: var(--text-secondary);
+  --gray-900: var(--text-primary);
+
+  --ok: #4ade80;
+  --ok-bg: #052e16;
+  --ok-border: #166534;
+  --bad: #f87171;
+  --bad-bg: #450a0a;
+  --bad-border: #991b1b;
+  --warn: #fbbf24;
+  --warn-bg: #451a03;
+  --warn-border: #92400e;
+  --accent: #2dd4bf;
+  --accent-bg: #042f2e;
+  --accent-border: #115e59;
+
+  --shadow-1: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-2: 0 4px 6px -1px rgba(0, 0, 0, 0.45);
+  --shadow-3: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-4: 0 20px 25px -5px rgba(0, 0, 0, 0.55);
+  --shadow-5: 0 25px 50px -12px rgba(0, 0, 0, 0.65);
+  --shadow-sm: var(--shadow-1);
+  --shadow-md: var(--shadow-3);
+  --shadow-lg: var(--shadow-5);
 }
 
 :focus-visible { outline: 2px solid var(--blue-700); outline-offset: 2px; }
@@ -96,8 +187,10 @@ html {
 body {
   margin: 0;
   font-family: "Be Vietnam Pro", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-  background: var(--gray-50);
-  color: var(--gray-900);
+  background: var(--surface-page);
+  color: var(--text-primary);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* Thanh cuộn tùy biến (Chrome/Edge) — chi tiết nhỏ giúp giao diện đỡ mặc định/đơn điệu */
@@ -119,7 +212,7 @@ header.app-header {
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 10px rgba(10, 15, 45, 0.2);
   background: var(--header-bg);
   color: #fff;
   padding: 12px 24px 16px;
