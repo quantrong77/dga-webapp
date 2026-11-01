@@ -1058,18 +1058,7 @@ async function onAnalyze() {
   }
 }
 
-function storageErrorMessage(err) {
-  const base = (err && err.message) || String(err);
-  if (Storage.mode === "gsheet") {
-    return "Lỗi kết nối Google Sheets: " + base +
-      "\n\nKiểm tra: URL trong config.js đúng chưa, Apps Script đã Deploy > New deployment với " +
-      "\"Who has access: Anyone\" chưa, và Google Sheet chưa bị xóa/đổi quyền.";
-  }
-  if (Storage.mode === "supabase") {
-    return "Lỗi kết nối Supabase: " + base;
-  }
-  return "Lỗi lưu dữ liệu: " + base;
-}
+// storageErrorMessage(err) moved to storage/storage-core.js
 
 function verdictPill(v) {
   if (v === "Đạt") return `<span class="pill ok">Đạt</span>`;

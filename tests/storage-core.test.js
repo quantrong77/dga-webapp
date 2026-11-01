@@ -12,6 +12,7 @@ const {
   isNetworkError,
   notifySyncStatus,
   _syncListeners,
+  storageErrorMessage,
 } = require("../storage/storage-core.js");
 
 describe("storage-core: normalizeGasKeys (Data Normalization)", () => {
@@ -248,5 +249,38 @@ describe("storage-core: notifySyncStatus (Event Distribution & Robustness)", () 
 
     // Clean up
     _syncListeners.length = 0;
+  });
+});
+
+
+describe("storage-core: storageErrorMessage (User-Facing Error Formatting)", () => {
+  const originalStorage = global.Storage;
+  afterEach(() => {
+    global.Storage = originalStorage;
+  });
+
+  test("formats Google Sheets storage errors with troubleshooting guide", () => {
+    global.Storage = { mode: "gsheet" };
+    const msg = storageErrorMessage(new Error("Script error 403"));
+    expect(msg).toContain("Lỗi kết nối Google Sheets: Script error 403");
+    expect(msg).toContain("Kiểm tra: URL trong config.js đúng chưa");
+  });
+
+  test("formats Supabase storage errors clearly", () => {
+    global.Storage = { mode: "supabase" };
+    const msg = storageErrorMessage(new Error("JWT expired"));
+    expect(msg).toBe("Lỗi kết nối Supabase: JWT expired");
+  });
+
+  test("formats local/generic storage errors fallback", () => {
+    global.Storage = { mode: "local" };
+    const msg = storageErrorMessage("QuotaExceededError");
+    expect(msg).toBe("Lỗi lưu dữ liệu: QuotaExceededError");
+  });
+
+  test("handles empty or null error object gracefully", () => {
+    global.Storage = { mode: "local" };
+    expect(storageErrorMessage(null)).toBe("Lỗi lưu dữ liệu: null");
+    expect(storageErrorMessage(undefined)).toBe("Lỗi lưu dữ liệu: undefined");
   });
 });

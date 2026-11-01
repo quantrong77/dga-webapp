@@ -152,6 +152,20 @@ function notifySyncStatus(override) {
   });
 }
 
+function storageErrorMessage(err) {
+  const base = (err && err.message) || String(err);
+  const mode = typeof Storage !== "undefined" ? Storage.mode : "";
+  if (mode === "gsheet") {
+    return "Lỗi kết nối Google Sheets: " + base +
+      "\n\nKiểm tra: URL trong config.js đúng chưa, Apps Script đã Deploy > New deployment với " +
+      "\"Who has access: Anyone\" chưa, và Google Sheet chưa bị xóa/đổi quyền.";
+  }
+  if (mode === "supabase") {
+    return "Lỗi kết nối Supabase: " + base;
+  }
+  return "Lỗi lưu dữ liệu: " + base;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     LS_KEYS,
@@ -171,5 +185,6 @@ if (typeof module !== "undefined" && module.exports) {
     _isSyncing,
     _syncListeners,
     notifySyncStatus,
+    storageErrorMessage,
   };
 }
