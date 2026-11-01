@@ -22,10 +22,10 @@ if (typeof module !== "undefined" && module.exports) {
 }
 
 const Storage = {
-  mode: hasGsheetConfig() ? "gsheet" : hasSupabaseConfig() ? "supabase" : "local",
+  mode: (typeof hasLocalServerConfig === "function" && hasLocalServerConfig()) ? "local-server" : hasGsheetConfig() ? "gsheet" : hasSupabaseConfig() ? "supabase" : "local",
 
   async listMeasurements() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listMeasurements");
         lsSet(LS_KEYS.measurements, data || []);
@@ -70,7 +70,7 @@ const Storage = {
     if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.measurements, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("addMeasurement", { record });
         return record;
@@ -115,7 +115,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.measurements).filter((r) => r.id !== id);
     lsSet(LS_KEYS.measurements, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteMeasurement", { id });
         return;
@@ -151,7 +151,7 @@ const Storage = {
   },
 
   async listStandards() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listStandards");
         lsSet(LS_KEYS.standards, data || []);
@@ -188,7 +188,7 @@ const Storage = {
     if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.standards, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("saveStandard", { record });
         return record;
@@ -227,7 +227,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.standards).filter((r) => r.id !== id);
     lsSet(LS_KEYS.standards, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteStandard", { id });
         return;
@@ -275,7 +275,7 @@ const Storage = {
   // -------------------------------------------------------------------
   async listRegulationConfig() {
     let rows;
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         rows = await gsheetGet("listRegulationConfig");
         lsSet(LS_KEYS.regulationConfig, rows || []);
@@ -326,7 +326,7 @@ const Storage = {
     if (idx >= 0) all[idx] = wire; else all.push(wire);
     lsSet(LS_KEYS.regulationConfig, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("saveRegulationConfig", { record: wire });
         return;
@@ -367,7 +367,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.regulationConfig).filter((r) => r.id !== id);
     lsSet(LS_KEYS.regulationConfig, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteRegulationConfig", { id });
         return;
@@ -404,7 +404,7 @@ const Storage = {
 
   // Danh mục Trạm (MaTram/TenTram) — dùng để gợi ý/tìm kiếm ở ô "Trạm", không bắt buộc.
   async listStations() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listStations");
         lsSet(LS_KEYS.stations, data || []);
@@ -441,7 +441,7 @@ const Storage = {
     if (idx >= 0) all[idx] = record; else all.push(record);
     lsSet(LS_KEYS.stations, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("saveStation", { record });
         return record;
@@ -480,7 +480,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.stations).filter((r) => r.id !== id);
     lsSet(LS_KEYS.stations, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteStation", { id });
         return;
@@ -517,7 +517,7 @@ const Storage = {
 
   // Thí nghiệm dầu MBA (độ ẩm/tgδ 90°C/điện áp chọc thủng) — Điều 46/47/50, QĐ1901.
   async listOilTests() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listOilTests");
         lsSet(LS_KEYS.oilTests, data || []);
@@ -553,7 +553,7 @@ const Storage = {
     all.push(record);
     lsSet(LS_KEYS.oilTests, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("addOilTest", { record });
         return record;
@@ -592,7 +592,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.oilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oilTests, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteOilTest", { id });
         return;
@@ -630,7 +630,7 @@ const Storage = {
   // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49, QĐ1901. Bảng
   // riêng khỏi oil_tests (dầu thùng dầu chính) vì có thêm điểm lấy mẫu + pha.
   async listOltcOilTests() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listOltcOilTests");
         lsSet(LS_KEYS.oltcOilTests, data || []);
@@ -666,7 +666,7 @@ const Storage = {
     all.push(record);
     lsSet(LS_KEYS.oltcOilTests, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("addOltcOilTest", { record });
         return record;
@@ -705,7 +705,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.oltcOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.oltcOilTests, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteOltcOilTest", { id });
         return;
@@ -746,7 +746,7 @@ const Storage = {
   // RIÊNG khỏi oil_tests (MBA) vì khác hẳn cấu trúc (equipment_type TI/TU thay cấp
   // điện áp/trạng thái dầu, không có has_membrane_n2/oil_sample_point).
   async listInstrumentOilTests() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listInstrumentOilTests");
         lsSet(LS_KEYS.instrumentOilTests, data || []);
@@ -784,7 +784,7 @@ const Storage = {
     all.push(record);
     lsSet(LS_KEYS.instrumentOilTests, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("addInstrumentOilTest", { record });
         return record;
@@ -823,7 +823,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.instrumentOilTests).filter((r) => r.id !== id);
     lsSet(LS_KEYS.instrumentOilTests, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteInstrumentOilTest", { id });
         return;
@@ -864,7 +864,7 @@ const Storage = {
   // nên phía gsheet (Code.gs) vẫn gắn created_by nếu đã đăng nhập nhưng không giới hạn ai
   // sửa vì client không cung cấp tính năng sửa.
   async listFeedback() {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       try {
         const data = await gsheetGet("listFeedback");
         lsSet(LS_KEYS.feedback, data || []);
@@ -900,7 +900,7 @@ const Storage = {
     all.push(record);
     lsSet(LS_KEYS.feedback, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("addFeedback", { record });
         return record;
@@ -939,7 +939,7 @@ const Storage = {
     const all = lsGet(LS_KEYS.feedback).filter((r) => r.id !== id);
     lsSet(LS_KEYS.feedback, all);
 
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       if (typeof navigator !== "undefined" && navigator.onLine === false) {
         enqueueSyncOp("deleteFeedback", { id });
         return;
@@ -983,7 +983,7 @@ const Storage = {
    *  phải sinh TRƯỚC bằng Storage.newId() (giống cách BBTN làm) vì ảnh có thể tải lên
    *  trước khi gọi addFeedback(). Trả về { image_url, image_name, image_file_id }. */
   async uploadFeedbackImage(feedbackId, file) {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       const base64Data = await fileToBase64(file);
       const res = await gsheetPost("uploadAttachment", {
         measurementId: feedbackId,
@@ -1020,7 +1020,7 @@ const Storage = {
    *  còn lại để null. Ở chế độ localStorage, bbtn_url có dạng "local:<measurementId>" —
    *  KHÔNG phải URL thật, chỉ là "khóa" để tra lại qua getLocalAttachment(). */
   async uploadAttachment(measurementId, file) {
-    if (this.mode === "gsheet") {
+    if ((this.mode === "gsheet" || this.mode === "local-server")) {
       const base64Data = await fileToBase64(file);
       const res = await gsheetPost("uploadAttachment", {
         measurementId,

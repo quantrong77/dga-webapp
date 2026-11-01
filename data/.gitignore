@@ -1,0 +1,4 @@
+# Bỏ qua file nhị phân đính kèm và file tạm
+uploads/*
+!uploads/.gitkeep
+*.tmp

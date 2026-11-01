@@ -27,6 +27,14 @@ function normalizeGasKeys(record) {
   return out;
 }
 
+function hasLocalServerConfig() {
+  return (
+    typeof window !== "undefined" &&
+    window.DGA_CONFIG &&
+    Boolean(window.DGA_CONFIG.LOCAL_SERVER_URL)
+  );
+}
+
 function hasSupabaseConfig() {
   return (
     typeof window !== "undefined" &&
@@ -51,6 +59,7 @@ function hasGsheetConfig() {
  *  không cần tự đi tìm lại đúng Sheet/dự án. Trả về null nếu không có link (chế độ
  *  local, hoặc chưa cấu hình) — badge khi đó vẫn hiển thị bình thường, chỉ không bấm
  *  mở được gì, y hệt hành vi trước khi có tính năng này.
+ *    - On-Premise Local Server: Trả về link /api?action=health để xem trạng thái CSDL máy chủ nội bộ.
  *    - Google Sheets: KHÔNG suy ra được từ GSHEET_WEBAPP_URL (URL đó là link Web App
  *      /exec, khác hẳn link Sheet) nên phải đọc từ GSHEET_SHEET_URL — admin tự dán tay
  *      1 lần vào config.js (xem chú thích ở đó).
@@ -61,7 +70,11 @@ function hasGsheetConfig() {
  */
 function databaseManagementUrl() {
   if (typeof window === "undefined" || !window.DGA_CONFIG) return null;
-  const currentMode = typeof Storage !== "undefined" ? Storage.mode : (hasGsheetConfig() ? "gsheet" : hasSupabaseConfig() ? "supabase" : "local");
+  const currentMode = typeof Storage !== "undefined" ? Storage.mode : (hasLocalServerConfig() ? "local-server" : hasGsheetConfig() ? "gsheet" : hasSupabaseConfig() ? "supabase" : "local");
+  if (currentMode === "local-server") {
+    const base = String(window.DGA_CONFIG.LOCAL_SERVER_URL || "/api").trim();
+    return base + (base.includes("?") ? "&" : "?") + "action=health";
+  }
   if (currentMode === "gsheet") {
     const url = String(window.DGA_CONFIG.GSHEET_SHEET_URL || "").trim();
     return url || null;
@@ -87,11 +100,13 @@ function sb() {
 
 function gsheetUrl() {
   const cfg = (typeof window !== "undefined" && window.DGA_CONFIG) || (typeof global !== "undefined" && global.DGA_CONFIG);
-  return cfg ? cfg.GSHEET_WEBAPP_URL : "";
+  if (!cfg) return "";
+  if (cfg.LOCAL_SERVER_URL) return cfg.LOCAL_SERVER_URL;
+  return cfg.GSHEET_WEBAPP_URL || "";
 }
 
-// Token phiên đăng nhập hiện tại (Google Sheets mode) — gắn tự động vào MỌI request
-// gsheetGet/gsheetPost bên dưới khi đã đăng nhập, để Apps Script (Code.gs) xác thực.
+// Token phiên đăng nhập hiện tại (Google Sheets / On-Premise Local Server mode) — gắn tự động vào MỌI request
+// gsheetGet/gsheetPost bên dưới khi đã đăng nhập, để Server xác thực.
 // Auth.init()/Auth._applySession() bên dưới là nơi duy nhất set biến này.
 let _authToken = null;
 
@@ -155,6 +170,10 @@ function notifySyncStatus(override) {
 function storageErrorMessage(err) {
   const base = (err && err.message) || String(err);
   const mode = typeof Storage !== "undefined" ? Storage.mode : "";
+  if (mode === "local-server") {
+    return "Lỗi kết nối Máy chủ nội bộ On-Premise: " + base +
+      "\n\nKiểm tra: Máy chủ nội bộ tại LOCAL_SERVER_URL đã được khởi động chưa (npm start) và cổng 8080 đang mở.";
+  }
   if (mode === "gsheet") {
     return "Lỗi kết nối Google Sheets: " + base +
       "\n\nKiểm tra: URL trong config.js đúng chưa, Apps Script đã Deploy > New deployment với " +
@@ -171,6 +190,7 @@ if (typeof module !== "undefined" && module.exports) {
     LS_KEYS,
     GAS_KEYS,
     normalizeGasKeys,
+    hasLocalServerConfig,
     hasSupabaseConfig,
     hasGsheetConfig,
     databaseManagementUrl,

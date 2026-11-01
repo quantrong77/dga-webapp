@@ -1,9 +1,10 @@
-/* scripts/serve.js — Máy chủ web tĩnh cục bộ không phụ thuộc thư viện ngoài (zero-dependency).
+/* scripts/serve.js — Máy chủ web tĩnh cục bộ và API CSDL On-Premise không phụ thuộc thư viện ngoài (zero-dependency).
  * Dùng để chạy thử nghiệm trên http://localhost:8080 (hoặc PORT do môi trường chỉ định).
  */
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const { handleApiRequest } = require("../server/api");
 
 const PORT = parseInt(process.env.PORT, 10) || 8080;
 const ROOT = path.resolve(__dirname, "..");
@@ -30,7 +31,8 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
   // CORS & CSP headers
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
   if (req.method === "OPTIONS") {
     res.writeHead(204);
@@ -40,12 +42,19 @@ const server = http.createServer((req, res) => {
 
   // Parse URL & decode URI components
   let reqPath = "";
+  let urlObj;
   try {
-    const urlObj = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    urlObj = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     reqPath = decodeURIComponent(urlObj.pathname);
   } catch (e) {
     res.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("400 Bad Request");
+    return;
+  }
+
+  // ĐIỀU HƯỚNG TỚI API CSDL ON-PREMISE NỘI BỘ
+  if (reqPath === "/api" || reqPath.startsWith("/api/")) {
+    handleApiRequest(req, res, urlObj);
     return;
   }
 
@@ -85,7 +94,8 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`DGA Web App đang chạy tại:`);
-  console.log(`  > Local:   http://localhost:${PORT}`);
-  console.log(`  > Network: http://127.0.0.1:${PORT}`);
+  console.log(`  > Giao diện Web:    http://localhost:${PORT}`);
+  console.log(`  > CSDL On-Premise:  http://localhost:${PORT}/api`);
+  console.log(`  > Thư mục dữ liệu:  ./data/ (database.json & uploads/)`);
   console.log(`Bấm Ctrl+C để dừng máy chủ.`);
 });

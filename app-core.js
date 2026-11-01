@@ -50,7 +50,7 @@ function applyDatabaseBadgeLink(badge) {
     return;
   }
   badge.dataset.dbLink = url;
-  const hint = Storage.mode === "gsheet" ? "Bấm để mở Google Sheet quản lý dữ liệu" : "Bấm để mở Supabase Dashboard";
+  const hint = Storage.mode === "local-server" ? "Bấm để kiểm tra trạng thái Máy chủ nội bộ On-Premise" : Storage.mode === "gsheet" ? "Bấm để mở Google Sheet quản lý dữ liệu" : "Bấm để mở Supabase Dashboard";
   badge.title = badge.title ? `${badge.title} — ${hint}` : hint;
 }
 
@@ -77,17 +77,17 @@ async function initApp() {
   const badge = $("storageBadge");
   const footerInfo = $("footerStorageInfo");
   const isAdminOrNoAuth = !Auth.enabled || (Auth.current && Auth.current.role === "admin");
-  if (Storage.mode === "gsheet" || Storage.mode === "supabase") {
-    footerInfo.textContent = "lưu trên database dùng chung (nhiều máy cùng truy cập)";
+  if (Storage.mode === "local-server" || Storage.mode === "gsheet" || Storage.mode === "supabase") {
+    footerInfo.textContent = Storage.mode === "local-server" ? "lưu trên Máy chủ nội bộ On-Premise (Localhost / LAN)" : "lưu trên database dùng chung (nhiều máy cùng truy cập)";
     badge.classList.toggle("hidden", !isAdminOrNoAuth);
     if (isAdminOrNoAuth) {
       // Màu xanh (.badge.supabase) là trạng thái LẠC QUAN ban đầu — đã có cấu hình
       // (config.js) nên coi như sẽ kết nối được; nếu bước tải Tiêu chuẩn/Lịch sử đo
       // ngay bên dưới (nơi thật sự gọi API đầu tiên) thất bại, badge sẽ bị chuyển
       // sang đỏ (.badge.error) ở khối try/catch tương ứng, xem thêm ghi chú ở đó.
-      badge.textContent = "Database";
+      badge.textContent = Storage.mode === "local-server" ? "Máy chủ nội bộ" : "Database";
       badge.className = "badge supabase";
-      badge.title = "Đã kết nối database";
+      badge.title = Storage.mode === "local-server" ? "Đã kết nối Máy chủ nội bộ (On-Premise Localhost)" : "Đã kết nối database";
       applyDatabaseBadgeLink(badge);
     }
   } else {
@@ -181,7 +181,7 @@ async function initApp() {
     // (đang lạc quan để xanh từ đầu initApp(), xem phía trên) sang đỏ để phản ánh
     // đúng tình trạng thay vì vẫn hiện xanh gây hiểu lầm là app đang hoạt động bình
     // thường. Không đổi badge khi ở chế độ local (không có khái niệm "mất kết nối").
-    if ((Storage.mode === "gsheet" || Storage.mode === "supabase") && isAdminOrNoAuth) {
+    if ((Storage.mode === "local-server" || Storage.mode === "gsheet" || Storage.mode === "supabase") && isAdminOrNoAuth) {
       badge.textContent = "Database";
       badge.className = "badge error";
       badge.title = "Mất kết nối database: " + storageErrorMessage(err);

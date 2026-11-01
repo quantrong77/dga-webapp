@@ -21,7 +21,9 @@ function authLsSet(session) {
 }
 
 const Auth = {
-  enabled: hasGsheetConfig(),
+  get enabled() {
+    return (typeof hasLocalServerConfig === "function" && hasLocalServerConfig()) || hasGsheetConfig();
+  },
   current: null, // { token, email, role } sau khi xác thực thành công, null nếu chưa đăng nhập
 
   /** Nạp phiên đã lưu (nếu có) từ lần trước — gọi 1 lần lúc khởi động trang. */
@@ -64,48 +66,39 @@ const Auth = {
     try {
       await gsheetPost("logout", {});
     } catch (e) {
-      console.warn("Đăng xuất phía server thất bại (bỏ qua, vẫn xóa phiên cục bộ):", e);
+      // bỏ qua lỗi mạng khi logout — phiên cục bộ vẫn xóa
     }
     _authToken = null;
     this.current = null;
     authLsSet(null);
   },
 
-  /** Xác thực lại token đã lưu (sau khi tải lại trang) — null nếu hết hạn/không hợp lệ. */
+  /** Thông tin cấu hình đăng ký (ai được đăng ký) từ server — gọi 1 lần lúc vẽ modal. */
+  async registrationInfo() {
+    return await gsheetGet("registrationInfo");
+  },
+
+  /** Kiểm tra lại phiên hiện tại với server (còn hạn không, role đổi chưa, cần đổi mk không). */
   async refresh() {
-    if (!_authToken) return null;
+    if (!this.current) return null;
     try {
-      const me = await gsheetGet("me");
-      // hasPassword: xem actionMe() ở Code.gs — dùng để hiện gợi ý #changePasswordGoogleHint
-      // (setupChangePassword(), ui-auth.js) TRƯỚC khi tài khoản chỉ đăng nhập Google thử đổi
-      // mật khẩu. Server cũ (chưa có trường này) trả undefined -> !!undefined = false, coi
-      // như "chưa có mật khẩu" (an toàn hơn: hiện gợi ý nhầm còn hơn để lỗi khó hiểu).
+      const data = await gsheetGet("me");
       this.current = {
-        token: _authToken, email: me.email, role: me.role,
-        hasPassword: !!me.hasPassword, mustChangePassword: !!me.mustChangePassword,
+        token: this.current.token,
+        email: data.email,
+        role: data.role,
+        hasPassword: !!data.hasPassword,
+        mustChangePassword: !!data.mustChangePassword,
       };
       authLsSet(this.current);
       return this.current;
-    } catch (err) {
-      if (isNetworkError(err)) {
-        console.warn("Mất mạng khi xác thực token — giữ nguyên phiên đăng nhập cục bộ đã lưu.");
-        return this.current;
-      }
+    } catch (e) {
+      // Token hết hạn hoặc user bị xóa — coi như đã đăng xuất
       _authToken = null;
       this.current = null;
       authLsSet(null);
       return null;
     }
-  },
-
-  isAdmin() {
-    return !!(this.current && this.current.role === "admin");
-  },
-
-  /** role "viewer" — chỉ đọc, không nhập/sửa được dữ liệu thiết bị (server luôn kiểm tra
-   *  lại qua requireWriter(), xem gsheet/Code.gs) — dùng ở canSaveEntry() (ui-auth.js). */
-  isViewer() {
-    return !!(this.current && this.current.role === "viewer");
   },
 
   async listUsers() {
@@ -120,23 +113,7 @@ const Auth = {
     return await gsheetPost("deleteUser", { email });
   },
 
-  /** Trạng thái đăng ký hiện tại của server ("open"/"domain"/"closed" + domain cho phép
-   *  nếu có, xem REGISTRATION_MODE ở Code.gs) — public, KHÔNG cần đăng nhập trước. Dùng để
-   *  ẩn/hiện link "Đăng ký" và gợi ý domain ở màn hình đăng nhập (setupAuthForms(), ui-auth.js).
-   *  Gọi lỗi (server cũ chưa có action này/mất mạng) → coi như "open" để không lỡ chặn nhầm
-   *  luồng đăng ký hiện có vì một lỗi không liên quan. */
-  async registrationInfo() {
-    try {
-      return await gsheetGet("registrationInfo");
-    } catch (err) {
-      return { mode: "open", domain: "" };
-    }
-  },
-
-  /** Tự đổi mật khẩu (đã đăng nhập, phải biết đúng mật khẩu cũ) — server hủy MỌI phiên
-   *  khác và cấp lại 1 phiên MỚI ngay trong cùng response (xem actionChangePassword(),
-   *  Code.gs), nên PHẢI áp dụng qua _applySession() để thay token/role đang lưu — nếu chỉ
-   *  đọc kết quả mà không gọi hàm này, lần gọi API kế tiếp sẽ dùng token CŨ đã bị hủy. */
+  /** Tự đổi mật khẩu (người dùng đang đăng nhập) — server yêu cầu đúng mật khẩu cũ. */
   async changePassword(oldPassword, newPassword) {
     const data = await gsheetPost("changePassword", { oldPassword, newPassword });
     return this._applySession(data);
