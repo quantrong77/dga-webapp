@@ -12,7 +12,7 @@
        - connect-src data: blob: : viewBbtn() fetch() file đính kèm lưu dạng data URL (chế độ thử nghiệm).
        - style-src 'unsafe-inline': giao diện dùng nhiều thuộc tính style="" (không chạy được mã).
        GitHub Pages không cho đặt HTTP header nên dùng thẻ meta (frame-ancestors không hỗ trợ ở meta). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com/gsi/client; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://script.google.com https://script.googleusercontent.com https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://accounts.google.com; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com/gsi/client; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://script.google.com https://script.googleusercontent.com https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://accounts.google.com blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <title>Đánh giá Dầu cách điện — QĐ1901/EVNNPT</title>
   <!-- Icon ứng dụng (DGAOil): bình tam giác dầu cam + máy biến áp + biểu đồ xu hướng -->
   <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
@@ -106,6 +106,7 @@
       <symbol id="icon-note" viewBox="0 0 24 24"><path d="M5 3.5h11l3 3v13.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4.5a1 1 0 0 1 1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 9h8M8 13h8M8 17h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></symbol>
       <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3 7 7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-external-link" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-gear-loader" viewBox="6 10 100 92">
         <g class="gear-loader-big"><path fill="var(--gear-gray)" d="M 80.16 61.85 L 86.57 60.80 L 86.57 71.20 L 80.16 70.15 L 79.62 72.65 L 78.83 75.09 L 77.79 77.43 L 83.60 80.35 L 77.48 88.77 L 72.92 84.14 L 71.01 85.85 L 68.93 87.36 L 66.72 88.65 L 69.71 94.42 L 59.81 97.64 L 58.83 91.21 L 56.28 91.47 L 53.72 91.47 L 51.17 91.21 L 50.19 97.64 L 40.29 94.42 L 43.28 88.65 L 41.07 87.36 L 38.99 85.85 L 37.08 84.14 L 32.52 88.77 L 26.40 80.35 L 32.21 77.43 L 31.17 75.09 L 30.38 72.65 L 29.84 70.15 L 23.43 71.20 L 23.43 60.80 L 29.84 61.85 L 30.38 59.35 L 31.17 56.91 L 32.21 54.57 L 26.40 51.65 L 32.52 43.23 L 37.08 47.86 L 38.99 46.15 L 41.07 44.64 L 43.28 43.35 L 40.29 37.58 L 50.19 34.36 L 51.17 40.79 L 53.72 40.53 L 56.28 40.53 L 58.83 40.79 L 59.81 34.36 L 69.71 37.58 L 66.72 43.35 L 68.93 44.64 L 71.01 46.15 L 72.92 47.86 L 77.48 43.23 L 83.60 51.65 L 77.79 54.57 L 78.83 56.91 L 79.62 59.35 Z"/></g>
         <g class="gear-loader-blue"><path fill="var(--blue-700)" d="M 43.69 29.96 L 47.61 29.15 L 47.61 36.85 L 43.69 36.04 L 42.86 38.74 L 41.54 41.24 L 44.88 43.43 L 39.43 48.88 L 37.24 45.54 L 34.74 46.86 L 32.04 47.69 L 32.85 51.61 L 25.15 51.61 L 25.96 47.69 L 23.26 46.86 L 20.76 45.54 L 18.57 48.88 L 13.12 43.43 L 16.46 41.24 L 15.14 38.74 L 14.31 36.04 L 10.39 36.85 L 10.39 29.15 L 14.31 29.96 L 15.14 27.26 L 16.46 24.76 L 13.12 22.57 L 18.57 17.12 L 20.76 20.46 L 23.26 19.14 L 25.96 18.31 L 25.15 14.39 L 32.85 14.39 L 32.04 18.31 L 34.74 19.14 L 37.24 20.46 L 39.43 17.12 L 44.88 22.57 L 41.54 24.76 L 42.86 27.26 Z"/></g>
@@ -315,8 +316,12 @@
         </div>
       </div>
 
-      <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thông tin lần đo</h2>
+      <!-- Bố cục chia đôi (Split layout): cột trái là form nhập liệu, cột phải là khung hiển thị BBTN (PDF)
+           để đối chiếu số liệu song song khi kéo thả/chọn file BBTN trước khi lưu và đánh giá -->
+      <div class="dga-input-split-layout" id="dgaInputSplitLayout">
+        <div class="dga-input-main-col">
+          <div class="panel">
+            <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thông tin lần đo</h2>
         <!-- Đang nạp Trạm/Thiết bị từ database (ẩn khi setComboLoading(false), xem
              app-core.js) — tránh cảm giác app bị đứng khi bấm mở gợi ý mà danh sách
              còn rỗng lúc mới vào app. -->
@@ -378,6 +383,12 @@
               <span id="bbtnCurrentName">—</span>
               <button type="button" class="btn ghost" id="btnViewBbtn" style="padding:3px 9px; font-size:11.5px;">Xem BBTN đã lưu</button>
               <button type="button" class="btn ghost" id="btnRemoveBbtn" style="padding:3px 9px; font-size:11.5px;" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+              <button type="button" class="btn ghost hidden" id="btnToggleBbtnPreview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+                <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                <span id="btnToggleBbtnPreviewText">Hiện BBTN đối chiếu</span>
+              </button>
             </div>
             <p class="note hidden" id="bbtnImportNote"></p>
           </label>
@@ -509,12 +520,41 @@
         </div>
 
         <p class="note hidden" id="editingMeasurementNote" style="color:var(--warn); font-weight:600;">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div style="margin-top:18px; display:flex; gap:10px;">
+        <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
           <button class="btn primary" id="btnAnalyze">Phân tích &amp; Lưu</button>
           <button class="btn ghost" id="btnClearForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditMeasurement">Hủy sửa</button>
         </div>
       </div>
+    </div><!-- /.dga-input-main-col -->
+
+    <aside class="bbtn-preview-col hidden" id="bbtnPreviewCol" aria-label="Khung đối chiếu Biên bản thí nghiệm">
+      <div class="bbtn-preview-panel">
+        <div class="bbtn-preview-header">
+          <span class="bbtn-preview-title">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+            Biên bản đối chiếu
+          </span>
+          <span class="badge" id="bbtnPreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
+          <span class="bbtn-preview-filename" id="bbtnPreviewFileName" title=""></span>
+          <div class="bbtn-preview-actions">
+            <button type="button" class="btn ghost" id="btnBbtnNewTab" title="Mở file ở tab mới" style="padding:3px 8px; font-size:11.5px;">
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-external-link"></use></svg> Mở tab mới
+            </button>
+            <button type="button" class="btn ghost" id="btnCloseBbtnPreview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu" style="padding:3px 8px; font-size:11.5px;">
+              ✕ Ẩn
+            </button>
+          </div>
+        </div>
+        <div class="bbtn-preview-body">
+          <iframe id="bbtnPreviewFrame" src="about:blank" title="Xem trước Biên bản thí nghiệm" class="bbtn-preview-frame"></iframe>
+        </div>
+        <div class="bbtn-preview-footer">
+          <span>💡 <strong>Đối chiếu:</strong> So sánh số liệu trong BBTN với các ô nhập liệu bên cạnh trước khi bấm "Phân tích &amp; Lưu".</span>
+        </div>
+      </div>
+    </aside>
+  </div><!-- /#dgaInputSplitLayout -->
 
       <!-- ===================== NHẬP HÀNG LOẠT NHIỀU BBTN (PDF) =====================
            Dùng khi có nhiều Biên bản thí nghiệm LỊCH SỬ của CÙNG 1 thiết bị để chung 1
@@ -2057,7 +2097,9 @@
       <div id="dauInstrumentWrap">
       <!-- BBTN 3 pha chung 1 biên bản (mẫu PTC3/BM.14) — đọc PDF hoặc nhập tay, tách thành 3 bản ghi
            A/B/C, xuất lại theo template/template-bbtn-dau-3pha.docx. Xem ui/ui-ti-oil-3pha.js. -->
-      <div class="panel" id="tio3Panel">
+      <div class="dga-input-split-layout" id="t3SplitLayout">
+        <div class="dga-input-main-col">
+          <div class="panel" id="tio3Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>BBTN dầu 3 pha (A, B, C chung một biên bản)</h2>
         <p class="note">Tải PDF biên bản để tự điền, hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành 1 bản ghi
           cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
@@ -2065,6 +2107,12 @@
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN 3 pha vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
           <input id="t3_file" type="file" accept="application/pdf,.pdf" />
+        </div>
+        <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+          <button type="button" class="btn ghost hidden" id="btnToggleT3Preview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
+            <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
+          </button>
         </div>
         <p class="note hidden" id="t3ImportNote" role="status"></p>
         <div class="grid">
@@ -2121,6 +2169,35 @@
           <p class="note hidden" id="t3MismatchNote" style="color:var(--warn); font-weight:600;"></p>
         </div>
       </div>
+    </div><!-- /.dga-input-main-col -->
+
+    <aside class="bbtn-preview-col hidden" id="t3PreviewCol" aria-label="Khung đối chiếu Biên bản thí nghiệm dầu 3 pha">
+      <div class="bbtn-preview-panel">
+        <div class="bbtn-preview-header">
+          <span class="bbtn-preview-title">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+            Biên bản đối chiếu (3 pha)
+          </span>
+          <span class="badge" id="t3PreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
+          <span class="bbtn-preview-filename" id="t3PreviewFileName" title=""></span>
+          <div class="bbtn-preview-actions">
+            <button type="button" class="btn ghost" id="btnT3NewTab" title="Mở file ở tab mới" style="padding:3px 8px; font-size:11.5px;">
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-external-link"></use></svg> Mở tab mới
+            </button>
+            <button type="button" class="btn ghost" id="btnCloseT3Preview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu" style="padding:3px 8px; font-size:11.5px;">
+              ✕ Ẩn
+            </button>
+          </div>
+        </div>
+        <div class="bbtn-preview-body">
+          <iframe id="t3PreviewFrame" src="about:blank" title="Xem trước Biên bản thí nghiệm dầu 3 pha" class="bbtn-preview-frame"></iframe>
+        </div>
+        <div class="bbtn-preview-footer">
+          <span>💡 <strong>Đối chiếu:</strong> So sánh kết quả 3 pha (A, B, C) với các ô nhập liệu bên cạnh trước khi bấm "Đánh giá &amp; Lưu 3 pha".</span>
+        </div>
+      </div>
+    </aside>
+  </div><!-- /#t3SplitLayout -->
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU</h2>
         <p class="note">Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
@@ -2649,12 +2726,14 @@
         <details class="mm-node">
           <summary>6. Nhập nhanh từ Biên bản thí nghiệm (PDF) và ảnh tấm nhãn<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
-          <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN)</h3>
+          <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song</h3>
           <ol type="1">
           <li>Ở tab <strong>Khí hòa tan</strong>, mục <strong>"Biên bản thí nghiệm (PDF, tùy chọn)"</strong>: <strong>kéo thả</strong> file PDF vào khung (đã được tăng chiều cao và có viền sáng focus khi rê chuột), hoặc bấm khung để chọn file.</li>
+          <li><strong>Khung hiển thị Biên bản đối chiếu song song (Split View):</strong> Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới): - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc. - Nút <strong>"Mở tab mới"</strong> giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần. - Nút <strong>"✕ Ẩn"</strong> hoặc <strong>"Hiện BBTN đối chiếu"</strong> để đóng hoặc mở lại khung xem bất kỳ lúc nào.</li>
           <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và <strong>7 khí hòa tan</strong>.</li>
-          <li><strong>Kiểm tra lại toàn bộ</strong> các ô đã điền, sửa nếu cần, rồi bấm <strong>Phân tích &amp; Lưu</strong>. File PDF được đính kèm cùng lần đo.</li>
-          <li>Sau này có thể bấm <strong>Xem BBTN đã lưu</strong> để mở lại file, hoặc <strong>Bỏ file</strong> để gỡ đính kèm.</li>
+          <li><strong>Đối chiếu và xác nhận số liệu:</strong> So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.</li>
+          <li>Bấm <strong>Phân tích &amp; Lưu</strong>. File PDF được đính kèm cùng lần đo.</li>
+          <li>Sau này khi sửa hoặc xem lại lần đo, bạn có thể bấm <strong>Xem BBTN đã lưu</strong> hoặc <strong>Hiện BBTN đối chiếu</strong> để mở lại file PDF đối chiếu trực tiếp song song với form.</li>
           </ol>
           <p>Việc đọc PDF chạy <strong>hoàn toàn trên trình duyệt của bạn</strong>, file không bị gửi đi đâu để "đọc".</p>
           <p class="sm-note">⚠ App được thiết kế theo mẫu biên bản <strong>PTC3/BM.15</strong>. Nếu biên bản dùng mẫu khác, có thể chỉ đọc được một phần hoặc không đọc được. Luôn đối chiếu với biên bản gốc.</p>
@@ -2739,7 +2818,7 @@
           <h4>BBTN dầu 3 pha (A, B, C chung một biên bản)</h4>
           <p>Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.</p>
           <ol type="1">
-          <li><strong>Có file PDF:</strong> kéo thả vào ô tải file. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Hãy so lại với biên bản trước khi lưu. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.</li>
+          <li><strong>Có file PDF:</strong> kéo thả vào ô tải file. Giao diện tự động mở <strong>Khung hiển thị Biên bản đối chiếu song song</strong> bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm <strong>Đánh giá &amp; Lưu 3 pha</strong>. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.</li>
           <li><strong>Nhập tay:</strong> điền thông tin chung và bảng kết quả theo từng pha. Pha nào không thí nghiệm thì để trống.</li>
           <li>Chọn <strong>Nhà sản xuất áp tiêu chuẩn</strong> (app tự chọn nếu tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm <strong>Đánh giá &amp; Lưu 3 pha</strong>.</li>
           </ol>

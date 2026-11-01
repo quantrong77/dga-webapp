@@ -420,6 +420,21 @@ async function initApp() {
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
   $("f_bbtn").addEventListener("change", onBbtnFileSelected);
   setupBbtnDropzone();
+  if ($("btnBbtnNewTab")) {
+    $("btnBbtnNewTab").addEventListener("click", () => {
+      const frame = $("bbtnPreviewFrame");
+      if (frame && frame.src && frame.src !== "about:blank") {
+        window.open(frame.src, "_blank", "noopener");
+      }
+    });
+  }
+  if ($("btnCloseBbtnPreview")) {
+    $("btnCloseBbtnPreview").addEventListener("click", hideBbtnPreview);
+  }
+  if ($("btnToggleBbtnPreview")) {
+    $("btnToggleBbtnPreview").addEventListener("click", toggleBbtnPreview);
+  }
+
   $("f_nameplate").addEventListener("change", onNameplateFileSelected);
   setupNameplateDropzone();
   setupInfoPopovers();

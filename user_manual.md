@@ -233,12 +233,17 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
 
 ## 6. Nhập nhanh từ Biên bản thí nghiệm (PDF) và ảnh tấm nhãn
 
-### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN)
+### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song
 
 1. Ở tab **Khí hòa tan**, mục **"Biên bản thí nghiệm (PDF, tùy chọn)"**: **kéo thả** file PDF vào khung (đã được tăng chiều cao và có viền sáng focus khi rê chuột), hoặc bấm khung để chọn file.
-2. App tự đọc và **điền sẵn** vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và **7 khí hòa tan**.
-3. **Kiểm tra lại toàn bộ** các ô đã điền, sửa nếu cần, rồi bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
-4. Sau này có thể bấm **Xem BBTN đã lưu** để mở lại file, hoặc **Bỏ file** để gỡ đính kèm.
+2. **Khung hiển thị Biên bản đối chiếu song song (Split View):** Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới):
+   - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc.
+   - Nút **"Mở tab mới"** giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần.
+   - Nút **"✕ Ẩn"** hoặc **"Hiện BBTN đối chiếu"** để đóng hoặc mở lại khung xem bất kỳ lúc nào.
+3. App tự đọc và **điền sẵn** vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và **7 khí hòa tan**.
+4. **Đối chiếu và xác nhận số liệu:** So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.
+5. Bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
+6. Sau này khi sửa hoặc xem lại lần đo, bạn có thể bấm **Xem BBTN đã lưu** hoặc **Hiện BBTN đối chiếu** để mở lại file PDF đối chiếu trực tiếp song song với form.
 
 Việc đọc PDF chạy **hoàn toàn trên trình duyệt của bạn**, file không bị gửi đi đâu để "đọc".
 
@@ -318,7 +323,7 @@ Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) 
 
 Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.
 
-1. **Có file PDF:** kéo thả vào ô tải file. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Hãy so lại với biên bản trước khi lưu. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
+1. **Có file PDF:** kéo thả vào ô tải file. Giao diện tự động mở **Khung hiển thị Biên bản đối chiếu song song** bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm **Đánh giá & Lưu 3 pha**. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
 2. **Nhập tay:** điền thông tin chung và bảng kết quả theo từng pha. Pha nào không thí nghiệm thì để trống.
 3. Chọn **Nhà sản xuất áp tiêu chuẩn** (app tự chọn nếu tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm **Đánh giá & Lưu 3 pha**.
 

@@ -26,6 +26,8 @@ let _removeBbtnOnSave = false;
 // onExportBbtn() bên dưới và bbtn-export.js. null khi chưa phân tích lần nào trong
 // phiên làm việc này (bấm "Xuất BBTN" lúc đó sẽ báo yêu cầu phân tích trước).
 let _lastAnalysis = null;
+// _currentBbtnBlobUrl: URL blob của file PDF BBTN đang hiển thị trong khung đối chiếu song song
+let _currentBbtnBlobUrl = null;
 
 // f_kieumay..f_hientrangvanhanh: 8 trường "thông số kỹ thuật thiết bị" (nameplate) —
 // không dùng để tính toán DGA, chỉ lưu kèm bản ghi để điền vào Báo cáo phân tích kỹ
@@ -42,6 +44,7 @@ const TECH_SPEC_FIELD_IDS = [
 const BBTN_EXTRA_FIELD_IDS = ["f_ngaythinghiem", "f_lydothinghiem", "f_nhietdo", "f_doam"];
 
 function clearForm() {
+  hideBbtnPreview();
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
   TECH_SPEC_FIELD_IDS.forEach((id) => ($(id).value = ""));
   BBTN_EXTRA_FIELD_IDS.forEach((id) => ($(id).value = ""));
@@ -66,6 +69,7 @@ function clearForm() {
 }
 
 function resetMeasurementEditState() {
+  hideBbtnPreview();
   _editingMeasurementId = null;
   _editingOriginalRecord = null;
   _editingMeasurementAttachment = null;
@@ -111,6 +115,118 @@ function updateLanDoSuggestion() {
  *  rồi tự bắn "change", xem setupBbtnDropzone() ở app-core.js) — xem onBbtnFileSelected()
  *  bên dưới. Gọi lại mỗi khi $("f_bbtn").value bị xóa (clearForm(),
  *  resetMeasurementEditState()) để nhãn quay về chữ hướng dẫn mặc định. */
+
+/** Hiển thị khung xem trước BBTN (PDF) bên cạnh vùng số liệu để người dùng đối chiếu */
+function showBbtnPreview(fileOrUrl, fileName, badgeText) {
+  const col = $("bbtnPreviewCol");
+  const layout = $("dgaInputSplitLayout");
+  const frame = $("bbtnPreviewFrame");
+  const nameEl = $("bbtnPreviewFileName");
+  const badgeEl = $("bbtnPreviewBadge");
+  const toggleBtn = $("btnToggleBbtnPreview");
+  const toggleBtnText = $("btnToggleBbtnPreviewText");
+  if (!col || !layout || !frame) return;
+
+  if (_currentBbtnBlobUrl) {
+    try { URL.revokeObjectURL(_currentBbtnBlobUrl); } catch (_) {}
+    _currentBbtnBlobUrl = null;
+  }
+
+  let srcUrl = "";
+  let name = fileName || "";
+
+  if (fileOrUrl instanceof File || fileOrUrl instanceof Blob) {
+    name = name || fileOrUrl.name || "Biên bản thí nghiệm.pdf";
+    try {
+      _currentBbtnBlobUrl = URL.createObjectURL(fileOrUrl);
+      srcUrl = _currentBbtnBlobUrl;
+    } catch (e) {
+      console.warn("Không tạo được blob URL cho BBTN:", e);
+    }
+  } else if (typeof fileOrUrl === "string" && fileOrUrl) {
+    srcUrl = fileOrUrl;
+    name = name || "Biên bản thí nghiệm.pdf";
+  }
+
+  if (srcUrl) {
+    frame.src = srcUrl;
+    if (nameEl) {
+      nameEl.textContent = name;
+      nameEl.title = name;
+    }
+    if (badgeEl && badgeText) badgeEl.textContent = badgeText;
+    layout.classList.add("has-preview");
+    col.classList.remove("hidden");
+    if (toggleBtn) {
+      toggleBtn.classList.remove("hidden");
+      if (toggleBtnText) toggleBtnText.textContent = "Ẩn BBTN đối chiếu";
+    }
+  }
+}
+
+/** Ẩn khung xem trước BBTN */
+function hideBbtnPreview() {
+  const col = $("bbtnPreviewCol");
+  const layout = $("dgaInputSplitLayout");
+  const frame = $("bbtnPreviewFrame");
+  const toggleBtn = $("btnToggleBbtnPreview");
+  const toggleBtnText = $("btnToggleBbtnPreviewText");
+  if (col) col.classList.add("hidden");
+  if (layout) layout.classList.remove("has-preview");
+  if (frame) frame.src = "about:blank";
+  if (_currentBbtnBlobUrl) {
+    try { URL.revokeObjectURL(_currentBbtnBlobUrl); } catch (_) {}
+    _currentBbtnBlobUrl = null;
+  }
+  const hasFile = ($("f_bbtn") && $("f_bbtn").files && $("f_bbtn").files[0]) ||
+                  (_editingMeasurementAttachment && _editingMeasurementAttachment.bbtn_url);
+  if (toggleBtn) {
+    if (hasFile) {
+      toggleBtn.classList.remove("hidden");
+      if (toggleBtnText) toggleBtnText.textContent = "Hiện BBTN đối chiếu";
+    } else {
+      toggleBtn.classList.add("hidden");
+    }
+  }
+}
+
+/** Chuyển đổi ẩn/hiện khung xem trước BBTN */
+function toggleBbtnPreview() {
+  const col = $("bbtnPreviewCol");
+  if (!col) return;
+  if (col.classList.contains("hidden")) {
+    const file = $("f_bbtn") && $("f_bbtn").files && $("f_bbtn").files[0];
+    if (file) {
+      showBbtnPreview(file, file.name, "Đã nạp file");
+    } else if (_editingMeasurementAttachment && _editingMeasurementAttachment.bbtn_url) {
+      viewBbtnInPreview(_editingMeasurementAttachment);
+    }
+  } else {
+    hideBbtnPreview();
+  }
+}
+
+/** Mở BBTN ở khung đối chiếu từ attachment */
+async function viewBbtnInPreview(att) {
+  if (!att || !att.bbtn_url) return;
+  const url = String(att.bbtn_url);
+  if (!url.startsWith("local:")) {
+    const safe = safeHttpUrl(url);
+    if (safe) showBbtnPreview(safe, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
+    return;
+  }
+  const measurementId = url.slice("local:".length);
+  const local = Storage.getLocalAttachment(measurementId);
+  if (!local) return;
+  try {
+    const res = await fetch(local.dataUrl);
+    const blob = await res.blob();
+    showBbtnPreview(blob, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
+  } catch (e) {
+    console.warn("Không mở được local attachment:", e);
+  }
+}
+
 function renderBbtnDropzoneLabel() {
   const zone = $("bbtnDropzone");
   const label = $("bbtnDropzoneText");
@@ -153,7 +269,7 @@ async function viewBbtn(att) {
       notifyError("Đường dẫn file đính kèm không hợp lệ.");
       return;
     }
-    window.open(safe, "_blank", "noopener");
+    showBbtnPreview(safe, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
     return;
   }
   const measurementId = url.slice("local:".length);
@@ -165,8 +281,7 @@ async function viewBbtn(att) {
   try {
     const res = await fetch(local.dataUrl);
     const blob = await res.blob();
-    const blobUrl = URL.createObjectURL(blob);
-    window.open(blobUrl, "_blank", "noopener");
+    showBbtnPreview(blob, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
   } catch (err) {
     notifyError("Không mở được file: " + ((err && err.message) || err));
   }
@@ -185,8 +300,10 @@ async function onBbtnFileSelected(e) {
   const note = $("bbtnImportNote");
   if (!file) {
     note.classList.add("hidden");
+    hideBbtnPreview();
     return;
   }
+  showBbtnPreview(file, file.name, "Đang đọc BBTN...");
   if (!window.BbtnImport) {
     note.textContent = "Không tự động đọc được BBTN (thư viện đọc PDF chưa tải xong) — vui lòng nhập tay các trường bên dưới.";
     note.classList.remove("hidden");
@@ -325,6 +442,7 @@ async function onBbtnFileSelected(e) {
   // dùng gõ tay/chọn combo) — gọi lại thủ công để "Lần đo" cũng được gợi ý đúng theo
   // lịch sử đã lưu, đúng tinh thần của tính năng này (nhập bổ sung lần đo LỊCH SỬ).
   updateLanDoSuggestion();
+  showBbtnPreview(file, file.name, filled.length ? ("Đã trích xuất (" + filled.length + " mục)") : "Đã tải file");
 
   if (!filled.length) {
     note.textContent = "Không nhận diện được thông tin nào từ file này — vui lòng nhập tay các trường bên dưới.";
@@ -447,6 +565,11 @@ function onEditMeasurement(rec) {
   renderBbtnDropzoneLabel();
   $("bbtnImportNote").classList.add("hidden");
   renderBbtnCurrent();
+  if (rec.bbtn_url) {
+    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+  } else {
+    hideBbtnPreview();
+  }
   $("f_tram").value = rec.tram || "";
   $("f_thietbi").value = rec.thiet_bi || "";
   $("f_loai").value = rec.equipment_type || "";
