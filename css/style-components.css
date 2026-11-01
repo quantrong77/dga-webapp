@@ -238,8 +238,9 @@ input:disabled, select:disabled, textarea:disabled {
   padding: 0;
 }
 
-/* Ô kéo-thả file BBTN (#bbtnDropzone) — chiều cao tăng gấp 1.5 lần (từ ~40px lên 60px) và focus nổi bật */
-#bbtnDropzone.file-dropzone {
+/* Ô kéo-thả file BBTN đơn (#bbtnDropzone) và hàng loạt (#batchDropzone) — chiều cao tăng gấp 1.5 lần (từ ~40px lên 60px) và focus nổi bật */
+#bbtnDropzone.file-dropzone,
+#batchDropzone.file-dropzone {
   min-height: 60px;
   padding: 16px 20px;
   gap: 14px;
@@ -248,18 +249,23 @@ input:disabled, select:disabled, textarea:disabled {
   background: var(--blue-50);
   box-shadow: var(--shadow-1);
 }
-#bbtnDropzone.file-dropzone .icon-svg {
+#bbtnDropzone.file-dropzone .icon-svg,
+#batchDropzone.file-dropzone .icon-svg {
   width: 28px;
   height: 28px;
   color: var(--blue-700);
 }
-#bbtnDropzone.file-dropzone .file-dropzone-text {
+#bbtnDropzone.file-dropzone .file-dropzone-text,
+#batchDropzone.file-dropzone .file-dropzone-text {
   font-size: 13.5px;
   color: var(--gray-700);
 }
 #bbtnDropzone.file-dropzone:focus,
 #bbtnDropzone.file-dropzone:focus-within,
-#bbtnDropzone.file-dropzone.is-focused {
+#bbtnDropzone.file-dropzone.is-focused,
+#batchDropzone.file-dropzone:focus,
+#batchDropzone.file-dropzone:focus-within,
+#batchDropzone.file-dropzone.is-focused {
   outline: 2px solid var(--blue-700);
   outline-offset: 2px;
   border-color: var(--blue-700);

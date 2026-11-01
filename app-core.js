@@ -1087,7 +1087,21 @@ function setupNameplateDropzone() {
  *  đã tự lọc/báo cáo từng file không hợp lệ trong bảng xem trước. */
 function setupBatchDropzone() {
   const zone = $("batchDropzone");
+  const input = $("batchFiles");
   if (!zone) return;
+
+  zone.setAttribute("tabindex", "0");
+  zone.setAttribute("role", "button");
+  if (input) {
+    zone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        input.click();
+      }
+    });
+  }
+  zone.addEventListener("focus", () => zone.classList.add("is-focused"));
+  zone.addEventListener("blur", () => zone.classList.remove("is-focused"));
 
   ["dragenter", "dragover"].forEach((evt) => {
     zone.addEventListener(evt, (e) => {
