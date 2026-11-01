@@ -12,6 +12,8 @@ function loadBbtnHelpers() {
   vm.runInContext(
     subCode +
     "\nthis.stripVnDiacritics = stripVnDiacritics;" +
+    "\nthis.guessDoAm = guessDoAm;" +
+    "\nthis.guessNhietDo = guessNhietDo;" +
     "\nthis.extractGasValues = extractGasValues;" +
     "\nthis.extractSoCheTao = extractSoCheTao;" +
     "\nthis.extractLoaiDau = extractLoaiDau;" +
@@ -22,7 +24,7 @@ function loadBbtnHelpers() {
   return sandbox;
 }
 
-const { stripVnDiacritics, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class } = loadBbtnHelpers();
+const { stripVnDiacritics, guessDoAm, guessNhietDo, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class } = loadBbtnHelpers();
 
 describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí", () => {
   test("trích số bình thường khi có số liệu", () => {
@@ -138,6 +140,108 @@ describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí
     const res5 = extractGasValues(lines5);
     expect(res5.N2).toBe("KPH");
     expect(res5.O2).toBe("KPH");
+  });
+
+  test("trường hợp H2 là KPH nhưng có STT 1 hoặc tỷ số CH4/H2: 1.0 không bị đọc nhầm là 1", () => {
+    const docLines = [
+      "CÁC HẠNG MỤC ĐÃ THÍ NGHIỆM:",
+      "1. Hydrogen H2 1",
+      "2. Methane CH4 1",
+      "KẾT QUẢ THÍ NGHIỆM (TESTING RESULTS):",
+      "1 Hydro (H2) ppm KPH < 300 Đạt",
+      "2 Metan (CH4) ppm 8.5 < 30 Đạt",
+      "3 Ethan (C2H6) ppm 4.2 < 25 Đạt",
+      "4 Ethylen (C2H4) ppm 2.0 < 4 Đạt",
+      "5 Acetylen (C2H2) ppm KPH < 1 Đạt",
+      "6 Carbon Monoxit (CO) ppm 85 < 330 Đạt",
+      "7 Carbon Dioxit (CO2) ppm 320 < 900 Đạt",
+      "TỶ SỐ KHÍ (GAS RATIOS):",
+      "CH4/H2: 1.0",
+      "C2H2/C2H4: 0.1",
+      "C2H4/C2H6: 0.48",
+      "THIẾT BỊ THÍ NGHIỆM: GC-2014 S/N 1",
+    ];
+    const res = extractGasValues(docLines);
+    expect(res.H2).toBe("KPH");
+    expect(res.CH4).toBe(8.5);
+    expect(res.C2H6).toBe(4.2);
+    expect(res.C2H4).toBe(2.0);
+    expect(res.C2H2).toBe("KPH");
+    expect(res.CO).toBe(85);
+    expect(res.CO2).toBe(320);
+  });
+
+  test("trường hợp H2 hoặc C2H2 dưới ngưỡng phát hiện ghi < 1, < 1 < 300, < 0.1, hoặc '-' được đọc là KPH", () => {
+    // 2 dấu < (kết quả < 1, tiêu chuẩn < 300)
+    const l1 = [
+      "BẢNG KẾT QUẢ THÍ NGHIỆM",
+      "1 Hydro (H2) ppm < 1 < 300 Đạt",
+      "2 Metan (CH4) ppm 5.0 < 30 Đạt",
+      "5 Acetylen (C2H2) ppm < 0.1 < 1 Đạt",
+      "CH4/H2: 1.0",
+    ];
+    const res1 = extractGasValues(l1);
+    expect(res1.H2).toBe("KPH");
+    expect(res1.CH4).toBe(5.0);
+    expect(res1.C2H2).toBe("KPH");
+
+    // Chỉ có 1 dấu < 1 Đạt
+    const l2 = [
+      "1 Hydro H2 ppm < 1 Đạt",
+      "5 Axetilen C2H2 ppm < 0.1 Đạt",
+    ];
+    const res2 = extractGasValues(l2);
+    expect(res2.H2).toBe("KPH");
+    expect(res2.C2H2).toBe("KPH");
+
+    // Dấu gạch ngang "-"
+    const l3 = [
+      "1 Hydro H2 ppm - < 300 Đạt",
+      "5 Acetylen C2H2 ppm — < 1 Đạt",
+    ];
+    const res3 = extractGasValues(l3);
+    expect(res3.H2).toBe("KPH");
+    expect(res3.C2H2).toBe("KPH");
+  });
+
+  test("trường hợp H2 có giá trị đo thật 1.0 thì vẫn đọc đúng số liệu 1.0", () => {
+    const l = [
+      "1 Hydro H2 ppm 1.0 < 300 Đạt",
+      "2 Metan CH4 ppm 1 < 30 Đạt",
+    ];
+    const res = extractGasValues(l);
+    expect(res.H2).toBe(1.0);
+    expect(res.CH4).toBe(1);
+  });
+});
+
+describe("BbtnImport — Tự động đọc Độ ẩm môi trường và Nhiệt độ", () => {
+  test("trích độ ẩm môi trường từ nhiều dạng biểu diễn khác nhau", () => {
+    const h1 = "Điều kiện môi trường (Ambient condition): t (Temp.) = 29 ºC , Độ ẩm (Humidity) = 78 %";
+    expect(guessDoAm(stripVnDiacritics(h1))).toBe(78);
+
+    const h2 = "Độ ẩm môi trường: 62 %";
+    expect(guessDoAm(stripVnDiacritics(h2))).toBe(62);
+
+    const h3 = "Độ ẩm: 65%";
+    expect(guessDoAm(stripVnDiacritics(h3))).toBe(65);
+
+    const h4 = "Humidity: 70%";
+    expect(guessDoAm(stripVnDiacritics(h4))).toBe(70);
+
+    const h5 = "Độ ẩm môi trường: 60";
+    expect(guessDoAm(stripVnDiacritics(h5))).toBe(60);
+
+    const h6 = "Độ ẩm MT = 58.5 %";
+    expect(guessDoAm(stripVnDiacritics(h6))).toBe(58.5);
+  });
+
+  test("trích nhiệt độ môi trường", () => {
+    const t1 = "Điều kiện môi trường (Ambient condition): t (Temp.) = 29 ºC , Độ ẩm (Humidity) = 78 %";
+    expect(guessNhietDo(stripVnDiacritics(t1))).toBe(29);
+
+    const t2 = "Nhiệt độ: 31.5 °C";
+    expect(guessNhietDo(stripVnDiacritics(t2))).toBe(31.5);
   });
 });
 

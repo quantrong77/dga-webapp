@@ -948,6 +948,36 @@ label.field {
   padding: 0;
 }
 
+/* Ô kéo-thả file BBTN (#bbtnDropzone) — chiều cao tăng gấp 1.5 lần (từ ~40px lên 60px) và focus nổi bật */
+#bbtnDropzone.file-dropzone {
+  min-height: 60px;
+  padding: 16px 18px;
+  gap: 12px;
+  border-width: 2px;
+  border-color: var(--blue-700);
+  background: var(--blue-50, #f0f7ff);
+  box-shadow: 0 0 0 1px rgba(30, 64, 175, 0.1);
+}
+#bbtnDropzone.file-dropzone .icon-svg {
+  width: 28px;
+  height: 28px;
+  color: var(--blue-700);
+}
+#bbtnDropzone.file-dropzone .file-dropzone-text {
+  font-size: 13.5px;
+  color: var(--gray-700);
+}
+#bbtnDropzone.file-dropzone:focus,
+#bbtnDropzone.file-dropzone:focus-within,
+#bbtnDropzone.file-dropzone.is-focused {
+  outline: 2px solid var(--blue-700);
+  outline-offset: 2px;
+  border-color: var(--blue-700);
+  border-style: solid;
+  box-shadow: 0 0 0 4px rgba(30, 64, 175, 0.25);
+  background: #e8f1fc;
+}
+
 /* ===================== Tab "Người dùng phản hồi" ===================== */
 /* Ảnh minh họa đã chọn (trước khi gửi) — hiện thay/kèm #fbDropzone ở trên, xem
    onFeedbackImageSelected() ở ui-feedback.js. */

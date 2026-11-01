@@ -366,7 +366,7 @@
                  thêm JS cho việc này) — 3 sự kiện dragenter/dragover/dragleave + drop
                  gắn ở khung ngoài để đổi viền/nền khi kéo file qua và xử lý khi thả,
                  xem setupBbtnDropzone() ở app-core.js. -->
-            <div class="file-dropzone" id="bbtnDropzone">
+            <div class="file-dropzone" id="bbtnDropzone" tabindex="0" role="button" aria-label="Kéo thả file PDF vào đây, hoặc bấm để chọn file">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
               <span class="file-dropzone-text" id="bbtnDropzoneText">Kéo thả file PDF vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
               <input id="f_bbtn" type="file" accept="application/pdf,.pdf" />

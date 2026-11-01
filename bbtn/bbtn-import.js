@@ -237,13 +237,18 @@ function guessTestDateISO(foldedFullText) {
 // nhãn tiếng Anh trong ngoặc (ổn định hơn nhãn tiếng Việt vì không dấu/không viết tắt).
 function guessNhietDo(foldedFullText) {
   // Chấp nhận cả "º" (ordinal masculine — ký tự đúng trong font PDF gốc) lẫn "°" (dấu độ
-  // Unicode chuẩn — Tesseract OCR luôn chuẩn hóa về ký tự này bất kể font gốc dùng gì).
-  const m = foldedFullText.match(/(?:t\s*\(Temp\.?\)|Nhiet do)\s*=\s*(-?\d+(?:[.,]\d+)?)\s*[º°]?C/i);
+  // Unicode chuẩn — Tesseract OCR luôn chuẩn hóa về ký tự này bất kể font gốc dùng gì),
+  // hỗ trợ cả dấu ":" hoặc "=" hoặc không có đơn vị C phía sau.
+  const m =
+    foldedFullText.match(/(?:t\s*\(Temp\.?\)|Nhiet\s*do(?:\s*\([^)]*\)|[^\n\r:=0-9]{0,25})?|Temperature)\s*[:=]?\s*(-?\d+(?:[.,]\d+)?)\s*[º°]?C/i) ||
+    foldedFullText.match(/(?:t\s*\(Temp\.?\)|Nhiet\s*do(?:\s*\([^)]*\)|[^\n\r:=0-9]{0,25})?)\s*[:=]\s*(-?\d+(?:[.,]\d+)?)/i);
   return m ? parseFloat(m[1].replace(",", ".")) : null;
 }
 
 function guessDoAm(foldedFullText) {
-  const m = foldedFullText.match(/Do am[^=]*=\s*(\d+(?:[.,]\d+)?)\s*%/i);
+  const m =
+    foldedFullText.match(/(?:Do\s*am(?:\s*\([^)]*\)|[^\n\r:=0-9]{0,25})?|Humidity)\s*[:=]?\s*(\d+(?:[.,]\d+)?)\s*%/i) ||
+    foldedFullText.match(/(?:Do\s*am(?:\s*\([^)]*\)|[^\n\r:=0-9]{0,25})?|Humidity)\s*[:=]\s*(\d+(?:[.,]\d+)?)/i);
   return m ? parseFloat(m[1].replace(",", ".")) : null;
 }
 
@@ -253,35 +258,119 @@ function guessDoAm(foldedFullText) {
 //    đã loại bỏ các cụm "< số" (đó là cột "Tiêu chuẩn/Limits", không phải kết quả đo).
 // ---------------------------------------------------------------------------
 const GAS_LINE_PATTERNS = [
-  { id: "H2", re: /\b(?:Hydrogen|Hydro)\b\s*(?:\(?\s*H\s*2\s*\)?|\/H2)?|(?<![A-Za-z0-9])H\s*2(?![A-Za-z0-9])/i },
-  { id: "CH4", re: /\b(?:Methane|Metan)\b\s*(?:\(?\s*CH\s*4\s*\)?|\/CH4)?|(?<![A-Za-z0-9])CH\s*4(?![A-Za-z0-9])/i },
-  { id: "C2H6", re: /\b(?:Ethane?|Etan)\b\s*(?:\(?\s*C\s*2\s*H\s*6\s*\)?|\/C2H6)?|(?<![A-Za-z0-9])C\s*2\s*H\s*6(?![A-Za-z0-9])/i },
-  { id: "C2H4", re: /\b(?:Ethylene?|Etilen)\b\s*(?:\(?\s*C\s*2\s*H\s*4\s*\)?|\/C2H4)?|(?<![A-Za-z0-9])C\s*2\s*H\s*4(?![A-Za-z0-9])/i },
-  { id: "C2H2", re: /\b(?:Acetylene?|Axetilen)\b\s*(?:\(?\s*C\s*2\s*H\s*2\s*\)?|\/C2H2)?|(?<![A-Za-z0-9])C\s*2\s*H\s*2(?![A-Za-z0-9])/i },
-  { id: "CO", re: /\b(?:Carbon\s*Monoxit|Carbon\s*Monoxide|Cacbon\s*Monoxit)\b\s*(?:\(?\s*CO\s*\)?|\/CO)?|(?<![A-Za-z0-9])CO(?![A-Za-z0-9])/i },
-  { id: "CO2", re: /\b(?:Carbon\s*Dioxit|Carbon\s*Dioxide|Cacbon\s*Dioxit)\b\s*(?:\(?\s*CO\s*2\s*\)?|\/CO2)?|(?<![A-Za-z0-9])CO\s*2(?![A-Za-z0-9])/i },
-  { id: "N2", re: /\b(?:Nitrogen|Nit[oơ])\b\s*(?:\(?\s*N\s*2\s*\)?|\/N2)?|(?<![A-Za-z0-9])N\s*2(?![A-Za-z0-9])/i },
-  { id: "O2", re: /\b(?:Oxygen|Oxy)\b\s*(?:\(?\s*O\s*2\s*\)?|\/O2)?|(?<![A-Za-z0-9])O\s*2(?![A-Za-z0-9])/i },
+  { id: "H2", re: /\b(?:Hydrogen|Hydro)\b(?:\s*\(?\s*H\s*2\s*\)?|\s*\/\s*H\s*2)?|(?<![A-Za-z0-9\/\\_–—-])H\s*2(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "CH4", re: /\b(?:Methane|Metan)\b(?:\s*\(?\s*CH\s*4\s*\)?|\s*\/\s*CH\s*4)?|(?<![A-Za-z0-9\/\\_–—-])CH\s*4(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "C2H6", re: /\b(?:Ethane?|Etan)\b(?:\s*\(?\s*C\s*2\s*H\s*6\s*\)?|\s*\/\s*C\s*2\s*H\s*6)?|(?<![A-Za-z0-9\/\\_–—-])C\s*2\s*H\s*6(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "C2H4", re: /\b(?:Ethylene?|Etilen)\b(?:\s*\(?\s*C\s*2\s*H\s*4\s*\)?|\s*\/\s*C\s*2\s*H\s*4)?|(?<![A-Za-z0-9\/\\_–—-])C\s*2\s*H\s*4(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "C2H2", re: /\b(?:Acetylene?|Axetilen)\b(?:\s*\(?\s*C\s*2\s*H\s*2\s*\)?|\s*\/\s*C\s*2\s*H\s*2)?|(?<![A-Za-z0-9\/\\_–—-])C\s*2\s*H\s*2(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "CO", re: /\b(?:Carbon\s*Monoxit|Carbon\s*Monoxide|Cacbon\s*Monoxit)\b(?:\s*\(?\s*CO\s*\)?|\s*\/\s*CO)?|(?<![A-Za-z0-9\/\\_–—-])CO(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "CO2", re: /\b(?:Carbon\s*Dioxit|Carbon\s*Dioxide|Cacbon\s*Dioxit)\b(?:\s*\(?\s*CO\s*2\s*\)?|\s*\/\s*CO\s*2)?|(?<![A-Za-z0-9\/\\_–—-])CO\s*2(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "N2", re: /\b(?:Nitrogen|Nit[oơ])\b(?:\s*\(?\s*N\s*2\s*\)?|\s*\/\s*N\s*2)?|(?<![A-Za-z0-9\/\\_–—-])N\s*2(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "O2", re: /\b(?:Oxygen|Oxy)\b(?:\s*\(?\s*O\s*2\s*\)?|\s*\/\s*O\s*2)?|(?<![A-Za-z0-9\/\\_–—-])O\s*2(?![A-Za-z0-9\/\\_–—-])/i },
 ];
 
-const KPH_PATTERN = /(?:^|\s|[^\wÀ-ỹ])(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|D[uư][oớ]i\s*ng[uư][oõ]ng\s*ph[aá]t\s*hi[eệ]n|\bND\b)(?:$|\s|[^\wÀ-ỹ])/i;
+const KPH_PATTERN =
+  /(?:^|\s|[^\wÀ-ỹ])(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|<\s*LOQ|D[uư][oớ]i\s*ng[uư][oõ]ng(?:\s*ph[aá]t\s*hi[eệ]n)?|\bND\b|N\/D|N\.D\.?|BDL|None)(?:$|\s|[^\wÀ-ỹ])|(?:^|\s)[-–—](?:\s|$)/i;
 
 function extractGasValues(lines) {
   const values = {};
+
+  // 1. Giới hạn phạm vi quét vào vùng bảng "KẾT QUẢ THÍ NGHIỆM" nếu tìm thấy tiêu đề bảng.
+  // Điều này tránh bắt nhầm số thứ tự/số mẫu ở bảng "CÁC HẠNG MỤC ĐÃ THÍ NGHIỆM" ở trang 1
+  // hoặc tỷ số khí (CH4/H2: 1.0) / số sê-ri thiết bị (GC S/N 1) ở cuối biên bản.
+  let searchLines = lines;
+  const startIdx = lines.findIndex((l) =>
+    /K[EÊ]T\s*QU[AẢ]\s*(?:TH[IÍ]|TH[UỬ])\s*NGHI[EỆ]M|TESTING\s*RESULTS|B[AẢ]NG\s*K[EÊ]T\s*QU[AẢ]/i.test(
+      stripVnDiacritics(l)
+    )
+  );
+  if (startIdx !== -1) {
+    let endIdx = lines.length;
+    for (let i = startIdx + 1; i < lines.length; i++) {
+      const f = stripVnDiacritics(lines[i]);
+      if (
+        /(?:T[yỷ]\s*s[oố]\s*kh[ií]|Gas\s*ratio|Thi[eế]t\s*b[iị]\s*th[ií]\s*nghi[eệ]m|Testing\s*instruments?|Ghi\s*ch[uú]|Remark|K[eê]t\s*lu[aậ]n|Conclusion|TUQ\.|Nguoi\s*thi\s*nghiem|Truong\s*phong|Chroma|Agilent|GC\s*-\s*S\/N)/i.test(
+          f
+        )
+      ) {
+        endIdx = i;
+        break;
+      }
+    }
+    const candidate = lines.slice(startIdx, endIdx);
+    if (
+      candidate.some((l) =>
+        /(?:Hydrogen|Hydro|Methane|Metan|Ethane|Etan|Ethylene|Etilen|Acetylene|Axetilen|Carbon|Cacbon|Nitrogen|Nit[oơ]|Oxygen|Oxy)\b/i.test(
+          l
+        )
+      )
+    ) {
+      searchLines = candidate;
+    }
+  }
+
+  // 2. Trích từng loại khí
   for (const gas of GAS_LINE_PATTERNS) {
     let found = null;
-    for (const line of lines) {
+    for (let i = 0; i < searchLines.length; i++) {
+      const line = searchLines[i];
+      // Bỏ qua các dòng tỷ số khí (vd: CH4/H2: 1.0, C2H2/C2H4: 0.1)
+      if (/(?:t[yỷ]\s*s[oố]|gas\s*ratio|\bCH4\s*\/\s*H2\b|\bC2H2\s*\/\s*C2H4\b|\bC2H4\s*\/\s*C2H6\b|\bCO2\s*\/\s*CO\b)/i.test(line)) {
+        continue;
+      }
+      // Bỏ qua dòng thiết bị thí nghiệm (vd: Máy sắc ký GC S/N 1)
+      if (/(?:thi[eế]t\s*b[iị]\s*th[ií]|testing\s*instruments?|m[aá]y\s*s[aắ]c\s*k[yý]|chromatograph)/i.test(line)) {
+        continue;
+      }
+
       const m = line.match(gas.re);
       if (!m) continue;
-      const rest = line.slice(m.index + m[0].length);
-      // Nếu có ký hiệu KPH (Không phát hiện / dưới ngưỡng phát hiện): kết quả đo chính là KPH,
-      // TUYỆT ĐỐI không lấy số ở cột "Tiêu chuẩn" (Limits) kế tiếp (vd: "< 1", "≤ 1", "300").
+
+      let rest = line.slice(m.index + m[0].length).trim();
+
+      // Nếu ô kết quả nằm ở dòng kế tiếp (bảng nhiều dòng do ngắt dòng PDF)
+      if (!rest && i + 1 < searchLines.length) {
+        const nextLine = searchLines[i + 1].trim();
+        const isNextGas = GAS_LINE_PATTERNS.some((g) => g.id !== gas.id && g.re.test(nextLine));
+        if (!isNextGas) {
+          rest = nextLine;
+        }
+      }
+
+      // 1) Nếu có từ khóa KPH (Không phát hiện / dưới ngưỡng phát hiện / ND / dấu gạch ngang "-"):
       if (KPH_PATTERN.test(rest)) {
         found = "KPH";
         break;
       }
-      // Loại bỏ cột Tiêu chuẩn (dạng "< số", "≤ số", "<= số", hoặc "≥ số") và Tốc độ sinh khí (dạng "xx%")
-      // để chỉ lấy đúng giá trị đo ở cột Kết quả.
+
+      // 2) Nếu trong kết quả có 2 dấu "<" liên tiếp (vd: "< 1 < 300" hoặc "< 0.1 < 1"):
+      // Dấu "<" đầu tiên chính là kết quả đo dưới ngưỡng phát hiện (LOD), dấu thứ hai là tiêu chuẩn.
+      const ltMatches = [...rest.matchAll(/[<≤]\s*[\d.,]+/g)];
+      if (ltMatches.length >= 2) {
+        const beforeFirstLt = rest.slice(0, ltMatches[0].index);
+        if (!/\d/.test(beforeFirstLt)) {
+          found = "KPH";
+          break;
+        }
+      }
+      // 3) Nếu chỉ có 1 dấu "<" và trước nó không có số đo thực tế (vd: "< 1 Đạt" hoặc "< 0.1 Đạt"):
+      if (ltMatches.length === 1) {
+        const beforeLt = rest.slice(0, ltMatches[0].index);
+        if (!/\d/.test(beforeLt)) {
+          const afterLt = rest.slice(ltMatches[0].index + ltMatches[0][0].length).trim();
+          const ltVal = parseFloat(ltMatches[0][0].replace(/[<≤\s]/g, "").replace(",", "."));
+          const fAfterLt = stripVnDiacritics(afterLt);
+          if (
+            (ltVal <= 5 && /^(?:Dat|Pass|Phu\s*hop|$)/i.test(fAfterLt)) ||
+            /<\s*(?:1|0\.1|0,1|0\.5|0,5|5)\s*(?:ppm)?\s*(?:[ĐD]at|Pass|$)/i.test(rest)
+          ) {
+            found = "KPH";
+            break;
+          }
+        }
+      }
+
+      // 4) Lấy số đo thực tế (đã loại bỏ cột Tiêu chuẩn và Tốc độ sinh khí)
       const cleaned = rest
         .replace(/[<≤>≥]=?\s*[\d.,]+/g, "")
         .replace(/[+-]?\s*[\d.,]+\s*%/g, "");
@@ -543,7 +632,9 @@ async function extract(file, onProgress) {
   const gases = extractGasValues(lines);
 
   const matchedCount =
-    [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau, dienApDm].filter(Boolean).length + Object.keys(gases).length;
+    [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau, dienApDm, nhietDo, doAm].filter(
+      (v) => v !== null && v !== undefined && v !== ""
+    ).length + Object.keys(gases).length;
 
   return {
     tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, bang63VoltageClass, namSx, namVanHanh, loaiDau,

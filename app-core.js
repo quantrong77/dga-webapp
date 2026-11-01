@@ -576,6 +576,10 @@ async function initApp() {
   toggleMbaSubtypeField();
   toggleStandardTypeFields();
   drawDuvalTriangleBase();
+  const bbtnZone = $("bbtnDropzone");
+  if (bbtnZone && $("tab-dga") && !$("tab-dga").classList.contains("hidden")) {
+    bbtnZone.focus();
+  }
 }
 
 // ---------------------------------------------------------------------
@@ -979,6 +983,17 @@ function setupBbtnDropzone() {
   const input = $("f_bbtn");
   if (!zone || !input) return;
 
+  zone.setAttribute("tabindex", "0");
+  zone.setAttribute("role", "button");
+  zone.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      input.click();
+    }
+  });
+  zone.addEventListener("focus", () => zone.classList.add("is-focused"));
+  zone.addEventListener("blur", () => zone.classList.remove("is-focused"));
+
   ["dragenter", "dragover"].forEach((evt) => {
     zone.addEventListener(evt, (e) => {
       e.preventDefault();
@@ -1104,7 +1119,12 @@ function setupTabs() {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
       btn.classList.add("active");
-      $("tab-" + btn.dataset.tab).classList.remove("hidden");
+      const tabEl = $("tab-" + btn.dataset.tab);
+      if (tabEl) tabEl.classList.remove("hidden");
+      if (btn.dataset.tab === "dga") {
+        const dropzone = $("bbtnDropzone");
+        if (dropzone) dropzone.focus();
+      }
       // Khi cụm nút tab không đủ chỗ (tràn ngang ở chế độ tab NGANG, hoặc tràn dọc ở chế
       // độ sidebar — xem ghi chú CSS "nav.tabs"/".tabs-inner"), nút vừa bấm có thể đang
       // nằm ngoài (hoặc chỉ lộ 1 phần trong) vùng nhìn thấy của nav.tabs — ví dụ bấm tab
