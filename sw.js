@@ -57,7 +57,7 @@ const PRECACHE_ASSETS = [
   "./bbtn/bbtn-export.js",
   "./bbtn/oil-bbtn.js",
   "./bbtn/tech-report-export.js",
-  "./bbtn/bbtn-batch-import.js",
+  "./ui/ui-batch-import.js",
   "./vendor/docxtemplater/pizzip.min.js",
   "./vendor/docxtemplater/docxtemplater.min.js",
 ];
