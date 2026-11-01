@@ -3,6 +3,7 @@
 // hoặc gây SyntaxError (const/let) hoặc âm thầm ghi đè nhau (function/var) — test này bắt lỗi đó SỚM.
 const fs = require("fs");
 const path = require("path");
+const vm = require("vm");
 const { ROOT, localScripts, topLevelNames, stripComments } = require("./scripts-helpers");
 
 describe.each(["index.html", "mobile/index.html"])("%s", (html) => {
@@ -17,7 +18,7 @@ describe.each(["index.html", "mobile/index.html"])("%s", (html) => {
     const dups = [];
     classic.forEach((s) => {
       topLevelNames(s.file).forEach((name) => {
-        if (owner.has(name) && owner.get(name) !== s.rel) dups.push(`${name}: ${owner.get(name)} và ${s.rel}`);
+        if (owner.has(name)) dups.push(owner.get(name) === s.rel ? `${name}: khai báo trùng trong ${s.rel}` : `${name}: ${owner.get(name)} và ${s.rel}`);
         else owner.set(name, s.rel);
       });
     });
@@ -25,7 +26,10 @@ describe.each(["index.html", "mobile/index.html"])("%s", (html) => {
   });
 
   test("mọi script cổ điển đều parse được (không lỗi cú pháp)", () => {
-    classic.forEach((s) => expect(() => topLevelNames(s.file)).not.toThrow());
+    classic.forEach((s) => {
+      expect(() => topLevelNames(s.file)).not.toThrow();
+      expect(() => new vm.Script(fs.readFileSync(s.file, "utf8"), { filename: s.file })).not.toThrow();
+    });
   });
 });
 
