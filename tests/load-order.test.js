@@ -57,7 +57,7 @@ describe("index.html (web) — thứ tự nạp", () => {
   test("không bỏ sót file: mọi file trong logic/, ui/, bbtn/ đều được index.html tham chiếu", () => {
     const referenced = new Set(order);
     const missing = [];
-    ["logic", "ui", "bbtn"].forEach((dir) => {
+    ["logic", "ui", "bbtn", "storage"].forEach((dir) => {
       fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(".js")).forEach((f) => {
         if (!referenced.has(`${dir}/${f}`)) missing.push(`${dir}/${f}`);
       });
