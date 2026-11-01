@@ -425,8 +425,10 @@ async function initApp() {
   if ($("btnBbtnNewTab")) {
     $("btnBbtnNewTab").addEventListener("click", () => {
       const frame = $("bbtnPreviewFrame");
-      if (frame && frame.src && frame.src !== "about:blank") {
-        window.open(frame.src, "_blank", "noopener");
+      if (!frame) return;
+      const target = frame.dataset.originalUrl || frame.src;
+      if (target && target !== "about:blank") {
+        window.open(target, "_blank", "noopener");
       }
     });
   }

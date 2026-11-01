@@ -117,7 +117,7 @@ function updateLanDoSuggestion() {
  *  resetMeasurementEditState()) để nhãn quay về chữ hướng dẫn mặc định. */
 
 /** Hiển thị khung xem trước BBTN (PDF) bên cạnh vùng số liệu để người dùng đối chiếu */
-function showBbtnPreview(fileOrUrl, fileName, badgeText) {
+function showBbtnPreview(fileOrUrl, fileName, badgeText, originalUrl) {
   const col = $("bbtnPreviewCol");
   const layout = $("dgaInputSplitLayout");
   const frame = $("bbtnPreviewFrame");
@@ -150,6 +150,13 @@ function showBbtnPreview(fileOrUrl, fileName, badgeText) {
 
   if (srcUrl) {
     frame.src = srcUrl;
+    if (originalUrl) {
+      frame.dataset.originalUrl = originalUrl;
+    } else if (typeof fileOrUrl === "string" && fileOrUrl && !fileOrUrl.startsWith("blob:")) {
+      frame.dataset.originalUrl = fileOrUrl;
+    } else {
+      delete frame.dataset.originalUrl;
+    }
     if (nameEl) {
       nameEl.textContent = name;
       nameEl.title = name;
@@ -173,7 +180,10 @@ function hideBbtnPreview() {
   const toggleBtnText = $("btnToggleBbtnPreviewText");
   if (col) col.classList.add("hidden");
   if (layout) layout.classList.remove("has-preview");
-  if (frame) frame.src = "about:blank";
+  if (frame) {
+    frame.src = "about:blank";
+    delete frame.dataset.originalUrl;
+  }
   if (_currentBbtnBlobUrl) {
     try { URL.revokeObjectURL(_currentBbtnBlobUrl); } catch (_) {}
     _currentBbtnBlobUrl = null;
@@ -210,21 +220,64 @@ function toggleBbtnPreview() {
 async function viewBbtnInPreview(att) {
   if (!att || !att.bbtn_url) return;
   const url = String(att.bbtn_url);
-  if (!url.startsWith("local:")) {
-    const safe = safeHttpUrl(url);
-    if (safe) showBbtnPreview(safe, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
+  const name = att.bbtn_name || "Biên bản thí nghiệm.pdf";
+  if (url.startsWith("local:")) {
+    const measurementId = url.slice("local:".length);
+    const local = Storage.getLocalAttachment(measurementId);
+    if (!local) return;
+    try {
+      const res = await fetch(local.dataUrl);
+      const blob = await res.blob();
+      showBbtnPreview(blob, name, "BBTN đã lưu");
+    } catch (e) {
+      console.warn("Không mở được local attachment:", e);
+    }
     return;
   }
-  const measurementId = url.slice("local:".length);
-  const local = Storage.getLocalAttachment(measurementId);
-  if (!local) return;
+  const safe = safeHttpUrl(url);
+  if (!safe) return;
+
+  // Thử tải qua fetch nếu có CORS (ví dụ Supabase storage public URL)
   try {
-    const res = await fetch(local.dataUrl);
-    const blob = await res.blob();
-    showBbtnPreview(blob, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
-  } catch (e) {
-    console.warn("Không mở được local attachment:", e);
+    const res = await fetch(safe, { mode: "cors" });
+    if (res.ok) {
+      const blob = await res.blob();
+      showBbtnPreview(blob, name, "BBTN đã lưu", safe);
+      return;
+    }
+  } catch (_) {
+    // Không thể fetch trực tiếp (CORS hoặc CSP connect-src)
   }
+
+  // Nếu không thể nhúng (do CSP frame-src / X-Frame-Options của Google Drive / cloud),
+  // hiển thị thẻ hướng dẫn trong iframe bằng HTML blob và cung cấp nút mở ở tab mới an toàn
+  const safeName = typeof escapeHtml === "function" ? escapeHtml(name) : name;
+  const safeUrl = typeof escapeHtml === "function" ? escapeHtml(safe) : safe;
+  const htmlDoc = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; margin: 0; background: #f8fafc; color: #334155; text-align: center; padding: 24px; box-sizing: border-box; }
+    .card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px 20px; max-width: 380px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.06); }
+    .icon { font-size: 32px; margin-bottom: 10px; }
+    h3 { font-size: 14px; margin: 0 0 8px 0; color: #0f172a; word-break: break-all; }
+    p { font-size: 12px; color: #64748b; line-height: 1.5; margin: 0 0 16px 0; }
+    a.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 16px; background: #0284c7; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 12.5px; font-weight: 600; }
+    a.btn:hover { background: #0369a1; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📄</div>
+    <h3>${safeName}</h3>
+    <p>Biên bản này được lưu trữ trên dịch vụ đám mây từ xa. Vui lòng bấm để mở xem toàn màn hình ở tab mới:</p>
+    <a class="btn" href="${safeUrl}" target="_blank" rel="noopener">Mở xem Biên bản ở tab mới ↗</a>
+  </div>
+</body>
+</html>`;
+  const blob = new Blob([htmlDoc], { type: "text/html" });
+  showBbtnPreview(blob, name, "Link đám mây", safe);
 }
 
 function renderBbtnDropzoneLabel() {
@@ -269,7 +322,7 @@ async function viewBbtn(att) {
       notifyError("Đường dẫn file đính kèm không hợp lệ.");
       return;
     }
-    showBbtnPreview(safe, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
+    window.open(safe, "_blank", "noopener");
     return;
   }
   const measurementId = url.slice("local:".length);
@@ -281,7 +334,8 @@ async function viewBbtn(att) {
   try {
     const res = await fetch(local.dataUrl);
     const blob = await res.blob();
-    showBbtnPreview(blob, att.bbtn_name || "Biên bản thí nghiệm.pdf", "BBTN đã lưu");
+    const blobUrl = URL.createObjectURL(blob);
+    window.open(blobUrl, "_blank", "noopener");
   } catch (err) {
     notifyError("Không mở được file: " + ((err && err.message) || err));
   }
