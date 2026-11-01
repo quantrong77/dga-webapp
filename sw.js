@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v1";
+const CACHE_NAME = "dga-offline-v2";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -127,7 +127,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Chiến lược Stale-While-Revalidate hoặc Cache-First cho static & CDN assets
+  // Đối với tài nguyên cùng nguồn (local static assets: JS, CSS, HTML...)
+  // Ưu tiên mạng trước (Network-First) để luôn nhận bản cập nhật mới nhất,
+  // nếu mất mạng mới trả về bản trong Cache (Offline-First dự phòng).
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      fetch(req)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const resClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, resClone));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Đối với CDN và thư viện ngoài: Cache-First để tối ưu tốc độ và tiết kiệm băng thông
   event.respondWith(
     caches.match(req).then((cachedResponse) => {
       const fetchPromise = fetch(req)
@@ -138,10 +156,7 @@ self.addEventListener("fetch", (event) => {
           }
           return networkResponse;
         })
-        .catch((err) => {
-          // Khi mất mạng và không có trong cache
-          return cachedResponse;
-        });
+        .catch(() => cachedResponse);
 
       return cachedResponse || fetchPromise;
     })
