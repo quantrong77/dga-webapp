@@ -203,17 +203,27 @@
       </div>
     </div>
     <div class="header-right">
-      <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối">
+      <!-- Nhóm công cụ & quản trị đưa lên Menu bar: Giới thiệu, Phản hồi, Quản trị -->
+      <button type="button" class="header-icon-btn tab-btn" data-tab="about" id="navAbout" title="Giới thiệu" aria-label="Giới thiệu" data-tooltip="Giới thiệu">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>
+      </button>
+      <button type="button" class="header-icon-btn tab-btn" data-tab="phanhoi" id="navPhanHoi" title="Phản hồi" aria-label="Phản hồi" data-tooltip="Phản hồi">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-feedback"></use></svg>
+      </button>
+      <!-- Quản trị — chỉ hiện với Admin (hoặc khi không bật Auth, xem initApp() ở app-core.js) -->
+      <button type="button" class="header-icon-btn tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị" aria-label="Quản trị" data-tooltip="Quản trị">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>
+      </button>
+
+      <div class="header-divider" aria-hidden="true"></div>
+
+      <!-- Tùy chọn giao diện & tài khoản -->
+      <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối" data-tooltip="Giao diện tối">
         <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg>
       </button>
-      <!-- Chỉ hiện khi Auth.enabled && Auth.current (giống userBadge, xem
-           refreshAuthHeaderUI() ở ui-auth.js) — mở modal #changePasswordOverlay bên dưới. -->
-      <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu">
+      <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu" aria-label="Đổi mật khẩu" data-tooltip="Đổi mật khẩu">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>
       </button>
-      <!-- Nút tên user TÍCH HỢP luôn đăng xuất (không còn nút "Đăng xuất" rời) — bấm vào
-           hiện hộp thoại xác nhận rồi mới đăng xuất, xem $("userBadge").addEventListener
-           ở ui-auth.js (thay cho $("btnLogout") cũ). -->
       <button type="button" id="userBadge" class="badge user-badge hidden" title="Bấm để đăng xuất"></button>
     </div>
   </header>
@@ -271,21 +281,13 @@
          DOM ở đây — không phụ thuộc thứ tự các <section id="tab-..."> bên dưới (mỗi nút
          tự tìm đúng section theo data-tab, xem addEventListener(".tab-btn"), app-core.js). -->
     <div class="tabs-inner">
+      <button class="tab-btn" data-tab="huongdan" title="Hướng dẫn sử dụng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-book"></use></svg><span class="tab-label">Hướng dẫn</span></button>
       <button class="tab-btn active" data-tab="nhap" title="Khí hòa tan"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flask"></use></svg><span class="tab-label">Khí hòa tan</span></button>
       <button class="tab-btn" data-tab="dau" title="Lý-Hóa dầu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg><span class="tab-label">Lý-Hóa dầu</span></button>
       <button class="tab-btn" data-tab="canhbao" title="Cảnh báo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg><span class="tab-label">Cảnh báo</span></button>
       <button class="tab-btn" data-tab="lichsu" title="Lịch sử đo"><svg class="tab-icon" aria-hidden="true"><use href="#icon-history"></use></svg><span class="tab-label">Lịch sử đo</span></button>
       <button class="tab-btn" data-tab="xuhuong" title="Xu hướng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-trend"></use></svg><span class="tab-label">Xu hướng</span></button>
-      <!-- "Quy trình lấy mẫu" + "Quy trình đánh giá" (2 tab cũ) đã gộp thành 1 tab "Quy
-           trình" duy nhất để thu gọn thanh tab — chọn nội dung con bằng cụm nút
-           .quytrinh-subtab-btn ngay trong tab, xem section id="tab-quytrinh" bên dưới +
-           setupQuyTrinhSubtabs() ở app-core.js (cùng cơ chế đã dùng cho tab "Cấu hình"). -->
       <button class="tab-btn" data-tab="quytrinh" title="Quy trình"><svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg><span class="tab-label">Quy trình</span></button>
-      <button class="tab-btn" data-tab="about" title="Giới thiệu"><svg class="tab-icon" aria-hidden="true"><use href="#icon-info"></use></svg><span class="tab-label">Giới thiệu</span></button>
-      <button class="tab-btn" data-tab="huongdan" title="Hướng dẫn sử dụng"><svg class="tab-icon" aria-hidden="true"><use href="#icon-book"></use></svg><span class="tab-label">Hướng dẫn</span></button>
-      <button class="tab-btn" data-tab="phanhoi" title="Người dùng phản hồi"><svg class="tab-icon" aria-hidden="true"><use href="#icon-feedback"></use></svg><span class="tab-label">Người dùng phản hồi</span></button>
-      <button class="tab-btn" data-tab="cauhinh" title="Cấu hình"><svg class="tab-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg><span class="tab-label">Cấu hình</span></button>
-      <button class="tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị"><svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="tab-label">Quản trị</span></button>
     </div>
   </nav>
 
@@ -1052,179 +1054,8 @@
       </div>
     </section>
 
-    <!-- ===================== TAB: CẤU HÌNH (gộp "Tiêu chuẩn NSX" + "Quy định QĐ1901/IEC" — 2
-         tab cũ ghép lại thành 1 để thu gọn thanh tab ngang, chọn bằng nút .cauhinh-subtab-btn
-         bên dưới thay vì 2 nút .tab-btn riêng — xem setupCauHinhSubtabs() ở app-core.js. Vẫn
-         GIỮ NGUYÊN id="tab-tieuchuan"/"tab-quydinh" cũ đổi thành id .cauhinh-subpanel để không
-         phải sửa lại các id con bên trong (ui-standards.js/ui-regulation-config.js không đổi
-         gì cả, chỉ đổi PHẦN TỬ CHA bọc ngoài). ===================== -->
-    <section id="tab-cauhinh" class="tab-panel hidden">
-      <div class="cauhinh-subtabs" role="tablist" aria-label="Chọn nội dung cấu hình">
-        <button type="button" class="cauhinh-subtab-btn active" data-subtab="tieuchuan" role="tab" aria-selected="true">Tiêu chuẩn</button>
-        <button type="button" class="cauhinh-subtab-btn" data-subtab="quydinh" role="tab" aria-selected="false">Quy định</button>
-      </div>
-
-      <div class="cauhinh-subpanel" id="cauhinh-tieuchuan" role="tabpanel">
-      <div class="panel">
-        <h2>Tiêu chuẩn theo nhà sản xuất
-          <button type="button" class="info-icon-btn" aria-controls="tieuchuan_info" aria-expanded="false" aria-label="Giải thích Tiêu chuẩn theo nhà sản xuất" title="Giải thích Tiêu chuẩn theo nhà sản xuất">i</button>
-        </h2>
-        <div class="info-popover hidden" id="tieuchuan_info">
-          <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
-          <p>Chọn loại tiêu chuẩn cần cấu hình bên dưới: <strong>Khí hòa tan (DGA)</strong> — dùng ngưỡng
-            của nhà sản xuất thay cho QĐ1901/IEC60599 khi đánh giá giá trị tuyệt đối từng khí; hoặc <strong>Dầu cách
-            điện</strong> — với MBA/Kháng dầu, dùng ngưỡng của nhà sản xuất thay cho Bảng 54/55/58 QĐ1901 (theo cấp
-            điện áp + trạng thái dầu); với TI/TU, QĐ1901 không có bảng mặc định (Điều 10/11 chỉ dẫn chiếu "theo quy
-            định nhà sản xuất") nên BẮT BUỘC cấu hình ở đây mới đánh giá được dầu TI/TU. Thiết bị/thí nghiệm không
-            chọn nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định (riêng
-            TI/TU sẽ báo "Chưa có tiêu chuẩn nhà sản xuất").</p>
-        </div>
-        <p class="note hidden" id="editingStandardNote" style="color:var(--warn); font-weight:600;">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
-
-        <div class="grid" style="margin-top:10px;">
-          <label class="field">Loại tiêu chuẩn
-            <select id="s_standard_type">
-              <option value="khi">Khí hòa tan (DGA)</option>
-              <option value="dau">Dầu cách điện (Độ ẩm / tgδ / Điện áp chọc thủng)</option>
-            </select>
-          </label>
-          <label class="field">Tên nhà sản xuất
-            <div class="combo-wrap">
-              <input id="s_manufacturer" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập nhà sản xuất mới" autocomplete="off" />
-              <button type="button" id="s_manufacturer_toggle" class="combo-toggle" aria-label="Hiện danh sách nhà sản xuất">▼</button>
-              <div id="s_manufacturer_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field" id="s_equipmenttype_wrap">Áp dụng cho loại thiết bị
-            <select id="s_equipmenttype">
-              <option>TI (biến dòng điện)</option>
-              <option>TU (biến điện áp)</option>
-              <option>MBA/Kháng dầu</option>
-              <option>Sứ xuyên (Bushing)</option>
-            </select>
-          </label>
-          <label class="field">Nguồn tài liệu (tùy chọn)
-            <input id="s_source" type="text" placeholder="VD: Quy trình TN-BD IOSK v2" />
-          </label>
-        </div>
-
-        <div id="stdGasFields">
-          <div class="section-title">Ngưỡng tuyệt đối từng khí (ppm)</div>
-          <div class="grid gases">
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_CH4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_C2H6" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_C2H4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_C2H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_CO" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_CO2" type="number" min="0" step="0.01" /></label>
-          </div>
-          <p class="note">Bỏ trống khoảng tốc độ sinh khí nếu muốn dùng Bảng 65 QĐ1901 làm mặc định (khuyến nghị).</p>
-
-          <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — cảnh báo nghiêm trọng nếu vượt)</div>
-          <p class="note">Ngưỡng riêng, nghiêm trọng hơn "ngưỡng tuyệt đối" ở trên — QĐ1901/IEC không quy định mức
-            này, chỉ áp dụng khi chính nhà sản xuất/đơn vị bạn tự đặt ra. Không cần điền đủ 7 khí — để trống khí nào
-            thì khí đó không bị kiểm tra ngưỡng loại bỏ (thường chỉ cần đặt cho H2, C2H2).</p>
-          <div class="grid gases">
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_loaibo_H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_loaibo_CH4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_loaibo_C2H6" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_loaibo_C2H4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_loaibo_C2H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_loaibo_CO" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_loaibo_CO2" type="number" min="0" step="0.01" /></label>
-          </div>
-        </div>
-
-        <div id="stdOilFields" class="hidden">
-          <p class="note" id="stdOilFieldsNoteMba">MBA/Kháng dầu: mỗi tiêu chuẩn ứng với 1 cấp điện áp + 1 trạng thái dầu
-            cụ thể (giống cấu trúc Bảng 54/55/58 QĐ1901) — có thể thêm nhiều tiêu chuẩn cho cùng 1 nhà sản xuất nếu cần
-            phân biệt theo cấp điện áp/trạng thái dầu. Bỏ trống hạng mục nào thì hạng mục đó vẫn dùng QĐ1901 mặc
-            định, chỉ các hạng mục có nhập số mới bị nhà sản xuất ghi đè.</p>
-          <p class="note hidden" id="stdOilFieldsNoteInstrument">TI/TU: QĐ1901 Điều 10/11 (Bảng 9 mục 12, Bảng 14 mục 11)
-            đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục dầu cách điện — KHÔNG có bảng số mặc
-            định, bắt buộc phải cấu hình tiêu chuẩn ở đây mới đánh giá được. Áp dụng chung cho thiết bị (không phân
-            theo cấp điện áp/trạng thái dầu). Có thể nhập 1 hoặc cả 2 mức ngưỡng bên dưới, theo đúng tài liệu nhà sản
-            xuất (ví dụ: Haefely Trench cho TI thường có cả 2 mức "bình thường" và "loại bỏ").</p>
-          <div class="grid" id="s_oil_mba_fields">
-            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
-              <select id="s_oil_voltage_class"></select>
-            </label>
-            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
-              <select id="s_oil_state">
-                <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
-                <option value="inservice">Dầu vận hành</option>
-              </select>
-            </label>
-          </div>
-          <div class="section-title" id="s_oil_normal_title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
-          <div class="grid gases">
-            <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" min="0" step="0.1" /></label>
-            <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" min="0" step="0.01" /></label>
-            <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" min="0" step="0.1" /></label>
-          </div>
-          <div id="s_oil_instrument_fields" class="hidden">
-            <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — mức nghiêm trọng hơn ngưỡng bình thường ở trên)</div>
-            <p class="note">Ví dụ tài liệu Haefely Trench cho TI: tgδ 90°C bình thường &lt; 0,1% / loại bỏ &gt; 0,2% —
-              Điện áp chọc thủng bình thường &gt; 60kV / loại bỏ &lt; 50kV — Độ ẩm bình thường &lt; 10ppm / loại bỏ
-              &gt; 20ppm. Giá trị nằm GIỮA 2 mức sẽ được báo "Cảnh báo" thay vì "Không đạt".</p>
-            <div class="grid gases">
-              <label class="field">Độ ẩm dầu — loại bỏ (ppm) <input id="s_oil_moisture_loaibo" type="number" min="0" step="0.1" /></label>
-              <label class="field">tgδ ở 90°C — loại bỏ (%) <input id="s_oil_tgd90_loaibo" type="number" min="0" step="0.01" /></label>
-              <label class="field">Điện áp chọc thủng — loại bỏ (kV) <input id="s_oil_bdv_loaibo" type="number" min="0" step="0.1" /></label>
-            </div>
-            <div class="section-title">tgδ ở 20°C (tùy chọn — chỉ TI/TU, khác hẳn tgδ 90°C ở trên)</div>
-            <p class="note">Một số nhà sản xuất (VD Arteche) đưa ra ngưỡng riêng đo ở nhiệt độ phòng (20°C) thay vì
-              90°C — bỏ trống nếu tài liệu nhà sản xuất của bạn không có hạng mục này.</p>
-            <div class="grid gases">
-              <label class="field">tgδ ở 20°C — bình thường (%) <input id="s_oil_tgd20" type="number" min="0" step="0.01" /></label>
-              <label class="field">tgδ ở 20°C — loại bỏ (%) <input id="s_oil_tgd20_loaibo" type="number" min="0" step="0.01" /></label>
-            </div>
-            <p class="note">Riêng cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX ghi ngưỡng loại bỏ tgδ20°C
-              thấp hơn cho thiết bị U.H.V) — nếu nhập, PHẢI nhập ĐỦ CẢ HAI ô dưới đây; bỏ trống cả hai nếu NSX
-              không có biệt lệ này.</p>
-            <div class="grid gases">
-              <label class="field">tgδ ở 20°C — loại bỏ khi U.H.V (%) <input id="s_oil_tgd20_uhv_loaibo" type="number" min="0" step="0.01" /></label>
-              <label class="field">Mốc Um áp dụng U.H.V (kV) <input id="s_oil_tgd20_uhv_um_kv" type="number" min="0" step="1" placeholder="VD: 500" /></label>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:14px; display:flex; gap:10px;">
-          <button class="btn primary" id="btnSaveStandard">Lưu tiêu chuẩn</button>
-          <button class="btn ghost hidden" id="btnCancelEditStandard">Hủy</button>
-        </div>
-      </div>
-
-      <div class="panel">
-        <h2>Danh sách tiêu chuẩn đã cấu hình</h2>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Nhà sản xuất</th><th>Loại</th><th>Áp dụng</th><th>Ngưỡng</th><th>Nguồn</th><th class="actions-col-header"></th></tr></thead>
-          <tbody id="standardsTable"></tbody>
-        </table></div>
-        <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
-      </div>
-      </div>
-
-      <div class="cauhinh-subpanel hidden" id="cauhinh-quydinh" role="tabpanel">
-      <div class="panel">
-        <h2>Cấu hình quy định
-          <button type="button" class="info-icon-btn" aria-controls="quydinh_info" aria-expanded="false" aria-label="Giải thích Cấu hình quy định" title="Giải thích Cấu hình quy định">i</button>
-        </h2>
-        <div class="info-popover hidden" id="quydinh_info">
-          <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
-          <p>Các bảng ngưỡng SỐ HỌC đơn giản trích từ QĐ1901/IEC 60599:2022 (KHÔNG bao gồm logic tra mã Bảng
-            66/Table A.10 hay ranh giới Tam giác Duval — những phần đó vẫn cố định theo đúng văn bản gốc) được
-            liệt kê bên dưới, nhóm theo loại thiết bị/bối cảnh áp dụng. Sửa số + tham chiếu nguồn rồi bấm "Lưu bảng
-            này" khi QĐ1901/IEC 60599 có bản cập nhật trong tương lai. Bấm "Khôi phục mặc định" để quay lại đúng số
-            liệu gốc đã tích hợp sẵn trong ứng dụng. Chỉ Admin sửa/lưu được; mọi người dùng đã đăng nhập đều xem
-            được.</p>
-        </div>
-        <p class="note" id="quydinhLoadingHint">Đang tải cấu hình...</p>
-        <div id="regulationConfigContainer"></div>
-      </div>
-      </div>
-    </section>
+    <!-- TAB: CẤU HÌNH đã được chuyển vào mục QUẢN TRỊ (tab-quantri) -->
+    <section id="tab-cauhinh" class="tab-panel hidden" style="display:none;"></section>
 
     <!-- ===================== TAB: QUY TRÌNH (gộp "Quy trình lấy mẫu" + "Quy trình đánh
          giá" — 2 tab cũ ghép lại thành 1 để thu gọn thanh tab ngang, chọn bằng nút
@@ -3560,7 +3391,22 @@
     </section>
 
     <section id="tab-quantri" class="tab-panel hidden">
-      <div class="panel">
+      <!-- Cụm subtabs Quản trị: Người dùng | Cấu hình | Bản sao Supabase -->
+      <div class="quantri-subtabs" role="tablist" aria-label="Chọn nội dung quản trị">
+        <button type="button" class="quantri-subtab-btn active" data-subtab="users" role="tab" aria-selected="true">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-shield"></use></svg>Người dùng
+        </button>
+        <button type="button" class="quantri-subtab-btn" data-subtab="cauhinh" role="tab" aria-selected="false">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Cấu hình
+        </button>
+        <button type="button" class="quantri-subtab-btn" data-subtab="supabase" role="tab" aria-selected="false">
+          <svg class="tab-icon" aria-hidden="true"><use href="#icon-flow"></use></svg>Bản sao Supabase
+        </button>
+      </div>
+
+      <!-- Subpanel 1: Quản lý người dùng -->
+      <div class="quantri-subpanel" id="quantri-users" role="tabpanel">
+        <div class="panel">
         <h2>Quản lý người dùng</h2>
         <p class="note">Chỉ Admin xem được tab này. Admin có toàn quyền thêm/sửa/xóa mọi dữ liệu (Đo khí, Dầu MBA,
           Dầu OLTC, Tiêu chuẩn, Trạm...). Người dùng thường (User) tự nhập và lưu được Đo khí/Dầu MBA/Dầu OLTC, và
@@ -3594,8 +3440,180 @@
         </table></div>
         <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
       </div>
+      </div>
 
-      <!-- Bản sao song song trên Supabase — Code.gs tự ghi theo mỗi lần có thay đổi (xem
+      <!-- Subpanel 2: Cấu hình (Tiêu chuẩn theo NSX & Quy định) -->
+      <div class="quantri-subpanel hidden" id="quantri-cauhinh" role="tabpanel">
+        <div class="cauhinh-subtabs" role="tablist" aria-label="Chọn nội dung cấu hình">
+        <button type="button" class="cauhinh-subtab-btn active" data-subtab="tieuchuan" role="tab" aria-selected="true">Tiêu chuẩn</button>
+        <button type="button" class="cauhinh-subtab-btn" data-subtab="quydinh" role="tab" aria-selected="false">Quy định</button>
+      </div>
+
+      <div class="cauhinh-subpanel" id="cauhinh-tieuchuan" role="tabpanel">
+      <div class="panel">
+        <h2>Tiêu chuẩn theo nhà sản xuất
+          <button type="button" class="info-icon-btn" aria-controls="tieuchuan_info" aria-expanded="false" aria-label="Giải thích Tiêu chuẩn theo nhà sản xuất" title="Giải thích Tiêu chuẩn theo nhà sản xuất">i</button>
+        </h2>
+        <div class="info-popover hidden" id="tieuchuan_info">
+          <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
+          <p>Chọn loại tiêu chuẩn cần cấu hình bên dưới: <strong>Khí hòa tan (DGA)</strong> — dùng ngưỡng
+            của nhà sản xuất thay cho QĐ1901/IEC60599 khi đánh giá giá trị tuyệt đối từng khí; hoặc <strong>Dầu cách
+            điện</strong> — với MBA/Kháng dầu, dùng ngưỡng của nhà sản xuất thay cho Bảng 54/55/58 QĐ1901 (theo cấp
+            điện áp + trạng thái dầu); với TI/TU, QĐ1901 không có bảng mặc định (Điều 10/11 chỉ dẫn chiếu "theo quy
+            định nhà sản xuất") nên BẮT BUỘC cấu hình ở đây mới đánh giá được dầu TI/TU. Thiết bị/thí nghiệm không
+            chọn nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định (riêng
+            TI/TU sẽ báo "Chưa có tiêu chuẩn nhà sản xuất").</p>
+        </div>
+        <p class="note hidden" id="editingStandardNote" style="color:var(--warn); font-weight:600;">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
+
+        <div class="grid" style="margin-top:10px;">
+          <label class="field">Loại tiêu chuẩn
+            <select id="s_standard_type">
+              <option value="khi">Khí hòa tan (DGA)</option>
+              <option value="dau">Dầu cách điện (Độ ẩm / tgδ / Điện áp chọc thủng)</option>
+            </select>
+          </label>
+          <label class="field">Tên nhà sản xuất
+            <div class="combo-wrap">
+              <input id="s_manufacturer" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập nhà sản xuất mới" autocomplete="off" />
+              <button type="button" id="s_manufacturer_toggle" class="combo-toggle" aria-label="Hiện danh sách nhà sản xuất">▼</button>
+              <div id="s_manufacturer_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <label class="field" id="s_equipmenttype_wrap">Áp dụng cho loại thiết bị
+            <select id="s_equipmenttype">
+              <option>TI (biến dòng điện)</option>
+              <option>TU (biến điện áp)</option>
+              <option>MBA/Kháng dầu</option>
+              <option>Sứ xuyên (Bushing)</option>
+            </select>
+          </label>
+          <label class="field">Nguồn tài liệu (tùy chọn)
+            <input id="s_source" type="text" placeholder="VD: Quy trình TN-BD IOSK v2" />
+          </label>
+        </div>
+
+        <div id="stdGasFields">
+          <div class="section-title">Ngưỡng tuyệt đối từng khí (ppm)</div>
+          <div class="grid gases">
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_CH4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_C2H6" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_C2H4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_C2H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_CO" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_CO2" type="number" min="0" step="0.01" /></label>
+          </div>
+          <p class="note">Bỏ trống khoảng tốc độ sinh khí nếu muốn dùng Bảng 65 QĐ1901 làm mặc định (khuyến nghị).</p>
+
+          <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — cảnh báo nghiêm trọng nếu vượt)</div>
+          <p class="note">Ngưỡng riêng, nghiêm trọng hơn "ngưỡng tuyệt đối" ở trên — QĐ1901/IEC không quy định mức
+            này, chỉ áp dụng khi chính nhà sản xuất/đơn vị bạn tự đặt ra. Không cần điền đủ 7 khí — để trống khí nào
+            thì khí đó không bị kiểm tra ngưỡng loại bỏ (thường chỉ cần đặt cho H2, C2H2).</p>
+          <div class="grid gases">
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_loaibo_H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_loaibo_CH4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_loaibo_C2H6" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_loaibo_C2H4" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_loaibo_C2H2" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_loaibo_CO" type="number" min="0" step="0.01" /></label>
+            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_loaibo_CO2" type="number" min="0" step="0.01" /></label>
+          </div>
+        </div>
+
+        <div id="stdOilFields" class="hidden">
+          <p class="note" id="stdOilFieldsNoteMba">MBA/Kháng dầu: mỗi tiêu chuẩn ứng với 1 cấp điện áp + 1 trạng thái dầu
+            cụ thể (giống cấu trúc Bảng 54/55/58 QĐ1901) — có thể thêm nhiều tiêu chuẩn cho cùng 1 nhà sản xuất nếu cần
+            phân biệt theo cấp điện áp/trạng thái dầu. Bỏ trống hạng mục nào thì hạng mục đó vẫn dùng QĐ1901 mặc
+            định, chỉ các hạng mục có nhập số mới bị nhà sản xuất ghi đè.</p>
+          <p class="note hidden" id="stdOilFieldsNoteInstrument">TI/TU: QĐ1901 Điều 10/11 (Bảng 9 mục 12, Bảng 14 mục 11)
+            đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục dầu cách điện — KHÔNG có bảng số mặc
+            định, bắt buộc phải cấu hình tiêu chuẩn ở đây mới đánh giá được. Áp dụng chung cho thiết bị (không phân
+            theo cấp điện áp/trạng thái dầu). Có thể nhập 1 hoặc cả 2 mức ngưỡng bên dưới, theo đúng tài liệu nhà sản
+            xuất (ví dụ: Haefely Trench cho TI thường có cả 2 mức "bình thường" và "loại bỏ").</p>
+          <div class="grid" id="s_oil_mba_fields">
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
+              <select id="s_oil_voltage_class"></select>
+            </label>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
+              <select id="s_oil_state">
+                <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
+                <option value="inservice">Dầu vận hành</option>
+              </select>
+            </label>
+          </div>
+          <div class="section-title" id="s_oil_normal_title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
+          <div class="grid gases">
+            <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" min="0" step="0.1" /></label>
+            <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" min="0" step="0.01" /></label>
+            <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" min="0" step="0.1" /></label>
+          </div>
+          <div id="s_oil_instrument_fields" class="hidden">
+            <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — mức nghiêm trọng hơn ngưỡng bình thường ở trên)</div>
+            <p class="note">Ví dụ tài liệu Haefely Trench cho TI: tgδ 90°C bình thường &lt; 0,1% / loại bỏ &gt; 0,2% —
+              Điện áp chọc thủng bình thường &gt; 60kV / loại bỏ &lt; 50kV — Độ ẩm bình thường &lt; 10ppm / loại bỏ
+              &gt; 20ppm. Giá trị nằm GIỮA 2 mức sẽ được báo "Cảnh báo" thay vì "Không đạt".</p>
+            <div class="grid gases">
+              <label class="field">Độ ẩm dầu — loại bỏ (ppm) <input id="s_oil_moisture_loaibo" type="number" min="0" step="0.1" /></label>
+              <label class="field">tgδ ở 90°C — loại bỏ (%) <input id="s_oil_tgd90_loaibo" type="number" min="0" step="0.01" /></label>
+              <label class="field">Điện áp chọc thủng — loại bỏ (kV) <input id="s_oil_bdv_loaibo" type="number" min="0" step="0.1" /></label>
+            </div>
+            <div class="section-title">tgδ ở 20°C (tùy chọn — chỉ TI/TU, khác hẳn tgδ 90°C ở trên)</div>
+            <p class="note">Một số nhà sản xuất (VD Arteche) đưa ra ngưỡng riêng đo ở nhiệt độ phòng (20°C) thay vì
+              90°C — bỏ trống nếu tài liệu nhà sản xuất của bạn không có hạng mục này.</p>
+            <div class="grid gases">
+              <label class="field">tgδ ở 20°C — bình thường (%) <input id="s_oil_tgd20" type="number" min="0" step="0.01" /></label>
+              <label class="field">tgδ ở 20°C — loại bỏ (%) <input id="s_oil_tgd20_loaibo" type="number" min="0" step="0.01" /></label>
+            </div>
+            <p class="note">Riêng cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX ghi ngưỡng loại bỏ tgδ20°C
+              thấp hơn cho thiết bị U.H.V) — nếu nhập, PHẢI nhập ĐỦ CẢ HAI ô dưới đây; bỏ trống cả hai nếu NSX
+              không có biệt lệ này.</p>
+            <div class="grid gases">
+              <label class="field">tgδ ở 20°C — loại bỏ khi U.H.V (%) <input id="s_oil_tgd20_uhv_loaibo" type="number" min="0" step="0.01" /></label>
+              <label class="field">Mốc Um áp dụng U.H.V (kV) <input id="s_oil_tgd20_uhv_um_kv" type="number" min="0" step="1" placeholder="VD: 500" /></label>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:14px; display:flex; gap:10px;">
+          <button class="btn primary" id="btnSaveStandard">Lưu tiêu chuẩn</button>
+          <button class="btn ghost hidden" id="btnCancelEditStandard">Hủy</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Danh sách tiêu chuẩn đã cấu hình</h2>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Nhà sản xuất</th><th>Loại</th><th>Áp dụng</th><th>Ngưỡng</th><th>Nguồn</th><th class="actions-col-header"></th></tr></thead>
+          <tbody id="standardsTable"></tbody>
+        </table></div>
+        <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
+      </div>
+      </div>
+
+      <div class="cauhinh-subpanel hidden" id="cauhinh-quydinh" role="tabpanel">
+      <div class="panel">
+        <h2>Cấu hình quy định
+          <button type="button" class="info-icon-btn" aria-controls="quydinh_info" aria-expanded="false" aria-label="Giải thích Cấu hình quy định" title="Giải thích Cấu hình quy định">i</button>
+        </h2>
+        <div class="info-popover hidden" id="quydinh_info">
+          <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
+          <p>Các bảng ngưỡng SỐ HỌC đơn giản trích từ QĐ1901/IEC 60599:2022 (KHÔNG bao gồm logic tra mã Bảng
+            66/Table A.10 hay ranh giới Tam giác Duval — những phần đó vẫn cố định theo đúng văn bản gốc) được
+            liệt kê bên dưới, nhóm theo loại thiết bị/bối cảnh áp dụng. Sửa số + tham chiếu nguồn rồi bấm "Lưu bảng
+            này" khi QĐ1901/IEC 60599 có bản cập nhật trong tương lai. Bấm "Khôi phục mặc định" để quay lại đúng số
+            liệu gốc đã tích hợp sẵn trong ứng dụng. Chỉ Admin sửa/lưu được; mọi người dùng đã đăng nhập đều xem
+            được.</p>
+        </div>
+        <p class="note" id="quydinhLoadingHint">Đang tải cấu hình...</p>
+        <div id="regulationConfigContainer"></div>
+      </div>
+      </div>
+      </div>
+
+      <!-- Subpanel 3: Bản sao Supabase -->
+      <div class="quantri-subpanel hidden" id="quantri-supabase" role="tabpanel">
+        <!-- Bản sao song song trên Supabase — Code.gs tự ghi theo mỗi lần có thay đổi (xem
            mirrorUpsertToSupabase()/syncAllToSupabase() ở gsheet/Code.gs, README mục 2c).
            Xem refreshSupabaseSyncUI()/onSyncSupabase() ở ui-admin.js. -->
       <div class="panel">
@@ -3614,6 +3632,7 @@
             <tbody id="sbSyncErrors"></tbody>
           </table></div>
         </div>
+      </div>
       </div>
     </section>
   </main>

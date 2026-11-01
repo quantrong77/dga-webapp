@@ -340,12 +340,22 @@ header.app-header p {
    trắng như .badge.user-badge ở trên mới đủ tương phản, thay vì màu --blue-700 gần
    như biến mất trên nền đó. aria-pressed="true" (đang ở chế độ dọc) đảo màu nền/chữ
    để nhận biết nhanh trạng thái đang bật — xem setupTabLayoutToggle() ở app-core.js. */
-.header-icon-btn {
+/* Vách ngăn phân cách giữa các cụm nút trên Header */
+.header-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.22);
+  margin: 0 4px;
   flex: none;
-  width: 30px;
-  height: 30px;
+}
+
+.header-icon-btn {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 32px;
   padding: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
@@ -353,17 +363,52 @@ header.app-header p {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
-.header-icon-btn:hover { background: rgba(255, 255, 255, 0.24); }
-.header-icon-btn[aria-pressed="true"] {
-  background: #fff;
+.header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-1px);
+}
+.header-icon-btn:active {
+  transform: translateY(1px);
+}
+.header-icon-btn[aria-pressed="true"],
+.header-icon-btn.active {
+  background: #ffffff;
   color: var(--evn-navy);
-  border-color: #fff;
+  border-color: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 .header-icon-btn .icon-svg { width: 16px; height: 16px; margin-right: 0; }
 
-
+/* Tooltip hiển thị chức năng khi trỏ chuột vào các nút icon trên Header (Menu bar) */
+.header-icon-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(-2px);
+  background: rgba(15, 23, 42, 0.95);
+  color: #ffffff;
+  font-size: 11.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s ease;
+  z-index: 100;
+}
+.header-icon-btn[data-tooltip]:hover::after,
+.header-icon-btn[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
 /* Badge trạng thái kết nối & Tự động đồng bộ ngoại tuyến (#syncStatusBadge) */
 .badge.sync-badge {
   display: inline-flex;

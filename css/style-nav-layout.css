@@ -391,6 +391,39 @@ body.tabs-sidebar main { max-width: none; }
 }
 .quytrinh-subpanel.hidden { display: none; }
 
+
+/* Tab "Quản trị" — phân mục con bằng segmented control: Người dùng | Cấu hình | Bản sao Supabase */
+.quantri-subtabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 18px;
+}
+.quantri-subtab-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.quantri-subtab-btn:hover { color: var(--blue-900); }
+.quantri-subtab-btn.active {
+  background: var(--surface);
+  color: var(--blue-900);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
+}
+.quantri-subpanel.hidden { display: none; }
 /* Hiệu ứng mờ dần + trượt nhẹ khi 1 tab/panel được hiện ra (chuyển tab, hoặc kết
    quả phân tích xuất hiện) — CSS animation tự chạy lại mỗi lần phần tử chuyển từ
    display:none sang hiển thị, không cần JS can thiệp. */

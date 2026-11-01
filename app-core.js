@@ -66,6 +66,8 @@ async function initApp() {
     $("userBadge").classList.remove("hidden");
     $("btnOpenChangePassword").classList.remove("hidden");
     $("navQuanTri").classList.toggle("hidden", Auth.current.role !== "admin");
+  } else if (!Auth.enabled) {
+    $("navQuanTri").classList.remove("hidden");
   }
 
   // Badge "Đã kết nối database" chỉ hiện với Admin (chi tiết vận hành/hạ tầng, không
@@ -103,6 +105,7 @@ async function initApp() {
   setupStickyHeaderObserver();
   setupCauHinhSubtabs();
   setupQuyTrinhSubtabs();
+  setupQuantriSubtabs();
   setupHandbookLightbox();
   setupMindmap();
   setupOverviewMindmap();
@@ -1145,19 +1148,26 @@ function setupTabs() {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
       btn.classList.add("active");
-      const tabEl = $("tab-" + btn.dataset.tab);
-      if (tabEl) tabEl.classList.remove("hidden");
-      if (btn.dataset.tab === "dga") {
+      const targetTab = btn.dataset.tab;
+      if (targetTab === "cauhinh") {
+        const qtPanel = $("tab-quantri");
+        if (qtPanel) qtPanel.classList.remove("hidden");
+        const cauhinhSubBtn = document.querySelector('.quantri-subtab-btn[data-subtab="cauhinh"]');
+        if (cauhinhSubBtn) cauhinhSubBtn.click();
+        const navQt = $("navQuanTri");
+        if (navQt) navQt.classList.add("active");
+      } else {
+        const tabEl = $("tab-" + targetTab);
+        if (tabEl) tabEl.classList.remove("hidden");
+      }
+      if (targetTab === "dga" || targetTab === "nhap") {
         const dropzone = $("bbtnDropzone");
         if (dropzone) dropzone.focus();
       }
-      // Khi cụm nút tab không đủ chỗ (tràn ngang ở chế độ tab NGANG, hoặc tràn dọc ở chế
-      // độ sidebar — xem ghi chú CSS "nav.tabs"/".tabs-inner"), nút vừa bấm có thể đang
-      // nằm ngoài (hoặc chỉ lộ 1 phần trong) vùng nhìn thấy của nav.tabs — ví dụ bấm tab
-      // "Quản trị"/"Cấu hình" ở cuối cụm lúc màn hình hẹp. Cuộn nhẹ (chỉ cuộn
-      // TỐI THIỂU cần thiết nhờ "nearest", không giật cả trang) để nút luôn hiện đầy đủ
-      // sau khi chọn, thay vì vẫn bị che 1 phần như trước khi bấm.
-      btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      // Tránh cuộn trang khi bấm các nút icon trên Header (chỉ cuộn cho các nút trong sidebar/nav.tabs)
+      if (!btn.classList.contains("header-icon-btn")) {
+        btn.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      }
     });
   });
 }
@@ -1214,6 +1224,25 @@ function setupQuyTrinhSubtabs() {
     });
   });
 }
+
+/** Phân mục con trong tab "Quản trị" (Người dùng | Cấu hình | Bản sao Supabase) */
+function setupQuantriSubtabs() {
+  const btns = document.querySelectorAll(".quantri-subtab-btn");
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const key = btn.dataset.subtab;
+      document.querySelectorAll(".quantri-subtab-btn").forEach((b) => {
+        const active = b === btn;
+        b.classList.toggle("active", active);
+        b.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      document.querySelectorAll(".quantri-subpanel").forEach((p) => {
+        p.classList.toggle("hidden", p.id !== "quantri-" + key);
+      });
+    });
+  });
+}
+
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

@@ -100,6 +100,7 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 | **Cấu hình** | Tiêu chuẩn theo nhà sản xuất; chỉnh bảng quy định |
 | **Giới thiệu** | Thông tin chung và căn cứ pháp lý |
 | **Hướng dẫn** | Xem hướng dẫn sử dụng này ngay trong app |
+| **Phản hồi** | Gửi góp ý cho ứng dụng |
 | **Người dùng phản hồi** | Gửi góp ý |
 | **Quản trị** | Quản lý người dùng — **chỉ Admin** mới thấy |
 
