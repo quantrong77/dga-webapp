@@ -1,219 +1,326 @@
-# Tính năng ứng dụng DGA (Phân tích khí hòa tan trong dầu cách điện)
+# Tổng quan Dự án & Danh mục Toàn bộ Tính năng Ứng dụng DGA (Dầu cách điện)
 
-> Tài liệu này mô tả **đầy đủ tính năng hiện có** của ứng dụng, theo đúng từng tab trên giao diện. Đây là tài liệu bổ sung cho `README.md` (vốn tập trung vào cài đặt/triển khai) — dùng để tra cứu "app hiện làm được những gì", không phải hướng dẫn cài đặt. Nội dung được đối chiếu trực tiếp với mã nguồn tại thời điểm viết; khi thêm/sửa tính năng, hãy cập nhật lại file này.
-
-Phạm vi ứng dụng: hỗ trợ kỹ sư thí nghiệm điện (EVNNPT) đánh giá tình trạng cách điện của **MBA/Kháng dầu, TI (biến dòng điện), TU (biến điện áp), Sứ xuyên (Bushing)** thông qua phân tích khí hòa tan (DGA) và các thí nghiệm dầu cách điện, căn cứ theo **QĐ 1901/QĐ-EVNNPT** và **IEC 60599:2022**.
-
----
-
-## 1. Tab "DGA" — Phân tích khí hòa tan
-
-Tab chính của ứng dụng, nơi nhập và đánh giá 1 lần đo khí hòa tan.
-
-**Nhập liệu:**
-- Thông tin lần đo: Trạm, Thiết bị, Loại thiết bị (TI/TU/MBA-Kháng dầu/Sứ xuyên/Khác), Pha (A/B/C/Chung 3 pha), Lần đo (tự gợi ý số thứ tự kế tiếp theo nhóm Trạm+Thiết bị+Pha), Ngày lấy mẫu, Nhà sản xuất (ô combo tự gõ-tìm).
-- Với MBA: tick chọn phân loại OLTC ("Ngăn OLTC thông dầu/khí với thùng chính?" — quyết định dùng bảng IEC Annex A.2.4 Table A.2 nào để tính ngưỡng C2H2 tham khảo; lưu kèm bản ghi và dùng làm tiêu chí gom nhóm ở mục "So sánh với nhóm thiết bị tương tự". **Lưu ý:** với số liệu mặc định hiện tại, do công cụ luôn lấy ngưỡng **chặt hơn (min)** giữa Table A.2 và QĐ1901 Bảng 64 (cả 2 đều 20 ppm cho C2H2 ở nhánh "không tick"), việc tick/không tick ô này *chưa* làm đổi ngưỡng C2H2 cuối cùng đang áp dụng).
-- 7 khí hòa tan chính (H2, CH4, C2H6, C2H4, C2H2, CO, CO2), cùng 2 khí bổ sung tùy chọn N2/O2 (dùng cho Tổng hàm lượng khí hòa tan — Bảng 63, Điều 54).
-- Khối "Thông số kỹ thuật thiết bị" (kiểu máy, năm sản xuất, năm vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu cách điện, hiện trạng vận hành) — phục vụ xuất "Báo cáo phân tích kỹ thuật". Có thể **đọc gợi ý một phần** từ ảnh chụp tấm nhãn thiết bị (xem mục 12.3) thay vì gõ tay toàn bộ.
-- Khối "Thông tin thí nghiệm bổ sung" (ngày thí nghiệm, lý do thí nghiệm, nhiệt độ/độ ẩm môi trường) — phục vụ xuất Biên bản thí nghiệm (BBTN).
-- Đính kèm 1 file BBTN (PDF) gốc cho lần đo — có thể **tự động trích xuất** dữ liệu từ PDF (xem mục 12.1) để điền sẵn toàn bộ form phía trên, người dùng không phải gõ tay.
-- Nhập liệu hàng loạt (Batch import) từ nhiều file BBTN cùng lúc — xem mục 12.2.
-
-**Phân tích & đánh giá (khi bấm "Phân tích & Lưu"):**
-- **Đánh giá giá trị tuyệt đối từng khí** so với ngưỡng đang áp dụng (QĐ1901/IEC hoặc tiêu chuẩn nhà sản xuất nếu đã cấu hình) — kết luận Đạt/Không đạt từng khí và tổng thể.
-- **Tổng lượng khí cháy (TCG)**.
-- **Chẩn đoán mã sự cố theo tỷ số khí**: dùng song song 3 phương pháp độc lập, không thay thế nhau:
-  - *Bảng 66 QĐ1901 / Table 1 IEC 60599:2022* (6 mã sự cố loại trừ lẫn nhau: PD, D1, D2, T1, T2, T3) — áp dụng cho MBA/Kháng dầu, TI, TU.
-  - *Table A.10 IEC 60599:2022 Annex A.5.3 (Bảng đơn giản hóa cho Sứ xuyên)* — 4 mã **độc lập** (PD, D, T, TP; có thể khớp 0, 1 hoặc nhiều mã cùng lúc), dùng riêng cho Sứ xuyên; nếu không khớp mã nào thì tự động lùi về dùng Bảng 66 (đúng khuyến cáo của IEC). Ngưỡng PD theo tỷ số CH4/H2 cũng khác nhau theo loại thiết bị: Sứ xuyên 0,07; MBA/Khác 0,1; TI/TU 0,2.
-  - **Tam giác Duval 1** — áp dụng đồng thời cho mọi loại thiết bị (kể cả Sứ xuyên), có đối chiếu chéo với mã Bảng 66/Table A.10 trong phần khuyến cáo.
-- **Tỷ lệ bổ sung Điều 54** (CO2/CO, O2/N2) và **Tổng hàm lượng khí hòa tan (Bảng 63)** — chỉ tính được khi đã nhập cả N2 lẫn O2; đưa ra khuyến cáo riêng (không ảnh hưởng trạng thái tổng thể Bình thường/Cảnh báo/Báo động, chỉ là tham khảo bổ sung).
-- **Ngưỡng loại bỏ (condemning limits)** riêng của nhà sản xuất (nếu đã cấu hình) — cảnh báo "⚠ Vượt ngưỡng loại bỏ" tách biệt với đánh giá "Không đạt" thông thường.
-- **Tốc độ gia tăng khí** so với lần đo liền trước (nếu có), đối chiếu Bảng 65 QĐ1901 (chỉ chính thức cho MBA/Kháng dầu; loại khác chỉ mang tính tham khảo) hoặc khoảng tốc độ riêng của nhà sản xuất nếu đã cấu hình.
-- **Trạng thái tổng thể** (Bình thường / Cảnh báo (ALERT) / Báo động (ALARM)) tổng hợp từ: kết quả Đạt/Không đạt, số khí vượt ngưỡng, mã chẩn đoán, đổi loại sự cố giữa 2 lần đo liền kề, tốc độ tăng bất thường, và vượt ngưỡng loại bỏ.
-- **So sánh với nhóm thiết bị tương tự** (thống kê tham khảo, KHÔNG phải ngưỡng quy định QĐ1901/IEC, không ảnh hưởng trạng thái tổng thể): gom các lần đo đã lưu của thiết bị **cùng loại** (ưu tiên cùng cấp điện áp + cùng nhà sản xuất, tự nới tiêu chí nếu chưa đủ dữ liệu; cần tối thiểu 5 lần đo trong nhóm) rồi tính **z-score từng khí trên thang log1p** (cảnh báo khi |z| ≥ 2, báo động khi |z| ≥ 3) và **điểm bất thường tổng hợp bằng Isolation Forest tự dựng ngay lúc đánh giá** (xét đồng thời cả 7 khí, không lưu model, chạy 100% phía trình duyệt).
-- **Ca tương tự trong lịch sử đo** (case-based reasoning — tham khảo, KHÔNG phải kết luận cho lần đo này): so "hình dạng" 7 khí (cosine similarity trên thang log1p) với toàn bộ lịch sử đã lưu, hiển thị tối đa 3 ca giống nhất (độ giống ≥ 0,5).
-- **Khuyến cáo hành động** cụ thể theo từng trường hợp.
-- Cảnh báo giá trị âm khi nhập liệu nhầm.
-
-**Xuất báo cáo (chỉ hiện khi có dữ liệu tương ứng):**
-- **Xuất BBTN (.docx)** — điền sẵn số liệu vào mẫu Biên bản thí nghiệm chuẩn PTC3/BM.15 (Trạm, vị trí lắp đặt, hãng SX, ngày lấy/thí nghiệm mẫu, lý do thí nghiệm, điều kiện môi trường, 7 khí + TCG + tốc độ sinh khí %/tháng, N2/O2, Tổng hàm lượng khí hòa tan, kết luận tổng hợp) — chạy 100% phía trình duyệt (docxtemplater), không gửi số liệu lên server nào.
-- **Xuất "Báo cáo phân tích kỹ thuật" (.docx)** — chỉ xuất được khi trạng thái khác "Bình thường": tổng hợp thông số kỹ thuật thiết bị, kết quả thí nghiệm, 3 tỷ số khí, chẩn đoán bất thường, đề xuất hướng xử lý và việc cần làm.
-
-**Sửa lần đo đã lưu:** cho phép sửa số liệu khí của bản ghi cũ; hệ thống tự động ghi log các trường đã sửa (giá trị cũ, thời điểm sửa) để hiển thị cảnh báo ở tab "Lịch sử đo".
+> **Tài liệu tham chiếu toàn diện về Dự án DGA Web App**  
+> Căn cứ tiêu chuẩn: **Quyết định 1901/QĐ-EVNNPT** & **IEC 60599:2022**  
+> Kiến trúc hệ thống: **Three-Tier Architecture (Presentation – Logic – Storage)** & **Offline-First PWA**
 
 ---
 
-## 2. Tab "Dầu cách điện" — Thí nghiệm dầu
+## 1. Giới thiệu Dự án & Mục tiêu
 
-Gồm 3 khối con, chọn qua bộ lọc "Loại thiết bị":
-
-### 2.1. Dầu MBA chính (MBA/Kháng dầu)
-- Độ ẩm dầu (ppm), tgδ ở 90°C (%), Điện áp chọc thủng (kV) — theo **Bảng 58/55/54 QĐ1901** (Điều 50/47/46), phân theo cấp điện áp và trạng thái dầu (mới/đang vận hành).
-- Tùy chọn "Có bảo vệ màng/nitơ" — chỉ hiện khi cấp điện áp đó có phân biệt 2 mức ngưỡng độ ẩm (theo Bảng 58).
-- Hỗ trợ lấy mẫu theo điểm "Chung" (1 mẫu đại diện 3 pha) hoặc "Pha riêng" (A/B/C — dành cho MBA/Kháng 3 pha rời, phổ biến ở cấp 500kV).
-- Có thể ưu tiên dùng tiêu chuẩn riêng của nhà sản xuất (nếu đã cấu hình ở tab "Cấu hình" — mục "Tiêu chuẩn") thay cho bảng mặc định.
-- Sửa/xóa thí nghiệm đã lưu (quyền theo vai trò — xem mục 8).
-
-### 2.2. Dầu OLTC (bộ đổi nấc có tải)
-- Cùng 3 chỉ tiêu Độ ẩm/tgδ 90°C/Điện áp chọc thủng — theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) hoặc theo Bảng 58 (nếu là dầu mới lắp).
-- Lấy mẫu theo "Điểm cuối trung tính" (3 pha dùng chung) hoặc "Pha riêng" (A/B/C).
-
-### 2.3. Dầu TI/TU/Sứ xuyên
-- Cùng 3 chỉ tiêu Độ ẩm/tgδ 90°C/Điện áp chọc thủng, nhưng **QĐ1901 Điều 10/11 KHÔNG có bảng ngưỡng mặc định** cho TI/TU (chỉ dẫn chiếu "theo quy định nhà sản xuất") — bắt buộc phải chọn 1 Nhà sản xuất đã cấu hình đủ tiêu chuẩn 2 tầng (Bình thường/Loại bỏ) ở tab "Cấu hình" — mục "Tiêu chuẩn" thì mới đánh giá được; nếu chưa chọn, hệ thống chặn lưu và báo rõ lý do.
-- Kết quả có 3 mức: Đạt / Cảnh báo / Không đạt (dựa theo 2 tầng ngưỡng của nhà sản xuất).
-- **Sứ xuyên (Bushing) KHÔNG có thí nghiệm dầu cách điện** — ứng dụng hiển thị ghi chú rõ và hướng người dùng quay lại tab "DGA" (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).
+Ứng dụng **DGA Web App** (Đánh giá Dầu cách điện & Phân tích khí hòa tan) là hệ thống phần mềm chuyên dụng hỗ trợ các kỹ sư thí nghiệm điện, cán bộ quản lý kỹ thuật của Tổng công ty Truyền tải điện Quốc gia (EVNNPT) thực hiện:
+- Phân tích và đánh giá tình trạng cách điện của các thiết bị điện cao áp ngâm dầu: **Máy biến áp (MBA) & Kháng điện, Máy biến dòng điện (TI), Máy biến điện áp (TU), Sứ xuyên (Bushing), và Bộ đổi nấc có tải (OLTC)**.
+- Tự động hóa công tác nhập liệu từ các Biên bản thí nghiệm (BBTN) dạng PDF và ảnh chụp tấm nhãn thiết bị (Nameplate OCR).
+- Giám sát tình trạng vận hành, phát hiện sớm các sự cố tiềm ẩn (nhiệt, điện, phóng điện cục bộ), dự báo xu hướng sinh khí và hỗ trợ ra quyết định bảo dưỡng chính xác.
+- Vận hành tin cậy, linh hoạt trong mọi điều kiện mạng (online/offline) và đồng bộ dữ liệu trên cả nền tảng máy tính (Web) và thiết bị di động (Mobile).
 
 ---
 
-## 3. Tab "Lịch sử đo"
+## 2. Kiến trúc Hệ thống (Three-Tier Architecture)
 
-- Bảng nhật ký toàn bộ các lần đo khí hòa tan đã lưu — lọc theo Trạm/Thiết bị (gõ tự do) và theo Loại thiết bị.
-- Có bộ chọn xem theo "Khí hòa tan (DGA)" hoặc "Dầu" (gộp 3 bảng con: Dầu MBA chính / Dầu OLTC / Dầu TI-TU-Sứ xuyên, dùng chung 1 ô lọc Trạm/Thiết bị).
-- Mỗi dòng hiển thị đầy đủ: 7 khí + N2/O2 (nếu có), TCG, kết luận Đạt/Không đạt (kèm cờ "⚠ Vượt ngưỡng loại bỏ" nếu có), mã chẩn đoán tỷ số khí, vùng Tam giác Duval, người nhập/người sửa lần cuối, huy hiệu "✎ N lần sửa" (xem log chi tiết qua tooltip).
-- Ô số liệu đã bị sửa so với bản gốc được tô nền cảnh báo, hiện tooltip giá trị cũ + thời điểm sửa.
-- Xem lại file BBTN đã đính kèm (nếu có), sửa/xóa từng bản ghi (theo phân quyền).
-- **So sánh tốc độ gia tăng khí giữa 2 lần đo bất kỳ** (không bắt buộc là 2 lần liền kề) của cùng 1 thiết bị — chọn thiết bị rồi chọn 2 mốc đo, hệ thống tự sắp theo thời gian và tính tốc độ theo Bảng 65 QĐ1901 hoặc khoảng riêng của nhà sản xuất.
+Hệ thống được thiết kế theo mô hình **3 tầng phân tách độc lập (Separation of Concerns)**, giúp mã nguồn dễ bảo trì, mở rộng và kiểm thử tự động:
 
----
+```mermaid
+graph TD
+    subgraph PresentationTier["1. Presentation Tier (ui/ & index.html)"]
+        UI_DGA["ui-dga.js<br/>(DGA & Split View)"]
+        UI_Oil["ui-oil.js & ui-ti-oil-3pha.js<br/>(Thí nghiệm dầu & 3 pha)"]
+        UI_History["ui-history.js & ui-trend.js<br/>(Lịch sử & Xu hướng Chart.js)"]
+        UI_Admin["ui-admin.js & ui-standards.js<br/>(Quản trị, Tiêu chuẩn, Quy định)"]
+        UI_Layout["ui-layout.js & ui-theme.js<br/>(Sidebar, Dark mode, Sticky)"]
+        UI_Errors["ui-errors.js & ui-busy.js<br/>(Xử lý lỗi tập trung, Toast)"]
+    end
 
-## 4. Tab "Cảnh báo"
+    subgraph LogicTier["2. Logic Tier (logic/ & dga-logic.js)"]
+        DGA_Core["dga-logic-core.js<br/>(Hằng số & Bộ điều phối)"]
+        DGA_Gas["dga-logic-gas.js<br/>(Tuyệt đối, Bảng 66, Duval 1, TCG)"]
+        DGA_Oil["dga-logic-oil.js & instrument-oil.js<br/>(Bảng 54/55/58 & Dầu TI/TU)"]
+        DGA_Reg["dga-logic-regulation-config.js<br/>(13 Bảng quy định có thể hiệu chỉnh)"]
+        DGA_Forecast["dga-logic-forecast.js<br/>(Dự báo ngoại suy Holt/OLS/Theil-Sen)"]
+        DGA_Stats["dga-logic-peer.js & case.js<br/>(Z-Score, Isolation Forest, CBR)"]
+    end
 
-Tự động rà soát **lần đo/thí nghiệm gần nhất của từng thiết bị** (gộp theo Trạm+Thiết bị+Pha đã chuẩn hóa) trên cả 4 nguồn dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức **Cảnh báo (ALERT)** hoặc **Báo động (ALARM)** — tái dùng nguyên các hàm đánh giá đã dùng ở tab DGA/Dầu cách điện, không tự đặt ngưỡng riêng.
+    subgraph StorageTier["3. Storage Tier (storage/ & storage.js)"]
+        Store_Core["storage-core.js<br/>(Trừu tượng hóa & Điều phối)"]
+        Store_Offline["storage-offline.js & sw.js<br/>(Service Worker v4 & Outbox Sync)"]
+        Store_Local["storage-local.js<br/>(LocalStorage bộ nhớ đệm)"]
+        Store_Remote["storage-remote.js & storage-auth.js<br/>(Google Sheets API & Supabase)"]
+    end
 
-- Thống kê nhanh: tổng số thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.
-- Lọc theo Trạm biến áp.
-- Mỗi dòng liệt kê: thiết bị, loại đo, mức cảnh báo, tình trạng, các khí/chỉ tiêu vượt ngưỡng, lý do chi tiết, khuyến cáo hành động cụ thể.
-- Nút "Xem xu hướng" — nhảy thẳng sang tab "Xu hướng", tự chọn đúng thiết bị/pha và tự tick sẵn đúng (các) thông số đã gây cảnh báo.
-- **Xuất báo cáo cảnh báo ra Excel (.xlsx)** — gồm thống kê tổng quan + toàn bộ danh sách đang hiển thị (tôn trọng bộ lọc Trạm đang áp dụng).
+    PresentationTier --> LogicTier
+    PresentationTier --> StorageTier
+    StorageTier --> LogicTier
+```
 
----
-
-## 5. Tab "Xu hướng"
-
-Vẽ đồ thị theo thời gian (Chart.js) cho 1 thiết bị cụ thể, gộp cả 3 nguồn dữ liệu: khí hòa tan, dầu MBA chính, dầu OLTC.
-
-- Chọn Trạm (tùy chọn) và Thiết bị qua ô combo tự gõ-tìm; cảnh báo nếu tên thiết bị bị trùng giữa nhiều trạm khi không lọc theo Trạm.
-- Lọc theo Pha (A/B/C) khi thiết bị có từ 2 pha dữ liệu trở lên.
-- Chọn tùy ý các thông số cần vẽ chung 1 đồ thị: 7 khí chính, N2, O2, TCG, Tổng hàm lượng khí hòa tan (Bảng 63), độ ẩm/tgδ 90°C/điện áp chọc thủng của dầu chính và dầu OLTC — mỗi thông số 1 trục tung riêng phù hợp đơn vị.
-- **Dự báo xu hướng (ngoại suy tuyến tính)** cho từng khí trong 7 khí chính: 3 thuật toán độc lập (hồi quy OLS, Theil-Sen, trung bình liền kề) + 1 dòng "Trung bình 3 thuật toán"; hiển thị tốc độ ppm/năm, R², giá trị dự báo, và ước tính thời điểm chạm ngưỡng đang áp dụng (nếu xu hướng đang tăng) trong khoảng số năm dự báo tùy chỉnh (1–30 năm). Có thể bật/tắt hiển thị dự báo (trạng thái nhớ qua localStorage).
-- Bảng lịch sử số liệu thô đi kèm cho từng nguồn (khí/dầu chính/dầu OLTC).
-- Toàn bộ phần vẽ đồ thị tự ẩn nếu thư viện Chart.js không tải được (mất mạng/CDN lỗi), nhưng bảng dự báo xu hướng vẫn hoạt động độc lập.
-
----
-
-## 6. Tab "Cấu hình"
-
-Gộp 2 nhóm chức năng cấu hình vào 1 tab, chuyển đổi qua bộ chọn segmented control nội bộ "Tiêu chuẩn" / "Quy định" (không phụ thuộc hệ thống tab chính, hoạt động nhất quán ở cả bố cục ngang lẫn sidebar):
-
-### 6.1. Mục "Tiêu chuẩn" — Tiêu chuẩn theo nhà sản xuất
-Cho phép cấu hình ngưỡng riêng theo từng Nhà sản xuất, áp dụng thay cho ngưỡng mặc định QĐ1901/IEC:
-- **Khí hòa tan (DGA)** — ngưỡng tuyệt đối từng khí, ngưỡng loại bỏ (condemning), khoảng tốc độ tăng riêng.
-- **Dầu cách điện MBA/Kháng dầu** — thay cho Bảng 54/55/58 QĐ1901 (theo cấp điện áp + trạng thái dầu).
-- **Dầu cách điện TI/TU** — **bắt buộc** phải cấu hình ở đây (2 tầng ngưỡng Bình thường/Loại bỏ) vì QĐ1901 không có bảng mặc định cho hạng mục này.
-- Thiết bị/thí nghiệm không chọn nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, tự động dùng tiêu chuẩn mặc định QĐ1901/IEC (riêng TI/TU sẽ báo "Chưa có tiêu chuẩn nhà sản xuất").
-- Danh sách các tiêu chuẩn đã cấu hình, có thể xem lại/sửa/xóa.
-- Nội dung hướng dẫn được gói gọn sau icon "i" cạnh tiêu đề, bấm để xem popover.
-
-### 6.2. Mục "Quy định" — Cấu hình quy định (13 bảng ngưỡng)
-Cho phép chỉnh sửa **13 bảng ngưỡng số học đơn giản** trích từ QĐ1901/IEC 60599:2022 (KHÔNG bao gồm logic tra mã Bảng 66/Table A.10 hay ranh giới Tam giác Duval — các phần đó vẫn cố định theo văn bản gốc), nhóm theo loại thiết bị/bối cảnh áp dụng — ví dụ các bảng "MBA/Kháng dầu — Khí hòa tan", "Dầu MBA — Điện áp chọc thủng", "Dầu MBA — Tổn hao điện môi tgδ ở 90°C", "Dầu MBA — Hàm lượng nước", "Dầu OLTC (đang vận hành) — Độ ẩm & điện áp chọc thủng", v.v.
-- Sửa số liệu + tham chiếu nguồn rồi bấm "Lưu bảng này" khi QĐ1901/IEC 60599 có bản cập nhật trong tương lai — không cần sửa code.
-- "Khôi phục mặc định" — quay lại đúng số liệu gốc đã tích hợp sẵn trong ứng dụng cho từng bảng.
-- Chỉ Admin sửa/lưu được (chế độ Google Sheets); mọi người dùng đã đăng nhập đều xem được.
-- Nội dung hướng dẫn cũng được gói gọn sau icon "i" cạnh tiêu đề.
+1. **Presentation Tier (Tầng hiển thị):**
+   - Đặt trong thư mục `ui/`, chia thành 18 module chuyên trách quản lý từng tab và tương tác người dùng.
+   - Hoàn toàn không chứa công thức tính toán ngưỡng hoặc chẩn đoán sự cố.
+2. **Logic Tier (Tầng nghiệp vụ DGA):**
+   - Đặt trong thư mục `logic/`, là mã JavaScript thuần (vanilla JS), phi trạng thái (stateless), 100% không phụ thuộc DOM hoặc trình duyệt.
+   - Được biên dịch tự động thành `mobile/dga-logic.js` cho bản di động, đảm bảo Web và Mobile cho ra kết quả chẩn đoán giống hệt nhau với cùng một bộ số liệu.
+3. **Storage Tier (Tầng lưu trữ dữ liệu):**
+   - Đặt trong thư mục `storage/`, cung cấp API thống nhất qua `storage.js` hỗ trợ 3 backend: **Google Sheets (qua Apps Script)**, **Supabase (PostgreSQL)**, và **LocalStorage (Offline/Demo)**.
+   - Tích hợp mô hình hàng đợi ngoại tuyến **Outbox Sync Pattern** tự động đẩy dữ liệu lên máy chủ khi có mạng trở lại.
 
 ---
 
-## 7. Tab "Quy trình"
+## 3. Toàn bộ Tính năng theo từng Tab Chức năng
 
-Gộp 2 nhóm nội dung tham khảo vào 1 tab, chuyển đổi qua bộ chọn segmented control nội bộ "Lấy mẫu dầu" / "Đánh giá DGA" (cùng cơ chế subtab đã dùng ở tab "Cấu hình", mục 6).
+### 3.1. Tab "Khí hòa tan" (DGA) — Phân tích & Đánh giá Khí hòa tan
 
-### 7.1. Mục "Lấy mẫu dầu"
-- **7 phương pháp lấy mẫu dầu** (Điều 8 QĐ1901) trình bày dạng accordion, có nút "Mở tất cả"/"Thu gọn tất cả".
-- 5 sơ đồ minh họa (Hình 2–5) + thư viện ảnh thực tế lấy mẫu — xem phóng to qua lightbox (bấm ảnh để mở, đóng bằng nút ×/bấm ra ngoài/phím Esc).
+Đây là tab tác nghiệp trung tâm của ứng dụng:
 
-### 7.2. Mục "Đánh giá DGA"
-- **Cẩm nang tham khảo nhanh** — các áp phích tổng hợp quy trình chẩn đoán, xem phóng to qua lightbox riêng.
-- **2 sơ đồ tư duy (mindmap)** dạng accordion lồng nhau (`<details>/<summary>`), có nút "Mở tất cả"/"Thu gọn tất cả" cho từng sơ đồ:
-  - Sơ đồ diễn giải quy trình DGA.
-  - Sơ đồ tổng quan thứ 2: cơ chế hình thành khí, 7 loại khí, khí chỉ thị theo lỗi, phương pháp chẩn đoán, quy trình.
+- **Nhập liệu thông minh & Gợi ý tự động:**
+  - *Trạm & Thiết bị:* Hộp nhập liệu lai (Combobox) cho phép vừa gõ tìm kiếm nhanh, vừa chọn từ danh sách đã có, hoặc nhập mới trực tiếp.
+  - *Phân loại thiết bị:* Hỗ trợ 5 nhóm: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing), Khác.
+  - *MBA có ngăn OLTC:* Hộp kiểm "Ngăn OLTC (thông dầu/khí với thùng chính)" để chọn bảng đối chiếu Annex A.2.4 Table A.2.
+  - *Nhà sản xuất:* Tùy chọn áp dụng tiêu chuẩn riêng của nhà sản xuất (nếu đã cấu hình).
+  - *Tự động gợi ý lần đo:* Hệ thống tự tra cứu lịch sử đo của thiết bị (khớp đúng Trạm + Thiết bị + Pha) để tự động tăng số lần đo kế tiếp.
+  - *7 khí hòa tan chính:* H2, CH4, C2H6, C2H4, C2H2, CO, CO2 (chấp nhận số thập phân hoặc giá trị "KPH" — Không phát hiện, tự quy về 0 ppm).
+  - *Khí bổ sung N2, O2:* Dùng cho tỷ lệ Điều 54 (CO2/CO, O2/N2) và Tổng hàm lượng khí hòa tan (Bảng 63, Điều 54).
+  - *Thông số kỹ thuật thiết bị:* Kiểu máy, năm sản xuất, năm vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu cách điện, hiện trạng vận hành.
+  - *Thông tin thí nghiệm bổ sung:* Ngày thí nghiệm, lý do thí nghiệm, nhiệt độ, độ ẩm môi trường.
 
----
+- **Khung hiển thị Biên bản đối chiếu song song (Split View Preview Pane):**
+  - **Tự động mở khi kéo-thả hoặc chọn PDF:** Ngay khi nạp file PDF BBTN, giao diện tự động chia làm 2 cột: Cột trái là form số liệu, Cột phải là khung tài liệu PDF gốc (`iframe`).
+  - **Bám dính khi cuộn (Sticky):** Khung xem trước PDF cố định trên màn hình máy tính, giúp người dùng vừa cuộn form nhập liệu vừa dễ dàng đối chiếu mắt từng giá trị (H2, CH4, C2H2, v.v.) với văn bản gốc trước khi lưu.
+  - **Tiện ích trên thanh công cụ xem trước:**
+    - Tên file tài liệu và huy hiệu trạng thái (`Đã trích xuất số liệu` / `Đang đọc BBTN...` / `BBTN đã lưu`).
+    - Nút **"Mở tab mới"** để xem tài liệu ở chế độ toàn màn hình trình duyệt.
+    - Nút **"✕ Ẩn"** và nút **"Hiện BBTN đối chiếu"** để đóng/mở lại khung bất kỳ lúc nào.
+  - **Tự động nạp lại khi sửa lần đo:** Mở lại lần đo cũ đã lưu có đính kèm PDF sẽ tự động hiển thị lại văn bản gốc vào khung đối chiếu.
+  - **Quản lý bộ nhớ an toàn:** Tự động giải phóng `URL.revokeObjectURL()` khi bấm "Xóa form" hoặc "Hủy sửa", không gây rò rỉ bộ nhớ trình duyệt.
 
-## 8. Đăng nhập, phân quyền và Quản trị
+- **Động cơ phân tích & Đánh giá DGA đa phương pháp:**
+  - **Đánh giá giá trị tuyệt đối từng khí:** So sánh với bảng ngưỡng QĐ1901/IEC hoặc tiêu chuẩn riêng của nhà sản xuất.
+  - **Tổng lượng khí cháy (TCG):** Tự động tính tổng $\text{H}_2 + \text{CH}_4 + \text{C}_2\text{H}_6 + \text{C}_2\text{H}_4 + \text{C}_2\text{H}_2 + \text{CO}$.
+  - **Chẩn đoán sự cố bằng 3 phương pháp độc lập:**
+    1. *Bảng 66 QĐ1901 / Table 1 IEC 60599:2022:* Sử dụng 3 tỷ số khí $\text{C}_2\text{H}_2/\text{C}_2\text{H}_4$, $\text{CH}_4/\text{H}_2$, $\text{C}_2\text{H}_4/\text{C}_2\text{H}_6$ để xác định 6 mã sự cố (PD: Phóng điện cục bộ, D1: Phóng điện năng lượng thấp, D2: Phóng điện năng lượng cao, T1: Quá nhiệt $<300^\circ\text{C}$, T2: Quá nhiệt $300\text{--}700^\circ\text{C}$, T3: Quá nhiệt $>700^\circ\text{C}$). Ngưỡng PD tự động điều chỉnh theo loại thiết bị (Sứ xuyên: 0,07; MBA: 0,1; TI/TU: 0,2).
+    2. *Table A.10 IEC 60599:2022 (Dành riêng cho Sứ xuyên):* Chẩn đoán 4 mã độc lập PD, D, T, TP; nếu không khớp mã nào thì tự động lùi về Bảng 66.
+    3. *Tam giác Duval 1:* Vẽ trực quan trên Canvas HTML5 với tọa độ phần trăm %CH4, %C2H4, %C2H2 (tổng = 100%), định vị điểm chẩn đoán trong các vùng sự cố (PD, T1, T2, T3, D1, D2, DT).
+  - **Tốc độ sinh khí (Rate of Gas Generation):** So sánh với lần đo liền trước theo Bảng 65 QĐ1901 (%/tháng hoặc ppm/ngày).
+  - **Đánh giá Trạng thái Tổng thể:** Tổng hợp thành 3 cấp độ: **Bình thường (Xanh)**, **Cảnh báo - ALERT (Vàng cam)**, **Báo động - ALARM (Đỏ)**, kèm cờ cảnh báo đặc biệt khi **Vượt ngưỡng loại bỏ (Condemning limit)**.
+  - **Khuyến cáo hành động kỹ thuật:** Đưa ra chỉ dẫn cụ thể (rút ngắn chu kỳ đo, kiểm tra tải, kiểm tra rơ le gas, dừng vận hành kiểm tra...).
+  - **So sánh thống kê nâng cao (Tham khảo bổ sung):**
+    - *So sánh nhóm thiết bị tương tự:* Tính toán điểm bất thường đa chiều bằng **Isolation Forest** tự dựng và Z-score thang Log1p cho từng khí so với nhóm thiết bị cùng chủng loại.
+    - *Ca sự cố tương tự (Case-Based Reasoning):* Tính độ tương đồng hình học (Cosine similarity) với toàn bộ kho dữ liệu lịch sử để gợi ý tối đa 3 ca đo có biểu hiện gần nhất.
 
-**Đăng nhập** (chỉ hoạt động ở chế độ Google Sheets — `Auth.enabled`; ở chế độ Supabase/localStorage mọi người dùng đều có toàn quyền):
-- Đăng ký/đăng nhập bằng email + mật khẩu.
-- Đăng nhập bằng Google (Google Identity Services) — tùy chọn, chỉ hiện khi đã cấu hình `GOOGLE_CLIENT_ID`.
-- Tự động khôi phục phiên đăng nhập đã lưu khi tải lại trang.
-- Đăng xuất qua bấm vào huy hiệu tên người dùng (có xác nhận trước khi đăng xuất).
+- **Xuất văn bản báo cáo chuyên nghiệp:**
+  - **Xuất BBTN (.docx):** Điền toàn bộ số liệu đo và kết quả đánh giá vào mẫu Biên bản thí nghiệm chuẩn PTC3/BM.15 qua thư viện Docxtemplater chạy 100% trong trình duyệt.
+  - **Xuất Báo cáo phân tích kỹ thuật (.docx):** Tự động xuất hiện khi thiết bị có bất thường (Cảnh báo/Báo động), tổng hợp đầy đủ thông số kỹ thuật, tỷ số khí, biểu đồ Duval và đề xuất xử lý.
 
-**Phân quyền 2 vai trò — Admin / User:**
-- **Admin**: toàn quyền sửa/xóa mọi bản ghi, cấu hình Tiêu chuẩn/Quy định, quản lý người dùng.
-- **User** (đã đăng nhập): tự nhập bản ghi mới (khí hòa tan/dầu MBA/dầu OLTC/dầu TI-TU); chỉ sửa được bản ghi do **chính mình** nhập; không xóa được, không cấu hình được Tiêu chuẩn/Quy định.
-- Quyền hiển thị ở giao diện chỉ mang tính gợi ý — quyền thật luôn được kiểm tra lại phía server (Google Apps Script), không tin tưởng tuyệt đối phía trình duyệt.
-- Mỗi bản ghi lưu vết người tạo/người sửa cuối + thời điểm — hiển thị ở cột "Người nhập" tại tab "Lịch sử đo"/"Dầu cách điện".
-
-**Tab "Quản trị" (chỉ Admin, chỉ chế độ Google Sheets):**
-- Danh sách toàn bộ người dùng: email, vai trò (đổi qua dropdown User/Admin), ngày tạo tài khoản, lần đăng nhập cuối.
-- Xóa người dùng (có xác nhận).
-- Tự bảo vệ tránh khóa nhầm chính mình: dòng của Admin đang đăng nhập bị vô hiệu hóa dropdown vai trò và ẩn nút xóa.
-
----
-
-## 9. Tab "Giới thiệu" (About)
-
-Thông tin giới thiệu chung về ứng dụng, phạm vi áp dụng và căn cứ pháp lý (QĐ1901/IEC 60599:2022).
-
-## 10. Tab "Hướng dẫn"
-
-Hướng dẫn sử dụng đầy đủ cho người dùng cuối, trình bày thành 19 mục accordion (Mở tất cả/Thu gọn tất cả) — đi theo từng công việc cụ thể: nhập số liệu, đọc kết quả, xuất báo cáo, xem cảnh báo, cấu hình, xử lý sự cố... Nội dung được **sinh tự động từ `user_manual.md`** (script `scripts/build-user-guide.js`) — sửa tài liệu gốc rồi dựng lại tab, không sửa tay HTML.
-
-## 11. Tab "Người dùng phản hồi"
-
-- Gửi góp ý tự do (nội dung văn bản) kèm tối đa 1 ảnh minh họa tùy chọn.
-- Hỗ trợ đính kèm ảnh qua 3 cách: chọn file, kéo-thả vào khung, hoặc **dán trực tiếp (Ctrl+V)** ảnh vừa chụp màn hình.
-- Xem lại toàn bộ góp ý đã gửi (mới nhất lên đầu), xem ảnh minh họa phóng to qua lightbox.
-- Chỉ Admin xóa được góp ý; không có tính năng sửa lại góp ý đã gửi.
+- **Nhập hàng loạt BBTN (Batch Import):**
+  - Kéo thả nhiều file PDF hoặc chọn nguyên thư mục chứa nhiều năm đo của cùng 1 thiết bị.
+  - Bảng xem trước danh sách file, kiểm tra trùng lặp ngày đo, chỉnh sửa pha trực tiếp và lưu hàng loạt vào cơ sở dữ liệu.
+  - Tự động đánh lại số lần đo theo trình tự thời gian tăng dần (`Sắp xếp lại Lần đo`).
 
 ---
 
-## 12. Nhập liệu tự động từ BBTN/ảnh nhãn thiết bị
+### 3.2. Tab "Dầu cách điện" — Thí nghiệm Lý-Hóa Dầu
 
-Chạy 100% phía trình duyệt (không gửi file lên bất kỳ server nào để "đọc") bằng 2 kỹ thuật khác nhau tùy loại tài liệu:
+Đánh giá chất lượng dầu cách điện theo các điều khoản quy định của QĐ1901:
 
-### 12.1. Nhập rời từng lần (tab "DGA") — đọc Biên bản thí nghiệm (PDF)
-Dùng thư viện `pdf.js` (đóng gói sẵn, không phụ thuộc CDN ngoài) để đọc trực tiếp lớp text của file PDF mẫu PTC3/BM.15 — đính kèm 1 file cho lần đo đang nhập, hệ thống tự nhận diện và điền sẵn: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu cách điện, Ngày thí nghiệm, Lý do thí nghiệm, Điều kiện môi trường (nhiệt độ/độ ẩm), và cả 7 giá trị khí hòa tan. Nếu PDF là bản scan/ảnh (không có lớp text), tự động chuyển sang đọc bằng OCR (Tesseract.js, vendor sẵn, không qua CDN) như phương án dự phòng.
+- **1. Dầu MBA chính (MBA/Kháng dầu):**
+  - 3 chỉ tiêu cốt lõi: Độ ẩm dầu (ppm), Tổn hao điện môi tgδ ở 90°C (%), Điện áp chọc thủng BDV (kV) — căn cứ theo Bảng 58, 55, 54 QĐ1901.
+  - Phân loại theo cấp điện áp (đến 35kV, 110-220kV, 500kV) và tình trạng dầu (dầu mới nhận, trước đóng điện, đang vận hành).
+  - Tự động nhận diện cấu hình bảo vệ màng ngăn N2/màng cao su.
+  - Hỗ trợ lấy mẫu chung 3 pha hoặc theo từng pha riêng biệt (A, B, C).
 
-### 12.2. Nhập hàng loạt — Batch import (tab "DGA")
-Chọn nhiều file PDF hoặc cả 1 thư mục BBTN của cùng 1 thiết bị cùng lúc — dùng chung Trạm/Thiết bị/Loại thiết bị/Nhà sản xuất/Thông số kỹ thuật đang điền ở form phía trên cho cả đợt, chỉ đọc riêng Pha/Ngày/7 khí từ mỗi file. Có bảng xem trước (preview) cho từng file với trạng thái: sẵn sàng nhập / cảnh báo (không đọc được Pha, hoặc trùng Pha+Ngày với bản ghi đã có/dòng khác trong đợt) / lỗi (không đọc được file hoặc thiếu dữ liệu bắt buộc) — có thể sửa tay Pha/Ngày từng dòng, tick chọn/bỏ chọn từng dòng hoặc chọn tất cả/bỏ tất cả, tùy chọn đính kèm luôn PDF gốc vào bản ghi. Lưu tuần tự từng dòng (1 dòng lỗi không chặn các dòng còn lại), tự đánh số "Lần đo" tăng dần đúng theo nhóm Trạm+Thiết bị+Pha. Phù hợp để nhập nhanh dữ liệu lịch sử (backfill) phục vụ phân tích xu hướng.
+- **2. Dầu OLTC (Bộ đổi nấc có tải):**
+  - Đánh giá Độ ẩm, tgδ 90°C, Điện áp chọc thủng theo Điều 37, Bảng 49 QĐ1901 (dầu vận hành) hoặc Bảng 58 (dầu mới).
+  - Điểm lấy mẫu: Điểm cuối trung tính hoặc từng pha riêng biệt.
 
-### 12.3. Đọc ảnh chụp tấm nhãn thiết bị (nameplate OCR, tab "DGA")
-Dùng OCR (Tesseract.js, chạy 100% trong trình duyệt qua Web Worker riêng, vendor sẵn không qua CDN) để đọc ảnh chụp/scan tấm nhãn gắn trên vỏ máy — gợi ý điền vào khối "Thông số kỹ thuật thiết bị" (Kiểu máy, Năm sản xuất, Điện áp định mức, Số chế tạo, Loại dầu cách điện) và "Nhà sản xuất". **Độ tin cậy thấp hơn** đọc BBTN vì mỗi hãng trình bày nhãn khác nhau (không có mẫu chung như PTC3/BM.15) — chỉ dò theo các nhãn thường gặp trên nameplate quốc tế, không suy diễn khi không thấy nhãn, không khóa trường nào. Các trường vận hành (Năm đưa vào vận hành, Kết cấu cách điện dầu, Hiện trạng vận hành) không đọc được từ nhãn (không in sẵn từ nhà sản xuất) nên luôn phải nhập tay.
+- **3. BBTN Dầu 3 pha TI/TU (PTC3/BM.14):**
+  - **Nhập liệu đồng thời 3 pha:** Đọc file PDF mẫu PTC3/BM.14 hoặc nhập tay đồng thời cả 3 pha A, B, C trong cùng một form.
+  - **Khung đối chiếu song song (Split View):** Tự động mở khung hiển thị PDF bên cạnh bảng số liệu 3 pha để kiểm tra đối chiếu.
+  - **Đánh giá theo 2 tầng ngưỡng NSX:** Áp dụng tiêu chuẩn Bình thường và Loại bỏ theo nhà sản xuất (do TI/TU không có bảng mặc định trong QĐ1901).
+  - **Cột đối chiếu "Trên BBTN":** Hiển thị kết luận in trên biên bản giấy bên cạnh kết luận của phần mềm và đưa ra cảnh báo nếu có sự sai lệch.
+  - **Lưu trữ & Tách bản ghi tự động:** Khi bấm lưu, dữ liệu được tự động tách thành 3 bản ghi riêng biệt trong lịch sử đo để các tab Cảnh báo và Xu hướng có thể theo dõi chi tiết từng pha.
+  - **Xuất BBTN dầu 3 pha (.docx):** Xuất lại file Word biên bản theo mẫu chuẩn, đã điền sẵn số liệu và kết luận tự động.
 
-Cả 3 kiểu đọc trên đều là suy đoán "tốt nhất có thể" dựa trên cấu trúc tài liệu hiện hành — người dùng luôn xem lại và sửa tay được mọi trường trước khi lưu.
-
----
-
-## 13. Các tiện ích giao diện dùng chung
-
-- **Bố cục thanh tab**: chuyển đổi giữa bố cục **ngang** (mặc định, có hiệu ứng bóng mờ 2 bên báo hiệu còn tab ẩn ngoài tầm nhìn, tự cuộn mượt tới tab vừa bấm) và bố cục **sidebar dọc** (có thể thu gọn) — trạng thái được nhớ qua localStorage.
-- **Icon "i" (info popover)**: cơ chế dùng chung cho mọi đoạn hướng dẫn dài — bấm để xem, đóng bằng nút "×" hoặc bấm ra ngoài; chỉ 1 popover mở tại 1 thời điểm.
-- **Ô combo tự gõ-tìm** (Trạm, Thiết bị...) — vừa gõ tự do vừa gợi ý từ dữ liệu đã có, không ép buộc chọn đúng từ danh sách.
-- **Toast thông báo** góc trên bên phải, xử lý lỗi tập trung (`ui/ui-errors.js`): toast xanh cho thao tác thành công (đăng nhập/đăng ký/lưu...), **toast đỏ cho lỗi/thiếu thông tin** (thiếu trường bắt buộc, mất kết nối database, lỗi không lường trước — kể cả lỗi trong Promise không được `await`, nhờ handler `error`/`unhandledrejection` toàn cục) — hiện lâu hơn (~6,5 giây) và hiển thị được nhiều dòng để đọc hết gợi ý xử lý.
-- Giao diện tiếng Việt, tối ưu cho cả máy tính và di động.
-
----
-
-## 14. Lưu trữ dữ liệu (3 chế độ, tự động chọn theo cấu hình)
-
-Thứ tự ưu tiên: **Google Sheets > Supabase > localStorage**.
-
-1. **Google Sheets** (qua Google Apps Script) — duy nhất hỗ trợ đăng nhập/phân quyền Admin-User; cần redeploy thủ công Apps Script (`gsheet/Code.gs`) mỗi khi mã backend thay đổi.
-2. **Supabase** (Postgres + Row Level Security) — chưa hỗ trợ phân quyền theo vai trò (giới hạn đã ghi trong README.md).
-3. **localStorage** (ngoại tuyến/demo) — dữ liệu chỉ lưu trên trình duyệt hiện tại, mọi người dùng có toàn quyền, ảnh/PDF đính kèm lưu dạng base64 cục bộ.
-
-Toàn bộ 3 chế độ dùng chung 1 giao diện (`storage.js` là lớp trừu tượng), không phân biệt khi thao tác trên các tab.
+- **4. Dầu TI/TU đơn lẻ & Sứ xuyên:**
+  - Nhập và đánh giá thí nghiệm dầu cho từng pha riêng lẻ của TI/TU theo tiêu chuẩn nhà sản xuất đã cấu hình.
+  - Hướng dẫn rõ ràng: Sứ xuyên kín dầu không thí nghiệm dầu, hướng dẫn chuyển sang đánh giá khí DGA.
 
 ---
 
-*Xem `README.md` để biết hướng dẫn cài đặt, triển khai và cấu trúc thư mục chi tiết của dự án.*
+### 3.3. Tab "Lịch sử đo" — Tra cứu & Quản lý Nhật ký Dữ liệu
+
+- **Bảng nhật ký đa năng:**
+  - Chuyển đổi linh hoạt giữa 2 chế độ hiển thị: **Khí hòa tan (DGA)** và **Dầu cách điện** (gộp dầu MBA, OLTC, TI/TU).
+  - Lọc dữ liệu tức thời theo Trạm (combobox), Thiết bị, Loại thiết bị và Cấp điện áp.
+- **Minh bạch lịch sử chỉnh sửa:**
+  - Lưu vết tài khoản người nhập ban đầu và người sửa cuối cùng kèm dấu thời gian.
+  - Huy hiệu `✎ N lần sửa`: Bấm để xem chi tiết lịch sử sửa đổi (trường dữ liệu nào bị sửa, giá trị cũ là bao nhiêu, sửa vào thời gian nào).
+  - Tô màu cảnh báo trực tiếp trên các ô số liệu đã bị chỉnh sửa so với ban đầu.
+- **Tiện ích xem lại văn bản:**
+  - Nút **"Xem BBTN"**: Mở lại file PDF gốc đính kèm trực tiếp trong khung đối chiếu song song hoặc mở tab mới.
+  - Nút **"BBTN 3 pha"**: Mở lại toàn bộ biên bản 3 pha TI/TU để xem hoặc xuất lại Word.
+- **Công cụ so sánh tốc độ sinh khí giữa 2 lần đo bất kỳ:**
+  - Chọn thiết bị và 2 mốc thời gian bất kỳ (không nhất thiết phải là 2 lần đo liên tiếp), app tự tính tốc độ gia tăng từng khí và đối chiếu với ngưỡng Bảng 65 QĐ1901.
+
+---
+
+### 3.4. Tab "Cảnh báo" — Dashboard Giám sát Thiết bị Bất thường
+
+- **Tự động rà soát toàn diện:** Quét lần đo gần nhất của toàn bộ thiết bị trên cả 4 nguồn dữ liệu (Khí DGA, Dầu MBA, Dầu OLTC, Dầu TI/TU).
+- **Thống kê phân cấp:**
+  - Đếm tổng số thiết bị theo dõi, số thiết bị bình thường, số thiết bị ở mức **Cảnh báo (ALERT)**, số thiết bị ở mức **Báo động (ALARM)**, và số thiết bị **Vượt ngưỡng loại bỏ**.
+- **Danh sách chi tiết & Điều hướng nhanh:**
+  - Hiển thị rõ nguyên nhân cảnh báo (khí nào vượt ngưỡng, tốc độ tăng bất thường ra sao, mã sự cố chẩn đoán là gì).
+  - Nút **"Xem xu hướng"** trên từng dòng thiết bị: Tự động chuyển sang tab "Xu hướng", tự tick chọn thiết bị và các khí đang bị cảnh báo để vẽ đồ thị phân tích ngay lập tức.
+- **Xuất báo cáo Excel (.xlsx):** Xuất toàn bộ danh sách thiết bị cảnh báo kèm khuyến cáo kỹ thuật ra file Excel theo đúng bộ lọc trạm đang chọn.
+
+---
+
+### 3.5. Tab "Xu hướng" — Phân tích Đồ thị & Dự báo Tương lai
+
+- **Biểu đồ đa thông số tương tác (Chart.js):**
+  - Vẽ diễn biến theo thời gian của 7 khí DGA chính, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và các chỉ tiêu dầu cách điện trên cùng một hệ trục.
+  - Mỗi loại thông số có trục tung (Y-axis) riêng phù hợp với thang đo và đơn vị.
+  - Bật/tắt nhanh từng đường đồ thị bằng cách click vào chú giải (Legend).
+- **Dự báo xu hướng sinh khí tương lai:**
+  - Áp dụng 3 thuật toán ngoại suy tuyến tính độc lập: **Hồi quy bình phương tối thiểu (OLS)**, **Ước lượng bền vững Theil-Sen**, và **Trung bình tốc độ gần nhất**.
+  - Tính đường trung bình tổng hợp của 3 thuật toán, hệ số tin cậy $R^2$, tốc độ tăng trưởng (ppm/năm).
+  - Ước tính số tháng/năm thiết bị sẽ chạm ngưỡng giới hạn nếu tiếp tục duy trì tốc độ sinh khí hiện tại.
+  - Tùy chỉnh khoảng thời gian dự báo từ 1 đến 30 năm.
+
+---
+
+### 3.6. Tab "Quy trình" — Cẩm nang & Sơ đồ Nghiệp vụ
+
+- **7 phương pháp lấy mẫu dầu chuẩn (Điều 8 QĐ1901):**
+  - Hướng dẫn chi tiết kỹ thuật lấy mẫu từ: thùng phuy, xitéc, thiết bị điện, chai thủy tinh, xilanh thủy tinh, ống đựng mẫu chuyên dụng.
+  - Sơ đồ kỹ thuật minh họa (Hình 2 đến Hình 5) và thư viện ảnh thực tế hiện trường.
+  - Chức năng Lightbox phóng to ảnh, đóng bằng phím `Esc` hoặc bấm ra ngoài.
+- **2 Sơ đồ tư duy (Mindmap) tương tác:**
+  - *Sơ đồ 1:* Quy trình đánh giá khí hòa tan DGA theo QĐ1901/IEC.
+  - *Sơ đồ 2:* Cơ chế hình thành khí, 7 loại khí chỉ thị sự cố, phân loại lỗi nhiệt và điện.
+  - Có các nút "Mở tất cả" / "Thu gọn tất cả" tiện lợi.
+- **Căn cứ pháp lý đầy đủ:** Trích dẫn chính xác từng điều khoản, bảng số liệu của QĐ1901/QĐ-EVNNPT và IEC 60599:2022.
+
+---
+
+### 3.7. Tab "Hướng dẫn" & Tab "Giới thiệu"
+
+- **Tab Hướng dẫn sử dụng tích hợp:**
+  - Gồm 19 chuyên đề accordion chi tiết từ cơ bản đến nâng cao (đăng nhập, nhập liệu, đối chiếu BBTN, đọc kết quả, cấu hình, xử lý sự cố...).
+  - Được biên dịch tự động từ file chuẩn `user_manual.md` qua công cụ build, đảm bảo tính đồng bộ tuyệt đối giữa tài liệu và ứng dụng.
+- **Tab Giới thiệu:**
+  - Thông tin phiên bản, bản quyền, mục tiêu dự án và đầu mối hỗ trợ kỹ thuật.
+
+---
+
+## 4. Khu vực "Quản trị" & Tiện ích Toàn cục (Header & UI Utilities)
+
+### 4.1. Khu vực "Quản trị" (Admin Console)
+
+Được tích hợp tập trung trên thanh Header dành riêng cho tài khoản có quyền Quản trị viên (Admin), bao gồm 3 phân hệ con:
+
+1. **Phân hệ Người dùng (`Quản trị > Người dùng`):**
+   - Danh sách toàn bộ tài khoản trong hệ thống: Email, vai trò (Admin / User), ngày tạo, lần đăng nhập gần nhất.
+   - Thêm tài khoản mới, phân quyền vai trò.
+   - Khóa/mở khóa tài khoản, kích hoạt hoặc đặt lại mật khẩu cho người dùng.
+   - Cơ chế tự bảo vệ: Tự động vô hiệu hóa nút xóa và hạ quyền đối với tài khoản Admin đang tự đăng nhập.
+
+2. **Phân hệ Cấu hình (`Quản trị > Cấu hình`):**
+   - **Mục "Tiêu chuẩn" (Tiêu chuẩn Nhà sản xuất):**
+     - Cấu hình ngưỡng khí riêng (tuyệt đối, loại bỏ, tốc độ tăng) cho từng hãng sản xuất máy biến áp, kháng điện, sứ xuyên.
+     - Cấu hình 2 tầng ngưỡng (Bình thường / Loại bỏ) cho dầu cách điện TI/TU theo từng hãng (Arteche, Trench, v.v.).
+   - **Mục "Quy định" (13 Bảng ngưỡng quy chuẩn):**
+     - Cho phép chỉnh sửa tham số của **13 bảng ngưỡng số học** trích từ QĐ1901 và IEC 60599 (Bảng 64, Bảng 65, Bảng 49, Bảng 54, Bảng 55, Bảng 58, Bảng 63...) trực tiếp trên giao diện khi quy chuẩn ngành có cập nhật mới mà không cần can thiệp mã nguồn.
+     - Nút "Khôi phục mặc định" giúp quay lại các giá trị chuẩn ban đầu của hệ thống.
+
+3. **Phân hệ Bản sao Supabase (`Quản trị > Bản sao Supabase`):**
+   - Công cụ đồng bộ, sao lưu và di chuyển dữ liệu giữa Google Sheets và cơ sở dữ liệu Supabase.
+   - Cho phép xuất file sao lưu JSON, kiểm tra tính toàn vẹn dữ liệu và phục hồi khi cần thiết.
+
+---
+
+### 4.2. Thanh Tiêu đề & Menu bar Toàn cầu (Header)
+
+Thanh Header được cố định ở mép trên màn hình (Sticky Header) với tính năng tự động đo đạc chiều cao thực tế bằng `ResizeObserver`, chứa các công cụ tiện ích toàn cục:
+
+- **Logo EVNNPT & Tên ứng dụng:** Nhận diện thương hiệu chuẩn của Tập đoàn Điện lực Việt Nam / EVNNPT.
+- **Nút chuyển đổi bố cục Tab (Thanh ngang ⇄ Sidebar):**
+  - Chuyển đổi linh hoạt giữa giao diện tab nằm ngang phía trên và giao diện cột điều hướng bên trái (Sidebar).
+  - Ghi nhớ trạng thái ưa thích của người dùng qua `localStorage`.
+- **Nút Thu gọn / Mở rộng Sidebar:**
+  - Ở chế độ Sidebar, nút mũi tên ở đầu thanh cho phép thu gọn sidebar về dạng thanh icon hẹp 60px để tối đa hóa không gian làm việc cho vùng nội dung chính.
+  - Mũi tên tự động xoay chiều chỉ hướng bằng CSS transform và nhớ trạng thái thu gọn.
+- **Huy hiệu kết nối Lưu trữ (Storage Badge):**
+  - Hiển thị chế độ lưu trữ hiện tại: `Google Sheets` (xanh), `Supabase` (xanh lục), `Local` (cam).
+  - Bấm vào badge sẽ mở trực tiếp trang quản lý Google Sheet hoặc Dashboard Supabase tương ứng ở tab mới.
+- **Huy hiệu Trạng thái Đồng bộ (Sync Badge):**
+  - Giám sát trạng thái kết nối mạng và hàng đợi ngoại tuyến theo thời gian thực: `Đã đồng bộ` (chấm xanh), `Ngoại tuyến: N chờ gửi` (chấm cam), `Đang đồng bộ...` (chấm xoay).
+- **Chuyển đổi Giao diện Sáng / Tối (Dark / Light Mode):**
+  - Nút biểu tượng Mặt trời / Mặt trăng chuyển đổi tức thì giao diện sáng và tối.
+  - Tự động nhận diện theme mặc định của hệ điều hành (`prefers-color-scheme`) và áp dụng sớm qua `early-layout.js` để tránh hiện tượng nháy trắng màn hình khi tải trang.
+- **Menu Người dùng (Tài khoản):**
+  - Hiển thị email và vai trò người dùng đang đăng nhập.
+  - Các chức năng: **Đổi mật khẩu**, **Quản trị** (chỉ Admin), **Phản hồi**, **Đăng xuất**.
+
+---
+
+### 4.3. Tiện ích Góp ý & Phản hồi (Feedback)
+
+- Gửi ý kiến đóng góp, báo lỗi trực tiếp từ trong ứng dụng.
+- Đính kèm 1 ảnh minh họa qua 3 hình thức thuận tiện: Chọn file từ máy, Kéo thả ảnh vào khung, hoặc **Dán trực tiếp ảnh chụp màn hình bằng phím tắt `Ctrl + V`**.
+- Xem lại danh sách các góp ý đã gửi, phóng to ảnh chụp qua hộp thoại Lightbox.
+
+---
+
+## 5. Khả năng Chạy Ngoại tuyến & Đồng bộ Tự động (Offline-First PWA)
+
+Ứng dụng đáp ứng tiêu chuẩn Progressive Web App (PWA) với khả năng làm việc độc lập hoàn toàn khi mất mạng:
+
+1. **Service Worker (`sw.js` — Cache v4):**
+   - Đóng gói sẵn toàn bộ các tài nguyên tĩnh (HTML, CSS, JS, Fonts, Icons, thư viện nội bộ).
+   - Chiến lược bộ nhớ đệm:
+     - *Local Assets:* Sử dụng chiến lược **Network-First** (ưu tiên lấy file mới nhất từ mạng, nếu mất kết nối sẽ tự động nạp từ cache offline).
+     - *Thư viện CDN:* Sử dụng chiến lược **Cache-First** để tăng tốc độ nạp trang tối đa.
+2. **Hàng đợi Đồng bộ Ngoại tuyến (Outbox Pattern):**
+   - Khi mất mạng hoặc mạng chập chờn, người dùng vẫn thực hiện nhập lần đo mới, sửa số liệu, xóa bản ghi bình thường.
+   - Thao tác ghi được lưu tạm vào hàng đợi ngoại tuyến (`LS_KEYS.outbox`).
+   - Ngay khi thiết bị có kết nối Internet trở lại, hệ thống tự động nhận diện và gửi tuần tự các bản ghi trong hàng đợi lên máy chủ Google Sheets/Supabase mà không cần người dùng thao tác lại.
+
+---
+
+## 6. Tiêu chuẩn Mã nguồn & Đảm bảo An toàn
+
+- **Bảo mật Content Security Policy (CSP):**
+  - Cấu hình thẻ `<meta http-equiv="Content-Security-Policy">` nghiêm ngặt, chặn hoàn toàn các nguồn script không rõ nguồn gốc.
+  - Cho phép WebAssembly và Web Worker cục bộ cho Tesseract.js (OCR) và PDF.js mà không dùng `unsafe-eval`.
+  - Directive `frame-src` cho phép nạp tài liệu blob PDF an toàn trong khung đối chiếu song song.
+- **Độc lập Thư viện (Zero External Runtime Dependencies):**
+  - Các thư viện xử lý tài liệu phức tạp: **Docxtemplater**, **PizZip**, **PDF.js**, **Tesseract.js** đều được lưu trữ trực tiếp trong thư mục `vendor/` nội bộ dự án, không phụ thuộc vào các máy chủ CDN nước ngoài.
+- **Kiểm thử Tự động Toàn diện (Automated Testing Suite):**
+  - **17 bộ kiểm thử Jest** bao quát 335 ca kiểm thử tự động (`tests/`): kiểm tra tính nhất quán lược đồ dữ liệu, thuật toán Bảng 66, Tam giác Duval, tốc độ sinh khí, xử lý KPH, thứ tự nạp script và tính hợp lệ cú pháp V8 của toàn bộ các file JavaScript.
+
+---
+
+## 7. Bảng Tổng hợp Danh mục File & Thành phần Hệ thống
+
+| Phân hệ | Đường dẫn File chính | Trách nhiệm chính |
+|---|---|---|
+| **Khung nhìn Web** | `index.html` | Cấu trúc giao diện HTML5, SVG icons sprite, meta CSP, bố cục chia đôi |
+| **Bố cục & Phong cách** | `css/style-*.css` (8 file) | Hệ thống Refactoring UI tokens, CSS Grid sidebar, Split layout đối chiếu PDF, Dark mode |
+| **Khởi động Giao diện** | `early-layout.js` | Áp dụng theme và bố cục sidebar sớm trước khi vẽ trang để chống giật nháy |
+| **Điều phối Chính** | `app-core.js` | Khởi tạo ứng dụng, kết nối sự kiện giao diện, vòng đời ứng dụng |
+| **Phân hệ Giao diện** | `ui/ui-dga.js` | Điều khiển form DGA, khung đối chiếu song song Split View, đọc BBTN |
+| | `ui/ui-ti-oil-3pha.js` | Điều khiển form BBTN dầu 3 pha TI/TU, khung đối chiếu 3 pha |
+| | `ui/ui-oil.js`, `ui-oltc.js`, `ui-ti-oil.js` | Điều khiển các form thí nghiệm dầu MBA, OLTC, TI/TU đơn lẻ |
+| | `ui/ui-layout.js` | Quản lý chuyển đổi Sidebar ngang/dọc, thu gọn/mở rộng sidebar, sticky header |
+| | `ui/ui-history.js` | Bảng nhật ký lịch sử đo, log chỉnh sửa, so sánh tốc độ sinh khí |
+| | `ui/ui-trend.js` | Biểu đồ diễn biến Chart.js, dự báo xu hướng tương lai Holt/OLS |
+| | `ui/ui-alerts.js` | Bảng điều khiển cảnh báo thiết bị bất thường, xuất Excel |
+| | `ui/ui-admin.js`, `ui-standards.js` | Quản lý người dùng, tiêu chuẩn hãng sản xuất, quy định 13 bảng ngưỡng |
+| | `ui/ui-errors.js`, `ui-busy.js` | Bắt lỗi toàn cục, hiển thị Toast thông báo và chỉ báo bận |
+| **Logic Nghiệp vụ** | `logic/dga-logic-*.js` (9 file) | Động cơ chẩn đoán DGA, ngưỡng QĐ1901/IEC, Duval 1, Isolation Forest, Bảng 54/55/58 |
+| **Tầng Dữ liệu** | `storage/storage-*.js` (5 file) | Lớp trừu tượng Google Sheets API, Supabase, LocalStorage, Outbox Sync ngoại tuyến |
+| **Ngoại tuyến** | `sw.js` | Service Worker cache v4, PWA offline, bắt sự kiện fetch |
+| **Xử lý Biên bản** | `bbtn/bbtn-import.js`, `nameplate-import.js` | Đọc text PDF (PDF.js) và nhận diện ảnh scan/tấm nhãn bằng OCR (Tesseract.js) |
+| | `bbtn/bbtn-export.js`, `oil-bbtn.js` | Điền số liệu vào file mẫu Word (.docx) qua Docxtemplater |
+| **Bản Di động** | `mobile/` | Phiên bản PWA tối ưu cho màn hình cảm ứng di động, dùng chung logic DGA core |
+| **Tài liệu Hướng dẫn** | `user_manual.md` | Sách hướng dẫn sử dụng chi tiết 19 mục dành cho người dùng cuối |
+| **Danh mục Tính năng** | `Features-web-app.md` | *(Tài liệu này)* Báo cáo mô tả toàn diện tính năng và kiến trúc dự án |
