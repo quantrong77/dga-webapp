@@ -92,6 +92,17 @@ const server = http.createServer((req, res) => {
   });
 });
 
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.log(`\n===================================================================`);
+    console.log(`[THÔNG BÁO] Cổng ${PORT} đã có máy chủ đang chạy sẵn.`);
+    console.log(`Ứng dụng đang hoạt động bình thường tại: http://localhost:${PORT}`);
+    console.log(`===================================================================\n`);
+    return;
+  }
+  console.error("Lỗi khởi động máy chủ:", err);
+});
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`DGA Web App đang chạy tại:`);
   console.log(`  > Giao diện Web:    http://localhost:${PORT}`);

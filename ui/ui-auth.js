@@ -331,10 +331,15 @@ function initGoogleSignIn() {
   if (googleSignInInitialized) return;
   const clientId = window.DGA_CONFIG && window.DGA_CONFIG.GOOGLE_CLIENT_ID;
   if (!clientId) return; // chưa cấu hình -> giữ nguyên UI đăng nhập email/mật khẩu như cũ
+
   if (typeof google === "undefined" || !google.accounts || !google.accounts.id) {
-    // Thư viện GIS chưa tải xong tại thời điểm này -> bỏ qua lần này, không chặn
-    // đăng nhập email/mật khẩu; window.onGoogleLibraryLoad sẽ thử lại khi tải xong.
-    console.warn("Google Identity Services chưa sẵn sàng ở lần gọi này — sẽ tự thử lại khi tải xong.");
+    if (!document.getElementById("gsiScript")) {
+      const s = document.createElement("script");
+      s.id = "gsiScript";
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true;
+      document.head.appendChild(s);
+    }
     return;
   }
   try {
@@ -349,10 +354,7 @@ function initGoogleSignIn() {
   }
 }
 
-// GIS tự động gọi window.onGoogleLibraryLoad ngay khi thư viện tải xong — đây là
-// cách chính thức của Google để xử lý đúng thứ tự tải bất đồng bộ (xem thẻ <script
-// async> trong index.html). Nếu người dùng đã đăng nhập xong trước khi hàm này
-// chạy, initGoogleSignIn() vẫn chạy an toàn (chỉ gắn nút vào overlay đang ẩn).
+
 window.onGoogleLibraryLoad = initGoogleSignIn;
 
 /** Callback của google.accounts.id — nhận credential (ID token JWT), gửi lên Apps

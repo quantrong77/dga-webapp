@@ -16,8 +16,8 @@ echo       * API CSDL noi bo:  http://localhost:8080/api
 echo       * Thu muc CSDL:     ./data/ [database.json va uploads]
 echo       * Tai khoan Admin:  admin@ptc3.evnnpt.vn / admin123456
 echo.
-echo [2/2] Dang mo trinh duyet web...
-start "" "http://localhost:8080"
+echo [2/2] Dang chuan bi mo trinh duyet sau 2 giay...
+start "" cmd /c "timeout /t 2 /nobreak > nul && start http://localhost:8080"
 
 echo.
 echo May chu dang hoat dong [HOAN TOAN KHONG CAN MANG INTERNET].
