@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v6";
+const CACHE_NAME = "dga-offline-v7";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -69,6 +69,9 @@ const PRECACHE_ASSETS = [
   "./ui/ui-batch-import.js",
   "./vendor/docxtemplater/pizzip.min.js",
   "./vendor/docxtemplater/docxtemplater.min.js",
+  "./vendor/supabase/supabase.js",
+  "./vendor/chartjs/chart.umd.min.js",
+  "./vendor/xlsx/xlsx.full.min.js",
 ];
 
 self.addEventListener("install", (event) => {
@@ -111,6 +114,7 @@ self.addEventListener("fetch", (event) => {
 
   // Bỏ qua các API endpoint động hoặc OAuth (để Storage layer quản lý)
   if (
+    url.pathname.startsWith("/api") ||
     url.hostname.includes("script.google.com") ||
     url.hostname.includes("script.googleusercontent.com") ||
     url.hostname.includes("supabase.co") ||
@@ -162,4 +166,3 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
-

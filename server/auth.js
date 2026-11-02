@@ -332,3 +332,4 @@ module.exports = {
   setUserRole,
   deleteUser,
 };
+

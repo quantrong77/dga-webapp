@@ -36,16 +36,13 @@
   <link rel="stylesheet" href="css/style-tabs-secondary.css" />
   <link rel="stylesheet" href="css/style-tab-regulation-config.css" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha512-6m3RpkhE77lyYH3ZOab3pFVoIpXrtVYmLuYQHOgLaYQIBRq/n6qJb1lHeZQlrRdBNQJfvj93mSTo7Zh723jRIw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Tải đồng bộ (không async/defer)
-       giống supabase-js ở trên, nên chắc chắn tải xong (hoặc chắc chắn thất bại) trước
-       khi app.js chạy — app.js kiểm tra typeof Chart === "undefined" trước khi dùng, nên
-       nếu mất mạng/CDN lỗi, chỉ phần đồ thị bị ẩn, các phần khác của trang không ảnh hưởng. -->
+  <script src="vendor/supabase/supabase.js"></script>
+  <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js" integrity="sha512-WoViKhKD4qI2WruSZqv9+kvM4WfFhUMQCLN4QlDTt5aU56fLQy2gYoxWIqlEnXqJy/+Ac5q/hk1oWfqnMDhwMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <!-- SheetJS (xlsx) — xuất file Excel (.xlsx) cho nút "Xuất Excel" ở tab "Cảnh báo"
-       (xem onExportAlertsExcel(), ui/ui-alerts.js). Tải đồng bộ giống Chart.js ở trên;
-       ui-alerts.js kiểm tra typeof XLSX === "undefined" trước khi dùng, nên nếu mất
-       mạng/CDN lỗi thì chỉ nút xuất Excel báo lỗi rõ ràng, không ảnh hưởng phần còn lại. -->
+  <script src="vendor/chartjs/chart.umd.min.js"></script>
+  <!-- SheetJS (xlsx) — xuất file Excel (.xlsx) cho nút "Xuất Excel". Kèm vendor dự phòng 100% offline. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="vendor/xlsx/xlsx.full.min.js"></script>
   <!-- Google Identity Services — cho nút "Đăng nhập bằng Google". Nếu GOOGLE_CLIENT_ID
        trong config.js để trống, hoặc script này tải không được (mất mạng...), nút
        Google sẽ tự ẩn — không ảnh hưởng đến đăng nhập email/mật khẩu như trước.
