@@ -69,6 +69,20 @@ function notifyError(message) {
   }
 }
 
+/** Hiện thông điệp thông tin/hướng dẫn bằng toast hoặc console. Không ném lỗi. */
+function notifyInfo(message) {
+  const text = String(message);
+  try {
+    if (typeof showToast === "function") {
+      showToast(text, "info");
+      return;
+    }
+  } catch (e) {
+    console.info("[DGA]", e);
+  }
+  console.info("[DGA] " + text);
+}
+
 /** Dùng trong catch: ghi log kỹ thuật (kèm ngữ cảnh) rồi báo người dùng. */
 function reportError(err, context) {
   try {
@@ -110,5 +124,5 @@ if (typeof window !== "undefined") installGlobalErrorHandlers(window);
 
 // Export cho Node (dùng để test) — trình duyệt bỏ qua nhánh này.
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { errorMessageOf, shouldShowErrorToast, notifyError, reportError, installGlobalErrorHandlers, ERROR_TOAST_DEDUPE_MS };
+  module.exports = { errorMessageOf, shouldShowErrorToast, notifyError, notifyInfo, reportError, installGlobalErrorHandlers, ERROR_TOAST_DEDUPE_MS };
 }

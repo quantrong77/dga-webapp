@@ -248,7 +248,10 @@ async function initApp() {
 
   // Tab "Quản trị" (quản lý user) — cô lập trong try/catch riêng, chỉ Admin mới
   // gọi tới vì listUsers() bị Apps Script chặn với user thường (requireAdmin).
-  if (Auth.enabled && Auth.isAdmin()) {
+  const isAdminUser = (typeof Auth !== "undefined" && typeof Auth.isAdmin === "function")
+    ? Auth.isAdmin()
+    : !!(typeof Auth !== "undefined" && Auth && Auth.current && Auth.current.role === "admin");
+  if (Auth && Auth.enabled && isAdminUser) {
     try {
       await refreshUsersUI();
       await refreshSupabaseSyncUI();

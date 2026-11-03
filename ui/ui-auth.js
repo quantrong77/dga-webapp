@@ -75,7 +75,10 @@ const SEED_STATIONS = [
 // ở server, không tin tưởng tuyệt đối phía client).
 // ---------------------------------------------------------------------
 function canWrite() {
-  return !Auth.enabled || Auth.isAdmin();
+  const isAdmin = (typeof Auth !== "undefined" && typeof Auth.isAdmin === "function")
+    ? Auth.isAdmin()
+    : !!(typeof Auth !== "undefined" && Auth && Auth.current && Auth.current.role === "admin");
+  return !Auth || !Auth.enabled || isAdmin;
 }
 
 function currentUserEmail() {
@@ -92,7 +95,10 @@ function canSaveEntry() {
 }
 
 function canEditRecord(rec) {
-  return !Auth.enabled || Auth.isAdmin() || isOwnRecord(rec);
+  const isAdmin = (typeof Auth !== "undefined" && typeof Auth.isAdmin === "function")
+    ? Auth.isAdmin()
+    : !!(typeof Auth !== "undefined" && Auth && Auth.current && Auth.current.role === "admin");
+  return !Auth || !Auth.enabled || isAdmin || isOwnRecord(rec);
 }
 
 /** Chuỗi ngắn hiển thị "Người nhập" trong bảng lịch sử — email người tạo bản ghi,
