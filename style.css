@@ -2275,3 +2275,64 @@ a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
   align-items: center;
   flex-wrap: wrap;
 }
+
+
+/* =====================================================================
+   Đồng nhất bề ngang các nút thao tác trong bảng (Actions Cell)
+   - Tab Cảnh báo: Xem, Sửa, Icon xu hướng có bề ngang bằng nhau (= nút Xem)
+   - Tab Lịch sử đo: Xem, Sửa, Xóa có bề ngang bằng nhau (= nút Xem)
+   ===================================================================== */
+.btn-action-alert,
+#alertsTable .actions-cell .btn {
+  min-width: 44px;
+  width: 44px;
+  height: 25px;
+  padding: 3px 0 !important;
+  font-size: 11.5px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.btn-action-alert.icon-only,
+#alertsTable .actions-cell .btn.icon-only {
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-action-alert.icon-only .icon-svg,
+#alertsTable .actions-cell .btn.icon-only .icon-svg {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+
+.btn-action-hist,
+#historyTable .actions-cell .btn:not([data-action="bbtn3"]),
+#lichsuOilHistoryTable .actions-cell .btn,
+#lichsuOltcHistoryTable .actions-cell .btn,
+#oilHistoryTable .actions-cell .btn,
+#oltcOilHistoryTable .actions-cell .btn,
+#historyTioTable .actions-cell .btn:not([data-action="bbtn3"]) {
+  min-width: 48px;
+  width: 48px;
+  height: 28px;
+  padding: 5px 0 !important;
+  font-size: 12px !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.actions-cell .btn-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 5px;
+  align-items: center;
+}

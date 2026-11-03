@@ -590,14 +590,14 @@ function refreshAlertsUI() {
       <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell"><div class="btn-row">
         ${a.record ? `
-        <button class="btn ghost" data-action="view" title="${a.record.bbtn_url ? 'Xem biên bản thí nghiệm (BBTN) đã đính kèm' : 'Xem chi tiết số liệu và chẩn đoán lần đo này'}" aria-label="Xem chi tiết lần đo" style="padding:4px 8px; font-size:11px;">
+        <button class="btn ghost btn-action-alert" data-action="view" title="${a.record.bbtn_url ? 'Xem biên bản thí nghiệm (BBTN) đã đính kèm' : 'Xem chi tiết số liệu và chẩn đoán lần đo này'}" aria-label="Xem chi tiết lần đo" >
           Xem
         </button>` : ""}
         ${a.record && typeof canEditRecord === "function" && canEditRecord(a.record) ? `
-        <button class="btn ghost" data-action="edit" title="Hiệu chỉnh số liệu lần đo này" aria-label="Hiệu chỉnh số liệu" style="padding:4px 8px; font-size:11px;">
+        <button class="btn ghost btn-action-alert" data-action="edit" title="Hiệu chỉnh số liệu lần đo này" aria-label="Hiệu chỉnh số liệu" >
           Sửa
         </button>` : ""}
-        <button class="btn ghost icon-only" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
+        <button class="btn ghost icon-only btn-action-alert" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>
         </button>
       </div></td>

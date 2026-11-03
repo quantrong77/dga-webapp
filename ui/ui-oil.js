@@ -244,9 +244,9 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${overallPill}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
-        <button class="btn ghost" data-action="view" title="${rec.bbtn_url ? 'Xem biên bản thí nghiệm đã đính kèm' : 'Xem chi tiết thí nghiệm dầu'}" style="padding:5px 10px; font-size:12px;">Xem</button>
-        ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
-        ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
+        <button class="btn ghost btn-action-hist" data-action="view" title="${rec.bbtn_url ? 'Xem biên bản thí nghiệm đã đính kèm' : 'Xem chi tiết thí nghiệm dầu'}" >Xem</button>
+        ${canEditRecord(rec) ? `<button class="btn ghost btn-action-hist" data-action="edit" >Sửa</button>` : ""}
+        ${canWrite() ? `<button class="btn danger btn-action-hist" data-action="del" >Xóa</button>` : ""}
       </div></td>
     `;
     const viewBtn = tr.querySelector('[data-action="view"]');

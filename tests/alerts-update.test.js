@@ -252,20 +252,29 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     const tioContent = fs.readFileSync("ui/ui-ti-oil.js", "utf8");
 
     // Bảng đo khí ui-history.js phải có nút Xem mà không phụ thuộc vào rec.bbtn_url
-    expect(histContent).toMatch(/<button class="btn ghost" data-action="viewbbtn"[^>]*>Xem<\/button>/);
-    expect(histContent).not.toMatch(/\$\{rec\.bbtn_url \? `<button class="btn ghost" data-action="viewbbtn"/);
+    expect(histContent).toMatch(/<button class="btn ghost[^"]*" data-action="viewbbtn"[^>]*>Xem<\/button>/);
+    expect(histContent).not.toMatch(/\$\{rec\.bbtn_url \? `<button class="btn ghost/);
 
     // Bảng dầu ui-oil.js, ui-oltc.js và ui-ti-oil.js phải có nút Xem
-    expect(oilContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>Xem<\/button>/);
-    expect(oltcContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>Xem<\/button>/);
-    expect(tioContent).toMatch(/<button class="btn ghost" data-action="viewbbtn"[^>]*>Xem<\/button>/);
+    expect(oilContent).toMatch(/<button class="btn ghost[^"]*" data-action="view"[^>]*>Xem<\/button>/);
+    expect(oltcContent).toMatch(/<button class="btn ghost[^"]*" data-action="view"[^>]*>Xem<\/button>/);
+    expect(tioContent).toMatch(/<button class="btn ghost[^"]*" data-action="viewbbtn"[^>]*>Xem<\/button>/);
   });
 
   test("8. Bảng Cảnh báo (ui-alerts.js) có nút 'Xem' trên từng dòng cảnh báo", () => {
     const fs = require("fs");
     const alertsContent = fs.readFileSync("ui/ui-alerts.js", "utf8");
-    expect(alertsContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>[\s\S]*?Xem[\s\S]*?<\/button>/);
+    expect(alertsContent).toMatch(/<button class="btn ghost[^"]*" data-action="view"[^>]*>[\s\S]*?Xem[\s\S]*?<\/button>/);
     expect(alertsContent).toMatch(/data-action="view"/);
     expect(alertsContent).toMatch(/onViewMeasurement\(a\.record\)/);
+  });
+
+  test("9. Đồng nhất bề ngang các nút thao tác: tab Cảnh báo (btn-action-alert) và tab Lịch sử (btn-action-hist)", () => {
+    const fs = require("fs");
+    const css = fs.readFileSync("css/style-tab-tables.css", "utf8");
+    expect(css).toMatch(/\.btn-action-alert/);
+    expect(css).toMatch(/min-width:\s*44px/);
+    expect(css).toMatch(/\.btn-action-hist/);
+    expect(css).toMatch(/min-width:\s*48px/);
   });
 });
