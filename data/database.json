@@ -71,12 +71,218 @@
       "created_by": "admin@ptc3.evnnpt.vn",
       "updated_by": "admin@ptc3.evnnpt.vn",
       "updated_at": "2026-11-02T02:18:33.091Z"
+    },
+    {
+      "id": "api_test_m_1793593432536",
+      "station": "TBA 500kV Pleiku 2",
+      "device": "572",
+      "sample_date": "2026-10-20",
+      "h2": 5,
+      "ch4": 10,
+      "c2h4": 15,
+      "created_by": "admin@ptc3.evnnpt.vn",
+      "updated_by": "admin@ptc3.evnnpt.vn",
+      "updated_at": "2026-11-02T04:23:52.537Z"
+    },
+    {
+      "id": "api_test_m_1793593562196",
+      "station": "TBA 500kV Pleiku 2",
+      "device": "572",
+      "sample_date": "2026-10-20",
+      "h2": 5,
+      "ch4": 10,
+      "c2h4": 15,
+      "created_by": "admin@ptc3.evnnpt.vn",
+      "updated_by": "admin@ptc3.evnnpt.vn",
+      "updated_at": "2026-11-02T04:26:02.198Z"
+    },
+    {
+      "id": "api_test_m_1793704672554",
+      "station": "TBA 500kV Pleiku 2",
+      "device": "572",
+      "sample_date": "2026-10-20",
+      "h2": 5,
+      "ch4": 10,
+      "c2h4": 15,
+      "created_by": "admin@ptc3.evnnpt.vn",
+      "updated_by": "admin@ptc3.evnnpt.vn",
+      "updated_at": "2026-11-03T11:17:52.555Z"
+    },
+    {
+      "id": "api_test_m_1793704693916",
+      "station": "TBA 500kV Pleiku 2",
+      "device": "572",
+      "sample_date": "2026-10-20",
+      "h2": 5,
+      "ch4": 10,
+      "c2h4": 15,
+      "created_by": "admin@ptc3.evnnpt.vn",
+      "updated_by": "admin@ptc3.evnnpt.vn",
+      "updated_at": "2026-11-03T11:18:13.917Z"
+    },
+    {
+      "id": "api_test_m_1793704819081",
+      "station": "TBA 500kV Pleiku 2",
+      "device": "572",
+      "sample_date": "2026-10-20",
+      "h2": 5,
+      "ch4": 10,
+      "c2h4": 15,
+      "created_by": "admin@ptc3.evnnpt.vn",
+      "updated_by": "admin@ptc3.evnnpt.vn",
+      "updated_at": "2026-11-03T11:20:19.082Z"
     }
   ],
   "oil_tests": [],
   "oltc_oil_tests": [],
   "instrument_oil_tests": [],
-  "stations": [],
+  "stations": [
+    {
+      "ma_tram": "TBA-01",
+      "ten_tram": "TBA 500kV Pleiku",
+      "id": "id_mvyyb6bx_kavpzb"
+    },
+    {
+      "ma_tram": "TBA-02",
+      "ten_tram": "TBA 500kV Pleiku 2",
+      "id": "id_mvyyb6dl_jcjbw5"
+    },
+    {
+      "ma_tram": "TBA-03",
+      "ten_tram": "TBA 220kV Chư Sê",
+      "id": "id_mvyyb6dx_4lw5d4"
+    },
+    {
+      "ma_tram": "TBA-04",
+      "ten_tram": "TBA 220kV An Khê",
+      "id": "id_mvyyb6e3_4fchjn"
+    },
+    {
+      "ma_tram": "TBA-05",
+      "ten_tram": "TBA 220kV KrôngBuk",
+      "id": "id_mvyyb6e8_vmsen4"
+    },
+    {
+      "ma_tram": "TBA-06",
+      "ten_tram": "TBA 220kV Krông Ana",
+      "id": "id_mvyyb6ed_vxxpls"
+    },
+    {
+      "ma_tram": "TBA-07",
+      "ten_tram": "XT273 NMTĐ Srêpốk 4",
+      "id": "id_mvyyb6em_148cv0"
+    },
+    {
+      "ma_tram": "TBA-08",
+      "ten_tram": "TBA 220kV Quy Nhơn",
+      "id": "id_mvyyb6er_pnqym6"
+    },
+    {
+      "ma_tram": "TBA-09",
+      "ten_tram": "TBA 220kV Phước An",
+      "id": "id_mvyyb6ew_wx9y6o"
+    },
+    {
+      "ma_tram": "TBA-10",
+      "ten_tram": "TBA 220kV Phù Mỹ",
+      "id": "id_mvyyb6f2_dde27s"
+    },
+    {
+      "ma_tram": "TBA-11",
+      "ten_tram": "TBA 220kV Tuy Hòa",
+      "id": "id_mvyyb6f8_1g0vws"
+    },
+    {
+      "ma_tram": "TBA-12",
+      "ten_tram": "TBA 220kV Nha Trang",
+      "id": "id_mvyyb6ff_eb7re4"
+    },
+    {
+      "ma_tram": "TBA-13",
+      "ten_tram": "TBA 500kV Vân Phong",
+      "id": "id_mvyyb6fm_x9sbtt"
+    },
+    {
+      "ma_tram": "TBA-14",
+      "ten_tram": "TBA 220kV Vân Phong",
+      "id": "id_mvyyb6fq_yo9lrc"
+    },
+    {
+      "ma_tram": "TBA-15",
+      "ten_tram": "TBA 220kV Cam Ranh",
+      "id": "id_mvyyb6fw_yepyvz"
+    },
+    {
+      "ma_tram": "TBA-16",
+      "ten_tram": "TBA 500kV Đắk Nông",
+      "id": "id_mvyyb6g1_ekrss4"
+    },
+    {
+      "ma_tram": "TBA-17",
+      "ten_tram": "TBA 220kV Đắk Nông",
+      "id": "id_mvyyb6g5_dgfzh0"
+    },
+    {
+      "ma_tram": "TBA-18",
+      "ten_tram": "TBA 500kV Di Linh",
+      "id": "id_mvyyb6gc_fju7h7"
+    },
+    {
+      "ma_tram": "TBA-19",
+      "ten_tram": "TBA 220kV Bảo Lộc",
+      "id": "id_mvyyb6gi_bmwwpm"
+    },
+    {
+      "ma_tram": "TBA-20",
+      "ten_tram": "TBA 220kV Đức Trọng",
+      "id": "id_mvyyb6gm_jd96k6"
+    },
+    {
+      "ma_tram": "TBA-21",
+      "ten_tram": "TBA 500kV Vĩnh Tân",
+      "id": "id_mvyyb6gz_kx2lxc"
+    },
+    {
+      "ma_tram": "TBA-22",
+      "ten_tram": "TBA 220kV Phan Thiết",
+      "id": "id_mvyyb6h4_cf3hts"
+    },
+    {
+      "ma_tram": "TBA-23",
+      "ten_tram": "TBA 220kV Hàm Tân",
+      "id": "id_mvyyb6h9_fzpb4d"
+    },
+    {
+      "ma_tram": "TBA-24",
+      "ten_tram": "TBA 220kV Phan Rí",
+      "id": "id_mvyyb6hf_k9yyt1"
+    },
+    {
+      "ma_tram": "TBA-25",
+      "ten_tram": "TBA 220kV Vĩnh Hảo",
+      "id": "id_mvyyb6hj_47m2ti"
+    },
+    {
+      "ma_tram": "TBA-26",
+      "ten_tram": "TBA 500kV Thuận Nam",
+      "id": "id_mvyyb6hr_cqzts4"
+    },
+    {
+      "ma_tram": "TBA-27",
+      "ten_tram": "TBA 220kV Tháp Chàm",
+      "id": "id_mvyyb6hw_9gi43e"
+    },
+    {
+      "ma_tram": "TBA-28",
+      "ten_tram": "TBA 220kV Ninh Phước",
+      "id": "id_mvyyb6i0_4ur5x2"
+    },
+    {
+      "ma_tram": "TBA-29",
+      "ten_tram": "TBA 220kV Phước Thái",
+      "id": "id_mvyyb6i6_rashej"
+    }
+  ],
   "standards": [],
   "regulation_config": [],
   "feedback": [],
@@ -89,7 +295,7 @@
       "role": "admin",
       "must_change_password": "0",
       "created_at": "2026-11-01T16:55:43.807Z",
-      "last_login": "2026-11-02T02:18:33.056Z"
+      "last_login": "2026-11-03T11:20:19.066Z"
     },
     {
       "id": "usr_mvy2mz9g",
@@ -270,6 +476,156 @@
       "must_change_password": "1",
       "created_at": "2026-11-02T02:18:33.024Z",
       "last_login": "2026-11-02T02:18:33.050Z"
+    },
+    {
+      "id": "usr_mvyr7xq3",
+      "email": "kythuat_1793593432442_ur5o@ptc3.evnnpt.vn",
+      "salt": "3e94c35ca37b82fbbe8b9d6d89637e85",
+      "password_hash": "ef9a93a72d52dfcf871ffb9d701b23eda333ff0fe00b9666e437a8bb12482cf8",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-02T04:23:52.443Z",
+      "last_login": "2026-11-02T04:23:52.443Z"
+    },
+    {
+      "id": "usr_mvyr7xqe",
+      "email": "throttle_1793593432454@ptc3.evnnpt.vn",
+      "salt": "d065fbedb0e77096b2e6f4a8dbce7340",
+      "password_hash": "195cff2e5cb211cad4c5cfc266671bfceffa6aeb89e8407e378b3a5e88f851c6",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-02T04:23:52.454Z",
+      "last_login": "2026-11-02T04:23:52.454Z"
+    },
+    {
+      "id": "usr_mvyr7xqr",
+      "email": "role_1793593432467@ptc3.evnnpt.vn",
+      "salt": "969f50123cf853c2473b5470c5d66e47",
+      "password_hash": "104a15d571548afc429bf183fd0fa1955da86239ff98a05310381d20fcc1f94a",
+      "role": "viewer",
+      "must_change_password": "1",
+      "created_at": "2026-11-02T04:23:52.467Z",
+      "last_login": "2026-11-02T04:23:52.491Z"
+    },
+    {
+      "id": "usr_mvyrapsk",
+      "email": "kythuat_1793593562132_pa1d@ptc3.evnnpt.vn",
+      "salt": "6a05221e84d8b53f430133ebcebe0ca7",
+      "password_hash": "d146d57ecb0efd303fbe7c49e39652db0a58c2a8b363a5f080d37db2d6efd363",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-02T04:26:02.132Z",
+      "last_login": "2026-11-02T04:26:02.132Z"
+    },
+    {
+      "id": "usr_mvyrapsu",
+      "email": "throttle_1793593562142@ptc3.evnnpt.vn",
+      "salt": "cb302eb9200d15054c290ce4df336ad5",
+      "password_hash": "bc5ac532efb5dca6c78f81cb1c2a399c3b0ea0185e2b9b02a463d97a762f052e",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-02T04:26:02.142Z",
+      "last_login": "2026-11-02T04:26:02.142Z"
+    },
+    {
+      "id": "usr_mvyrapt1",
+      "email": "role_1793593562149@ptc3.evnnpt.vn",
+      "salt": "5f5cb057af9ed2b82971e9e44057b2c9",
+      "password_hash": "8a01cb8ba12ddf10a7383a2d1514abcb6435d971cbc5591472bf32f9f95a2f63",
+      "role": "viewer",
+      "must_change_password": "1",
+      "created_at": "2026-11-02T04:26:02.149Z",
+      "last_login": "2026-11-02T04:26:02.173Z"
+    },
+    {
+      "id": "usr_mw0lg738",
+      "email": "kythuat_1793704672484_lp36@ptc3.evnnpt.vn",
+      "salt": "479739479763fb49db54a44664b47652",
+      "password_hash": "dbe64163f19037bbcbd0e2fa985f7b8010916a76eb4aa251c1434da2a638f799",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-03T11:17:52.484Z",
+      "last_login": "2026-11-03T11:17:52.484Z"
+    },
+    {
+      "id": "usr_mw0lg73i",
+      "email": "throttle_1793704672494@ptc3.evnnpt.vn",
+      "salt": "aaa7abfd704989ca825289335cd7c38f",
+      "password_hash": "9bace8e0860b525c1e308e657b4d12216acc998198812e1c736cb97342a40711",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-03T11:17:52.494Z",
+      "last_login": "2026-11-03T11:17:52.494Z"
+    },
+    {
+      "id": "usr_mw0lg73q",
+      "email": "role_1793704672502@ptc3.evnnpt.vn",
+      "salt": "1845ad8fc9343c4df14742aeadd32346",
+      "password_hash": "11d76c0058861c574f04dcbb918e155809972842dd37c908b97dc65d6c9182b3",
+      "role": "viewer",
+      "must_change_password": "1",
+      "created_at": "2026-11-03T11:17:52.502Z",
+      "last_login": "2026-11-03T11:17:52.519Z"
+    },
+    {
+      "id": "usr_mw0lgnj7",
+      "email": "kythuat_1793704693793_j7r1@ptc3.evnnpt.vn",
+      "salt": "03ef7bb9a7e870d5ee60409f1bd6e27e",
+      "password_hash": "b41f1f2a83644523ee96bbd9cc276a4f1be986ab785b45868056e1a008bf4761",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-03T11:18:13.795Z",
+      "last_login": "2026-11-03T11:18:13.795Z"
+    },
+    {
+      "id": "usr_mw0lgnki",
+      "email": "throttle_1793704693841@ptc3.evnnpt.vn",
+      "salt": "7e016f32d851a5d9438ad11fb97ea638",
+      "password_hash": "cf870956ebdbdd146f8cb47cebadc42540fa260f88ad4d6508d547b314ce0327",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-03T11:18:13.842Z",
+      "last_login": "2026-11-03T11:18:13.842Z"
+    },
+    {
+      "id": "usr_mw0lgnkt",
+      "email": "role_1793704693852@ptc3.evnnpt.vn",
+      "salt": "8fd43bd356f9db29bbde4cc30e029fe7",
+      "password_hash": "ea29d093a1cc2e87247f625ab01dc0c109ea27d700ec45a4b1e42b10749bdd8c",
+      "role": "viewer",
+      "must_change_password": "1",
+      "created_at": "2026-11-03T11:18:13.852Z",
+      "last_login": "2026-11-03T11:18:13.886Z"
+    },
+    {
+      "id": "usr_mw0ljc5g",
+      "email": "kythuat_1793704819011_anjo@ptc3.evnnpt.vn",
+      "salt": "dca2e15e851d46742c0a8b95357cde60",
+      "password_hash": "578e85048d47347e00de8961407ba05bbd106194aff60f879460bf78b93e3ce4",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-03T11:20:19.012Z",
+      "last_login": "2026-11-03T11:20:19.012Z"
+    },
+    {
+      "id": "usr_mw0ljc5v",
+      "email": "throttle_1793704819027@ptc3.evnnpt.vn",
+      "salt": "e7ee64b90c20efa71938b4cad7532ff1",
+      "password_hash": "f538964c75b0f78d75c7e01301442ff299bfb9d29028ab3026e327e95dd875c8",
+      "role": "user",
+      "must_change_password": "0",
+      "created_at": "2026-11-03T11:20:19.027Z",
+      "last_login": "2026-11-03T11:20:19.027Z"
+    },
+    {
+      "id": "usr_mw0ljc64",
+      "email": "role_1793704819036@ptc3.evnnpt.vn",
+      "salt": "df35e407e618caf8898c1d61682f8e90",
+      "password_hash": "9689deef08d8731f83c40d921fdeaf872625414f21cb0b4a368f83760ef32af2",
+      "role": "viewer",
+      "must_change_password": "1",
+      "created_at": "2026-11-03T11:20:19.036Z",
+      "last_login": "2026-11-03T11:20:19.056Z"
     }
   ],
   "sessions": [
@@ -503,6 +859,195 @@
       "role": "admin",
       "created_at": "2026-11-02T02:18:33.059Z",
       "expires_at": "2026-12-02T02:18:33.059Z"
+    },
+    {
+      "token": "tok_d023f56ac5d981864b3fd8c786d6e3120892e94a7548de07",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-02T04:23:52.437Z",
+      "expires_at": "2026-12-02T04:23:52.437Z"
+    },
+    {
+      "token": "tok_3bdcb2e6826f71783e7c5f7f7b6ffe8a26e297dc98a2b72a",
+      "email": "kythuat_1793593432442_ur5o@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-02T04:23:52.445Z",
+      "expires_at": "2026-12-02T04:23:52.445Z"
+    },
+    {
+      "token": "tok_21751d5500df31c909ebe50fae9d6efd9f0b7bf3f37bf7b7",
+      "email": "throttle_1793593432454@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-02T04:23:52.460Z",
+      "expires_at": "2026-12-02T04:23:52.460Z"
+    },
+    {
+      "token": "tok_6c6a9b6e6d8595fdd2fe06a98c5b58639a8bb47a2506a785",
+      "email": "role_1793593432467@ptc3.evnnpt.vn",
+      "role": "viewer",
+      "created_at": "2026-11-02T04:23:52.494Z",
+      "expires_at": "2026-12-02T04:23:52.494Z"
+    },
+    {
+      "token": "tok_e356d0028189c53879e9e74cd5469af1caec8c5c6521f1aa",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-02T04:23:52.501Z",
+      "expires_at": "2026-12-02T04:23:52.501Z"
+    },
+    {
+      "token": "tok_3d46ed6910be74f38e8e0ab4117f126397bce4c007a672bd",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-02T04:26:02.127Z",
+      "expires_at": "2026-12-02T04:26:02.127Z"
+    },
+    {
+      "token": "tok_607760d8dd47b0c416a805f90cad29a20d23f545e595228b",
+      "email": "kythuat_1793593562132_pa1d@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-02T04:26:02.135Z",
+      "expires_at": "2026-12-02T04:26:02.135Z"
+    },
+    {
+      "token": "tok_e74751c1db1a62ce9d88ef7d237d60287ab30c446591402e",
+      "email": "throttle_1793593562142@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-02T04:26:02.145Z",
+      "expires_at": "2026-12-02T04:26:02.145Z"
+    },
+    {
+      "token": "tok_e73d205ea1996e4e83edc823c677a08a369aad45a0b0cbc4",
+      "email": "role_1793593562149@ptc3.evnnpt.vn",
+      "role": "viewer",
+      "created_at": "2026-11-02T04:26:02.177Z",
+      "expires_at": "2026-12-02T04:26:02.177Z"
+    },
+    {
+      "token": "tok_583d64eaa49243ed2be83e26a1bdc77db87658d50767b502",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-02T04:26:02.185Z",
+      "expires_at": "2026-12-02T04:26:02.185Z"
+    },
+    {
+      "token": "tok_85d4a5941555fd549278226b37d56b30f86afbf16ac0be61",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-02T04:26:15.884Z",
+      "expires_at": "2026-12-02T04:26:15.884Z"
+    },
+    {
+      "token": "tok_fa7668d591190eee0a84636b8eb7576f1c7e887418344362",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-02T07:42:20.848Z",
+      "expires_at": "2026-12-02T07:42:20.848Z"
+    },
+    {
+      "token": "tok_a523a594eb9d1a6e75dd9b2b0fea4d85093b6443746416c0",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-03T11:17:52.479Z",
+      "expires_at": "2026-12-03T11:17:52.479Z"
+    },
+    {
+      "token": "tok_aebdf7379a51e646086ff4694e6c042e1bd2bc3c3dd11437",
+      "email": "kythuat_1793704672484_lp36@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-03T11:17:52.488Z",
+      "expires_at": "2026-12-03T11:17:52.488Z"
+    },
+    {
+      "token": "tok_6ca3ab2d7ad3e936faa565b998f6f8dd6458953d2a315fd6",
+      "email": "throttle_1793704672494@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-03T11:17:52.498Z",
+      "expires_at": "2026-12-03T11:17:52.498Z"
+    },
+    {
+      "token": "tok_bdfab7e4e807a1b6b307638ebbb30ffdbe0ae99401b1d7f1",
+      "email": "role_1793704672502@ptc3.evnnpt.vn",
+      "role": "viewer",
+      "created_at": "2026-11-03T11:17:52.524Z",
+      "expires_at": "2026-12-03T11:17:52.524Z"
+    },
+    {
+      "token": "tok_6620ec70bc49f847c8528d0b3da23057c5b13938a9f36f2d",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-03T11:17:52.532Z",
+      "expires_at": "2026-12-03T11:17:52.532Z"
+    },
+    {
+      "token": "tok_91e85bfab42e635aebc48ed322fb16e61448960ae3f2daa9",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-03T11:18:13.786Z",
+      "expires_at": "2026-12-03T11:18:13.786Z"
+    },
+    {
+      "token": "tok_130d6a2f9a8abd4fafc92938386b5222f6ebce4d944b16ec",
+      "email": "kythuat_1793704693793_j7r1@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-03T11:18:13.837Z",
+      "expires_at": "2026-12-03T11:18:13.837Z"
+    },
+    {
+      "token": "tok_e49f8e8c10d6030bc69a3922f317d1f5ce782ed8eaf09b27",
+      "email": "throttle_1793704693841@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-03T11:18:13.848Z",
+      "expires_at": "2026-12-03T11:18:13.848Z"
+    },
+    {
+      "token": "tok_f4948faf680063e004e3d94f78a65b5ecc529bf6bf696de3",
+      "email": "role_1793704693852@ptc3.evnnpt.vn",
+      "role": "viewer",
+      "created_at": "2026-11-03T11:18:13.889Z",
+      "expires_at": "2026-12-03T11:18:13.889Z"
+    },
+    {
+      "token": "tok_2bd51965f917b3b613848a8e5d7a4709edafb156c200780b",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-03T11:18:13.900Z",
+      "expires_at": "2026-12-03T11:18:13.900Z"
+    },
+    {
+      "token": "tok_a2a49ee4cb03ba56a7ee441eaf35c2dbb23c5e27dff6eb18",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-03T11:20:19.004Z",
+      "expires_at": "2026-12-03T11:20:19.004Z"
+    },
+    {
+      "token": "tok_fb60ef2b460cc7478b57bc22ea2ead1f3a2c2325a92fed5b",
+      "email": "kythuat_1793704819011_anjo@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-03T11:20:19.020Z",
+      "expires_at": "2026-12-03T11:20:19.020Z"
+    },
+    {
+      "token": "tok_81bab6efea2b63a8abcb7682248d50c3461627e68ca226e2",
+      "email": "throttle_1793704819027@ptc3.evnnpt.vn",
+      "role": "user",
+      "created_at": "2026-11-03T11:20:19.031Z",
+      "expires_at": "2026-12-03T11:20:19.031Z"
+    },
+    {
+      "token": "tok_09061837abc5c1edd5d1c166c48c6505d2735f29a1ad035f",
+      "email": "role_1793704819036@ptc3.evnnpt.vn",
+      "role": "viewer",
+      "created_at": "2026-11-03T11:20:19.063Z",
+      "expires_at": "2026-12-03T11:20:19.063Z"
+    },
+    {
+      "token": "tok_21efb662f581cf560e1152ab722b67d8f3445a5bc865296f",
+      "email": "admin@ptc3.evnnpt.vn",
+      "role": "admin",
+      "created_at": "2026-11-03T11:20:19.069Z",
+      "expires_at": "2026-12-03T11:20:19.069Z"
     }
   ]
 }

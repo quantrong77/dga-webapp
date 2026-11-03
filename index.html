@@ -12,17 +12,16 @@
        - connect-src data: blob: : viewBbtn() fetch() file đính kèm lưu dạng data URL (chế độ thử nghiệm).
        - style-src 'unsafe-inline': giao diện dùng nhiều thuộc tính style="" (không chạy được mã).
        GitHub Pages không cho đặt HTTP header nên dùng thẻ meta (frame-ancestors không hỗ trợ ở meta). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com/gsi/client; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' data: blob: https://script.google.com https://script.googleusercontent.com https://*.supabase.co wss://*.supabase.co https://accounts.google.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; frame-src https://accounts.google.com blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' data: blob:; frame-src blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
   <title>Đánh giá Dầu cách điện — QĐ1901/EVNNPT</title>
   <!-- Icon ứng dụng (DGAOil): bình tam giác dầu cam + máy biến áp + biểu đồ xu hướng -->
   <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="image/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <!-- Be Vietnam Pro — font Google Fonts hỗ trợ tốt dấu tiếng Việt, dùng cho toàn bộ giao diện -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <!-- style.css (2031 dòng) đã được tách thành 8 file theo tab/khu vực trong css/, giữ
        NGUYÊN thứ tự các đoạn như file gốc (chỉ cắt, không đảo) nên thứ tự cascade CSS
        không đổi. style-base.css chứa các biến :root (--blue-900, --radius...) dùng
@@ -35,13 +34,10 @@
   <link rel="stylesheet" href="css/style-tab-tables.css" />
   <link rel="stylesheet" href="css/style-tabs-secondary.css" />
   <link rel="stylesheet" href="css/style-tab-regulation-config.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js" integrity="sha512-6m3RpkhE77lyYH3ZOab3pFVoIpXrtVYmLuYQHOgLaYQIBRq/n6qJb1lHeZQlrRdBNQJfvj93mSTo7Zh723jRIw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="vendor/supabase/supabase.js"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js" integrity="sha512-WoViKhKD4qI2WruSZqv9+kvM4WfFhUMQCLN4QlDTt5aU56fLQy2gYoxWIqlEnXqJy/+Ac5q/hk1oWfqnMDhwMA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="vendor/chartjs/chart.umd.min.js"></script>
   <!-- SheetJS (xlsx) — xuất file Excel (.xlsx) cho nút "Xuất Excel". Kèm vendor dự phòng 100% offline. -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" integrity="sha512-r22gChDnGvBylk90+2e/ycr3RVrDi8DIOkIGNhJlKfuyQM4tIRAI062MaV8sfjQKYVGjOBaZBOA87z+IhZE9DA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="vendor/xlsx/xlsx.full.min.js"></script>
   <!-- Google Identity Services — cho nút "Đăng nhập bằng Google". Nếu GOOGLE_CLIENT_ID
        trong config.js để trống, hoặc script này tải không được (mất mạng...), nút
@@ -50,7 +46,19 @@
        app.js chạy initGoogleSignIn() lần đầu, nên app.js còn đăng ký hàm toàn cục
        window.onGoogleLibraryLoad — Google tự gọi hàm này khi thư viện sẵn sàng,
        bất kể thứ tự tải, để không bị lỡ mất việc hiện nút. -->
-  </head>
+    <!-- Dọn dẹp cache cũ và Service Worker lỗi thời khi chạy On-Premise -->
+  <script>
+    if (typeof caches !== "undefined") {
+      caches.keys().then(function(keys) {
+        keys.forEach(function(k) {
+          if (!k.includes("onpremise")) {
+            caches.delete(k);
+          }
+        });
+      });
+    }
+  </script>
+</head>
 <body>
   <script src="early-layout.js"></script>
   <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
@@ -132,6 +140,15 @@
       </div>
 
       <div id="authLoginForm">
+        <div id="authServerStatusBadge" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#1e40af; text-align:left; line-height:1.4;">
+          <div style="font-weight:600; display:flex; align-items:center; gap:6px;">
+            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+            Máy chủ CSDL Nội bộ (On-Premise Localhost)
+          </div>
+          <div style="margin-top:4px; color:#475569; font-size:11px;">
+            Tài khoản Admin mặc định: <b>admin@ptc3.evnnpt.vn</b> | Mật khẩu: <b>admin123456</b>
+          </div>
+        </div>
         <label class="field">Email
           <input id="auth_login_email" type="email" placeholder="ten@gmail.com" autocomplete="username" />
         </label>
@@ -918,10 +935,16 @@
       <div class="panel">
         <div class="toolbar">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Cảnh báo thiết bị</h2>
-          <button type="button" class="btn ghost" id="btnExportAlertsExcel" disabled title="Xuất danh sách cảnh báo đang hiển thị ra file Excel (.xlsx)">
+          <div class="btn-row" style="margin-left:auto;">
+            <button type="button" class="btn ghost" id="btnRefreshAlerts" title="Làm mới danh sách cảnh báo theo số liệu mới nhất">
+              <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-history"></use></svg>
+              Làm mới
+            </button>
+            <button type="button" class="btn ghost" id="btnExportAlertsExcel" disabled title="Xuất danh sách cảnh báo đang hiển thị ra file Excel (.xlsx)">
             <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-download"></use></svg>
             Xuất Excel
-          </button>
+            </button>
+          </div>
         </div>
         <p class="note">Tự động rà soát TOÀN BỘ thiết bị đã có dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và
           liệt kê những thiết bị mà LẦN ĐO GẦN NHẤT đang ở mức Cảnh báo/Báo động — theo đúng nguyên tắc đang dùng ở

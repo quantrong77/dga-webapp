@@ -90,6 +90,9 @@ function setupTabs() {
       } else {
         const tabEl = $("tab-" + targetTab);
         if (tabEl) tabEl.classList.remove("hidden");
+        if (targetTab === "canhbao" && typeof refreshAlertsUI === "function") {
+          refreshAlertsUI();
+        }
       }
       if (targetTab === "dga" || targetTab === "nhap") {
         const dropzone = $("bbtnDropzone");

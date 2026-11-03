@@ -107,6 +107,21 @@ function alertStationOptions() {
     .map((name) => ({ value: name, label: name }));
 }
 
+/** Sắp xếp bản ghi theo thứ tự thời gian giảm dần:
+ *  1) Ngày lấy mẫu (sample_date) mới nhất lên trước
+ *  2) Nếu cùng ngày lấy mẫu: Lần đo (lan_do) lớn hơn lên trước
+ *  3) Nếu vẫn trùng: Thời điểm tạo/id mới hơn lên trước */
+function alertSortRecordsDescending(records) {
+  return records.slice().sort((a, b) => {
+    const dt = new Date(b.sample_date) - new Date(a.sample_date);
+    if (!isNaN(dt) && dt !== 0) return dt;
+    const lanA = Number(a.lan_do) || 0;
+    const lanB = Number(b.lan_do) || 0;
+    if (lanA !== lanB) return lanB - lanA;
+    return String(b.created_at || b.id || "").localeCompare(String(a.created_at || a.id || ""));
+  });
+}
+
 /** Rà soát khí hòa tan (đo DGA) — gộp theo ĐÚNG khóa thiết bị Trạm+Thiết bị+Pha đang
  *  dùng ở tab Lịch sử đo (deviceKey(), xem ui-history.js), lấy lần đo GẦN NHẤT của mỗi
  *  nhóm làm "hiện tại", lần đo liền trước (nếu có) để tính tốc độ sinh khí/đổi loại sự
@@ -116,7 +131,10 @@ function alertStationOptions() {
 function computeGasAlerts() {
   const groups = new Map();
   _allMeasurements.forEach((r) => {
-    const key = deviceKey(r);
+    const tram = (r.tram || "").trim();
+    const thietbi = (r.thiet_bi || "").trim();
+    const pha = (r.pha || "").trim();
+    const key = `${tram}|||${thietbi}|||${pha}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(r);
   });
@@ -125,7 +143,7 @@ function computeGasAlerts() {
   const manufacturerStandards = toManufacturerStandardsForLogic(_allStandards);
 
   groups.forEach((records) => {
-    const sorted = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
+    const sorted = alertSortRecordsDescending(records);
     const latest = sorted[0];
     const prior = sorted[1] || null;
 
@@ -224,9 +242,10 @@ function computeGasAlerts() {
     results.push({
       source: "gas",
       sourceLabel: "Khí hòa tan (DGA)",
-      tram: latest.tram || "",
-      deviceName: latest.thiet_bi || "",
-      thietBiLabel: (latest.thiet_bi || "?") + (latest.pha ? ` — ${DGA.phaLabelWithPrefix(latest.pha)}` : ""),
+      record: latest,
+      tram: (latest.tram || "").trim(),
+      deviceName: (latest.thiet_bi || "").trim(),
+      thietBiLabel: (latest.thiet_bi || "?").trim() + (latest.pha ? ` — ${DGA.phaLabelWithPrefix(latest.pha)}` : ""),
       level: effectiveStatus.level,
       levelLabel: effectiveStatus.label,
       statusHtml: (overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")) +
@@ -234,18 +253,15 @@ function computeGasAlerts() {
       statusText,
       exceededItems,
       exceededKeys,
-      // Mỗi dòng cảnh báo khí hòa tan gắn với ĐÚNG 1 pha cụ thể (gộp theo deviceKey()
-      // tram+thiet_bi+pha, xem groups ở trên) — dùng để CHỈ tick đúng pha này ở tab "Xu
-      // hướng" khi bấm "Xem xu hướng" (xem goToTrendForDevice()), thay vì mặc định tick
-      // sẵn cả A/B/C. Rỗng/không có nếu thiết bị không phân pha (vd 1 số MBA nhập gộp).
       phase: latest.pha || null,
-      // Pha ĐỊNH DANH THIẾT BỊ đã chuẩn hóa (xem gasPhaseIdentity() phía trên file) —
-      // dùng ở deviceIdentityKey() cho thống kê "Thiết bị đang theo dõi/cảnh báo".
       identityPhase: gasPhaseIdentity(latest.pha),
       reasons: effectiveStatus.reasons,
       action: effectiveStatus.action,
       lanDo: latest.lan_do ?? "—",
       sampleDate: latest.sample_date,
+      isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
+      editLog: latest.edit_log || "",
+      editedAt: latest.edited_at || null,
     });
   });
 
@@ -275,7 +291,8 @@ function computeOilAlerts() {
   const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
 
   groups.forEach((records) => {
-    const latest = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
+    const sorted = alertSortRecordsDescending(records);
+    const latest = sorted[0];
     const evalResult = DGA.evaluateOilTest({
       voltageClass: latest.voltage_class, oilState: latest.oil_state, hasMembraneN2: latest.has_membrane_n2,
       manufacturer: latest.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
@@ -288,7 +305,8 @@ function computeOilAlerts() {
     results.push({
       source: "oil",
       sourceLabel: "Dầu MBA chính",
-      tram: latest.tram || "",
+      record: latest,
+      tram: (latest.tram || "").trim(),
       deviceName: latest.thiet_bi || "",
       thietBiLabel: (latest.thiet_bi || "?") + phaSuffix,
       level: "alarm",
@@ -314,6 +332,9 @@ function computeOilAlerts() {
         "Điều 6 QĐ1901.",
       lanDo: "—",
       sampleDate: latest.sample_date,
+      isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
+      editLog: latest.edit_log || "",
+      editedAt: latest.edited_at || null,
     });
   });
 
@@ -337,7 +358,8 @@ function computeOltcOilAlerts() {
   const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
 
   groups.forEach((records) => {
-    const latest = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
+    const sorted = alertSortRecordsDescending(records);
+    const latest = sorted[0];
     const evalResult = DGA.evaluateOltcOilTest({
       oltcSamplePoint: latest.oltc_sample_point, voltageClass: latest.voltage_class, oilState: latest.oil_state,
       hasMembraneN2: latest.has_membrane_n2, manufacturer: latest.manufacturer || null,
@@ -351,7 +373,8 @@ function computeOltcOilAlerts() {
     results.push({
       source: "oltc",
       sourceLabel: "Dầu OLTC",
-      tram: latest.tram || "",
+      record: latest,
+      tram: (latest.tram || "").trim(),
       deviceName: latest.thiet_bi || "",
       thietBiLabel: `${latest.thiet_bi || "?"} (OLTC${phaSuffix})`,
       level: "alarm",
@@ -375,6 +398,9 @@ function computeOltcOilAlerts() {
         "OLTC theo hướng dẫn nhà sản xuất; báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
       lanDo: "—",
       sampleDate: latest.sample_date,
+      isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
+      editLog: latest.edit_log || "",
+      editedAt: latest.edited_at || null,
     });
   });
 
@@ -405,7 +431,8 @@ function computeInstrumentOilAlerts() {
   const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
 
   groups.forEach((records) => {
-    const latest = records.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))[0];
+    const sorted = alertSortRecordsDescending(records);
+    const latest = sorted[0];
     const equipmentType = latest.equipment_type || DGA.EQUIPMENT_TYPES.TI;
     const evalResult = DGA.evaluateInstrumentOilTest({
       equipmentType, manufacturer: latest.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
@@ -423,7 +450,8 @@ function computeInstrumentOilAlerts() {
     results.push({
       source: "tio",
       sourceLabel: `Dầu ${tioEquipmentTypeShort(equipmentType)}`,
-      tram: latest.tram || "",
+      record: latest,
+      tram: (latest.tram || "").trim(),
       deviceName: latest.thiet_bi || "",
       thietBiLabel: (latest.thiet_bi || "?") + phaSuffix,
       level,
@@ -445,6 +473,9 @@ function computeInstrumentOilAlerts() {
         "hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" nếu cần); báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
       lanDo: "—",
       sampleDate: latest.sample_date,
+      isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
+      editLog: latest.edit_log || "",
+      editedAt: latest.edited_at || null,
     });
   });
 
@@ -543,25 +574,46 @@ function refreshAlertsUI() {
       : a.exceededItems.map((g) =>
           `<span class="pill bad" style="margin:0 3px 3px 0;">${a.source === "gas" ? gasLabelIcon(g) : ""}${escapeHtml(g)}</span>`
         ).join("");
+    const editBadge = (typeof editLogBadgeHtml === "function" && a.record) ? editLogBadgeHtml(a.record) : "";
+    const editedPill = a.isEdited ? `<span class="pill muted" style="margin-left:4px; font-size:10px;" title="${escapeHtml(a.editLog ? 'Log chỉnh sửa:\n' + a.editLog : 'Đã hiệu chỉnh số liệu')}">✎ Đã hiệu chỉnh</span>` : "";
+
     tr.innerHTML = `
       <td>${escapeHtml(a.tram || "—")}</td>
       <td>${escapeHtml(a.thietBiLabel)}</td>
       <td>${sourceIcon(a.source)}${escapeHtml(a.sourceLabel)}</td>
       <td>${alertLevelPill(a.level, a.levelLabel)}</td>
-      <td>${a.statusHtml}</td>
+      <td>${a.statusHtml}${editedPill}</td>
       <td style="max-width:160px;">${exceededHtml}</td>
       <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
       <td style="font-size:12px; max-width:280px;">${escapeHtml(a.action)}</td>
-      <td>${escapeHtml(a.lanDo)}</td>
+      <td>${escapeHtml(a.lanDo)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
       <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell"><div class="btn-row">
         <button class="btn ghost icon-only" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>
         </button>
+        ${a.record && typeof canEditRecord === "function" && canEditRecord(a.record) ? `
+        <button class="btn ghost" data-action="edit" title="Hiệu chỉnh số liệu lần đo này" aria-label="Hiệu chỉnh số liệu" style="padding:4px 8px; font-size:11px;">
+          Sửa
+        </button>` : ""}
       </div></td>
     `;
     const trendBtn = tr.querySelector('[data-action="trend"]');
     if (trendBtn) trendBtn.addEventListener("click", () => goToTrendForDevice(a.tram, a.deviceName, a.exceededKeys, a.phase));
+    const editBtn = tr.querySelector('[data-action="edit"]');
+    if (editBtn && a.record) {
+      editBtn.addEventListener("click", () => {
+        if (a.source === "gas" && typeof onEditMeasurement === "function") {
+          onEditMeasurement(a.record);
+        } else if (a.source === "oil" && typeof onEditOilTest === "function") {
+          onEditOilTest(a.record);
+        } else if (a.source === "oltc" && typeof onEditOltcOilTest === "function") {
+          onEditOltcOilTest(a.record);
+        } else if (a.source === "tio" && typeof onEditTioOilTest === "function") {
+          onEditTioOilTest(a.record);
+        }
+      });
+    }
     tbody.appendChild(tr);
   });
 
@@ -608,7 +660,7 @@ function onExportAlertsExcel() {
 
   const HEADER = [
     "Trạm", "Thiết bị", "Loại đo", "Mức cảnh báo", "Tình trạng", "Chỉ tiêu vượt ngưỡng",
-    "Hạng mục cảnh báo", "Khuyến cáo", "Lần đo", "Ngày thí nghiệm",
+    "Hạng mục cảnh báo", "Khuyến cáo", "Lần đo", "Ngày thí nghiệm", "Trạng thái hiệu chỉnh",
   ];
   const aoa = [
     ["BÁO CÁO CẢNH BÁO THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
@@ -632,6 +684,7 @@ function onExportAlertsExcel() {
       a.action || "",
       a.lanDo,
       a.sampleDate,
+      a.isEdited ? `Đã hiệu chỉnh (${(a.editLog || "").replace(/\n/g, "; ")})` : "Nguyên bản",
     ]),
   ];
 

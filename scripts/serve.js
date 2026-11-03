@@ -81,11 +81,21 @@ const server = http.createServer((req, res) => {
     const ext = path.extname(safePath).toLowerCase();
     const contentType = MIME_TYPES[ext] || "application/octet-stream";
 
-    res.writeHead(200, {
+    const headers = {
       "Content-Type": contentType,
       "Content-Length": stats.size,
-      "Cache-Control": "no-cache",
-    });
+      "Access-Control-Allow-Origin": "*",
+    };
+
+    if (ext === ".html" || ext === ".js" || ext === ".json") {
+      headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
+      headers["Pragma"] = "no-cache";
+      headers["Expires"] = "0";
+    } else {
+      headers["Cache-Control"] = "no-cache";
+    }
+
+    res.writeHead(200, headers);
 
     const stream = fs.createReadStream(safePath);
     stream.pipe(res);

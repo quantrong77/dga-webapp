@@ -548,6 +548,32 @@ async function initApp() {
   $("cmp_device").addEventListener("change", refreshCompareMeasurementOptions);
   $("btnCompareRate").addEventListener("click", onCompareRate);
   $("btnExportAlertsExcel").addEventListener("click", onExportAlertsExcel);
+  const btnRefreshAlerts = $("btnRefreshAlerts");
+  if (btnRefreshAlerts) {
+    btnRefreshAlerts.addEventListener("click", async () => {
+      setAlertsLoading(true);
+      try {
+        if (typeof Storage !== "undefined") {
+          const [measurements, oilTests, oltcOilTests, tioOilTests] = await Promise.all([
+            Storage.listMeasurements().catch(() => _allMeasurements),
+            Storage.listOilTests().catch(() => _allOilTests),
+            Storage.listOltcOilTests().catch(() => _allOltcOilTests),
+            Storage.listInstrumentOilTests().catch(() => _allTioOilTests),
+          ]);
+          _allMeasurements = measurements;
+          _allOilTests = oilTests;
+          _allOltcOilTests = oltcOilTests;
+          _allTioOilTests = tioOilTests;
+        }
+        refreshAlertsUI();
+        showToast("Đã làm mới danh sách Cảnh báo theo số liệu mới nhất.");
+      } catch (err) {
+        refreshAlertsUI();
+      } finally {
+        setAlertsLoading(false);
+      }
+    });
+  }
   // Tab "Xu hướng" — 2 ô combo tự gõ-tìm (không còn là <select> tĩnh) giống ô Trạm/Thiết
   // bị ở tab DGA/Dầu cách điện, xem setupCombo() bên dưới. #tr_device gợi ý chỉ trong
   // đúng trạm đang gõ ở #tr_station (ràng buộc lọc theo trạm, xem trendDeviceOptions()
