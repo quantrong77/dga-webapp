@@ -589,15 +589,37 @@ function refreshAlertsUI() {
       <td>${escapeHtml(a.lanDo)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
       <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell"><div class="btn-row">
-        <button class="btn ghost icon-only" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>
-        </button>
+        ${a.record ? `
+        <button class="btn ghost" data-action="view" title="${a.record.bbtn_url ? 'Xem biên bản thí nghiệm (BBTN) đã đính kèm' : 'Xem chi tiết số liệu và chẩn đoán lần đo này'}" aria-label="Xem chi tiết lần đo" style="padding:4px 8px; font-size:11px;">
+          Xem
+        </button>` : ""}
         ${a.record && typeof canEditRecord === "function" && canEditRecord(a.record) ? `
         <button class="btn ghost" data-action="edit" title="Hiệu chỉnh số liệu lần đo này" aria-label="Hiệu chỉnh số liệu" style="padding:4px 8px; font-size:11px;">
           Sửa
         </button>` : ""}
+        <button class="btn ghost icon-only" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>
+        </button>
       </div></td>
     `;
+    const viewBtn = tr.querySelector('[data-action="view"]');
+    if (viewBtn && a.record) {
+      viewBtn.addEventListener("click", () => {
+        if (a.record.bbtn_url && typeof viewBbtn === "function") {
+          viewBbtn({ bbtn_url: a.record.bbtn_url, bbtn_name: a.record.bbtn_name });
+        } else if (a.source === "gas" && typeof onViewMeasurement === "function") {
+          onViewMeasurement(a.record);
+        } else if (a.source === "oil" && typeof onEditOilTest === "function") {
+          onEditOilTest(a.record);
+        } else if (a.source === "oltc" && typeof onEditOltcOilTest === "function") {
+          onEditOltcOilTest(a.record);
+        } else if (a.source === "tio" && typeof onEditTioOilTest === "function") {
+          onEditTioOilTest(a.record);
+        } else if (typeof viewBbtn === "function") {
+          viewBbtn({ bbtn_url: a.record.bbtn_url, bbtn_name: a.record.bbtn_name });
+        }
+      });
+    }
     const trendBtn = tr.querySelector('[data-action="trend"]');
     if (trendBtn) trendBtn.addEventListener("click", () => goToTrendForDevice(a.tram, a.deviceName, a.exceededKeys, a.phase));
     const editBtn = tr.querySelector('[data-action="edit"]');

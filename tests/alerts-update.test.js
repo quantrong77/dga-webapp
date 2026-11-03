@@ -260,4 +260,12 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     expect(oltcContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>Xem<\/button>/);
     expect(tioContent).toMatch(/<button class="btn ghost" data-action="viewbbtn"[^>]*>Xem<\/button>/);
   });
+
+  test("8. Bảng Cảnh báo (ui-alerts.js) có nút 'Xem' trên từng dòng cảnh báo", () => {
+    const fs = require("fs");
+    const alertsContent = fs.readFileSync("ui/ui-alerts.js", "utf8");
+    expect(alertsContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>[\s\S]*?Xem[\s\S]*?<\/button>/);
+    expect(alertsContent).toMatch(/data-action="view"/);
+    expect(alertsContent).toMatch(/onViewMeasurement\(a\.record\)/);
+  });
 });
