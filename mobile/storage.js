@@ -259,6 +259,14 @@ const Auth = {
     return !!(this.current && this.current.role === "admin");
   },
 
+  isViewer() {
+    return !!(this.current && this.current.role === "viewer");
+  },
+
+  isUser() {
+    return !!(this.current && (this.current.role === "user" || this.current.role === "admin"));
+  },
+
   async listUsers() {
     return await gsheetGet("listUsers");
   },

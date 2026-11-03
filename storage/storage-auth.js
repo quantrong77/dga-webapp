@@ -26,6 +26,18 @@ const Auth = {
   },
   current: null, // { token, email, role } sau khi xác thực thành công, null nếu chưa đăng nhập
 
+  isAdmin() {
+    return !!(this.current && this.current.role === "admin");
+  },
+
+  isViewer() {
+    return !!(this.current && this.current.role === "viewer");
+  },
+
+  isUser() {
+    return !!(this.current && (this.current.role === "user" || this.current.role === "admin"));
+  },
+
   /** Nạp phiên đã lưu (nếu có) từ lần trước — gọi 1 lần lúc khởi động trang. */
   loadSaved() {
     const saved = authLsGet();
@@ -144,6 +156,10 @@ const Auth = {
     return await gsheetPost("syncSupabase", {});
   },
 };
+
+if (typeof window !== "undefined") {
+  window.Auth = Auth;
+}
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {

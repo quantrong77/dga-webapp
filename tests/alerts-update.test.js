@@ -50,6 +50,8 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
       vm.runInContext(code, ctx);
     };
 
+    loadScript("storage/storage-core.js");
+    loadScript("storage/storage-auth.js");
     loadScript("ui/ui-utils.js");
     loadScript("ui/ui-standards.js");
     loadScript("ui/ui-auth.js");
@@ -214,5 +216,31 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     expect(alerts[0].record.id).toBe("oil_1");
     expect(alerts[0].isEdited).toBe(true);
     expect(alerts[0].exceededItems).toContain("Độ ẩm dầu");
+  });
+
+  test("6. Auth.isAdmin, Auth.isViewer, Auth.isUser trả về đúng theo vai trò phiên đăng nhập", () => {
+    ctx.window.DGA_CONFIG = { LOCAL_SERVER_URL: "/api" };
+    ctx.Auth.current = null;
+    expect(ctx.Auth.isAdmin()).toBe(false);
+    expect(ctx.Auth.isViewer()).toBe(false);
+
+    ctx.Auth.current = { email: "admin@ptc3.evnnpt.vn", role: "admin" };
+    expect(ctx.Auth.isAdmin()).toBe(true);
+    expect(ctx.Auth.isViewer()).toBe(false);
+    expect(ctx.Auth.isUser()).toBe(true);
+    expect(ctx.canWrite()).toBe(true);
+    expect(ctx.canEditRecord({ created_by: "other@ptc3.evnnpt.vn" })).toBe(true);
+
+    ctx.Auth.current = { email: "viewer@ptc3.evnnpt.vn", role: "viewer" };
+    expect(ctx.Auth.isAdmin()).toBe(false);
+    expect(ctx.Auth.isViewer()).toBe(true);
+    expect(ctx.canWrite()).toBe(false);
+
+    ctx.Auth.current = { email: "user@ptc3.evnnpt.vn", role: "user" };
+    expect(ctx.Auth.isAdmin()).toBe(false);
+    expect(ctx.Auth.isViewer()).toBe(false);
+    expect(ctx.Auth.isUser()).toBe(true);
+    expect(ctx.canEditRecord({ created_by: "user@ptc3.evnnpt.vn" })).toBe(true);
+    expect(ctx.canEditRecord({ created_by: "other@ptc3.evnnpt.vn" })).toBe(false);
   });
 });
