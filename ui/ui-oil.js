@@ -244,10 +244,21 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${overallPill}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
+        <button class="btn ghost" data-action="view" title="${rec.bbtn_url ? 'Xem biên bản thí nghiệm đã đính kèm' : 'Xem chi tiết thí nghiệm dầu'}" style="padding:5px 10px; font-size:12px;">Xem</button>
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
       </div></td>
     `;
+    const viewBtn = tr.querySelector('[data-action="view"]');
+    if (viewBtn) {
+      viewBtn.addEventListener("click", () => {
+        if (rec.bbtn_url && typeof viewBbtn === "function") {
+          viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+        } else {
+          onEditOilTest(rec);
+        }
+      });
+    }
     const editBtn = tr.querySelector('[data-action="edit"]');
     if (editBtn) editBtn.addEventListener("click", () => onEditOilTest(rec));
     const delBtn = tr.querySelector('[data-action="del"]');

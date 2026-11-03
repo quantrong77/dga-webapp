@@ -243,4 +243,21 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     expect(ctx.canEditRecord({ created_by: "user@ptc3.evnnpt.vn" })).toBe(true);
     expect(ctx.canEditRecord({ created_by: "other@ptc3.evnnpt.vn" })).toBe(false);
   });
+
+  test("7. Nút 'Xem' luôn xuất hiện trong các bảng lịch sử đo (kể cả khi không có file đính kèm)", () => {
+    const fs = require("fs");
+    const histContent = fs.readFileSync("ui/ui-history.js", "utf8");
+    const oilContent = fs.readFileSync("ui/ui-oil.js", "utf8");
+    const oltcContent = fs.readFileSync("ui/ui-oltc.js", "utf8");
+    const tioContent = fs.readFileSync("ui/ui-ti-oil.js", "utf8");
+
+    // Bảng đo khí ui-history.js phải có nút Xem mà không phụ thuộc vào rec.bbtn_url
+    expect(histContent).toMatch(/<button class="btn ghost" data-action="viewbbtn"[^>]*>Xem<\/button>/);
+    expect(histContent).not.toMatch(/\$\{rec\.bbtn_url \? `<button class="btn ghost" data-action="viewbbtn"/);
+
+    // Bảng dầu ui-oil.js, ui-oltc.js và ui-ti-oil.js phải có nút Xem
+    expect(oilContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>Xem<\/button>/);
+    expect(oltcContent).toMatch(/<button class="btn ghost" data-action="view"[^>]*>Xem<\/button>/);
+    expect(tioContent).toMatch(/<button class="btn ghost" data-action="viewbbtn"[^>]*>Xem<\/button>/);
+  });
 });

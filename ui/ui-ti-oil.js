@@ -220,14 +220,22 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${tioVerdictPill(evalResult.overall)}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
-        ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" title="Xem file BBTN đã đính kèm" style="padding:5px 10px; font-size:12px;">Xem</button>` : ""}
+        <button class="btn ghost" data-action="viewbbtn" title="${rec.bbtn_url ? 'Xem file BBTN đã đính kèm' : 'Xem chi tiết thí nghiệm dầu TI'}" style="padding:5px 10px; font-size:12px;">Xem</button>
         ${["A", "B", "C"].includes(rec.phase) ? `<button class="btn ghost" data-action="bbtn3" title="Mở cả 3 pha của biên bản này để xem, sửa hoặc xuất BBTN" style="padding:5px 10px; font-size:12px;">BBTN 3 pha</button>` : ""}
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
       </div></td>
     `;
     const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
-    if (viewBbtnBtn) viewBbtnBtn.addEventListener("click", () => viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name }));
+    if (viewBbtnBtn) {
+      viewBbtnBtn.addEventListener("click", () => {
+        if (rec.bbtn_url && typeof viewBbtn === "function") {
+          viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+        } else {
+          onEditTioOilTest(rec);
+        }
+      });
+    }
     const bbtn3Btn = tr.querySelector('[data-action="bbtn3"]');
     if (bbtn3Btn) bbtn3Btn.addEventListener("click", () => openTio3FromRecord(rec));
     const editBtn = tr.querySelector('[data-action="edit"]');

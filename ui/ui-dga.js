@@ -666,6 +666,120 @@ function onEditMeasurement(rec) {
   $("f_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+/** Nạp 1 lần đo đã lưu lên form tab "Khí hòa tan" để XEM CHI TIẾT (kèm chẩn đoán,
+ *  Duval, TCG, và mở khung BBTN đối chiếu nếu có đính kèm file) — KHÔNG đặt trạng thái
+ *  sửa (không ghi đè bản ghi), nút bấm vẫn là "Phân tích & Lưu". */
+function onViewMeasurement(rec) {
+  if (!rec) return;
+  resetMeasurementEditState();
+
+  _editingMeasurementAttachment = rec.bbtn_url
+    ? { bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name, bbtn_file_id: rec.bbtn_file_id }
+    : null;
+  _removeBbtnOnSave = false;
+  if ($("f_bbtn")) $("f_bbtn").value = "";
+  renderBbtnDropzoneLabel();
+  if ($("bbtnImportNote")) $("bbtnImportNote").classList.add("hidden");
+  renderBbtnCurrent();
+
+  if (rec.bbtn_url) {
+    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+  } else {
+    hideBbtnPreview();
+  }
+
+  if ($("f_tram")) $("f_tram").value = rec.tram || "";
+  if ($("f_thietbi")) $("f_thietbi").value = rec.thiet_bi || "";
+  if ($("f_loai")) $("f_loai").value = rec.equipment_type || "";
+  refreshManufacturerOptions();
+  toggleMbaSubtypeField();
+  if ($("f_mbasubtype")) $("f_mbasubtype").checked = rec.mba_subtype === DGA.MBA_SUBTYPES.COMM_OLTC;
+  if ($("f_nsx")) $("f_nsx").value = rec.manufacturer || "";
+  if ($("f_pha")) $("f_pha").value = rec.pha || "";
+  if ($("f_landocount")) $("f_landocount").value = rec.lan_do ?? 1;
+  if ($("f_ngay")) $("f_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
+  if ($("f_ghichu")) $("f_ghichu").value = rec.ghi_chu || "";
+  if ($("f_kieumay")) $("f_kieumay").value = rec.kieu_may || "";
+  if ($("f_namsx")) $("f_namsx").value = rec.nam_sx || "";
+  if ($("f_namvanhanh")) $("f_namvanhanh").value = rec.nam_van_hanh || "";
+  if ($("f_dienapdm")) $("f_dienapdm").value = rec.dien_ap_dm || "";
+  if ($("f_sochetao")) $("f_sochetao").value = rec.so_che_tao || "";
+  if ($("f_loaidau")) $("f_loaidau").value = rec.loai_dau || "";
+  if ($("f_ketcaucachdien")) $("f_ketcaucachdien").value = rec.ket_cau_cach_dien || "";
+  if ($("f_hientrangvanhanh")) $("f_hientrangvanhanh").value = rec.hien_trang_van_hanh || "";
+  if ($("f_ngaythinghiem")) $("f_ngaythinghiem").value = rec.ngay_thi_nghiem || "";
+  if ($("f_lydothinghiem")) $("f_lydothinghiem").value = rec.ly_do_thi_nghiem || "";
+  if ($("f_nhietdo")) $("f_nhietdo").value = rec.nhiet_do ?? "";
+  if ($("f_doam")) $("f_doam").value = rec.do_am ?? "";
+
+  const gases = recordGases(rec);
+  DGA.GASES.forEach((g) => {
+    if ($("g_" + g)) $("g_" + g).value = gases[g] ?? "";
+  });
+  const n2 = rec.n2 ?? rec.N2 ?? null;
+  const o2 = rec.o2 ?? rec.O2 ?? null;
+  if ($("g_N2")) $("g_N2").value = n2 ?? "";
+  if ($("g_O2")) $("g_O2").value = o2 ?? "";
+  if ($("f_bang63_voltage")) $("f_bang63_voltage").value = rec.bang63_voltage_class || "110-220";
+  if ($("f_bang63_applicable")) $("f_bang63_applicable").checked = !!rec.bang63_applicable;
+
+  if ($("editingMeasurementNote")) $("editingMeasurementNote").classList.add("hidden");
+  if ($("btnCancelEditMeasurement")) $("btnCancelEditMeasurement").classList.add("hidden");
+  if ($("btnAnalyze")) $("btnAnalyze").textContent = "Phân tích & Lưu";
+
+  const tabBtn = document.querySelector('button.tab-btn[data-tab="nhap"]');
+  if (tabBtn) tabBtn.click();
+
+  // Đánh giá và hiển thị kết quả phân tích để người dùng xem chẩn đoán & Duval
+  try {
+    const kphGases = {};
+    for (const g of DGA.GASES) {
+      if (gases[g] === 0) kphGases[g] = true;
+    }
+    const equipmentType = rec.equipment_type;
+    const mbaSubtype = equipmentType === DGA.EQUIPMENT_TYPES.MBA
+      ? (rec.mba_subtype === DGA.MBA_SUBTYPES.COMM_OLTC ? DGA.MBA_SUBTYPES.COMM_OLTC : DGA.MBA_SUBTYPES.NO_OLTC)
+      : null;
+    const logicMeasurement = { equipmentType, manufacturer: rec.manufacturer, mbaSubtype };
+    const standard = DGA.resolveStandard(logicMeasurement, toManufacturerStandardsForLogic(_allStandards));
+    const tcg = DGA.computeTCG(gases);
+    const evalRows = DGA.evaluateAbsolute(gases, standard.limits, kphGases);
+    const overall = DGA.overallVerdict(evalRows);
+    const exceedCount = DGA.countExceedTypical(gases, equipmentType, logicMeasurement);
+    const ratios = DGA.computeRatios(gases);
+    const diagnosis = DGA.diagnoseGasFault(gases, equipmentType, standard.pdThreshold, kphGases);
+    const bushingCodes = equipmentType === DGA.EQUIPMENT_TYPES.BUSHING ? DGA.diagnoseBushingRatios(ratios) : [];
+    let applicability = DGA.ratioApplicability(exceedCount);
+    if (Object.keys(kphGases).length > 0 && exceedCount === 0) {
+      applicability = "Không có hiệu lực — các khí đều dưới ngưỡng phát hiện (KPH) hoặc trong khoảng điển hình (Điều 54 QĐ1901 & IEC 60599)";
+    }
+    const duval = DGA.diagnoseDuval1(gases, kphGases);
+    const condemningRows = DGA.evaluateCondemning(gases, standard.condemning);
+    const additionalRatios = DGA.diagnoseAdditionalRatios(gases, n2, o2);
+    const bang63Percent = DGA.computeTotalDissolvedGasPercent(gases, n2, o2);
+    const bang63 = DGA.evaluateBang63(bang63Percent, rec.bang63_voltage_class || "110-220", !!rec.bang63_applicable);
+    bang63.value = bang63Percent;
+    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows: null, condemningRows, additionalRatios, bang63, equipmentType, bushingCodes });
+    const overallStatus = DGA.computeOverallStatus({ overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis: null, rateRows: null, condemningRows });
+
+    _lastAnalysis = { measurement: rec, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows: null, tcgRate: null, prior: null, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly: null, similarCases: null, kphGases };
+    renderResults(_lastAnalysis);
+  } catch (e) {
+    console.warn("Lỗi tính toán xem nhanh lần đo:", e);
+  }
+
+  const dateStr = DGA.formatSampleDate(rec.sample_date) || rec.sample_date || "";
+  const infoText = rec.bbtn_url
+    ? `Đang xem lần đo ${rec.thiet_bi || ""} (${dateStr}) kèm BBTN đối chiếu.`
+    : `Đang xem lần đo ${rec.thiet_bi || ""} (${dateStr}) — bản ghi chưa có file BBTN đính kèm.`;
+  notifyInfo(infoText);
+  if ($("resultsPanel")) {
+    $("resultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  } else if ($("f_tram")) {
+    $("f_tram").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+}
+
 // ---------------------------------------------------------------------
 // Tam giác Duval — vẽ khung tam giác + đường phân vùng (theo bảng "Limits of
 // zones", Annex B, Figure B.3, IEC 60599:2022) và điểm chẩn đoán bằng SVG.

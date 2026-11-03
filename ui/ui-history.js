@@ -86,13 +86,23 @@ async function refreshHistoryUI() {
       <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
       <td>${ownerCellHtml(rec)}${editLogBadgeHtml(rec)}</td>
       <td class="actions-cell"><div class="btn-row">
-        ${rec.bbtn_url ? `<button class="btn ghost" data-action="viewbbtn" title="Xem biên bản thí nghiệm (BBTN) đã đính kèm" style="padding:5px 10px; font-size:12px;">Xem</button>` : ""}
+        <button class="btn ghost" data-action="viewbbtn" title="${rec.bbtn_url ? 'Xem biên bản thí nghiệm (BBTN) đã đính kèm' : 'Xem chi tiết số liệu và chẩn đoán lần đo'}" style="padding:5px 10px; font-size:12px;">Xem</button>
         ${canEditRecord(rec) ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button>` : ""}
         ${canWrite() ? `<button class="btn danger" data-action="del" style="padding:5px 10px; font-size:12px;">Xóa</button>` : ""}
       </div></td>
     `;
     const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
-    if (viewBbtnBtn) viewBbtnBtn.addEventListener("click", () => viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name }));
+    if (viewBbtnBtn) {
+      viewBbtnBtn.addEventListener("click", () => {
+        if (rec.bbtn_url) {
+          viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+        } else if (typeof onViewMeasurement === "function") {
+          onViewMeasurement(rec);
+        } else {
+          viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+        }
+      });
+    }
     const editBtn = tr.querySelector('[data-action="edit"]');
     if (editBtn) editBtn.addEventListener("click", () => onEditMeasurement(rec));
     const delBtn = tr.querySelector('[data-action="del"]');
