@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      # TAM THOI: deploy thu nhanh sua dang nhap Google truoc khi merge — xoa dong nay sau khi merge
+      - fix/khoi-phuc-dang-nhap-google
   workflow_dispatch:
 
 permissions:
