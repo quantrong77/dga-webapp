@@ -277,4 +277,27 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     expect(css).toMatch(/\.btn-action-hist/);
     expect(css).toMatch(/min-width:\s*48px/);
   });
+  test("Hiệu chỉnh về số liệu khỏe có khí KPH (=0) -> KHÔNG còn Báo động 'đổi loại sự cố'", () => {
+    // Cả 2 lần đo đều Đạt, mọi khí dưới giá trị điển hình; lần sau có C2H2 = KPH (0).
+    // Trước bản sửa: tab Cảnh báo tự suy mã T1 -> T2 từ tỷ số 0/x và báo BÁO ĐỘNG dù Tình
+    // trạng "Đạt" (tab Khí hòa tan coi tỷ số không có hiệu lực -> Bình thường).
+    const base = { tram: "TBA 220kV X", thiet_bi: "T1", equipment_type: "MBA", pha: "chung3pha", co: 100, co2: 600 };
+    ctx.setMeasurements([
+      { ...base, id: "p", sample_date: "2026-04-01", lan_do: 1, h2: 5, ch4: 8, c2h6: 3, c2h4: 1, c2h2: 0 },
+      { ...base, id: "c", sample_date: "2026-10-01", lan_do: 2, h2: 5, ch4: 8, c2h6: 3, c2h4: 4, c2h2: 0 },
+    ]);
+    expect(ctx.computeGasAlerts()).toHaveLength(0);
+  });
+
+  test("Bản nhập sai CÙNG NGÀY không được dùng làm 'lần đo trước' của bản nhập lại cho đúng", () => {
+    const base = { tram: "TBA 220kV X", thiet_bi: "T2", equipment_type: "MBA", pha: "chung3pha", co: 100, co2: 600 };
+    ctx.setMeasurements([
+      { ...base, id: "old", sample_date: "2026-04-01", lan_do: 1, h2: 5, ch4: 8, c2h6: 3, c2h4: 1, c2h2: 0.5 },
+      // nhập sai (C2H4 gõ nhầm 8 thay vì 1 -> mã T2) ...
+      { ...base, id: "wrong", sample_date: "2026-10-01", lan_do: 2, h2: 5, ch4: 8, c2h6: 3, c2h4: 8, c2h2: 0.5 },
+      // ... rồi nhập lại đúng cùng ngày, lần đo 3 (mã T1, giống lần đo tháng 4)
+      { ...base, id: "fixed", sample_date: "2026-10-01", lan_do: 3, h2: 5, ch4: 8, c2h6: 3, c2h4: 1, c2h2: 0.5 },
+    ]);
+    expect(ctx.computeGasAlerts()).toHaveLength(0);
+  });
 });

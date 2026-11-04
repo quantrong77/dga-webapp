@@ -145,21 +145,36 @@ function computeGasAlerts() {
   groups.forEach((records) => {
     const sorted = alertSortRecordsDescending(records);
     const latest = sorted[0];
-    const prior = sorted[1] || null;
+    // Lần đo liền trước = lần GẦN NHẤT có ngày lấy mẫu NHỎ HƠN HẲN lần đo hiện tại — y hệt
+    // cách onAnalyze() (ui-dga.js) chọn `prior`. KHÔNG lấy sorted[1]: khi có 2 bản ghi CÙNG
+    // ngày (VD bản nhập sai + bản nhập lại cho đúng), sorted[1] chính là bản nhập sai, khiến
+    // "loại sự cố đổi khác" bị so với số liệu sai -> Báo động dù lần đo hiện tại đã Đạt.
+    const latestTime = new Date(latest.sample_date).getTime();
+    const prior = sorted.find((r) => new Date(r.sample_date).getTime() < latestTime) || null;
 
     const mbaSubtype = latest.mba_subtype ?? latest.mbaSubtype ?? null;
     const logicMeasurement = { equipmentType: latest.equipment_type, manufacturer: latest.manufacturer, mbaSubtype };
     const standard = DGA.resolveStandard(logicMeasurement, manufacturerStandards);
 
     const gases = recordGases(latest);
-    const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
+    // Khí KPH (lưu = 0) — cùng quy ước chế độ "Xem" lần đo (ui-dga.js) và onAnalyze(): KPH
+    // làm tỷ số khí mất hiệu lực chẩn đoán (Điều 54 QĐ1901 & IEC 60599 mục 6.1(c)). Thiếu
+    // bước này, tab "Cảnh báo" tự suy ra mã sự cố từ các tỷ số 0/x và báo "đổi loại sự cố"
+    // (Báo động) cho thiết bị mà tab "Khí hòa tan" đánh giá là Bình thường.
+    const kphOf = (g) => {
+      const out = {};
+      for (const name of DGA.GASES) if (g[name] === 0) out[name] = true;
+      return out;
+    };
+    const kphGases = kphOf(gases);
+    const evalRows = DGA.evaluateAbsolute(gases, standard.limits, kphGases);
     const overall = DGA.overallVerdict(evalRows);
     const exceedCount = DGA.countExceedTypical(gases, latest.equipment_type, logicMeasurement);
     const ratios = DGA.computeRatios(gases);
     // DGA.diagnoseGasFault() tự chọn đúng bảng theo loại thiết bị (Table A.10 cho sứ
     // xuyên, Table 1/Bảng 66 cho các loại còn lại) — xem chú thích đầy đủ ở onAnalyze()
     // (ui-dga.js), phải dùng giống hệt ở đây để tab "Cảnh báo" ra kết quả nhất quán.
-    const diagnosis = DGA.diagnoseGasFault(gases, latest.equipment_type, standard.pdThreshold);
+    const diagnosis = DGA.diagnoseGasFault(gases, latest.equipment_type, standard.pdThreshold, kphGases);
     const condemningRows = DGA.evaluateCondemning(gases, standard.condemning);
 
     let rateRows = null;
@@ -170,8 +185,8 @@ function computeGasAlerts() {
       // lưu khí chữ thường, không chuẩn hóa lại sẽ làm sai lệch toàn bộ tốc độ sinh khí.
       const priorGases = recordGases(prior);
       const deltaDays = Math.round((new Date(latest.sample_date) - new Date(prior.sample_date)) / 86400000);
-      rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, latest.equipment_type);
-      priorDiagnosis = DGA.diagnoseGasFault(priorGases, latest.equipment_type, standard.pdThreshold);
+      rateRows = DGA.computeRateOfChange(priorGases, gases, deltaDays, standard.rate, latest.equipment_type, kphGases);
+      priorDiagnosis = DGA.diagnoseGasFault(priorGases, latest.equipment_type, standard.pdThreshold, kphOf(priorGases));
     }
 
     const overallStatus = DGA.computeOverallStatus({

@@ -1078,7 +1078,11 @@ async function onAnalyze() {
     // (điều kiện ALARM riêng của lưu đồ IEC 60599, xem computeOverallStatus()) — PHẢI dùng
     // cùng diagnoseGasFault() (cùng bảng theo loại thiết bị) để so sánh cho đúng nghĩa,
     // không dùng lại diagnoseRatios() trần (sẽ luôn là Table 1 kể cả với sứ xuyên).
-    priorDiagnosis = DGA.diagnoseGasFault(priorGases, measurement.equipment_type, standard.pdThreshold);
+    // Khí KPH (lưu = 0) của lần đo trước cũng làm tỷ số mất hiệu lực — cùng quy ước với
+    // computeGasAlerts() (ui-alerts.js) để 2 tab luôn ra cùng kết luận "đổi loại sự cố".
+    const priorKph = {};
+    for (const g of DGA.GASES) if (priorGases[g] === 0) priorKph[g] = true;
+    priorDiagnosis = DGA.diagnoseGasFault(priorGases, measurement.equipment_type, standard.pdThreshold, priorKph);
     // Tốc độ sinh khí (%/tháng) của TỔNG lượng khí cháy (TCG) — cùng công thức %/tháng
     // dùng cho từng khí ở trên nhưng KHÔNG có khoảng tham chiếu Bảng 65 riêng cho TCG
     // (chỉ tham khảo). Hiện ở stat-card TCG (renderResults()) và điền vào BBTN khi xuất
