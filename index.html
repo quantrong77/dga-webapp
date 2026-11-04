@@ -12,7 +12,7 @@
        - connect-src data: blob: : viewBbtn() fetch() file đính kèm lưu dạng data URL (chế độ thử nghiệm).
        - style-src 'unsafe-inline': giao diện dùng nhiều thuộc tính style="" (không chạy được mã).
        GitHub Pages không cho đặt HTTP header nên dùng thẻ meta (frame-ancestors không hỗ trợ ở meta). -->
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline'; worker-src 'self' blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' data: blob:; frame-src blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' https://accounts.google.com/gsi/client; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' data: blob: http://localhost:8080 https://script.google.com https://script.googleusercontent.com https://accounts.google.com; frame-src https://accounts.google.com blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
@@ -45,13 +45,17 @@
        LƯU Ý: script này tải bất đồng bộ (async) — không đảm bảo tải xong trước khi
        app.js chạy initGoogleSignIn() lần đầu, nên app.js còn đăng ký hàm toàn cục
        window.onGoogleLibraryLoad — Google tự gọi hàm này khi thư viện sẵn sàng,
-       bất kể thứ tự tải, để không bị lỡ mất việc hiện nút. -->
+       bất kể thứ tự tải, để không bị lỡ mất việc hiện nút.
+       Thư viện được ui-auth.js (initGoogleSignIn) chèn ĐỘNG chỉ khi config.js có
+       GOOGLE_CLIENT_ID — tức chỉ ở chế độ online (GitHub Pages); chế độ On-Premise
+       không tải. CSP phía trên cho phép các domain accounts.google.com /
+       script.google.com cho chế độ online — chỉ "cho phép", không tự gửi request. -->
     <!-- Dọn dẹp cache cũ và Service Worker lỗi thời khi chạy On-Premise -->
   <script>
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v9-viewbuttons") {
+          if (k !== "dga-offline-v10-google-auth") {
             caches.delete(k);
           }
         });
@@ -140,7 +144,7 @@
       </div>
 
       <div id="authLoginForm">
-        <div id="authServerStatusBadge" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#1e40af; text-align:left; line-height:1.4;">
+        <div id="authServerStatusBadge" class="hidden" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#1e40af; text-align:left; line-height:1.4;">
           <div style="font-weight:600; display:flex; align-items:center; gap:6px;">
             <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
             Máy chủ CSDL Nội bộ (On-Premise Localhost)

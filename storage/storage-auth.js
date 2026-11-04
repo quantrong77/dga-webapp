@@ -87,7 +87,13 @@ const Auth = {
 
   /** Thông tin cấu hình đăng ký (ai được đăng ký) từ server — gọi 1 lần lúc vẽ modal. */
   async registrationInfo() {
-    return await gsheetGet("registrationInfo");
+    // Gọi lỗi (server cũ chưa có action này/mất mạng) -> coi như "open" để không chặn
+    // nhầm luồng đăng ký hiện có vì một lỗi không liên quan.
+    try {
+      return await gsheetGet("registrationInfo");
+    } catch (err) {
+      return { mode: "open", domain: "" };
+    }
   },
 
   /** Kiểm tra lại phiên hiện tại với server (còn hạn không, role đổi chưa, cần đổi mk không). */
@@ -105,6 +111,11 @@ const Auth = {
       authLsSet(this.current);
       return this.current;
     } catch (e) {
+      // Mất mạng (Offline-First) -> GIỮ phiên đăng nhập cục bộ đã lưu, không đăng xuất nhầm.
+      if (typeof isNetworkError === "function" && isNetworkError(e)) {
+        console.warn("Mất mạng khi xác thực token — giữ nguyên phiên đăng nhập cục bộ đã lưu.");
+        return this.current;
+      }
       // Token hết hạn hoặc user bị xóa — coi như đã đăng xuất
       _authToken = null;
       this.current = null;

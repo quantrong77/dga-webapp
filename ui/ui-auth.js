@@ -161,6 +161,12 @@ async function enterApp() {
 }
 
 function setupAuthForms() {
+  // Khung "Máy chủ CSDL nội bộ + tài khoản Admin mặc định" chỉ có ý nghĩa ở chế độ
+  // On-Premise — ẩn sẵn trong index.html, chỉ hiện khi config.js chọn LOCAL_SERVER_URL.
+  const serverBadge = $("authServerStatusBadge");
+  if (serverBadge) {
+    serverBadge.classList.toggle("hidden", !(typeof hasLocalServerConfig === "function" && hasLocalServerConfig()));
+  }
   $("linkShowRegister").addEventListener("click", (e) => {
     e.preventDefault();
     $("authLoginForm").classList.add("hidden");
