@@ -26,10 +26,10 @@ REGULATION_CITATIONS.IEC60422_2024_TABLE3_NEW = "IEC 60422:2024 Bảng 3 (Table 
 // ---------------------------------------------------------------------------
 
 // Bảng 59 — Trị số axit (mgKOH/g dầu), KHÔNG LỚN HƠN. Dầu mới: 0,02 mọi cấp. Dầu vận hành: "Đến 35 kV" 0,25;
-// "110 kV" 0,15; "220 đến 500 kV" 0,1. Bậc >35–<110 kV văn bản không nêu → null.
+// "110 kV" 0,15; "220 đến 500 kV" 0,1 — đủ mọi cấp điện áp đang dùng (cấp 66 kV cũ đã bỏ).
 const BANG59_ACID = {
   new: 0.02,
-  inservice: { duoi15: 0.25, "15den35": 0.25, tren35duoi110: null, "110": 0.15, "220": 0.1, "500": 0.1 },
+  inservice: { duoi15: 0.25, "15den35": 0.25, "110": 0.15, "220": 0.1, "500": 0.1 },
 };
 
 // Điều 51 — Nhiệt độ chớp cháy cốc kín (ASTM D93/ISO 2719): dầu mới KHÔNG THẤP HƠN 135°C; trong vận hành

@@ -188,6 +188,7 @@ function onEditOilTest(rec) {
   $("o_tram").value = rec.tram || "";
   $("o_thietbi").value = rec.thiet_bi || "";
   $("o_samplepoint").value = rec.oil_sample_point || "chung";
+  ensureOilVoltageOption("o_voltage_class", rec.voltage_class);
   $("o_voltage_class").value = rec.voltage_class || "";
   toggleOilMembraneField();
   $("o_oilstate").value = rec.oil_state || "inservice";

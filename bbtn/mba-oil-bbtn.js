@@ -95,7 +95,7 @@ function mbaOilVoltageClass(kv) {
   if (kv >= 400) return "500";
   if (kv >= 200) return "220";
   if (kv >= 100) return "110";
-  if (kv > 35) return "tren35duoi110";
+  if (kv > 35) return ""; // không còn cấp điện áp nào giữa 35 và 110 kV (cấp 66 kV cũ đã bỏ) — để người dùng chọn
   if (kv >= 15) return "15den35";
   return "duoi15";
 }

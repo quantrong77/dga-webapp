@@ -213,8 +213,17 @@ function toOilStandardsForLogic(list) {
 }
 
 function oilVoltageClassLabel(vc) {
-  const found = DGA.OIL_VOLTAGE_CLASSES.find((c) => c.value === vc);
-  return found ? found.label : vc || "—";
+  return DGA.oilVoltageClassName(vc);
+}
+
+/** Sửa bản ghi cũ có cấp điện áp đã bỏ khỏi danh sách (VD 66 kV): thêm tạm 1 lựa chọn để không mất giá trị. */
+function ensureOilVoltageOption(selectId, vc) {
+  const sel = $(selectId);
+  if (!sel || !vc || Array.from(sel.options).some((o) => o.value === vc)) return;
+  const opt = document.createElement("option");
+  opt.value = vc;
+  opt.textContent = DGA.oilVoltageClassName(vc);
+  sel.appendChild(opt);
 }
 
 // id của tiêu chuẩn đang SỬA (null = đang ở chế độ "thêm mới"). Có id thì

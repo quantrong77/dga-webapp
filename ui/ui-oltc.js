@@ -72,6 +72,7 @@ function onEditOltcOilTest(rec) {
   $("ot_tram").value = rec.tram || "";
   $("ot_thietbi").value = rec.thiet_bi || "";
   $("ot_samplepoint").value = rec.oltc_sample_point || "trungtinh";
+  ensureOilVoltageOption("ot_voltage_class", rec.voltage_class);
   $("ot_voltage_class").value = rec.voltage_class || "";
   toggleOltcMembraneField();
   $("ot_oilstate").value = rec.oil_state || "inservice";

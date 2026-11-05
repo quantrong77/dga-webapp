@@ -309,10 +309,11 @@ const DIEU54_ADDITIONAL_RATIOS = { co2co_low: 3, co_min: 1000, co2co_high: 10, c
 // ngưỡng IEC 60422 chưa được người dùng cung cấp số liệu xác nhận.
 // ---------------------------------------------------------------------------
 
+// Bậc "> 35 kV và < 110 kV" (cấp 66 kV cũ) ĐÃ BỎ khỏi lưới điện nên không còn trong danh sách chọn — các
+// bảng ngưỡng bên dưới vẫn GIỮ khóa "tren35duoi110" để bản ghi cũ (nếu có) vẫn hiển thị/đánh giá được.
 const OIL_VOLTAGE_CLASSES = [
   { value: "duoi15", label: "< 15 kV" },
   { value: "15den35", label: "15 – 35 kV" },
-  { value: "tren35duoi110", label: "> 35 kV và < 110 kV" },
   { value: "110", label: "110 kV" },
   { value: "220", label: "220 kV" },
   { value: "500", label: "500 kV" },
@@ -360,6 +361,13 @@ function bang58WaterLimits(voltageClass, hasMembraneN2) {
     return hasMembraneN2 ? BANG58_WATER.den110_comMangN2 : BANG58_WATER.den110_khongMangN2;
   }
   return BANG58_WATER.tren110; // 220kV và 500kV — cùng trị số trong Bảng 58
+}
+
+/** Nhãn cấp điện áp dầu, kể cả bậc đã bỏ (bản ghi cũ). */
+const OIL_VOLTAGE_CLASS_LEGACY_LABELS = { tren35duoi110: "> 35 kV và < 110 kV (cấp 66 kV cũ, đã bỏ)" };
+function oilVoltageClassName(vc) {
+  const found = OIL_VOLTAGE_CLASSES.find((c) => c.value === vc);
+  return found ? found.label : OIL_VOLTAGE_CLASS_LEGACY_LABELS[vc] || vc || "—";
 }
 
 function hasVal(v) {

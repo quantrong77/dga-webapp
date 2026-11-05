@@ -308,7 +308,8 @@ function toOilStandardsForLogic(list) {
   }));
 }
 function oilVoltageClassLabel(vc) {
-  const found = DGA.OIL_VOLTAGE_CLASSES.find((c) => c.value === vc);
+  const found = DGA.OIL_VOLTAGE_CLASSES.find((c) => c.value === vc) ||
+    (DGA.OIL_VOLTAGE_CLASS_LEGACY_LABELS && DGA.OIL_VOLTAGE_CLASS_LEGACY_LABELS[vc] ? { label: DGA.OIL_VOLTAGE_CLASS_LEGACY_LABELS[vc] } : null);
   return found ? found.label : vc || "—";
 }
 

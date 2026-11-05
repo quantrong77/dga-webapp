@@ -317,10 +317,11 @@ const DIEU54_ADDITIONAL_RATIOS = { co2co_low: 3, co_min: 1000, co2co_high: 10, c
 // ngưỡng IEC 60422 chưa được người dùng cung cấp số liệu xác nhận.
 // ---------------------------------------------------------------------------
 
+// Bậc "> 35 kV và < 110 kV" (cấp 66 kV cũ) ĐÃ BỎ khỏi lưới điện nên không còn trong danh sách chọn — các
+// bảng ngưỡng bên dưới vẫn GIỮ khóa "tren35duoi110" để bản ghi cũ (nếu có) vẫn hiển thị/đánh giá được.
 const OIL_VOLTAGE_CLASSES = [
   { value: "duoi15", label: "< 15 kV" },
   { value: "15den35", label: "15 – 35 kV" },
-  { value: "tren35duoi110", label: "> 35 kV và < 110 kV" },
   { value: "110", label: "110 kV" },
   { value: "220", label: "220 kV" },
   { value: "500", label: "500 kV" },
@@ -368,6 +369,13 @@ function bang58WaterLimits(voltageClass, hasMembraneN2) {
     return hasMembraneN2 ? BANG58_WATER.den110_comMangN2 : BANG58_WATER.den110_khongMangN2;
   }
   return BANG58_WATER.tren110; // 220kV và 500kV — cùng trị số trong Bảng 58
+}
+
+/** Nhãn cấp điện áp dầu, kể cả bậc đã bỏ (bản ghi cũ). */
+const OIL_VOLTAGE_CLASS_LEGACY_LABELS = { tren35duoi110: "> 35 kV và < 110 kV (cấp 66 kV cũ, đã bỏ)" };
+function oilVoltageClassName(vc) {
+  const found = OIL_VOLTAGE_CLASSES.find((c) => c.value === vc);
+  return found ? found.label : OIL_VOLTAGE_CLASS_LEGACY_LABELS[vc] || vc || "—";
 }
 
 function hasVal(v) {
@@ -1935,10 +1943,10 @@ REGULATION_CITATIONS.IEC60422_2024_TABLE3_NEW = "IEC 60422:2024 Bảng 3 (Table 
 // ---------------------------------------------------------------------------
 
 // Bảng 59 — Trị số axit (mgKOH/g dầu), KHÔNG LỚN HƠN. Dầu mới: 0,02 mọi cấp. Dầu vận hành: "Đến 35 kV" 0,25;
-// "110 kV" 0,15; "220 đến 500 kV" 0,1. Bậc >35–<110 kV văn bản không nêu → null.
+// "110 kV" 0,15; "220 đến 500 kV" 0,1 — đủ mọi cấp điện áp đang dùng (cấp 66 kV cũ đã bỏ).
 const BANG59_ACID = {
   new: 0.02,
-  inservice: { duoi15: 0.25, "15den35": 0.25, tren35duoi110: null, "110": 0.15, "220": 0.1, "500": 0.1 },
+  inservice: { duoi15: 0.25, "15den35": 0.25, "110": 0.15, "220": 0.1, "500": 0.1 },
 };
 
 // Điều 51 — Nhiệt độ chớp cháy cốc kín (ASTM D93/ISO 2719): dầu mới KHÔNG THẤP HƠN 135°C; trong vận hành
@@ -3002,8 +3010,6 @@ function buildRegulationConfigRegistry() {
         { path: ["pharieng", "duoi15", "moisture"], label: "Một pha/không trung tính, <15kV — Hàm lượng nước (QĐ1901 hiện chưa có số liệu)", unit: "ppm", kind: "number" },
         { path: ["pharieng", "15den35", "bdv"], label: "Một pha/không trung tính, 15–35kV — Điện áp chọc thủng", unit: "kV", kind: "number" },
         { path: ["pharieng", "15den35", "moisture"], label: "Một pha/không trung tính, 15–35kV — Hàm lượng nước (QĐ1901 hiện chưa có số liệu)", unit: "ppm", kind: "number" },
-        { path: ["pharieng", "tren35duoi110", "bdv"], label: "Một pha/không trung tính, >35–<110kV — Điện áp chọc thủng (QĐ1901 hiện chưa có số liệu)", unit: "kV", kind: "number" },
-        { path: ["pharieng", "tren35duoi110", "moisture"], label: "Một pha/không trung tính, >35–<110kV — Hàm lượng nước (QĐ1901 hiện chưa có số liệu)", unit: "ppm", kind: "number" },
         { path: ["pharieng", "110", "bdv"], label: "Một pha/không trung tính, 110kV — Điện áp chọc thủng", unit: "kV", kind: "number" },
         { path: ["pharieng", "110", "moisture"], label: "Một pha/không trung tính, 110kV — Hàm lượng nước", unit: "ppm", kind: "number" },
         { path: ["pharieng", "220", "bdv"], label: "Một pha/không trung tính, 220kV — Điện áp chọc thủng", unit: "kV", kind: "number" },
@@ -3793,7 +3799,7 @@ if (typeof module !== "undefined" && module.exports) {
       normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
       QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
       dieu54AdvisoryMessages, dieu54ActionMessages, dieu54AdditionalFlags, dieu54Applies, buildRecommendations, computeOverallStatus,
-      OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
+      OIL_VOLTAGE_CLASSES, OIL_VOLTAGE_CLASS_LEGACY_LABELS, oilVoltageClassName, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
       evaluateInstrumentOilTest,
       IEC60422_2024_TABLE5_MBA, IEC60422_2024_TABLE7_TITU, IEC60422_2024_CATEGORY_LABEL_MBA,
       IEC60422_2024_CATEGORY_LABEL_TITU, mapOilVoltageClassToIec60422Category, resolveIec60422TituCategory,
@@ -3838,7 +3844,7 @@ if (typeof module !== "undefined" && module.exports) {
     normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
     QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
     dieu54AdvisoryMessages, dieu54ActionMessages, dieu54AdditionalFlags, dieu54Applies, buildRecommendations, computeOverallStatus,
-    OIL_VOLTAGE_CLASSES, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
+    OIL_VOLTAGE_CLASSES, OIL_VOLTAGE_CLASS_LEGACY_LABELS, oilVoltageClassName, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
     evaluateInstrumentOilTest,
     IEC60422_2024_TABLE5_MBA, IEC60422_2024_TABLE7_TITU, IEC60422_2024_CATEGORY_LABEL_MBA,
     IEC60422_2024_CATEGORY_LABEL_TITU, mapOilVoltageClassToIec60422Category, resolveIec60422TituCategory,

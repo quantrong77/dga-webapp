@@ -19,7 +19,14 @@ describe("QĐ1901 — chỉ tiêu bổ sung", () => {
     expect(at("110", "inservice", 0.15).verdict).toBe("Đạt");
     expect(at("15den35", "inservice", 0.25).verdict).toBe("Đạt");
     expect(at("500", "new", 0.03).verdict).toBe("Không đạt");
-    expect(at("tren35duoi110", "inservice", 0.2).verdict).toBe("Không có ngưỡng");
+  });
+
+  test("cấp 66 kV cũ (> 35 – < 110 kV) đã bỏ khỏi danh sách chọn; bản ghi cũ vẫn có nhãn; Bảng 59 đủ mọi cấp còn lại", () => {
+    expect(DGA.OIL_VOLTAGE_CLASSES.map((c) => c.value)).toEqual(["duoi15", "15den35", "110", "220", "500"]);
+    expect(DGA.oilVoltageClassName("tren35duoi110")).toMatch(/66 kV cũ/);
+    DGA.OIL_VOLTAGE_CLASSES.forEach((c) => {
+      expect(DGA.BANG59_ACID.inservice[c.value]).toEqual(expect.any(Number));
+    });
   });
 
   test("Điều 51 chớp cháy: dầu mới ≥135°C; vận hành giảm ≤5°C so với lần trước", () => {
