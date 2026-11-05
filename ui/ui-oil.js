@@ -165,6 +165,7 @@ function clearOilForm() {
   resetOilTestEditState();
   hideOilPreview();
   if (typeof syncOltcFromMain === "function") syncOltcFromMain();
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 function resetOilTestEditState() {
@@ -218,6 +219,7 @@ function onEditOilTest(rec) {
   // Đảm bảo khối "Dầu MBA chính" đang HIỆN trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
   $("dau_equipmenttype").value = DGA.EQUIPMENT_TYPES.MBA;
   toggleDauEquipmentType();
+  if (typeof inputOpenRecord === "function") inputOpenRecord("dau");
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   $("o_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -472,8 +474,9 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
 async function refreshOilTestsUI() {
   const all = await Storage.listOilTests();
   _allOilTests = all;
-  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
-  renderOilTestRows("oilHistoryTable", "oilHistoryEmpty", sorted);
+  // Bảng ở tab Lý-Hóa dầu chỉ hiện số liệu đã lưu của THIẾT BỊ ĐANG CHỌN (ui-input-subtabs.js); toàn bộ ở tab Lịch sử đo
+  if (typeof renderOilSavedTable === "function") renderOilSavedTable();
+  else renderOilTestRows("oilHistoryTable", "oilHistoryEmpty", all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date)));
   if (typeof refreshLichSuOilTable === "function") refreshLichSuOilTable();
 
   refreshTrendDeviceOptions();
@@ -541,6 +544,7 @@ function oilFillFromParsed(parsed) {
   $("o_samplepoint").value = h.phase || parsed.threePhase ? "pharieng" : "chung";
   renderOilParamTable(false);
   oilFillParamValues(parsed.values, "o", h.phase);
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 /** Điền form OLTC từ phần OLTC của biên bản. */
@@ -613,6 +617,7 @@ async function onOilBbtnFileSelected() {
   oilFillFromParsed(parsed);
   const hasOltc = oltcFillFromParsed(parsed);
   if (typeof syncOltcFromMain === "function") syncOltcFromMain();
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
   const h = parsed.header;
   const lbl = (fields) => fields.map((f) => (DGA.oilParamDef(f) || {}).label || f).join(", ");
   const parts = [];

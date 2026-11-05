@@ -139,6 +139,13 @@ Khi bạn cuộn màn hình xuống phía dưới để đọc kết quả phân
 
 ## 4. Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)
 
+Dưới ô **Loại thiết bị** có 2 tab con (cách tổ chức giống hệt tab **Lý-Hóa dầu**, app nhớ tab con dùng lần cuối):
+
+- **Nhập BBTN cũ** — kéo thả BBTN (PDF) để tự điền form và đối chiếu ở khung bên cạnh, nhập hàng loạt nhiều BBTN của cùng 1 thiết bị, và bảng **Số liệu đã lưu** ở cuối trang: các lần đo đã lưu của đúng Trạm/Thiết bị đang nhập ở form (có nút Xem/Sửa/Xóa như tab Lịch sử đo).
+- **Lập BBTN** — nhập tay số liệu mới, bấm **Phân tích & Lưu** rồi **Xuất BBTN (docx)** / báo cáo phân tích kỹ thuật ở khối kết quả.
+
+Hai tab con dùng **chung một form** — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con **Nhập BBTN cũ**.
+
 ### Bước 1 — Chọn loại thiết bị
 
 Ở ô **Loại thiết bị** trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — **hãy chọn đúng**.
@@ -297,6 +304,8 @@ Sau khi bấm **Phân tích & Lưu**, ở đầu khối **"2. Kết quả đánh
 Ba chỉ tiêu được đánh giá: **Độ ẩm dầu (ppm)**, **Tổn hao điện môi tgδ ở 90°C (%)**, **Điện áp chọc thủng (kV)**.
 
 Đầu tab, chọn **Loại thiết bị** — chỉ khối nhập liệu phù hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản ghi).
+
+Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: **Nhập BBTN cũ** (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá & Lưu cả biên bản", bảng **Số liệu đã lưu** của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và **Lập BBTN** (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Toàn bộ dữ liệu của mọi thiết bị xem ở tab **Lịch sử đo**.
 
 ### 9.1. Dầu MBA/Kháng dầu (dầu chính)
 

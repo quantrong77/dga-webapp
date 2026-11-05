@@ -66,6 +66,7 @@ function clearForm() {
   $("nameplateRawTextNote").classList.add("hidden");
   $("resultsPanel").classList.add("hidden");
   resetMeasurementEditState();
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 function resetMeasurementEditState() {
@@ -399,6 +400,7 @@ async function onBbtnFileSelected(e) {
     $("f_thietbi").value = data.thietbi;
     filled.push("Thiết bị");
   }
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
   if (data.loai) {
     $("f_loai").value = data.loai;
     refreshManufacturerOptions();
@@ -662,6 +664,7 @@ function onEditMeasurement(rec) {
   $("editingMeasurementNote").classList.remove("hidden");
   $("btnCancelEditMeasurement").classList.remove("hidden");
   $("btnAnalyze").textContent = "Cập nhật & Lưu";
+  if (typeof inputOpenRecord === "function") inputOpenRecord("nhap");
   document.querySelector('button.tab-btn[data-tab="nhap"]').click();
   $("f_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -727,6 +730,7 @@ function onViewMeasurement(rec) {
   if ($("btnCancelEditMeasurement")) $("btnCancelEditMeasurement").classList.add("hidden");
   if ($("btnAnalyze")) $("btnAnalyze").textContent = "Phân tích & Lưu";
 
+  if (typeof inputOpenRecord === "function") inputOpenRecord("nhap");
   const tabBtn = document.querySelector('button.tab-btn[data-tab="nhap"]');
   if (tabBtn) tabBtn.click();
 

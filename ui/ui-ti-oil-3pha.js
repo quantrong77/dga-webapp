@@ -149,6 +149,7 @@ function tio3ReadForm() {
 }
 
 function tio3FillForm(form) {
+  if (typeof _tioSavedSource !== "undefined") _tioSavedSource = "t3";
   Object.entries(TIO3_TEXT_FIELDS).forEach(([key, id]) => {
     if (form[key] !== undefined && form[key] !== null) $(id).value = form[key];
   });
@@ -159,6 +160,7 @@ function tio3FillForm(form) {
       $(`t3_${k}_${ph}`).value = v === null || v === undefined ? "" : v;
     });
   });
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 function tio3SetEquipmentType(type) {
@@ -350,6 +352,7 @@ function tio3ClearForm() {
   _tio3Printed = {};
   _tio3SoBbtn = "";
   _tio3AutoKetLuan = "";
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 function tio3RenderFileLabel() {
@@ -440,6 +443,7 @@ function openTio3FromRecord(rec) {
   _tio3SoBbtn = form.soBbtn;
   _tio3LoadedRecords = records;
   $("t3EditingNote").classList.remove("hidden");
+  if (typeof inputOpenRecord === "function") inputOpenRecord("dau");
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   tio3Render(form, tio3Evaluate(form));
   $("tio3Panel").scrollIntoView({ behavior: "smooth", block: "start" });

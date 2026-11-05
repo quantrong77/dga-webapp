@@ -39,6 +39,7 @@ function clearTioOilForm() {
   $("tioOilResultsPanel").classList.add("hidden");
   $("tioIec60422Panel").classList.add("hidden");
   resetTioOilTestEditState();
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 function resetTioOilTestEditState() {
@@ -77,6 +78,8 @@ function onEditTioOilTest(rec) {
   // đang để ở loại khác) trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
   $("dau_equipmenttype").value = rec.equipment_type || DGA.EQUIPMENT_TYPES.TI;
   toggleDauEquipmentType();
+  if (typeof _tioSavedSource !== "undefined") _tioSavedSource = "tio";
+  if (typeof inputOpenRecord === "function") inputOpenRecord("dau");
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   $("tio_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -263,8 +266,8 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
 async function refreshTioOilTestsUI() {
   const all = await Storage.listInstrumentOilTests();
   _allTioOilTests = all;
-  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
-  renderTioOilTestRows("tioOilHistoryTable", "tioOilHistoryEmpty", sorted);
+  if (typeof renderTioSavedTable === "function") renderTioSavedTable();
+  else renderTioOilTestRows("tioOilHistoryTable", "tioOilHistoryEmpty", all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date)));
   // Mirror ở tab "Lịch sử đo" (bảng con #lichsuInstrumentOilHistoryTable, xem
   // refreshLichSuInstrumentOilTable() ở ui-history.js) — cùng lý do/quy ước đã áp dụng
   // cho refreshOilTestsUI()/refreshOltcOilTestsUI() (ui-oil.js/ui-oltc.js).

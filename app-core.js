@@ -107,6 +107,7 @@ async function initApp() {
   setupSidebarCollapseToggle();
   setupCauHinhSubtabs();
   setupQuyTrinhSubtabs();
+  if (typeof setupInputSubtabs === "function") setupInputSubtabs();
   setupQuantriSubtabs();
   setupHandbookLightbox();
   setupMindmap();

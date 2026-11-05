@@ -65,6 +65,7 @@ function syncOltcFromMain() {
     $("o_ngay").value ? "lấy mẫu " + DGA.formatSampleDate($("o_ngay").value).split("-").reverse().join("/") : "chưa nhập ngày lấy mẫu",
   ].filter(Boolean);
   $("ot_inheritSummary").textContent = "Dùng theo dầu MBA chính: " + parts.join(" · ") + ".";
+  if (typeof renderOltcSavedTable === "function") renderOltcSavedTable();
 }
 
 function applyOltcInheritUI() {
@@ -99,6 +100,7 @@ function clearOltcOilForm() {
   renderOilParamTable(false, "ot");
   $("oltcOilResultsPanel").classList.add("hidden");
   resetOltcOilTestEditState();
+  if (typeof refreshSavedTables === "function") refreshSavedTables();
 }
 
 function resetOltcOilTestEditState() {
@@ -150,6 +152,7 @@ function onEditOltcOilTest(rec) {
   // Đảm bảo khối "Dầu MBA chính"/OLTC đang HIỆN trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
   $("dau_equipmenttype").value = DGA.EQUIPMENT_TYPES.MBA;
   toggleDauEquipmentType();
+  if (typeof inputOpenRecord === "function") inputOpenRecord("dau");
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   $("ot_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
@@ -351,8 +354,8 @@ function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
 async function refreshOltcOilTestsUI() {
   const all = await Storage.listOltcOilTests();
   _allOltcOilTests = all;
-  const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
-  renderOltcOilTestRows("oltcOilHistoryTable", "oltcOilHistoryEmpty", sorted);
+  if (typeof renderOltcSavedTable === "function") renderOltcSavedTable();
+  else renderOltcOilTestRows("oltcOilHistoryTable", "oltcOilHistoryEmpty", all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date)));
   if (typeof refreshLichSuOltcTable === "function") refreshLichSuOltcTable();
 
   refreshTrendDeviceOptions();

@@ -391,6 +391,48 @@ body.tabs-sidebar main { max-width: none; }
 }
 .quytrinh-subpanel.hidden { display: none; }
 
+/* Tab "Khí hòa tan" + "Lý-Hóa dầu" — 2 tab con "Nhập BBTN cũ" | "Lập BBTN" (ui/ui-input-subtabs.js), CÙNG KIỂU
+   segmented control với .quytrinh-subtabs ở trên (lớp riêng .input-* để không lẫn với setupQuyTrinhSubtabs()).
+   Form nhập liệu dùng chung; tab con chỉ ẩn/hiện các khối .mode-import / .mode-lap theo data-input-mode của
+   <section> — !important vì nhiều khối tự đổi display bằng inline style/JS (.hidden vẫn ẩn như cũ). */
+.input-subtabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 8px;
+}
+.input-subtab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  padding: 8px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.input-subtab-btn .icon-svg { width: 16px; height: 16px; }
+.input-subtab-btn:hover { color: var(--blue-900); }
+.input-subtab-btn.active {
+  background: var(--surface);
+  color: var(--blue-900);
+  box-shadow: var(--shadow-1);
+  font-weight: var(--font-bold);
+}
+.input-subtab-hint { margin: 0 0 14px; }
+[data-input-mode="lap"] .mode-import,
+[data-input-mode="import"] .mode-lap { display: none !important; }
+/* "Lập BBTN" không có khung đối chiếu: trả form về 1 cột kể cả khi khung còn mở ở "Nhập BBTN cũ" */
+[data-input-mode="lap"] .bbtn-preview-col { display: none !important; }
+[data-input-mode="lap"] .dga-input-split-layout.has-preview { display: block; }
+
 
 /* Tab "Quản trị" — phân mục con bằng segmented control: Người dùng | Cấu hình | Bản sao Supabase */
 .quantri-subtabs {

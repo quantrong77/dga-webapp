@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v24-oilpreview") {
+          if (k !== "dga-offline-v25-inputsubtabs") {
             caches.delete(k);
           }
         });
@@ -317,7 +317,7 @@
 
   <main>
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
-    <section id="tab-nhap" class="tab-panel">
+    <section id="tab-nhap" class="tab-panel" data-input-mode="import">
       <!-- Panel "Loại thiết bị" RIÊNG ở đầu tab, dạng ".toolbar" (tiêu đề trái/control
            phải) — TÁCH KHỎI vùng nhập liệu "Thông tin lần đo" bên dưới, cùng khuôn mẫu
            đã dùng ở tab "Dầu cách điện" (#dau_equipmenttype) để đồng nhất giao diện
@@ -338,6 +338,21 @@
           </select>
         </div>
       </div>
+
+      <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (ui/ui-input-subtabs.js): form nhập liệu là MỘT form
+           dùng chung; tab con chỉ ẩn/hiện các khối .mode-import (đọc BBTN, nhập hàng loạt, Số liệu đã lưu) và .mode-lap
+           (xuất BBTN docx) — CSS theo data-input-mode trên <section>, xem style-nav-layout.css. -->
+      <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu khí hòa tan">
+        <button type="button" class="input-subtab-btn active" data-input-mode="import" role="tab" aria-selected="true">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN cũ</button>
+        <button type="button" class="input-subtab-btn" data-input-mode="lap" role="tab" aria-selected="false">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-edit"></use></svg>Lập BBTN</button>
+      </div>
+      <p class="note input-subtab-hint mode-import">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
+        với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
+        đo đã lưu của thiết bị đang chọn ở form.</p>
+      <p class="note input-subtab-hint mode-lap">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+        theo mẫu.</p>
 
       <!-- Bố cục chia đôi (Split layout): cột trái là form nhập liệu, cột phải là khung hiển thị BBTN (PDF)
            để đối chiếu số liệu song song khi kéo thả/chọn file BBTN trước khi lưu và đánh giá -->
@@ -407,7 +422,7 @@
               <button type="button" class="btn ghost" id="btnViewBbtn" style="padding:3px 9px; font-size:11.5px;">Xem BBTN đã lưu</button>
               <button type="button" class="btn ghost" id="btnRemoveBbtn" style="padding:3px 9px; font-size:11.5px;" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
             </div>
-            <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+            <div class="mode-import" style="display:flex; justify-content:flex-end; margin-top:4px;">
               <button type="button" class="btn ghost hidden" id="btnToggleBbtnPreview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
                 <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
                 <span id="btnToggleBbtnPreviewText">Hiện BBTN đối chiếu</span>
@@ -586,7 +601,7 @@
            từng file một qua form phía trên. Dùng ĐÚNG Trạm/Thiết bị/Loại thiết bị/Ngăn
            OLTC/Nhà sản xuất đang chọn Ở FORM PHÍA TRÊN cho TẤT CẢ file trong đợt —
            chỉ Pha/Ngày lấy mẫu/hàm lượng khí đọc riêng từng file (xem bbtn-batch-import.js). -->
-      <div class="panel">
+      <div class="panel mode-import">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị</h2>
         <p class="note" style="margin-top:-6px;">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
           đang chọn ở form "1. Thông tin lần đo" phía trên cho TẤT CẢ file bên dưới — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
@@ -639,14 +654,14 @@
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>2. Kết quả đánh giá</h2>
           <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button type="button" class="btn ghost" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+            <button type="button" class="btn ghost mode-lap" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
             <!-- Chỉ hiện khi thiết bị có bất thường (overallStatus.level !== "normal") — xem
                  renderResults() ở ui-dga.js. Báo cáo dành riêng cho trường hợp cần phân tích/báo
                  cáo cấp trên, không cần xuất cho mọi lần đo bình thường. -->
             <button type="button" class="btn ghost hidden" id="btnExportTechReport"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất báo cáo phân tích kỹ thuật (docx)</button>
           </div>
         </div>
-        <p class="note" style="margin-top:2px;">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
+        <p class="note mode-lap" style="margin-top:2px;">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
           thí nghiệm (PTC3/BM.15) — tải về, MỞ TRONG WORD để bổ sung các mục mẫu chưa có sẵn dữ liệu (hãng SX, số chế tạo,
           điều kiện môi trường, chữ ký...) trước khi ban hành. Số liệu điền sẵn chỉ mang tính hỗ trợ, người dùng cần kiểm
           tra lại trước khi ký.</p>
@@ -752,6 +767,22 @@
 
         <div class="section-title">Khuyến cáo</div>
         <ul class="rec-list" id="r_recs"></ul>
+      </div>
+
+      <!-- Số liệu đã lưu của THIẾT BỊ ĐANG CHỌN ở form (Trạm + Thiết bị) — dùng chung cách vẽ dòng với bảng tab
+           "Lịch sử đo" (renderMeasurementRows(), ui-history.js); lọc/vẽ lại ở renderNhapSavedTable() (ui-input-subtabs.js). -->
+      <div class="panel mode-import" id="nhapSavedPanel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Khí hòa tan</h2>
+        <p class="note" id="nhapSavedCaption"></p>
+        <div class="table-scroll"><table>
+          <thead><tr>
+            <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
+            <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
+            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+          </tr></thead>
+          <tbody id="nhapSavedTable"></tbody>
+        </table></div>
+        <p class="note hidden" id="nhapSavedEmpty"></p>
       </div>
     </section>
 
@@ -2054,7 +2085,7 @@
     </section>
 
     <!-- ===================== TAB: DẦU CÁCH ĐIỆN (MBA/Kháng dầu) ===================== -->
-    <section id="tab-dau" class="tab-panel hidden">
+    <section id="tab-dau" class="tab-panel hidden" data-input-mode="import">
       <!-- Chọn "Loại thiết bị" giống tab "DGA" (#f_loai) — CHỈ ẩn/hiện đúng (các) khối
            nhập liệu liên quan để đỡ phải cuộn qua cả 3 khối (MBA+OLTC/TI-TU) cùng lúc,
            KHÔNG phải 1 trường dữ liệu của bản ghi. Lựa chọn được nhớ lại giữa các lần vào
@@ -2081,6 +2112,21 @@
           </select>
         </div>
       </div>
+
+      <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (ui/ui-input-subtabs.js): form nhập liệu là MỘT form
+           dùng chung; tab con chỉ ẩn/hiện các khối .mode-import (đọc BBTN, nhập hàng loạt, Số liệu đã lưu) và .mode-lap
+           (xuất BBTN docx) — CSS theo data-input-mode trên <section>, xem style-nav-layout.css. -->
+      <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu lý-hóa dầu">
+        <button type="button" class="input-subtab-btn active" data-input-mode="import" role="tab" aria-selected="true">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN cũ</button>
+        <button type="button" class="input-subtab-btn" data-input-mode="lap" role="tab" aria-selected="false">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-edit"></use></svg>Lập BBTN</button>
+      </div>
+      <p class="note input-subtab-hint mode-import">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
+        với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
+        thí nghiệm dầu đã lưu của thiết bị đang chọn ở form.</p>
+      <p class="note input-subtab-hint mode-lap">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+        theo mẫu.</p>
 
       <p class="note hidden" id="dauNoOilSupportNote">Tab "Lý-Hóa dầu" hiện chưa hỗ trợ
         nhập thí nghiệm dầu cho loại thiết bị này — vui lòng dùng tab "Khí hòa tan" để nhập kết
@@ -2109,7 +2155,7 @@
         <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
         <div style="margin:-4px 0 10px; display:flex; gap:10px; flex-wrap:wrap;">
           <button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button>
-          <button type="button" class="btn ghost hidden" id="btnToggleOilPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+          <button type="button" class="btn ghost hidden mode-import" id="btnToggleOilPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             <span id="btnToggleOilPreviewText">Hiện BBTN đối chiếu</span>
           </button>
@@ -2203,7 +2249,7 @@
       <div class="panel hidden" id="oilResultsPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
-          <button type="button" class="btn ghost" id="btnExportMbaOilBbtnMain" title="Tới khối Xuất Biên bản thí nghiệm"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+          <button type="button" class="btn ghost mode-lap" id="btnExportMbaOilBbtnMain" title="Tới khối Xuất Biên bản thí nghiệm"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
@@ -2230,7 +2276,7 @@
       <!-- Xuất Biên bản thí nghiệm dầu (thùng chính + OLTC) theo mẫu PTC3 — ui/ui-oil-bbtn-export.js,
            bbtn/mba-oil-bbtn-export.js, template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
            không lưu vào cơ sở dữ liệu. -->
-      <div class="panel hidden" id="oilBbtnExportPanel">
+      <div class="panel hidden mode-lap" id="oilBbtnExportPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất Biên bản thí nghiệm dầu cách điện (docx)</h2>
           <button type="button" class="btn primary" id="btnExportMbaOilBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
@@ -2261,8 +2307,9 @@
         </div>
       </div>
 
-      <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu đã lưu</h2>
+      <div class="panel mode-import">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu MBA chính</h2>
+        <p class="note" id="oilSavedCaption"></p>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
@@ -2373,7 +2420,7 @@
       <div class="panel hidden" id="oltcOilResultsPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
-          <button type="button" class="btn ghost" id="btnExportMbaOilBbtnOltc"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+          <button type="button" class="btn ghost mode-lap" id="btnExportMbaOilBbtnOltc"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
@@ -2384,8 +2431,9 @@
         </table></div>
       </div>
 
-      <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu OLTC đã lưu</h2>
+      <div class="panel mode-import">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu OLTC</h2>
+        <p class="note" id="oltcSavedCaption"></p>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
@@ -2443,7 +2491,7 @@
           <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN 3 pha vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
           <input id="t3_file" type="file" accept="application/pdf,.pdf" />
         </div>
-        <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+        <div class="mode-import" style="display:flex; justify-content:flex-end; margin-top:4px;">
           <button type="button" class="btn ghost hidden" id="btnToggleT3Preview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
             <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
@@ -2492,7 +2540,7 @@
         <p class="note hidden" id="t3EditingNote" style="color:var(--warn); font-weight:600;">Đang mở biên bản đã lưu — bấm "Đánh giá &amp; Lưu 3 pha" để cập nhật đúng các bản ghi này.</p>
         <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
           <button type="button" class="btn primary" id="btnT3Analyze">Đánh giá &amp; Lưu 3 pha</button>
-          <button type="button" class="btn ghost" id="btnT3Export"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+          <button type="button" class="btn ghost mode-lap" id="btnT3Export"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
           <button type="button" class="btn ghost" id="btnT3Clear">Xóa form</button>
         </div>
         <div class="hidden" id="t3ResultWrap" style="margin-top:18px;">
@@ -2637,8 +2685,9 @@
         </table></div>
       </div>
 
-      <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử thí nghiệm dầu TI/TU đã lưu</h2>
+      <div class="panel mode-import">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu TI/TU</h2>
+        <p class="note" id="tioSavedCaption"></p>
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
@@ -2890,6 +2939,12 @@
         <details class="mm-node">
           <summary>4. Nhập và đánh giá một lần đo khí hòa tan (tab Khí hòa tan)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
+          <p>Dưới ô <strong>Loại thiết bị</strong> có 2 tab con (cách tổ chức giống hệt tab <strong>Lý-Hóa dầu</strong>, app nhớ tab con dùng lần cuối):</p>
+          <ul class="rec-list">
+          <li><strong>Nhập BBTN cũ</strong> — kéo thả BBTN (PDF) để tự điền form và đối chiếu ở khung bên cạnh, nhập hàng loạt nhiều BBTN của cùng 1 thiết bị, và bảng <strong>Số liệu đã lưu</strong> ở cuối trang: các lần đo đã lưu của đúng Trạm/Thiết bị đang nhập ở form (có nút Xem/Sửa/Xóa như tab Lịch sử đo).</li>
+          <li><strong>Lập BBTN</strong> — nhập tay số liệu mới, bấm <strong>Phân tích &amp; Lưu</strong> rồi <strong>Xuất BBTN (docx)</strong> / báo cáo phân tích kỹ thuật ở khối kết quả.</li>
+          </ul>
+          <p>Hai tab con dùng <strong>chung một form</strong> — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con <strong>Nhập BBTN cũ</strong>.</p>
           <h3>Bước 1 — Chọn loại thiết bị</h3>
           <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — <strong>hãy chọn đúng</strong>.</p>
           <h3>Bước 2 — Điền "Thông tin lần đo"</h3>
@@ -3133,6 +3188,7 @@
           <div class="sm-body">
           <p>Ba chỉ tiêu được đánh giá: <strong>Độ ẩm dầu (ppm)</strong>, <strong>Tổn hao điện môi tgδ ở 90°C (%)</strong>, <strong>Điện áp chọc thủng (kV)</strong>.</p>
           <p>Đầu tab, chọn <strong>Loại thiết bị</strong> — chỉ khối nhập liệu phù hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản ghi).</p>
+          <p>Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: <strong>Nhập BBTN cũ</strong> (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá &amp; Lưu cả biên bản", bảng <strong>Số liệu đã lưu</strong> của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và <strong>Lập BBTN</strong> (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Toàn bộ dữ liệu của mọi thiết bị xem ở tab <strong>Lịch sử đo</strong>.</p>
           <h3>9.1. Dầu MBA/Kháng dầu (dầu chính)</h3>
           <p>Điền: <strong>Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú</strong>, rồi nhập 3 kết quả và bấm <strong>Đánh giá &amp; Lưu</strong>.</p>
           <ul class="rec-list">
@@ -3872,6 +3928,7 @@
   <script src="ui/ui-ti-oil.js"></script>
   <script src="ui/ui-ti-oil-3pha.js"></script>
   <script src="ui/ui-history.js"></script>
+  <script src="ui/ui-input-subtabs.js"></script>
   <script src="ui/ui-trend.js"></script>
   <script src="ui/ui-alerts.js"></script>
   <script src="ui/ui-feedback.js"></script>

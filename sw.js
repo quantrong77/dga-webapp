@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v24-oilpreview";
+const CACHE_NAME = "dga-offline-v25-inputsubtabs";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -67,6 +67,7 @@ const PRECACHE_ASSETS = [
   "./ui/ui-ti-oil.js",
   "./ui/ui-ti-oil-3pha.js",
   "./ui/ui-history.js",
+  "./ui/ui-input-subtabs.js",
   "./ui/ui-trend.js",
   "./ui/ui-alerts.js",
   "./ui/ui-feedback.js",

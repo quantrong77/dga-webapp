@@ -36,11 +36,22 @@ async function refreshHistoryUI() {
   );
   filtered.sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
 
-  const tbody = $("historyTable");
-  tbody.innerHTML = "";
   $("historyEmpty").classList.toggle("hidden", filtered.length > 0);
+  renderMeasurementRows($("historyTable"), filtered);
+  if (typeof renderNhapSavedTable === "function") renderNhapSavedTable();
 
-  filtered.forEach((rec) => {
+  refreshCompareDeviceOptions();
+  refreshTrendDeviceOptions();
+  refreshAlertsUI();
+}
+
+/** Vẽ các dòng lần đo khí hòa tan (đã lọc + sắp xếp) vào tbody — DÙNG CHUNG cho bảng tab "Lịch sử đo"
+ *  (#historyTable) và bảng "Số liệu đã lưu" của thiết bị đang chọn ở tab Khí hòa tan (#nhapSavedTable,
+ *  ui-input-subtabs.js) để 2 nơi luôn cùng 1 cách tính Kết luận/Chẩn đoán và cùng các nút Xem/Sửa/Xóa. */
+function renderMeasurementRows(tbody, records) {
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  records.forEach((rec) => {
     const gases = recordGases(rec);
     const mbaSubtype = rec.mba_subtype ?? rec.mbaSubtype ?? null;
     const standard = DGA.resolveStandard({ equipmentType: rec.equipment_type, manufacturer: rec.manufacturer, mbaSubtype }, toManufacturerStandardsForLogic(_allStandards));
@@ -122,10 +133,6 @@ async function refreshHistoryUI() {
     }
     tbody.appendChild(tr);
   });
-
-  refreshCompareDeviceOptions();
-  refreshTrendDeviceOptions();
-  refreshAlertsUI();
 }
 
 // ---------------------------------------------------------------------
