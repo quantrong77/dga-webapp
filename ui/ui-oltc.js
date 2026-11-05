@@ -163,6 +163,7 @@ async function onAnalyzeOltcOil() {
   const stds = toOilStandardsForLogic(_allStandards);
   const results = records.map((rec) => ({ col: rec.phase || "X", rec, qd: DGA.evaluateOltcRecord(rec, stds, _allOltcOilTests || []) }));
   renderOltcOilResults(results);
+  if (typeof oilBbtnExportSetOltc === "function") oilBbtnExportSetOltc(header, results);
 
   if (!canSaveEntry()) return;
   if (overwrite.length) {

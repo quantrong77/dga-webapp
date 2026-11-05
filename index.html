@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v22-no66kv") {
+          if (k !== "dga-offline-v23-oilbbtnexport") {
             caches.delete(k);
           }
         });
@@ -2193,7 +2193,10 @@
       </div>
 
       <div class="panel hidden" id="oilResultsPanel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
+          <button type="button" class="btn ghost" id="btnExportMbaOilBbtnMain" title="Tới khối Xuất Biên bản thí nghiệm"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+        </div>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
         </div>
@@ -2214,6 +2217,40 @@
           <thead><tr><th>Hạng mục</th><th>Giá trị</th><th>Giới hạn (Tốt/Kém)</th><th>Đơn vị</th><th>Đánh giá</th><th>Căn cứ</th></tr></thead>
           <tbody id="o_iec_resultTable"></tbody>
         </table></div>
+      </div>
+
+      <!-- Xuất Biên bản thí nghiệm dầu (thùng chính + OLTC) theo mẫu PTC3 — ui/ui-oil-bbtn-export.js,
+           bbtn/mba-oil-bbtn-export.js, template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
+           không lưu vào cơ sở dữ liệu. -->
+      <div class="panel hidden" id="oilBbtnExportPanel">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất Biên bản thí nghiệm dầu cách điện (docx)</h2>
+          <button type="button" class="btn primary" id="btnExportMbaOilBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+        </div>
+        <p class="note" id="ob_scope" style="margin-top:6px;"></p>
+        <p class="note">Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
+          dầu thùng chính và dầu OLTC cùng thiết bị, cùng ngày lấy mẫu chung 1 biên bản. Chỉ các chỉ tiêu đã nhập được đưa vào.
+          Các ô dưới đây chỉ dùng cho biên bản (không lưu); để trống thì biên bản để trống. Mở file trong Word để bổ sung
+          số biên bản, thiết bị thí nghiệm và ký trước khi ban hành.</p>
+        <div class="grid">
+          <label class="field field-wide">Vị trí lấy mẫu<input id="ob_vitrilaymau" type="text" placeholder="VD: Van thùng chính, van OLTC pha A,B,C máy biến áp AT2" /></label>
+          <label class="field">Hãng sản xuất<input id="ob_hangsx" type="text" placeholder="(không bắt buộc)" /></label>
+          <label class="field">Năm sản xuất<input id="ob_namsx" type="text" placeholder="VD: 2019" /></label>
+          <label class="field">Điện áp định mức<input id="ob_dienapdm" type="text" placeholder="VD: (225/√3±8x1,25%)/115/√3/23 (kV)" /></label>
+          <label class="field">Công suất<input id="ob_congsuat" type="text" placeholder="VD: 150/200/250 (MVA)" /></label>
+          <label class="field">Số chế tạo<input id="ob_sochetao" type="text" placeholder="(không bắt buộc)" /></label>
+          <label class="field">Năm vận hành<input id="ob_namvanhanh" type="text" placeholder="VD: 2019" /></label>
+          <label class="field">Loại dầu<input id="ob_loaidau" type="text" placeholder="VD: Nynas Nytro 10XN" /></label>
+          <label class="field">Lý do thí nghiệm<input id="ob_lydo" type="text" placeholder="VD: Định kỳ 1 năm" /></label>
+          <label class="field">Nhiệt độ môi trường (°C)<input id="ob_nhietdo" type="number" step="0.1" placeholder="VD: 33" /></label>
+          <label class="field">Độ ẩm môi trường (%)<input id="ob_doam" type="number" step="0.1" min="0" max="100" placeholder="VD: 68" /></label>
+          <label class="field field-wide">
+            <span class="field-label-row">Kết luận
+              <button type="button" class="btn ghost" id="btnOilBbtnAutoConclusion" style="padding:2px 8px; font-size:11.5px; margin-left:8px;">Viết lại tự động</button>
+            </span>
+            <textarea id="ob_ketluan" rows="2" placeholder="App tự viết theo kết quả đánh giá — sửa được"></textarea>
+          </label>
+        </div>
       </div>
 
       <div class="panel">
@@ -2319,7 +2356,10 @@
       </div>
 
       <div class="panel hidden" id="oltcOilResultsPanel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
+          <button type="button" class="btn ghost" id="btnExportMbaOilBbtnOltc"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
+        </div>
         <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
         </div>
@@ -3773,6 +3813,7 @@
   <script src="ui/ui-dga.js"></script>
   <script src="bbtn/bbtn-export.js"></script>
   <script src="bbtn/mba-oil-bbtn.js"></script>
+  <script src="bbtn/mba-oil-bbtn-export.js"></script>
   <script src="bbtn/oil-bbtn.js"></script>
   <script src="bbtn/tech-report-export.js"></script>
   <script src="ui/ui-batch-import.js"></script>
@@ -3781,6 +3822,7 @@
   <script src="ui/ui-admin.js"></script>
   <script src="ui/ui-oil.js"></script>
   <script src="ui/ui-oltc.js"></script>
+  <script src="ui/ui-oil-bbtn-export.js"></script>
   <script src="ui/ui-ti-oil.js"></script>
   <script src="ui/ui-ti-oil-3pha.js"></script>
   <script src="ui/ui-history.js"></script>

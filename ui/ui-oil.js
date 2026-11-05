@@ -294,6 +294,7 @@ async function onAnalyzeOil() {
   }));
   renderOilResults(results);
   renderOilIec60422Results(results);
+  if (typeof oilBbtnExportSetMain === "function") oilBbtnExportSetMain(header, results);
 
   if (!canSaveEntry()) return;
   if (overwrite.length) {
@@ -602,6 +603,7 @@ async function onOilBbtnFileSelected() {
   // Biên bản mới = nhập mới (bỏ liên kết với bản ghi đang sửa nếu có); 1 file + 1 nhóm cho cả biên bản
   resetOilTestEditState();
   _oilBbtnImport = { file, groupId: Storage.newId(), attachment: null };
+  if (typeof _oilBbtnLastHeader !== "undefined") _oilBbtnLastHeader = parsed.header || null;
   oilFillFromParsed(parsed);
   const hasOltc = oltcFillFromParsed(parsed);
   const h = parsed.header;

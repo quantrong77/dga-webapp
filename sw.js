@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v22-no66kv";
+const CACHE_NAME = "dga-offline-v23-oilbbtnexport";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -63,6 +63,7 @@ const PRECACHE_ASSETS = [
   "./ui/ui-admin.js",
   "./ui/ui-oil.js",
   "./ui/ui-oltc.js",
+  "./ui/ui-oil-bbtn-export.js",
   "./ui/ui-ti-oil.js",
   "./ui/ui-ti-oil-3pha.js",
   "./ui/ui-history.js",
@@ -72,6 +73,8 @@ const PRECACHE_ASSETS = [
   "./bbtn/bbtn-export.js",
   "./bbtn/mba-oil-bbtn.js",
   "./bbtn/oil-bbtn.js",
+  "./bbtn/mba-oil-bbtn-export.js",
+  "./template/template-bbtn-ly-hoa-dau.docx",
   "./bbtn/tech-report-export.js",
   "./ui/ui-batch-import.js",
   "./vendor/docxtemplater/pizzip.min.js",
