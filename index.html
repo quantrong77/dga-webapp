@@ -35,6 +35,7 @@
   <link rel="stylesheet" href="css/style-tabs-secondary.css" />
   <link rel="stylesheet" href="css/style-tab-regulation-config.css" />
   <link rel="stylesheet" href="css/style-dieu54-charts.css" />
+  <link rel="stylesheet" href="css/style-dga-workflow.css" />
   <script src="vendor/supabase/supabase.js"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
   <script src="vendor/chartjs/chart.umd.min.js"></script>
@@ -56,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v11-dieu54") {
+          if (k !== "dga-offline-v12-workflow") {
             caches.delete(k);
           }
         });
@@ -1473,13 +1474,28 @@
 
       <div class="quytrinh-subpanel hidden" id="quytrinh-danhgia" role="tabpanel">
       <div class="panel">
-        <h2>Quy trình nghiệp vụ đánh giá DGA</h2>
-        <p class="note">Chuyển thể từ lưu đồ đánh giá kết quả DGA (Hình 1 — Flow chart, mục 9, IEC 60599:2022) kết
-          hợp nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/QĐ-EVNNPT. Đây chính là thuật toán mà công cụ này áp
-          dụng để tính khối "Trạng thái tổng thể" hiển thị đầu mục 2 "Kết quả đánh giá" ở tab "Khí hòa tan" cho mỗi lần đo.
-          Thuật toán CHỈ mang tính hỗ trợ tự động — KHÔNG thay thế đánh giá tổng thể của kỹ sư có thẩm quyền theo
-          Điều 3 QĐ1901 (so với pha khác/thiết bị cùng loại/giá trị xuất xưởng/hướng dẫn nhà sản xuất/diễn biến vận
-          hành thực tế — những yếu tố phần mềm không có đủ dữ liệu để tự động hóa).</p>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flow"></use></svg>Quy trình nghiệp vụ đánh giá DGA</h2>
+        <p class="note">Số hóa lưu đồ đánh giá kết quả phân tích khí hòa tan của <b>Điều 54 QĐ1901/QĐ-EVNNPT</b> (mục 3:
+          khoảng giá trị điển hình Bảng 64 → tốc độ tăng Bảng 65 → kiểm tra nhiễm khí OLTC → tỷ số khí Bảng 66, Tam giác
+          Duval Bảng 67) kết hợp lưu đồ <b>Hình 1 (mục 9) IEC 60599:2022</b> (mức ALERT/ALARM, "đổi loại sự cố"), áp dụng
+          cho MBA có điện áp từ 110 kV trở lên. Đây chính là thuật toán công cụ dùng để tính khối "Trạng thái tổng thể"
+          ở đầu mục "Kết quả đánh giá" (tab "Khí hòa tan") và để rà soát tự động ở tab "Cảnh báo".</p>
+        <p class="note">Thuật toán CHỈ mang tính hỗ trợ — KHÔNG thay thế đánh giá tổng thể của kỹ sư có thẩm quyền (Điều 3
+          QĐ1901). Trước khi quyết định có cho MBA vận hành tiếp hay không, Điều 54 yêu cầu xem xét thêm: khả năng sinh
+          khí do nguyên nhân khác ngoài khiếm khuyết trong MBA (hư hỏng làm mát, hỏng hệ thống bảo vệ dầu…), đặc thù vận
+          hành của MBA và khuyến cáo của nhà sản xuất.</p>
+        <div class="wf-wrap">
+          <svg id="dgaWorkflowSvg" class="wf-svg" viewBox="0 0 1100 1400" role="img"
+            aria-label="Lưu đồ quy trình nghiệp vụ đánh giá DGA theo Điều 54 QĐ1901 và IEC 60599"></svg>
+        </div>
+        <div class="wf-legend" aria-hidden="true">
+          <span class="lg-process">Bước xử lý</span>
+          <span class="lg-decision">Điều kiện rẽ nhánh</span>
+          <span class="lg-note">Kiểm tra / xử lý phụ (Điều 54)</span>
+          <span class="lg-normal">Bình thường</span>
+          <span class="lg-alert">Cảnh báo (ALERT)</span>
+          <span class="lg-alarm">Báo động (ALARM)</span>
+        </div>
       </div>
 
       <div class="panel">
@@ -1487,81 +1503,121 @@
         <div class="process-flow">
           <div class="process-step">
             <div class="step-num">1</div>
-            <h3>Nhập &amp; lưu kết quả đo</h3>
-            <p>Nhập nồng độ 7 khí hòa tan (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) cho 1 lần đo tại 1 Trạm/Thiết bị/Pha
-              cụ thể.</p>
-            <p class="maps-to">Thực hiện ở: <strong>Tab "Khí hòa tan"</strong>, mục "Thông tin lần đo".</p>
+            <h3>Nhập &amp; kiểm tra số liệu</h3>
+            <p>Nhập nồng độ 7 khí hòa tan (H2, CH4, C2H6, C2H4, C2H2, CO, CO2, ppm) và N2, O2 nếu có, cho 1 lần đo tại 1
+              Trạm/Thiết bị/Pha. Khí ghi "KPH" hoặc để trống được hiểu là <strong>không phát hiện (KPH)</strong>: lưu
+              0 ppm và tỷ số khí liên quan không có hiệu lực chẩn đoán (Điều 54; IEC 60599 mục 6.1). Loại trừ trước các
+              lỗi lấy mẫu/đo lường rõ ràng (IEC 60599 mục 9).</p>
+            <p class="maps-to">Thực hiện ở: <strong>Tab "Khí hòa tan"</strong> — nhập tay, hoặc đọc từ file BBTN PDF.</p>
           </div>
           <div class="process-step">
             <div class="step-num">2</div>
-            <h3>So sánh với giá trị điển hình &amp; lần đo liền trước</h3>
-            <p>Hệ thống tự đối chiếu từng khí với "giá trị điển hình" theo đúng loại thiết bị (Bảng 64 QĐ1901/Điều
-              54, hoặc Annex A IEC 60599:2022), đồng thời tự tìm lần đo gần nhất liền trước (cùng Trạm + Thiết bị +
-              Pha) để tính tốc độ tăng khí (ppm/năm) và đối chiếu Bảng 65 QĐ1901.</p>
-            <p class="maps-to">Thực hiện tự động khi bấm <strong>"Phân tích &amp; Lưu"</strong>; xem lại các lần đo
-              trước ở <strong>Tab "Lịch sử đo"</strong>.</p>
+            <h3>Xác định tiêu chuẩn áp dụng</h3>
+            <p>Điều 54: đánh giá theo hướng dẫn của nhà sản xuất; không có thì theo IEC 60599 (hoặc IEEE C57.104).
+              Công cụ dùng tiêu chuẩn NSX nếu thiết bị đã gán NSX có cấu hình đủ ngưỡng; ngược lại lấy <strong>chặt hơn</strong>
+              giữa QĐ1901 và IEC 60599:2022 Annex A theo loại thiết bị (MBA: Bảng 64 / Table A.2 theo kiểu OLTC;
+              TI/TU: Bảng 12 = Table A.8; sứ xuyên: Table A.11). Ngưỡng PD (CH4/H2) cũng theo loại: 0,1 (MBA), 0,2
+              (TI/TU, Annex A.4.3), 0,07 (sứ xuyên, Annex A.5.3).</p>
+            <p class="maps-to">Cấu hình NSX ở <strong>Tab "Cấu hình" — mục "Tiêu chuẩn"</strong>.</p>
           </div>
           <div class="process-step branch">
             <div class="step-num">3</div>
-            <h3>Rẽ nhánh: có bất thường hay không?</h3>
-            <p><strong>Tất cả khí dưới giá trị điển hình và tốc độ tăng bình thường</strong> → kết luận thiết bị
-              đang ở trạng thái điển hình, chuyển thẳng tới Bước 6 (Bình thường) — không bắt buộc tính tỷ số khí.</p>
-            <p><strong>Có ít nhất 1 khí vượt giá trị điển hình, hoặc tốc độ tăng bất thường</strong> → bắt buộc tính
-              tỷ số khí ở Bước 4 (Điều 54 QĐ1901/mục 6.1(c) IEC 60599).</p>
+            <h3>Rẽ nhánh: so với khoảng giá trị hàm lượng khí điển hình (Bảng 64)</h3>
+            <p><strong>Tất cả khí trong khoảng điển hình</strong> → không có dấu hiệu bất thường; nếu tốc độ tăng cũng
+              trong khoảng điển hình → <strong>Bình thường</strong>, theo dõi định kỳ. Nếu khí trong khoảng điển hình
+              nhưng tốc độ tăng cao hơn Bảng 65 → tăng cường phân tích để theo dõi xu hướng (dấu hiệu sớm của lỗi tiềm ẩn)
+              — mức <strong>Cảnh báo</strong>.</p>
+            <p><strong>Hàm lượng khí thấp hơn khoảng điển hình</strong> → kiểm tra lỗi lấy mẫu, đo lường hoặc do xử lý
+              dầu gần đây, tiếp tục theo dõi định kỳ.</p>
+            <p><strong>Có khí vượt khỏi khoảng điển hình</strong> → sang Bước 4.</p>
           </div>
-          <div class="process-step">
+          <div class="process-step branch">
             <div class="step-num">4</div>
-            <h3>Tính tỷ số khí &amp; tra mã loại sự cố</h3>
-            <p>Tính 3 tỷ số cơ bản (C2H2/C2H4, CH4/H2, C2H4/C2H6), tra mã loại sự cố theo Bảng 66 QĐ1901/Table 1
-              IEC 60599 (PD, D1, D2, T1, T2, T3); đối chiếu độc lập bằng Tam giác Duval 1 (Annex B) để tăng độ tin
-              cậy chẩn đoán.</p>
-            <p class="maps-to">Hiển thị ở mục "Ba tỷ số khí cơ bản" và "Tam giác Duval 1" trong kết quả phân tích.</p>
+            <h3>Rẽ nhánh: tốc độ tăng hàm lượng khí (Bảng 65)</h3>
+            <p>Tự tìm lần đo liền trước (cùng Trạm + Thiết bị + Pha, ngày lấy mẫu sớm hơn) để tính tốc độ tăng (ppm/năm)
+              và so với khoảng tốc độ tăng điển hình Bảng 65: <strong>trong khoảng</strong> → tiếp tục theo dõi định kỳ;
+              <strong>thấp hơn</strong> → kiểm tra lỗi đo lường hoặc do xử lý dầu gần đây; <strong>cao hơn</strong> →
+              sang Bước 5. Khi tốc độ khí cháy tăng đột ngột: tăng tần suất thí nghiệm khí hòa tan.</p>
+            <p class="note">Lưu ý: theo IEC 60599 (mục 9, Hình 1), khí vượt giá trị điển hình đã là điều kiện ALERT — nên
+              công cụ vẫn hiển thị mức <strong>Cảnh báo</strong> khi có khí vượt Bảng 64 dù tốc độ tăng trong khoảng điển
+              hình (Điều 54: tiếp tục theo dõi định kỳ); mã khiếm khuyết (Bước 6) vẫn được tra để tham khảo.</p>
+            <p class="maps-to">Bảng "Tốc độ sinh khí" trong kết quả phân tích; xem lại các lần đo ở
+              <strong>Tab "Lịch sử đo"</strong>.</p>
           </div>
           <div class="process-step">
             <div class="step-num">5</div>
-            <h3>So với ngưỡng tuyệt đối (Đạt/Không đạt) &amp; ngưỡng loại bỏ</h3>
-            <p>Đối chiếu từng khí với ngưỡng tuyệt đối chính thức (QĐ1901 Bảng 12/64, hoặc tiêu chuẩn nhà sản xuất
-              nếu có cấu hình ở tab "Cấu hình" — mục "Tiêu chuẩn") — đây chính là "giá trị báo động" (alarm values) của lưu đồ gốc
-              IEC 60599. Nếu nhà sản xuất có cấu hình thêm "ngưỡng loại bỏ" (condemning limit), đây là mức nghiêm
-              trọng hơn "Không đạt" thông thường.</p>
+            <h3>Kiểm tra nhiễm khí từ OLTC (MBA có bộ chuyển nấc dưới tải)</h3>
+            <p>Tính tỷ lệ C2H2/H2: nếu <strong>C2H2/H2 &gt; 2 – 3</strong>, nghi ngờ nhiễm khí từ OLTC → lấy mẫu dầu khoang
+              OLTC, phân tích khí hòa tan so sánh với khoang dầu chính, trừ khí nền từ OLTC để tính lại hàm lượng khí trong
+              khoang dầu chính. Hàm lượng một/vài khí ở 2 khoang như nhau chứng tỏ có dịch chuyển khí → kiểm tra tiếp điểm
+              chuyển nấc và độ kín giữa 2 khoang.</p>
+            <p class="maps-to">Khuyến cáo tự động trong mục "Khuyến cáo"; thí nghiệm dầu OLTC ở <strong>Tab "Lý-Hóa dầu"</strong>.</p>
+          </div>
+          <div class="process-step">
+            <div class="step-num">6</div>
+            <h3>Xác định tính chất khiếm khuyết</h3>
+            <p>Tính 3 tỷ số cơ bản C2H2/C2H4, CH4/H2, C2H4/C2H6 và tra mã theo <strong>Bảng 66</strong> (= Table 1 IEC 60599:
+              PD, D1, D2, T1, T2, T3). Tỷ số không nằm trong giới hạn Bảng 66 → dùng <strong>bảng đơn giản PD / D / T</strong>
+              để xác định lỗi sơ bộ (PD: CH4/H2 &lt; 0,2; D: C2H2/C2H4 &gt; 0,2; T: C2H2/C2H4 &lt; 0,2). Đối chiếu độc lập bằng
+              <strong>Tam giác Duval 1</strong> (Bảng 67) và Biểu đồ 1, 2 ở mục dưới. Sứ xuyên dùng Table A.10 (Annex A.5.3).
+              Tỷ số chỉ có giá trị chẩn đoán chính thức khi có ít nhất 1 khí vượt khoảng điển hình (IEC 60599 mục 6.1);
+              ngoài trường hợp đó chỉ để tham khảo.</p>
+            <p class="maps-to">Mục "Ba tỷ số khí cơ bản" và "Tam giác Duval 1" trong kết quả phân tích.</p>
+          </div>
+          <div class="process-step">
+            <div class="step-num">7</div>
+            <h3>Đánh giá bổ sung</h3>
+            <p><strong>CO2/CO</strong> &lt; 3 và CO &gt; 1000 ppm: nghi giấy cách điện bị carbon hóa (xác nhận bằng phân tích
+              furanic/độ trùng hợp giấy); CO2/CO &gt; 10 và CO2 &gt; 10000 ppm: quá nhiệt nhẹ (&lt; 160 °C) hoặc oxy hóa dầu.
+              <strong>O2/N2</strong> &lt; 0,3: tiêu thụ oxy quá mức do oxy hóa dầu/lão hóa giấy; ~0,5: bình thường ở thiết bị
+              tiếp xúc không khí. <strong>Bảng 63</strong> (tổng hàm lượng khí hòa tan &lt; 1,0% cấp 110–220 kV, &lt; 0,5%
+              cấp 500 kV) chỉ áp dụng cho dầu mới/sau sửa chữa có thay dầu hoặc lọc dầu. Đối chiếu Bảng 68 (lỗi điển hình)
+              và Bảng 69 (khí chính theo dạng hư hỏng).</p>
           </div>
           <div class="process-step branch">
-            <div class="step-num">6</div>
-            <h3>Rẽ nhánh: xác định mức độ báo động</h3>
-            <p>Ứng dụng tổng hợp toàn bộ kết quả ở các bước trên thành 1 trạng thái tổng thể duy nhất, hiển thị
-              ngay đầu mục "Kết quả đánh giá":</p>
+            <div class="step-num">8</div>
+            <h3>So với ngưỡng tuyệt đối, ngưỡng loại bỏ &amp; lần đo trước → xác định mức</h3>
+            <p>Đối chiếu từng khí với ngưỡng Đạt/Không đạt của tiêu chuẩn áp dụng ở Bước 2 (tương ứng "alarm values" của
+              lưu đồ IEC 60599) và ngưỡng loại bỏ (condemning) nếu NSX có cấu hình; so mã khiếm khuyết với lần đo liền trước
+              ("change in fault type" — IEC 60599 Hình 1). Lưu ý: với MBA, QĐ1901 chỉ có khoảng giá trị điển hình (Bảng 64),
+              không có bảng ngưỡng báo động riêng — công cụ lấy cận trên Bảng 64 hoặc Table A.2 (chặt hơn) làm ngưỡng
+              Đạt/Không đạt mặc định. Tổng hợp thành 1 trạng thái duy nhất:</p>
           </div>
         </div>
 
         <div class="status-legend">
           <div class="status-legend-card normal">
             <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-check-circle"></use></svg>BÌNH THƯỜNG</div>
-            <p>Tất cả khí dưới giá trị điển hình, tốc độ tăng khí bình thường.</p>
-            <p class="action">→ Tiếp tục giám sát định kỳ theo chu kỳ quy định (Điều 3, 7 QĐ1901).</p>
+            <p>Tất cả khí trong (hoặc dưới) khoảng giá trị điển hình, tốc độ tăng khí không vượt Bảng 65.</p>
+            <p class="action">→ Tiếp tục theo dõi định kỳ (Điều 54). Nếu khí/tốc độ thấp bất thường: kiểm tra lỗi lấy mẫu,
+              đo lường, xử lý dầu.</p>
           </div>
           <div class="status-legend-card alert">
             <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>CẢNH BÁO (ALERT)</div>
-            <p>Có khí vượt giá trị điển hình hoặc tốc độ tăng bất thường, nhưng CHƯA vượt ngưỡng tuyệt đối/loại bỏ,
-              và loại sự cố (nếu xác định được) chưa đổi khác so với lần đo trước.</p>
-            <p class="action">→ Tăng tần suất lấy mẫu, cân nhắc giám sát trực tuyến.</p>
+            <p>Có khí vượt khoảng điển hình, hoặc tốc độ tăng vượt Bảng 65, nhưng CHƯA vượt ngưỡng tuyệt đối/loại bỏ và
+              loại sự cố (nếu xác định được) chưa đổi khác so với lần đo trước.</p>
+            <p class="action">→ Tăng tần suất thí nghiệm khí hòa tan, theo dõi xu hướng, đề xuất phép thử chuyên sâu hoặc
+              xin ý kiến nhà sản xuất (Điều 54).</p>
           </div>
           <div class="status-legend-card alarm">
             <div class="status-badge"><svg class="status-icon" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>BÁO ĐỘNG (ALARM)</div>
             <p>Có khí vượt ngưỡng tuyệt đối ("Không đạt") hoặc vượt ngưỡng loại bỏ nhà sản xuất, hoặc loại sự cố
-              (Bảng 66/A.10) thay đổi so với lần đo liền trước.</p>
-            <p class="action">→ Hành động ngay: kiểm tra hiện trường, cân nhắc giám sát trực tuyến/sửa chữa, báo cáo
-              cấp có thẩm quyền (Điều 6 QĐ1901).</p>
+              (Bảng 66/A.10) đổi khác so với lần đo liền trước.</p>
+            <p class="action">→ Hành động ngay: lấy mẫu xác nhận, kiểm tra hiện trường; nếu có nguy cơ sự cố đề xuất dừng
+              vận hành để tìm nguyên nhân (Điều 54); báo cáo cấp có thẩm quyền (Điều 6 QĐ1901).</p>
           </div>
         </div>
 
         <div class="process-flow" style="margin-top:4px;">
           <div class="process-step">
-            <div class="step-num">7</div>
-            <h3>Lưu dữ liệu &amp; theo dõi xu hướng</h3>
-            <p>Mọi kết quả đều được lưu vào lịch sử kèm vết người nhập/sửa, làm dữ liệu nền cho lần đo kế tiếp (quay
-              lại Bước 2) và cho việc theo dõi diễn biến nhiều lần đo theo thời gian.</p>
-            <p class="maps-to">Lưu trữ ở <strong>Tab "Lịch sử đo"</strong>; xem diễn biến ở
-              <strong>Tab "Xu hướng"</strong>.</p>
+            <div class="step-num">9</div>
+            <h3>Lưu dữ liệu, theo dõi xu hướng &amp; chu kỳ thí nghiệm</h3>
+            <p>Mọi kết quả được lưu vào lịch sử kèm vết người nhập/sửa, làm dữ liệu nền cho lần đo kế tiếp (quay lại
+              Bước 1). Chu kỳ thí nghiệm khí hòa tan theo Điều 54: bắt buộc với MBA sau lắp đặt mới và sau sửa chữa bảo
+              dưỡng (thay cuộn dây, rút vỏ/rút ruột máy, sửa chữa toàn diện, sấy máy); trong vận hành: lần đầu sau khi
+              đóng điện 3 ngày, 1 tháng, 3 tháng, 6 tháng, sau đó 1 năm một lần — rút ngắn khi có Cảnh báo/Báo động.</p>
+            <p class="maps-to">Lưu trữ ở <strong>Tab "Lịch sử đo"</strong>; diễn biến ở <strong>Tab "Xu hướng"</strong>;
+              thiết bị đang Cảnh báo/Báo động ở <strong>Tab "Cảnh báo"</strong>.</p>
           </div>
         </div>
       </div>
@@ -3643,6 +3699,7 @@
   <script src="ui/ui-theme.js"></script>
   <script src="ui/ui-guides.js"></script>
   <script src="ui/ui-dieu54-charts.js"></script>
+  <script src="ui/ui-dga-workflow.js"></script>
   <script src="ui/ui-dga.js"></script>
   <script src="bbtn/bbtn-export.js"></script>
   <script src="bbtn/oil-bbtn.js"></script>

@@ -1,0 +1,79 @@
+/* css/style-dga-workflow.css — Lưu đồ "Quy trình nghiệp vụ đánh giá DGA" (ui/ui-dga-workflow.js).
+   Toàn bộ màu lấy từ biến giao diện (css/style-base.css) nên tự đổi theo chế độ sáng/tối. */
+
+.wf-wrap {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface-sunken);
+  overflow-x: auto;
+}
+.wf-svg {
+  display: block;
+  width: 100%;
+  min-width: 720px;
+  max-width: 1100px;
+  height: auto;
+  margin: 0 auto;
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+}
+
+.wf-shape { stroke-width: 1.6; filter: drop-shadow(0 2px 3px rgba(15, 23, 42, 0.12)); }
+.wf-process, .wf-note { fill: var(--surface-raised); stroke: var(--border-strong); }
+.wf-note { stroke-dasharray: 5 4; }
+.wf-start { fill: var(--blue-100); stroke: var(--blue-700); }
+.wf-decision { fill: var(--blue-50); stroke: var(--blue-700); }
+.wf-normal { fill: var(--ok-bg); stroke: var(--ok); }
+.wf-alert { fill: var(--warn-bg); stroke: var(--warn); }
+.wf-alarm { fill: var(--bad-bg); stroke: var(--bad); }
+
+.wf-text {
+  fill: var(--text-primary);
+  font-size: 13px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.wf-sub { font-size: 75%; }
+.wf-status-title { font-weight: var(--font-extrabold); font-size: 14px; letter-spacing: 0.3px; }
+.wf-normal ~ .wf-status-title { fill: var(--ok); }
+.wf-alert ~ .wf-status-title { fill: var(--warn); }
+.wf-alarm ~ .wf-status-title { fill: var(--bad); }
+
+.wf-edge { fill: none; stroke: var(--text-secondary); stroke-width: 1.6; }
+.wf-edge-dash { stroke-dasharray: 6 4; }
+.wf-arrow { fill: var(--text-secondary); }
+.wf-label {
+  fill: var(--text-secondary);
+  font-size: 12px;
+  font-weight: var(--font-semibold);
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: var(--surface-sunken);
+  stroke-width: 4px;
+}
+
+.wf-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.wf-legend span::before {
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: -1px;
+  border-radius: 3px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface-raised);
+}
+.wf-legend .lg-decision::before { background: var(--blue-50); border-color: var(--blue-700); transform: rotate(45deg) scale(0.8); }
+.wf-legend .lg-note::before { border-style: dashed; }
+.wf-legend .lg-normal::before { background: var(--ok-bg); border-color: var(--ok); }
+.wf-legend .lg-alert::before { background: var(--warn-bg); border-color: var(--warn); }
+.wf-legend .lg-alarm::before { background: var(--bad-bg); border-color: var(--bad); }
