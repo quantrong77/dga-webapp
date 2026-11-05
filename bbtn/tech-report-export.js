@@ -113,7 +113,9 @@ async function exportTechReportDocx(analysis) {
   const Ctor = typeof window.docxtemplater === "function" ? window.docxtemplater : window.docxtemplater.default;
   const zip = new window.PizZip(buf);
   const doc = new Ctor(zip, { paragraphLoop: true, linebreaks: true });
-  doc.render(buildTechReportData(analysis));
+  const data = buildTechReportData(analysis);
+  // Tên văn bản/điều/bảng đã cấu hình (ui/ui-terms.js) — áp cho nội dung điền vào báo cáo
+  doc.render(typeof applyRegulationTermsDeep === "function" ? applyRegulationTermsDeep(data) : data);
   const blob = doc.getZip().generate({
     type: "blob",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

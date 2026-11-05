@@ -97,6 +97,114 @@ function voltageStateFields(unit) {
   return fields;
 }
 
+// ---------------------------------------------------------------------------
+// 10) TÊN VĂN BẢN / ĐIỀU KHOẢN / BẢNG / PHỤ LỤC hiển thị — cấu hình được để khi quy định hoặc
+//     tiêu chuẩn thay đổi (QĐ mới thay QĐ1901, IEC 60599 bản mới, đánh số lại điều/bảng...) Admin
+//     cập nhật 1 lần, mọi nơi hiển thị đổi theo — KHÔNG phải sửa hàng trăm câu chữ trong code.
+//
+//     Cơ chế: applyRegulationTerms(text) thay các cụm MẶC ĐỊNH (VD "Bảng 66") bằng giá trị đang
+//     cấu hình (VD "Bảng 70"), 1 lượt duy nhất, khớp đúng ranh giới từ ("Bảng 6" không ăn vào
+//     "Bảng 66"). Chỉ áp dụng các mục ĐÃ ĐỔI khác mặc định -> chưa đổi gì thì văn bản giữ nguyên.
+//     Áp dụng ở: giao diện (ui/ui-terms.js quét toàn trang + nội dung sinh động), file Word xuất ra.
+// ---------------------------------------------------------------------------
+const REGULATION_TERMS_DOCS = {
+  QD_FULL: "QĐ1901/QĐ-EVNNPT",
+  QD_SHORT: "QĐ1901",
+  IEC60599_NAME: "IEC 60599",
+  IEC60599_YEAR: "2022",
+  IEC60422_NAME: "IEC 60422",
+  IEC60422_YEAR: "2024",
+  IEEE_C57104: "IEEE C57.104",
+  QD_SAMPLING: "3856/QĐ-PTC3",
+};
+
+const REGULATION_TERMS_QD_ARTICLE_NUMS = [3, 6, 7, 10, 11, 37, 46, 47, 50, 54];
+const REGULATION_TERMS_QD_TABLE_NUMS = [12, 49, 54, 55, 58, 63, 64, 65, 66, 67, 68, 69];
+const REGULATION_TERMS_QD = {};
+REGULATION_TERMS_QD_ARTICLE_NUMS.forEach((n) => { REGULATION_TERMS_QD["D" + n] = "Điều " + n; });
+REGULATION_TERMS_QD_TABLE_NUMS.forEach((n) => { REGULATION_TERMS_QD["B" + n] = "Bảng " + n; });
+
+const REGULATION_TERMS_IEC_DEFS = [
+  ["T1", "Table 1", "IEC 60599 — Bảng diễn giải 3 tỷ số khí (= Bảng 66)"],
+  ["T2", "Table 2", "IEC 60599 — Bảng đơn giản PD/D/T"],
+  ["TA2", "Table A.2", "IEC 60599 — Khoảng điển hình MBA lực"],
+  ["TA7", "Table A.7", "IEC 60599 — Khoảng điển hình CT/VT"],
+  ["TA8", "Table A.8", "IEC 60599 — Giá trị tối đa máy biến áp đo lường"],
+  ["TA10", "Table A.10", "IEC 60599 — Chẩn đoán sứ xuyên"],
+  ["TA11", "Table A.11", "IEC 60599 — Khoảng điển hình sứ xuyên"],
+  ["ANNEX_A", "Annex A", "IEC 60599 — Phụ lục A"],
+  ["ANNEX_B", "Annex B", "IEC 60599 — Phụ lục B (Tam giác Duval)"],
+  ["FIG_B3", "Figure B.3", "IEC 60599 — Hình Tam giác Duval 1"],
+  ["FIG_1", "Hình 1", "IEC 60599 — Lưu đồ đánh giá (mục 9)"],
+  ["T60422_5", "Bảng 5", "IEC 60422 — Dầu MBA/Kháng vận hành"],
+  ["T60422_7", "Bảng 7", "IEC 60422 — Dầu TI/TU vận hành"],
+];
+const REGULATION_TERMS_IEC = {};
+REGULATION_TERMS_IEC_DEFS.forEach(([k, v]) => { REGULATION_TERMS_IEC[k] = v; });
+
+function termsEscapeRe(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+}
+
+/** Danh sách luật thay thế: { pats: [cụm mặc định...], out: giá trị hiện hành, def: giá trị mặc định }. */
+function regulationTermRules() {
+  const D = REGULATION_TERMS_DOCS, Q = REGULATION_TERMS_QD, I = REGULATION_TERMS_IEC;
+  const d0 = _regulationConfigDefaults.TERMS_DOCS.values;
+  const rules = [
+    { pats: ["QĐ1901/QĐ-EVNNPT", "QĐ 1901/QĐ-EVNNPT"], out: D.QD_FULL, def: d0.QD_FULL },
+    { pats: ["QĐ1901", "QĐ 1901"], out: D.QD_SHORT, def: d0.QD_SHORT },
+    { pats: [`IEC 60599:${d0.IEC60599_YEAR}`, `IEC60599:${d0.IEC60599_YEAR}`, `IEC 60599-${d0.IEC60599_YEAR}`, `IEC60599-${d0.IEC60599_YEAR}`],
+      out: `${D.IEC60599_NAME}:${D.IEC60599_YEAR}`, def: `${d0.IEC60599_NAME}:${d0.IEC60599_YEAR}` },
+    { pats: ["IEC 60599", "IEC60599"], out: D.IEC60599_NAME, def: d0.IEC60599_NAME },
+    { pats: [`IEC 60422:${d0.IEC60422_YEAR}`, `IEC60422:${d0.IEC60422_YEAR}`],
+      out: `${D.IEC60422_NAME}:${D.IEC60422_YEAR}`, def: `${d0.IEC60422_NAME}:${d0.IEC60422_YEAR}` },
+    { pats: ["IEC 60422", "IEC60422"], out: D.IEC60422_NAME, def: d0.IEC60422_NAME },
+    { pats: ["IEEE C57.104"], out: D.IEEE_C57104, def: d0.IEEE_C57104 },
+    { pats: ["3856/QĐ-PTC3"], out: D.QD_SAMPLING, def: d0.QD_SAMPLING },
+  ];
+  const q0 = _regulationConfigDefaults.TERMS_QD_ARTICLES.values;
+  Object.keys(q0).forEach((k) => rules.push({ pats: [q0[k]], out: Q[k], def: q0[k] }));
+  const i0 = _regulationConfigDefaults.TERMS_IEC.values;
+  Object.keys(i0).forEach((k) => rules.push({ pats: [i0[k]], out: I[k], def: i0[k] }));
+  return rules;
+}
+
+let _termsCache = { sig: null, re: null, map: null };
+
+/** Biên dịch (và lưu đệm) regex cho các luật ĐANG ĐỔI khác mặc định; null nếu không có gì đổi. */
+function compiledRegulationTerms() {
+  const active = regulationTermRules().filter((r) => typeof r.out === "string" && r.out.trim() !== "" && r.out !== r.def);
+  const sig = JSON.stringify(active.map((r) => [r.pats, r.out]));
+  if (_termsCache.sig === sig) return _termsCache;
+  if (active.length === 0) {
+    _termsCache = { sig, re: null, map: null };
+    return _termsCache;
+  }
+  const entries = [];
+  active.forEach((r) => r.pats.forEach((p) => entries.push({ p, out: r.out, test: new RegExp("^" + termsEscapeRe(p) + "$", "u") })));
+  entries.sort((a, b) => b.p.length - a.p.length); // cụm dài khớp trước (VD "IEC 60599:2022" trước "IEC 60599")
+  const tail = (p) => (/[\p{L}]$/u.test(p) ? "(?![\\p{L}\\p{N}])" : "(?!\\p{N})");
+  const body = entries.map((e) => "(?<![\\p{L}\\p{N}])" + termsEscapeRe(e.p) + tail(e.p)).join("|");
+  _termsCache = { sig, re: new RegExp(body, "gu"), map: entries };
+  return _termsCache;
+}
+
+/** Thay tên văn bản/điều/bảng mặc định bằng giá trị Admin đã cấu hình. Không đổi gì -> trả nguyên văn. */
+function applyRegulationTerms(text) {
+  if (typeof text !== "string" || text === "") return text;
+  const c = compiledRegulationTerms();
+  if (!c.re) return text;
+  return text.replace(c.re, (m) => {
+    const e = c.map.find((x) => x.test.test(m));
+    return e ? e.out : m;
+  });
+}
+
+/** Có tên nào đang được đổi khác mặc định không (để giao diện bỏ qua việc quét khi không cần). */
+function regulationTermsActive() {
+  return !!compiledRegulationTerms().re;
+}
+
 /**
  * Đăng ký toàn bộ các bảng ngưỡng "đơn giản" có thể cấu hình qua tab "Cấu hình quy
  * định". Mỗi mục:
@@ -327,6 +435,36 @@ function buildRegulationConfigRegistry() {
         { path: [cat, "tgd90", "poor"], label: `Category ${cat} — tgδ 90°C, biên "Kém" (>)`, unit: "%", kind: "number" },
       ]),
     },
+    {
+      key: "TERMS_DOCS", category: "Tên văn bản, điều khoản, bảng, phụ lục (hiển thị)",
+      title: "Tên văn bản quy định / tiêu chuẩn và phiên bản — đổi ở đây, mọi nơi hiển thị cập nhật theo",
+      citationKey: "TERMS_DOCS", target: REGULATION_TERMS_DOCS,
+      fields: [
+        { path: ["QD_FULL"], label: "Quy định — tên đầy đủ (mặc định QĐ1901/QĐ-EVNNPT)", unit: "", kind: "text" },
+        { path: ["QD_SHORT"], label: "Quy định — tên viết tắt (mặc định QĐ1901)", unit: "", kind: "text" },
+        { path: ["IEC60599_NAME"], label: "Tiêu chuẩn DGA — tên (mặc định IEC 60599)", unit: "", kind: "text" },
+        { path: ["IEC60599_YEAR"], label: "Tiêu chuẩn DGA — phiên bản/năm (mặc định 2022)", unit: "", kind: "text" },
+        { path: ["IEC60422_NAME"], label: "Tiêu chuẩn dầu — tên (mặc định IEC 60422)", unit: "", kind: "text" },
+        { path: ["IEC60422_YEAR"], label: "Tiêu chuẩn dầu — phiên bản/năm (mặc định 2024)", unit: "", kind: "text" },
+        { path: ["IEEE_C57104"], label: "Hướng dẫn IEEE (mặc định IEEE C57.104)", unit: "", kind: "text" },
+        { path: ["QD_SAMPLING"], label: "Quy trình lấy mẫu dầu (mặc định 3856/QĐ-PTC3)", unit: "", kind: "text" },
+      ],
+    },
+    {
+      key: "TERMS_QD_ARTICLES", category: "Tên văn bản, điều khoản, bảng, phụ lục (hiển thị)",
+      title: "Số hiệu điều khoản và bảng của quy định — khi quy định mới đánh số lại",
+      citationKey: "TERMS_QD_ARTICLES", target: REGULATION_TERMS_QD,
+      fields: [
+        ...REGULATION_TERMS_QD_ARTICLE_NUMS.map((n) => ({ path: ["D" + n], label: `Điều ${n} (mặc định)`, unit: "", kind: "text" })),
+        ...REGULATION_TERMS_QD_TABLE_NUMS.map((n) => ({ path: ["B" + n], label: `Bảng ${n} (mặc định)`, unit: "", kind: "text" })),
+      ],
+    },
+    {
+      key: "TERMS_IEC", category: "Tên văn bản, điều khoản, bảng, phụ lục (hiển thị)",
+      title: "Số hiệu bảng, phụ lục, hình của tiêu chuẩn IEC — khi IEC ra bản mới đánh số lại",
+      citationKey: "TERMS_IEC", target: REGULATION_TERMS_IEC,
+      fields: REGULATION_TERMS_IEC_DEFS.map(([k, v, desc]) => ({ path: [k], label: `${v} — ${desc}`, unit: "", kind: "text" })),
+    },
   ];
 }
 
@@ -356,7 +494,12 @@ function rcRequireOrder(problems, pairs) {
   return problems;
 }
 
+const rcNonEmptyText = (v) => Object.keys(v).filter((k) => typeof v[k] !== "string" || v[k].trim() === "").map((k) => `Ô "${k}" không được để trống`);
+
 const REGULATION_CONFIG_VALIDATORS = {
+  TERMS_DOCS: rcNonEmptyText,
+  TERMS_QD_ARTICLES: rcNonEmptyText,
+  TERMS_IEC: rcNonEmptyText,
   BANG66_TABLE1: (v) => rcRequireOrder([], [
     [v.D1.h_min, v.D1.h_max, "D1: CH4/H2 \"từ\" phải nhỏ hơn \"đến\""],
     [v.D2.g_min, v.D2.g_max, "D2: C2H2/C2H4 \"từ\" phải nhỏ hơn \"đến\""],

@@ -145,7 +145,9 @@ async function exportBbtnDocx(analysis) {
   const Ctor = typeof window.docxtemplater === "function" ? window.docxtemplater : window.docxtemplater.default;
   const zip = new window.PizZip(buf);
   const doc = new Ctor(zip, { paragraphLoop: true, linebreaks: true });
-  doc.render(buildBbtnExportData(analysis));
+  const data = buildBbtnExportData(analysis);
+  // Tên văn bản/điều/bảng đã cấu hình (ui/ui-terms.js) — áp cho nội dung điền vào biên bản
+  doc.render(typeof applyRegulationTermsDeep === "function" ? applyRegulationTermsDeep(data) : data);
   const blob = doc.getZip().generate({
     type: "blob",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",

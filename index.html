@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v14-config") {
+          if (k !== "dga-offline-v15-terms") {
             caches.delete(k);
           }
         });
@@ -1143,7 +1143,7 @@
         <button type="button" class="quytrinh-subtab-btn" data-subtab="danhgia" role="tab" aria-selected="false">Đánh giá DGA</button>
       </div>
 
-      <div class="quytrinh-subpanel" id="quytrinh-laymau" role="tabpanel">
+      <div class="quytrinh-subpanel" data-no-terms id="quytrinh-laymau" role="tabpanel">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-sample"></use></svg>Quy trình lấy mẫu và bảo quản dầu cách điện</h2>
         <p class="note">Biên soạn theo <strong>Quyết định số 3856/QĐ-PTC3</strong> ngày 08/6/2026 của Công ty Truyền
@@ -3559,7 +3559,7 @@
             được.</p>
         </div>
         <p class="note" id="quydinhLoadingHint">Đang tải cấu hình...</p>
-        <div id="regulationConfigContainer"></div>
+        <div id="regulationConfigContainer" data-no-terms></div>
       </div>
       </div>
       </div>
@@ -3695,6 +3695,7 @@
   <script src="ui/ui-auth.js"></script>
   <!-- Presentation Tier: UI Components & Common Utilities -->
   <script src="ui/ui-utils.js"></script>
+  <script src="ui/ui-terms.js"></script>
   <script src="ui/ui-combobox.js"></script>
   <script src="ui/ui-dropzone.js"></script>
   <script src="ui/ui-layout.js"></script>

@@ -70,6 +70,12 @@ function regulationFieldValueHtml(current, field) {
   const v = DGA.getValueAtPath(current, field.path);
   const val = v === null || v === undefined ? "" : v;
   const pathAttr = escapeHtml(JSON.stringify(field.path));
+  if (field.kind === "text") {
+    return `
+    <label class="field">${escapeHtml(field.label)}
+      <input type="text" data-kind="text" data-path='${pathAttr}' value="${escapeHtml(String(val))}" ${canWrite() ? "" : "disabled"} />
+    </label>`;
+  }
   return `
     <label class="field">${escapeHtml(field.label)}${field.unit ? " (" + escapeHtml(field.unit) + ")" : ""}
       <input type="number" step="0.01" data-path='${pathAttr}' value="${val}" ${canWrite() ? "" : "disabled"} />
@@ -145,7 +151,7 @@ function validateRegulationValues(item, valuesObj) {
       if (lo !== null && lo !== undefined && hi !== null && hi !== undefined && lo > hi) {
         problems.push(`${f.label}: giá trị "Từ" đang lớn hơn "Đến"`);
       }
-    } else if (f.kind !== "range" && v !== null && v !== undefined && Number(v) < 0) {
+    } else if (f.kind !== "range" && f.kind !== "text" && v !== null && v !== undefined && Number(v) < 0) {
       problems.push(`${f.label}: không được âm`);
     }
   });
@@ -165,6 +171,10 @@ function collectRegulationFormValues(container) {
     const path = JSON.parse(inp.getAttribute("data-path"));
     const sub = inp.getAttribute("data-sub");
     const raw = inp.value.trim();
+    if (inp.getAttribute("data-kind") === "text") {
+      DGA.setValueAtPath(valuesObj, path, raw);
+      return;
+    }
     let num = null;
     if (raw !== "") {
       num = Number(raw);

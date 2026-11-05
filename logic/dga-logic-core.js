@@ -233,6 +233,9 @@ const REGULATION_CITATIONS = {
   BANG67_DUVAL: "QĐ1901 Bảng 67, Điều 54 = IEC 60599:2022 Annex B, Figure B.3",
   DIEU54_OLTC: "QĐ1901 Điều 54 mục 3 — kiểm tra nhiễm khí từ OLTC",
   DIEU54_ADDITIONAL: "QĐ1901 Điều 54 — Đánh giá các tỷ lệ bổ sung (= IEC 60599:2022 mục 5.5, 5.6)",
+  TERMS_DOCS: "Tên văn bản quy định / tiêu chuẩn đang áp dụng",
+  TERMS_QD_ARTICLES: "Số hiệu điều khoản, bảng của quy định (QĐ1901/QĐ-EVNNPT)",
+  TERMS_IEC: "Số hiệu bảng, phụ lục, hình của tiêu chuẩn IEC",
 };
 
 
