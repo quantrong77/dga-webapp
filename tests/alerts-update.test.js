@@ -251,31 +251,47 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     const oltcContent = fs.readFileSync("ui/ui-oltc.js", "utf8");
     const tioContent = fs.readFileSync("ui/ui-ti-oil.js", "utf8");
 
-    // Bảng đo khí ui-history.js phải có nút Xem mà không phụ thuộc vào rec.bbtn_url
-    expect(histContent).toMatch(/<button class="btn ghost[^"]*" data-action="viewbbtn"[^>]*>Xem<\/button>/);
-    expect(histContent).not.toMatch(/\$\{rec\.bbtn_url \? `<button class="btn ghost/);
-
-    // Bảng dầu ui-oil.js, ui-oltc.js và ui-ti-oil.js phải có nút Xem
-    expect(oilContent).toMatch(/<button class="btn ghost[^"]*" data-action="view"[^>]*>Xem<\/button>/);
-    expect(oltcContent).toMatch(/<button class="btn ghost[^"]*" data-action="view"[^>]*>Xem<\/button>/);
-    expect(tioContent).toMatch(/<button class="btn ghost[^"]*" data-action="viewbbtn"[^>]*>Xem<\/button>/);
+    // Nút Xem (icon "eye") luôn được vẽ — KHÔNG nằm trong điều kiện rec.bbtn_url
+    expect(histContent).toMatch(/rowActionBtn\("viewbbtn", "eye"/);
+    expect(histContent).not.toMatch(/rec\.bbtn_url &&\s*rowActionBtn/);
+    expect(oilContent).toMatch(/rowActionBtn\("view", "eye"/);
+    expect(oltcContent).toMatch(/rowActionBtn\("view", "eye"/);
+    expect(tioContent).toMatch(/rowActionBtn\("viewbbtn", "eye"/);
   });
 
   test("8. Bảng Cảnh báo (ui-alerts.js) có nút 'Xem' trên từng dòng cảnh báo", () => {
     const fs = require("fs");
     const alertsContent = fs.readFileSync("ui/ui-alerts.js", "utf8");
-    expect(alertsContent).toMatch(/<button class="btn ghost[^"]*" data-action="view"[^>]*>[\s\S]*?Xem[\s\S]*?<\/button>/);
-    expect(alertsContent).toMatch(/data-action="view"/);
+    expect(alertsContent).toMatch(/rowActionBtn\("view", "eye"/);
     expect(alertsContent).toMatch(/onViewMeasurement\(a\.record\)/);
   });
 
-  test("9. Đồng nhất bề ngang các nút thao tác: tab Cảnh báo (btn-action-alert) và tab Lịch sử (btn-action-hist)", () => {
+  test("9. Nút thao tác dạng icon cùng kích thước, xếp thành 1 cột, có tooltip (Cảnh báo + Lịch sử)", () => {
     const fs = require("fs");
     const css = fs.readFileSync("css/style-tab-tables.css", "utf8");
-    expect(css).toMatch(/\.btn-action-alert/);
-    expect(css).toMatch(/min-width:\s*44px/);
-    expect(css).toMatch(/\.btn-action-hist/);
-    expect(css).toMatch(/min-width:\s*48px/);
+    expect(css).toMatch(/\.btn-action-alert,\s*\.btn-action-hist,\s*\.actions-cell \.row-action-btn \{[^}]*width: 30px;/);
+    expect(css).toMatch(/\.actions-stack \{[^}]*flex-direction: column;/);
+    expect(css).toMatch(/\.row-action-btn\[data-tooltip\]::after \{[^}]*content: attr\(data-tooltip\);/);
+  });
+
+  test("10. Không còn nút chữ Xem/Sửa/Xóa trong cột Thao tác; mỗi nút có icon + tooltip + aria-label", () => {
+    const fs = require("fs");
+    for (const f of ["ui/ui-alerts.js", "ui/ui-history.js", "ui/ui-oil.js", "ui/ui-oltc.js", "ui/ui-ti-oil.js"]) {
+      const src = fs.readFileSync(f, "utf8");
+      expect(src).not.toMatch(/>\s*(?:Xem|Sửa|Xóa|BBTN 3 pha)\s*<\/button>/);
+      expect(src).toMatch(/rowActionsHtml\(\[/);
+    }
+    const html = ctx.rowActionBtn("del", "trash", "Xóa lần đo này", { danger: true, cls: "btn-action-hist" });
+    expect(html).toContain('data-action="del"');
+    expect(html).toContain('data-tooltip="Xóa lần đo này"');
+    expect(html).toContain('aria-label="Xóa lần đo này"');
+    expect(html).toContain('href="#icon-trash"');
+    expect(html).toMatch(/class="btn danger icon-only row-action-btn btn-action-hist"/);
+    expect(ctx.rowActionsHtml([html, false, ""])).toBe(`<div class="btn-row actions-stack">${html}</div>`);
+    const index = fs.readFileSync("index.html", "utf8");
+    for (const id of ["icon-eye", "icon-edit", "icon-trash", "icon-trend", "icon-layers"]) {
+      expect(index).toContain(`<symbol id="${id}"`);
+    }
   });
   test("Hiệu chỉnh về số liệu khỏe có khí KPH (=0) -> KHÔNG còn Báo động 'đổi loại sự cố'", () => {
     // Cả 2 lần đo đều Đạt, mọi khí dưới giá trị điển hình; lần sau có C2H2 = KPH (0).

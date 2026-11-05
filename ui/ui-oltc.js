@@ -198,11 +198,13 @@ function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${escapeHtml(rec.bdv_kv ?? "—")}</td>
       <td>${overallPill}</td>
       <td>${ownerCellHtml(rec)}</td>
-      <td class="actions-cell"><div class="btn-row">
-        <button class="btn ghost btn-action-hist" data-action="view" title="${rec.bbtn_url ? 'Xem biên bản thí nghiệm đã đính kèm' : 'Xem chi tiết thí nghiệm dầu OLTC'}" >Xem</button>
-        ${canEditRecord(rec) ? `<button class="btn ghost btn-action-hist" data-action="edit" >Sửa</button>` : ""}
-        ${canWrite() ? `<button class="btn danger btn-action-hist" data-action="del" >Xóa</button>` : ""}
-      </div></td>
+      <td class="actions-cell">${rowActionsHtml([
+        rowActionBtn("view", "eye",
+          rec.bbtn_url ? "Xem biên bản thí nghiệm đã đính kèm" : "Xem chi tiết thí nghiệm dầu OLTC",
+          { cls: "btn-action-hist" }),
+        canEditRecord(rec) && rowActionBtn("edit", "edit", "Sửa kết quả thí nghiệm dầu OLTC này", { cls: "btn-action-hist" }),
+        canWrite() && rowActionBtn("del", "trash", "Xóa kết quả thí nghiệm dầu OLTC này", { danger: true, cls: "btn-action-hist" }),
+      ])}</td>
     `;
     const viewBtn = tr.querySelector('[data-action="view"]');
     if (viewBtn) {

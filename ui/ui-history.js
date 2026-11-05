@@ -85,11 +85,13 @@ async function refreshHistoryUI() {
       <td style="font-size:12px;">${diagnosis}</td>
       <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
       <td>${ownerCellHtml(rec)}${editLogBadgeHtml(rec)}</td>
-      <td class="actions-cell"><div class="btn-row">
-        <button class="btn ghost btn-action-hist" data-action="viewbbtn" title="${rec.bbtn_url ? 'Xem biên bản thí nghiệm (BBTN) đã đính kèm' : 'Xem chi tiết số liệu và chẩn đoán lần đo'}" >Xem</button>
-        ${canEditRecord(rec) ? `<button class="btn ghost btn-action-hist" data-action="edit" >Sửa</button>` : ""}
-        ${canWrite() ? `<button class="btn danger btn-action-hist" data-action="del" >Xóa</button>` : ""}
-      </div></td>
+      <td class="actions-cell">${rowActionsHtml([
+        rowActionBtn("viewbbtn", "eye",
+          rec.bbtn_url ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm" : "Xem chi tiết số liệu và chẩn đoán lần đo",
+          { cls: "btn-action-hist" }),
+        canEditRecord(rec) && rowActionBtn("edit", "edit", "Sửa số liệu lần đo này", { cls: "btn-action-hist" }),
+        canWrite() && rowActionBtn("del", "trash", "Xóa lần đo này", { danger: true, cls: "btn-action-hist" }),
+      ])}</td>
     `;
     const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
     if (viewBbtnBtn) {

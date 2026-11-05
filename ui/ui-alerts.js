@@ -603,19 +603,14 @@ function refreshAlertsUI() {
       <td style="font-size:12px; max-width:280px;">${escapeHtml(a.action)}</td>
       <td>${escapeHtml(a.lanDo)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
       <td>${escapeHtml(a.sampleDate)}</td>
-      <td class="actions-cell"><div class="btn-row">
-        ${a.record ? `
-        <button class="btn ghost btn-action-alert" data-action="view" title="${a.record.bbtn_url ? 'Xem biên bản thí nghiệm (BBTN) đã đính kèm' : 'Xem chi tiết số liệu và chẩn đoán lần đo này'}" aria-label="Xem chi tiết lần đo" >
-          Xem
-        </button>` : ""}
-        ${a.record && typeof canEditRecord === "function" && canEditRecord(a.record) ? `
-        <button class="btn ghost btn-action-alert" data-action="edit" title="Hiệu chỉnh số liệu lần đo này" aria-label="Hiệu chỉnh số liệu" >
-          Sửa
-        </button>` : ""}
-        <button class="btn ghost icon-only btn-action-alert" data-action="trend" title="Xem xu hướng" aria-label="Xem xu hướng của thiết bị này">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>
-        </button>
-      </div></td>
+      <td class="actions-cell">${rowActionsHtml([
+        a.record && rowActionBtn("view", "eye",
+          a.record.bbtn_url ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm" : "Xem chi tiết số liệu và chẩn đoán lần đo này",
+          { cls: "btn-action-alert" }),
+        a.record && typeof canEditRecord === "function" && canEditRecord(a.record) &&
+          rowActionBtn("edit", "edit", "Hiệu chỉnh số liệu lần đo này", { cls: "btn-action-alert" }),
+        rowActionBtn("trend", "trend", "Xem xu hướng của thiết bị này", { cls: "btn-action-alert" }),
+      ])}</td>
     `;
     const viewBtn = tr.querySelector('[data-action="view"]');
     if (viewBtn && a.record) {

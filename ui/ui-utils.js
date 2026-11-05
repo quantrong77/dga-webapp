@@ -4,6 +4,28 @@ function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/** Nút thao tác DẠNG ICON trong cột "Thao tác" của các bảng (tab Cảnh báo, Lịch sử đo/dầu):
+ *  chỉ hiện icon, tooltip (data-tooltip, CSS ở css/style-tab-tables.css) mô tả hành động khi
+ *  trỏ chuột/focus bàn phím, aria-label cho trình đọc màn hình. Các nút xếp thành 1 CỘT dọc
+ *  nhờ khung .actions-stack — xem rowActionsHtml() bên dưới.
+ *  @param {string} action  giá trị data-action (code bắt sự kiện tìm nút theo thuộc tính này)
+ *  @param {string} icon    id symbol trong sprite (index.html), không kèm tiền tố "icon-"
+ *  @param {string} tip     mô tả hành động (hiển thị ở tooltip)
+ *  @param {{danger?: boolean, cls?: string}} [opts] */
+function rowActionBtn(action, icon, tip, opts) {
+  const o = opts || {};
+  const cls = ["btn", o.danger ? "danger" : "ghost", "icon-only", "row-action-btn", o.cls || ""].join(" ").trim();
+  const t = escapeHtml(tip);
+  return `<button type="button" class="${cls}" data-action="${escapeHtml(action)}" data-tooltip="${t}" aria-label="${t}">` +
+    `<svg class="icon-svg" aria-hidden="true"><use href="#icon-${escapeHtml(icon)}"></use></svg></button>`;
+}
+
+/** Khung chứa các nút rowActionBtn() xếp thành 1 cột dọc — bỏ qua phần tử rỗng (nút bị ẩn
+ *  do không đủ quyền, VD Sửa/Xóa). */
+function rowActionsHtml(buttons) {
+  return `<div class="btn-row actions-stack">${buttons.filter(Boolean).join("")}</div>`;
+}
+
 /** URL đọc từ database (bbtn_url, image_url...) chỉ được mở/hiển thị nếu là http(s) — chặn
  *  "javascript:"/"data:text/html"... do ai đó ghi thẳng vào database qua API để chạy mã độc
  *  khi người khác bấm "Xem". Trả về URL gốc nếu an toàn, null nếu không. */

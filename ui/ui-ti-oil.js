@@ -219,12 +219,15 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${escapeHtml(rec.bdv_kv ?? "—")}</td>
       <td>${tioVerdictPill(evalResult.overall)}</td>
       <td>${ownerCellHtml(rec)}</td>
-      <td class="actions-cell"><div class="btn-row">
-        <button class="btn ghost btn-action-hist" data-action="viewbbtn" title="${rec.bbtn_url ? 'Xem file BBTN đã đính kèm' : 'Xem chi tiết thí nghiệm dầu TI'}">Xem</button>
-        ${["A", "B", "C"].includes(rec.phase) ? `<button class="btn ghost" data-action="bbtn3" title="Mở cả 3 pha của biên bản này để xem, sửa hoặc xuất BBTN" style="padding:5px 10px; font-size:12px;">BBTN 3 pha</button>` : ""}
-        ${canEditRecord(rec) ? `<button class="btn ghost btn-action-hist" data-action="edit">Sửa</button>` : ""}
-        ${canWrite() ? `<button class="btn danger btn-action-hist" data-action="del">Xóa</button>` : ""}
-      </div></td>
+      <td class="actions-cell">${rowActionsHtml([
+        rowActionBtn("viewbbtn", "eye",
+          rec.bbtn_url ? "Xem file BBTN đã đính kèm" : "Xem chi tiết thí nghiệm dầu TI",
+          { cls: "btn-action-hist" }),
+        ["A", "B", "C"].includes(rec.phase) &&
+          rowActionBtn("bbtn3", "layers", "BBTN 3 pha: mở cả 3 pha của biên bản để xem, sửa hoặc xuất BBTN", { cls: "btn-action-hist" }),
+        canEditRecord(rec) && rowActionBtn("edit", "edit", "Sửa kết quả thí nghiệm dầu này", { cls: "btn-action-hist" }),
+        canWrite() && rowActionBtn("del", "trash", "Xóa kết quả thí nghiệm dầu này", { danger: true, cls: "btn-action-hist" }),
+      ])}</td>
     `;
     const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
     if (viewBbtnBtn) {
