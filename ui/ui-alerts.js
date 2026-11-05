@@ -70,9 +70,10 @@ function tioPhaseIdentity(phase) {
  *  1 trong 3 nguồn dữ liệu — dùng làm mẫu số cho thống kê "Thiết bị đang có cảnh
  *  báo". Có thể giới hạn về đúng 1 Trạm (tham số "station") để khớp với bộ lọc
  *  #al_stationFilter — để trống/không truyền = đếm TẤT CẢ trạm như trước. */
-function totalTrackedDeviceCount(station) {
+function totalTrackedDeviceCount(station, device) {
   const keys = new Set();
-  const matchesStation = (r) => !station || (r.tram || "").trim() === station;
+  const matchesStation = (r) =>
+    (!station || (r.tram || "").trim() === station) && (!device || (r.thiet_bi || "").trim() === device);
   _allMeasurements.forEach((r) => {
     if (!matchesStation(r)) return;
     keys.add(deviceIdentityKey(r.tram, r.thiet_bi, gasPhaseIdentity(r.pha)));
@@ -105,6 +106,38 @@ function alertStationOptions() {
   return Array.from(names)
     .sort((a, b) => a.localeCompare(b, "vi"))
     .map((name) => ({ value: name, label: name }));
+}
+
+/** Bộ lọc đang áp dụng ở tab "Cảnh báo": Trạm (#al_stationFilter) và Thiết bị (#al_deviceFilter). */
+function alertFilters() {
+  return {
+    station: $("al_stationFilter") ? $("al_stationFilter").value.trim() : "",
+    device: $("al_deviceFilter") ? $("al_deviceFilter").value.trim() : "",
+  };
+}
+
+function filterAlertsBy(alerts, { station, device }) {
+  return alerts.filter((a) =>
+    (!station || (a.tram || "").trim() === station) && (!device || (a.deviceName || "").trim() === device));
+}
+
+/** Gợi ý cho ô "Thiết bị" (#al_deviceFilter) — CHỈ các thiết bị đang có Cảnh báo/Báo động và
+ *  THUỘC trạm đang chọn ở #al_stationFilter (đọc lại mỗi lần mở/gõ, nên luôn theo đúng trạm hiện
+ *  tại). Để trống Trạm: gợi ý thiết bị của mọi trạm, kèm tên trạm để phân biệt (giống
+ *  trendDeviceOptions() ở ui-trend.js). Mỗi tên thiết bị gom mọi Pha/loại đo của nó. */
+function alertDeviceOptions() {
+  const { station } = alertFilters();
+  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
+  const byName = new Map();
+  filterAlertsBy(allAlerts, { station, device: "" }).forEach((a) => {
+    const name = (a.deviceName || "").trim();
+    if (!name) return;
+    if (!byName.has(name)) byName.set(name, new Set());
+    byName.get(name).add((a.tram || "").trim());
+  });
+  return Array.from(byName.entries())
+    .sort((a, b) => a[0].localeCompare(b[0], "vi", { numeric: true }))
+    .map(([name, trams]) => ({ value: name, label: station || trams.size === 0 ? name : `${name} — ${Array.from(trams).join(", ")}` }));
 }
 
 /** Sắp xếp bản ghi theo thứ tự thời gian giảm dần:
@@ -560,9 +593,10 @@ function refreshAlertsUI() {
 
   // Lọc theo Trạm biến áp (#al_stationFilter, combo tự gõ-tìm — xem alertStationOptions()
   // ở trên) — để trống = xem TẤT CẢ trạm đang có cảnh báo (mặc định, không đổi hành vi cũ).
-  const station = $("al_stationFilter") ? $("al_stationFilter").value.trim() : "";
+  // + lọc theo Thiết bị thuộc trạm (#al_deviceFilter, xem alertDeviceOptions()).
+  const { station, device } = alertFilters();
   const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
-  const alerts = station ? allAlerts.filter((a) => (a.tram || "").trim() === station) : allAlerts;
+  const alerts = filterAlertsBy(allAlerts, { station, device });
   // Báo động (ALARM) lên trước Cảnh báo (ALERT); trong cùng mức, mới nhất lên trước.
   alerts.sort((a, b) => {
     if (a.level !== b.level) return a.level === "alarm" ? -1 : 1;
@@ -574,7 +608,9 @@ function refreshAlertsUI() {
   const emptyEl = $("alertsEmpty");
   emptyEl.classList.toggle("hidden", alerts.length > 0);
   if (alerts.length === 0) {
-    emptyEl.textContent = station
+    emptyEl.textContent = device
+      ? `Thiết bị "${device}"${station ? ` (trạm "${station}")` : ""} hiện không ở mức Cảnh báo/Báo động (theo lần đo gần nhất).`
+      : station
       ? `Trạm "${station}" hiện không có thiết bị nào đang ở mức Cảnh báo/Báo động (theo lần đo gần nhất của từng thiết bị).`
       : "Chưa phát hiện thiết bị nào đang ở mức Cảnh báo/Báo động — tất cả thiết bị đã có dữ liệu đều đang ở mức " +
         "Bình thường (theo lần đo gần nhất của từng thiết bị).";
@@ -649,7 +685,7 @@ function refreshAlertsUI() {
     tbody.appendChild(tr);
   });
 
-  const totalDevices = totalTrackedDeviceCount(station);
+  const totalDevices = totalTrackedDeviceCount(station, device);
   // deviceIdentityKey() gồm cả Pha — nếu chỉ dùng Trạm+Thiết bị, cảnh báo ở TI 174 pha B
   // và TI 174 pha C (2 thiết bị vật lý khác nhau, cùng tên "thiet_bi") sẽ bị đếm gộp
   // thành 1, làm số "Thiết bị đang có cảnh báo" thấp hơn thực tế.
@@ -682,8 +718,8 @@ function onExportAlertsExcel() {
   const exportedAt = now.toLocaleString("vi-VN");
   // Khớp đúng bộ lọc Trạm đang áp dụng trên bảng (#al_stationFilter) — xuất đúng những
   // gì đang hiển thị, kể cả khi đã lọc về 1 trạm cụ thể.
-  const station = $("al_stationFilter") ? $("al_stationFilter").value.trim() : "";
-  const totalDevices = totalTrackedDeviceCount(station);
+  const { station, device } = alertFilters();
+  const totalDevices = totalTrackedDeviceCount(station, device);
   // Xem chú thích ở warnDeviceKeys trong refreshAlertsUI() — phải gồm cả Pha (deviceIdentityKey())
   // để không gộp nhầm các Pha khác nhau của cùng 1 TI thành 1 thiết bị.
   const warnDeviceKeys = new Set(_lastAlerts.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
@@ -696,7 +732,7 @@ function onExportAlertsExcel() {
   ];
   const aoa = [
     ["BÁO CÁO CẢNH BÁO THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
-    [station ? `Ngày xuất: ${exportedAt}  |  Trạm biến áp: ${station}` : `Ngày xuất: ${exportedAt}  |  Trạm biến áp: Tất cả`],
+    [`Ngày xuất: ${exportedAt}  |  Trạm biến áp: ${station || "Tất cả"}  |  Thiết bị: ${device || "Tất cả"}`],
     [
       `Tổng thiết bị theo dõi: ${totalDevices}`,
       `Thiết bị đang có cảnh báo: ${warnDeviceKeys.size}/${totalDevices}`,

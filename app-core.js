@@ -624,7 +624,20 @@ async function initApp() {
     listEl: $("al_stationFilter_list"),
     getOptions: () => alertStationOptions(),
   });
-  ["input", "change"].forEach((evt) => $("al_stationFilter").addEventListener(evt, refreshAlertsUI));
+  // Ô "Thiết bị" thuộc trạm đang chọn (xem alertDeviceOptions(), ui-alerts.js).
+  setupCombo({
+    input: $("al_deviceFilter"),
+    toggleBtn: $("al_deviceFilter_toggle"),
+    listEl: $("al_deviceFilter_list"),
+    getOptions: () => alertDeviceOptions(),
+  });
+  ["input", "change"].forEach((evt) => $("al_stationFilter").addEventListener(evt, () => {
+    // Đổi trạm: bỏ Thiết bị đang lọc nếu thiết bị đó không thuộc trạm mới (tránh lọc ra bảng rỗng khó hiểu)
+    const dev = $("al_deviceFilter");
+    if (dev && dev.value.trim() && !alertDeviceOptions().some((o) => o.value === dev.value.trim())) dev.value = "";
+    refreshAlertsUI();
+  }));
+  ["input", "change"].forEach((evt) => $("al_deviceFilter").addEventListener(evt, refreshAlertsUI));
   toggleMbaSubtypeField();
   toggleStandardTypeFields();
   drawDuvalTriangleBase();

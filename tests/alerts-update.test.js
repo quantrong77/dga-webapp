@@ -317,3 +317,47 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     expect(ctx.computeGasAlerts()).toHaveLength(0);
   });
 });
+
+describe("Tab Cảnh báo: lọc theo Thiết bị thuộc Trạm", () => {
+  let ctx2;
+  const fs = require("fs");
+  const path = require("path");
+  const vm = require("vm");
+  const inputs = { al_stationFilter: { value: "" }, al_deviceFilter: { value: "" } };
+  beforeAll(() => {
+    ctx2 = {
+      console, Date, Math, Number, String, Array, Set, Map,
+      document: { getElementById: (id) => inputs[id] || null, querySelector: () => null, querySelectorAll: () => [] },
+      escapeHtml: (s) => String(s || ""), verdictPill: (v) => v, tioVerdictPill: (v) => v,
+      DGA: require("../dga-logic"),
+    };
+    ctx2.window = ctx2; ctx2.global = ctx2;
+    vm.createContext(ctx2);
+    ["storage/storage-core.js", "storage/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+      .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), ctx2));
+    const bad = { equipment_type: "MBA", pha: "chung3pha", sample_date: "2026-10-01", lan_do: 1, h2: 500, ch4: 10, c2h6: 10, c2h4: 10, c2h2: 0, co: 200, co2: 1500 };
+    ctx2.__m = [
+      { ...bad, id: "1", tram: "TBA A", thiet_bi: "T1" },
+      { ...bad, id: "2", tram: "TBA A", thiet_bi: "T2" },
+      { ...bad, id: "3", tram: "TBA B", thiet_bi: "T1" },
+    ];
+    vm.runInContext("_allMeasurements = __m; _allOilTests = []; _allOltcOilTests = []; _allTioOilTests = []; _allStandards = [];", ctx2);
+  });
+
+  test("gợi ý Thiết bị chỉ thuộc trạm đang chọn; để trống trạm thì kèm tên trạm", () => {
+    inputs.al_stationFilter.value = "TBA A";
+    expect(ctx2.alertDeviceOptions().map((o) => o.value)).toEqual(["T1", "T2"]);
+    inputs.al_stationFilter.value = "TBA B";
+    expect(ctx2.alertDeviceOptions().map((o) => o.value)).toEqual(["T1"]);
+    inputs.al_stationFilter.value = "";
+    expect(ctx2.alertDeviceOptions().find((o) => o.value === "T1").label).toBe("T1 — TBA A, TBA B");
+  });
+
+  test("lọc bảng + đếm thiết bị theo Trạm và Thiết bị", () => {
+    const all = ctx2.computeGasAlerts();
+    expect(ctx2.filterAlertsBy(all, { station: "TBA A", device: "T1" }).map((a) => a.record.id)).toEqual(["1"]);
+    expect(ctx2.filterAlertsBy(all, { station: "", device: "T1" }).map((a) => a.record.id).sort()).toEqual(["1", "3"]);
+    expect(ctx2.totalTrackedDeviceCount("TBA A", "")).toBe(2);
+    expect(ctx2.totalTrackedDeviceCount("TBA A", "T2")).toBe(1);
+  });
+});

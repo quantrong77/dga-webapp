@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v15-terms") {
+          if (k !== "dga-offline-v16-alertdevice") {
             caches.delete(k);
           }
         });
@@ -972,12 +972,21 @@
              (xem setupCombo()/alertStationOptions(), ui-alerts.js): CHỈ gợi ý các trạm
              THỰC SỰ đang có ít nhất 1 thiết bị ở mức Cảnh báo/Báo động; để trống = xem
              TẤT CẢ trạm đang có cảnh báo (mặc định). -->
-        <div class="toolbar" style="margin-bottom:14px;">
+        <div class="toolbar" style="margin-bottom:14px; justify-content:flex-start; gap:16px; flex-wrap:wrap;">
           <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="al_stationFilter" type="text" placeholder="Gõ để tìm trạm, để trống = TẤT CẢ trạm có cảnh báo" autocomplete="off" />
               <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm đang có cảnh báo">▼</button>
               <div id="al_stationFilter_list" class="combo-list hidden"></div>
+            </div>
+          </label>
+          <!-- Lọc theo Thiết bị THUỘC trạm đang chọn (xem alertDeviceOptions(), ui-alerts.js): chỉ gợi ý
+               thiết bị đang có cảnh báo; để trống = tất cả thiết bị (của trạm đã chọn, hoặc mọi trạm). -->
+          <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
+            <div class="combo-wrap">
+              <input id="al_deviceFilter" type="text" placeholder="Gõ để tìm thiết bị, để trống = TẤT CẢ thiết bị" autocomplete="off" />
+              <button type="button" id="al_deviceFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị đang có cảnh báo thuộc trạm đã chọn">▼</button>
+              <div id="al_deviceFilter_list" class="combo-list hidden"></div>
             </div>
           </label>
         </div>
