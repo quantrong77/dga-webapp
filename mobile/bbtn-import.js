@@ -306,10 +306,55 @@ const GAS_LINE_PATTERNS = [
 const KPH_PATTERN =
   /(?:^|\s|[^\wÀ-ỹ])(?:KPH|K\.P\.H\.?|K\s*P\s*H|Kh[oô]ng\s*ph[aá]t\s*hi[eệ]n|<\s*LOD|<\s*LOQ|D[uư][oớ]i\s*ng[uư][oõ]ng(?:\s*ph[aá]t\s*hi[eệ]n)?|\bND\b|N\/D|N\.D\.?|BDL|None)(?:$|\s|[^\wÀ-ỹ])|(?:^|\s)[-–—](?:\s|$)/i;
 
+// Ô "Kết quả" để TRỐNG trong BBTN = khí không phát hiện (KPH). Khi đó dòng bảng chỉ còn cột
+// "Tiêu chuẩn" (vd "Hydrogen H2 ppm < 300 Đạt"), KHÔNG được lấy số 300 làm kết quả đo. Các hằng
+// và hàm dưới đây dùng để nhận ra trường hợp đó, kể cả khi dấu "<" bị mất/đổi ký tự lúc trích PDF.
+const LT_GLYPHS_RE = /[‹˂＜«ᐸ]|&lt;?/g; // các ký tự "nhỏ hơn" lạ do font/OCR -> "<"
+const LE_GLYPHS_RE = /[⩽≦]/g; // -> "≤"
+const GAS_VERDICT_RE = /\b(?:Khong\s*dat|Dat|Canh\s*bao|Bao\s*dong|Pass|Fail|Xem\s*PL)\b/i;
+const GAS_FAIL_VERDICT_RE = /\b(?:Khong\s*dat|Canh\s*bao|Bao\s*dong|Fail)\b/i;
+
+// Ngưỡng mặc định (QĐ1901/IEC 60599 Annex A) theo từng khí — dự phòng khi chạy ngoài trình
+// duyệt (test) không có DGA; trong app, knownGasLimitValues() đọc trực tiếp từ DGA + tiêu
+// chuẩn NSX đang cấu hình (_allStandards) nên luôn khớp đúng các con số in ở cột "Tiêu chuẩn".
+const DEFAULT_GAS_LIMIT_VALUES = {
+  H2: [150, 300, 392], CH4: [30, 130, 216], C2H6: [50, 90, 121], C2H4: [10, 70, 280],
+  C2H2: [2, 5, 20], CO: [300, 600, 927], CO2: [900, 11578, 14000],
+};
+
+function knownGasLimitValues(gasId) {
+  const set = new Set(DEFAULT_GAS_LIMIT_VALUES[gasId] || []);
+  const addFrom = (limits) => {
+    const v = limits && Number(limits[gasId]);
+    if (Number.isFinite(v) && v > 0) set.add(v);
+  };
+  try {
+    if (typeof DGA !== "undefined" && DGA.resolveStandard && DGA.EQUIPMENT_TYPES) {
+      Object.values(DGA.EQUIPMENT_TYPES).forEach((t) => {
+        [null, ...Object.values(DGA.MBA_SUBTYPES || {})].forEach((sub) => {
+          const st = DGA.resolveStandard({ equipmentType: t, mbaSubtype: sub }, []);
+          addFrom(st && st.limits);
+        });
+      });
+    }
+    if (typeof _allStandards !== "undefined" && typeof toManufacturerStandardsForLogic === "function") {
+      toManufacturerStandardsForLogic(_allStandards).forEach((std) => {
+        addFrom(std.limits);
+        addFrom(std.condemning);
+      });
+    }
+  } catch (e) {
+    // không đọc được tiêu chuẩn -> chỉ dùng DEFAULT_GAS_LIMIT_VALUES
+  }
+  return set;
+}
+
 function extractGasValues(lines) {
   const values = {};
 
   // 1. Giới hạn phạm vi quét vào vùng bảng "KẾT QUẢ THÍ NGHIỆM" nếu tìm thấy tiêu đề bảng.
+  // Điều này tránh bắt nhầm số thứ tự/số mẫu ở bảng "CÁC HẠNG MỤC ĐÃ THÍ NGHIỆM" ở trang 1
+  // hoặc tỷ số khí (CH4/H2: 1.0) / số sê-ri thiết bị (GC S/N 1) ở cuối biên bản.
   let searchLines = lines;
   const startIdx = lines.findIndex((l) =>
     /K[EÊ]T\s*QU[AẢ]\s*(?:TH[IÍ]|TH[UỬ])\s*NGHI[EỆ]M|TESTING\s*RESULTS|B[AẢ]NG\s*K[EÊ]T\s*QU[AẢ]/i.test(
@@ -358,24 +403,29 @@ function extractGasValues(lines) {
       const m = line.match(gas.re);
       if (!m) continue;
 
-      let rest = line.slice(m.index + m[0].length).trim();
+      const normalizeRest = (t) => t.replace(LT_GLYPHS_RE, "<").replace(LE_GLYPHS_RE, "≤");
+      let rest = normalizeRest(line.slice(m.index + m[0].length)).trim();
+      // Bỏ đơn vị đứng ngay sau tên khí (cột "Đơn vị") để xét được ô "Kết quả" có trống không
+      const restNoUnit = (t) => t.replace(/^(?:\(?\s*(?:ppm|µl\/l|ul\/l|μl\/l)\s*\)?)\s*/i, "").trim();
 
-      // Nếu ô kết quả nằm ở dòng kế tiếp (bảng nhiều dòng do ngắt dòng PDF)
-      if (!rest && i + 1 < searchLines.length) {
-        const nextLine = searchLines[i + 1].trim();
-        const isNextGas = GAS_LINE_PATTERNS.some((g) => g.id !== gas.id && g.re.test(nextLine));
+      // Nếu ô kết quả nằm ở dòng kế tiếp (bảng nhiều dòng do ngắt dòng PDF) — kể cả khi dòng
+      // hiện tại chỉ còn đơn vị "ppm"
+      if (!restNoUnit(rest) && i + 1 < searchLines.length) {
+        const nextLine = normalizeRest(searchLines[i + 1]).trim();
+        const isNextGas = GAS_LINE_PATTERNS.some((g) => g.re.test(nextLine));
         if (!isNextGas) {
-          rest = nextLine;
+          rest = (rest + " " + nextLine).trim();
         }
       }
 
-      // 1) Nếu có từ khóa KPH:
+      // 1) Nếu có từ khóa KPH (Không phát hiện / dưới ngưỡng phát hiện / ND / dấu gạch ngang "-"):
       if (KPH_PATTERN.test(rest)) {
         found = "KPH";
         break;
       }
 
       // 2) Nếu trong kết quả có 2 dấu "<" liên tiếp (vd: "< 1 < 300" hoặc "< 0.1 < 1"):
+      // Dấu "<" đầu tiên chính là kết quả đo dưới ngưỡng phát hiện (LOD), dấu thứ hai là tiêu chuẩn.
       const ltMatches = [...rest.matchAll(/[<≤]\s*[\d.,]+/g)];
       if (ltMatches.length >= 2) {
         const beforeFirstLt = rest.slice(0, ltMatches[0].index);
@@ -401,11 +451,34 @@ function extractGasValues(lines) {
         }
       }
 
-      // 4) Lấy số đo thực tế
+      // 4) Lấy số đo thực tế (đã loại bỏ cột Tiêu chuẩn và Tốc độ sinh khí)
+      const hasLimitToken = /[<≤>≥]=?\s*[\d.,]+/.test(rest);
+      const foldedRest = stripVnDiacritics(rest);
+      const hasVerdict = GAS_VERDICT_RE.test(foldedRest);
       const cleaned = rest
         .replace(/[<≤>≥]=?\s*[\d.,]+/g, "")
         .replace(/[+-]?\s*[\d.,]+\s*%/g, "");
       const nums = cleaned.match(/-?\d+(?:[.,]\d+)?/g);
+
+      // 4a) Ô "Kết quả" TRỐNG: dòng có cột Tiêu chuẩn và/hoặc Đánh giá nhưng không còn số đo
+      //     nào -> KPH (trước đây bỏ trống, hoặc đọc nhầm sang dòng khác).
+      if ((!nums || !nums.length) && (hasLimitToken || hasVerdict)) {
+        found = "KPH";
+        break;
+      }
+
+      // 4b) Dấu "<" của cột Tiêu chuẩn bị MẤT khi trích PDF/OCR (vd "H2 ppm 300 Đạt"): chỉ còn
+      //     ĐÚNG 1 số, số đó trùng 1 ngưỡng tiêu chuẩn đã biết của khí này, và Đánh giá là "Đạt"
+      //     -> đó là giá trị Tiêu chuẩn chứ không phải kết quả đo -> ô Kết quả trống = KPH.
+      //     Dòng "Không đạt"/"Cảnh báo" GIỮ NGUYÊN số (an toàn: không che mất số liệu xấu).
+      if (nums && nums.length === 1 && !hasLimitToken && hasVerdict && !GAS_FAIL_VERDICT_RE.test(foldedRest)) {
+        const n = parseFloat(nums[0].replace(",", "."));
+        if (knownGasLimitValues(gas.id).has(n)) {
+          found = "KPH";
+          break;
+        }
+      }
+
       if (nums && nums.length) {
         found = parseFloat(nums[0].replace(",", "."));
         break;

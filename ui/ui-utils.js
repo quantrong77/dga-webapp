@@ -42,8 +42,9 @@ function alertIfNegative(fields) {
   return false;
 }
 
-/** Cảnh báo (KHÔNG chặn lưu, khác alertIfNegative ở trên) khi để TRỐNG 1/nhiều trong 7
- *  khí chính (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) lúc nhập/sửa số liệu ở tab DGA. */
+/** Thông báo (KHÔNG chặn lưu, khác alertIfNegative ở trên) khi để TRỐNG 1/nhiều trong 7
+ *  khí chính (H2, CH4, C2H6, C2H4, C2H2, CO, CO2) lúc nhập/sửa số liệu ở tab DGA — ô trống
+ *  được hiểu là KPH (không phát hiện), xem onAnalyze() (ui-dga.js). */
 function findEmptyMainGasLabels() {
   return DGA.GASES.filter((g) => $("g_" + g) && $("g_" + g).value.trim() === "");
 }
@@ -51,12 +52,11 @@ function findEmptyMainGasLabels() {
 function warnIfEmptyMainGas() {
   const empty = findEmptyMainGasLabels();
   if (empty.length === 0) return;
-  alert(
-    `Lưu ý: khí ${empty.join(", ")} đang để TRỐNG — hệ thống sẽ tự động tính là 0 ppm và vẫn dùng ` +
-    `giá trị này để đánh giá/vẽ đồ thị xu hướng như đã đo được 0 ppm.\n\n` +
-    `Vui lòng kiểm tra lại BBTN/số liệu gốc: nếu khí này CHƯA ĐO (không phải đo được 0), hãy quay lại ` +
-    `sửa cho đúng sau khi lưu — số liệu vẫn được lưu lại bình thường ngay bây giờ.`
-  );
+  const text =
+    `Khí ${empty.join(", ")} để TRỐNG — được hiểu là KPH (không phát hiện, lưu 0 ppm). ` +
+    `Nếu khí này CHƯA ĐO thì kiểm tra lại BBTN/số liệu gốc và sửa sau khi lưu.`;
+  if (typeof notifyInfo === "function") notifyInfo(text);
+  else console.info("[DGA] " + text);
 }
 
 // ---------------------------------------------------------------------------

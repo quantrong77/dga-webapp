@@ -453,3 +453,94 @@ describe("BbtnExport — Xuất biên bản khi có khí KPH", () => {
     expect(ketLuan).not.toContain("Không áp dụng");
   });
 });
+
+describe("BbtnImport.extractGasValues — Ô 'Kết quả' để TRỐNG = KPH, không lấy giá trị cột Tiêu chuẩn", () => {
+  const wrap = (rows) => [
+    "KẾT QUẢ THÍ NGHIỆM",
+    "TT Hạng mục phân tích (Test items) Đơn vị (Unit) Kết quả (Result) Tiêu chuẩn (Limits) Đánh giá",
+    ...rows,
+    "Ghi chú (Remark):",
+  ];
+
+  test("ô trống, cột Tiêu chuẩn có '<' với ngưỡng lớn -> KPH (trước đây bỏ trống)", () => {
+    const res = extractGasValues(wrap([
+      "1 Hydrogen H2 ppm < 300 Đạt",
+      "2 Methane CH4 9.703 < 30 Đạt",
+      "3 Ethan C2H6 < 25 Đạt",
+      "6 CarbonMonoxit CO 97.798 < 330 Đạt",
+      "7 Carbondioxit CO2 < 900 Đạt",
+    ]));
+    expect(res.H2).toBe("KPH");
+    expect(res.CH4).toBe(9.703);
+    expect(res.C2H6).toBe("KPH");
+    expect(res.CO).toBe(97.798);
+    expect(res.CO2).toBe("KPH");
+  });
+
+  test("ô trống + có cột Tốc độ sinh khí -> KPH", () => {
+    const res = extractGasValues(wrap(["1 Hydrogen H2 ppm < 300 0.5% Đạt", "7 Carbondioxit CO2 < 900 -2.1% Đạt"]));
+    expect(res.H2).toBe("KPH");
+    expect(res.CO2).toBe("KPH");
+  });
+
+  test("dấu '<' bị đổi ký tự khi trích PDF (‹ ˂ ＜ &lt;) -> không lấy số Tiêu chuẩn làm kết quả", () => {
+    const res = extractGasValues(wrap([
+      "1 Hydrogen H2 ppm ‹ 300 Đạt",
+      "2 Methane CH4 ˂ 30 Đạt",
+      "6 CarbonMonoxit CO ＜ 330 Đạt",
+      "7 Carbondioxit CO2 &lt; 900 Đạt",
+    ]));
+    expect(res).toMatchObject({ H2: "KPH", CH4: "KPH", CO: "KPH", CO2: "KPH" });
+  });
+
+  test("dấu '<' bị MẤT, chỉ còn số trùng ngưỡng tiêu chuẩn + 'Đạt' -> KPH", () => {
+    const res = extractGasValues(wrap(["1 Hydrogen H2 ppm 300 Đạt", "7 Carbondioxit CO2 900 Đạt"]));
+    expect(res.H2).toBe("KPH");
+    expect(res.CO2).toBe("KPH");
+  });
+
+  test("an toàn: số trùng ngưỡng nhưng Đánh giá 'Không đạt' -> GIỮ số đo", () => {
+    const res = extractGasValues(wrap(["1 Hydrogen H2 ppm 300 Không đạt"]));
+    expect(res.H2).toBe(300);
+  });
+
+  test("có số đo thật thì vẫn đọc đúng số đo, kể cả khi cột Tiêu chuẩn mất '<'", () => {
+    const res = extractGasValues(wrap([
+      "1 Hydrogen H2 ppm 12.5 < 300 Đạt",
+      "2 Methane CH4 9.7 30 Đạt",
+      "7 Carbondioxit CO2 950 < 900 Không đạt",
+    ]));
+    expect(res.H2).toBe(12.5);
+    expect(res.CH4).toBe(9.7);
+    expect(res.CO2).toBe(950);
+  });
+
+  test("ô kết quả trống, cột Tiêu chuẩn rơi xuống dòng kế tiếp -> KPH", () => {
+    const res = extractGasValues(wrap(["1 Hydrogen H2 ppm", "< 300", "Đạt", "2 Methane CH4 9.7 < 30 Đạt"]));
+    expect(res.H2).toBe("KPH");
+    expect(res.CH4).toBe(9.7);
+  });
+});
+
+describe("Form nhập tab Khí hòa tan — ô khí để TRỐNG được hiểu là KPH", () => {
+  const dgaSrc = fs.readFileSync(path.join(__dirname, "..", "ui", "ui-dga.js"), "utf8");
+  test("onAnalyze(): ô trống -> gases = 0 và đánh dấu kphGases", () => {
+    expect(dgaSrc).toMatch(/raw === ""\) \{[\s\S]{0,300}?gases\[g\] = 0;\s*kphGases\[g\] = true;/);
+  });
+  test("thông báo ô trống nói rõ là KPH, không dùng alert() chặn màn hình", () => {
+    const utils = fs.readFileSync(path.join(__dirname, "..", "ui", "ui-utils.js"), "utf8");
+    const fn = utils.slice(utils.indexOf("function warnIfEmptyMainGas"), utils.indexOf("function warnIfEmptyMainGas") + 600);
+    expect(fn).toContain("KPH");
+    expect(fn).not.toMatch(/\balert\(/);
+  });
+  test("bản mobile dùng cùng bộ đọc khí (extractGasValues) với bản web", () => {
+    const norm = (s) => {
+      s = s.replace(/\r/g, "");
+      const a = s.indexOf("const KPH_PATTERN");
+      return s.slice(a, s.indexOf("\n}\n", s.indexOf("function extractGasValues", a)));
+    };
+    const web = fs.readFileSync(path.join(__dirname, "..", "bbtn", "bbtn-import.js"), "utf8");
+    const mob = fs.readFileSync(path.join(__dirname, "..", "mobile", "bbtn-import.js"), "utf8");
+    expect(norm(mob)).toBe(norm(web));
+  });
+});

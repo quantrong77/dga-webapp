@@ -882,7 +882,10 @@ async function onAnalyze() {
       gases[g] = 0;
       kphGases[g] = true;
     } else if (raw === "") {
+      // Ô để TRỐNG = khí không phát hiện (KPH) — giống BBTN để trống ô "Kết quả" (xem
+      // extractGasValues(), bbtn-import.js): lưu 0 ppm và coi là KPH khi chẩn đoán.
       gases[g] = 0;
+      kphGases[g] = true;
     } else {
       const n = parseFloat(raw.replace(",", "."));
       if (!Number.isFinite(n)) {
