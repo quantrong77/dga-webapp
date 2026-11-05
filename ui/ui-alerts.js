@@ -100,7 +100,7 @@ function totalTrackedDeviceCount(station, device) {
  *  trendStationOptions() ở ui-trend.js. setupCombo() tự gọi lại hàm này mỗi lần mở/gõ
  *  nên danh sách luôn theo đúng dữ liệu mới nhất. */
 function alertStationOptions() {
-  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
+  const allAlerts = collectAllAlerts();
   const names = new Set();
   allAlerts.forEach((a) => { const n = (a.tram || "").trim(); if (n) names.add(n); });
   return Array.from(names)
@@ -113,12 +113,92 @@ function alertFilters() {
   return {
     station: $("al_stationFilter") ? $("al_stationFilter").value.trim() : "",
     device: $("al_deviceFilter") ? $("al_deviceFilter").value.trim() : "",
+    // "Loại cảnh báo" (#al_typeFilter): "level:alarm|alert", "src:gas|oil|oltc|tio" hoặc "cat:<hạng mục>"
+    type: $("al_typeFilter") ? $("al_typeFilter").value : "",
+    // "Số liệu" (#al_dataFilter): "" tất cả | "latest" chỉ số liệu mới nhất | "stale" chỉ cảnh báo cũ
+    data: $("al_dataFilter") ? $("al_dataFilter").value : "",
   };
 }
 
-function filterAlertsBy(alerts, { station, device }) {
+/** Khớp 1 cảnh báo với giá trị ô "Loại cảnh báo" (xem alertFilters()). */
+function alertMatchesType(a, type) {
+  if (!type) return true;
+  const [kind, val] = type.split(":");
+  if (kind === "level") return a.level === val;
+  if (kind === "src") return a.source === val;
+  if (kind === "cat") return (a.categories || []).includes(val);
+  return true;
+}
+
+function filterAlertsBy(alerts, { station, device, type, data }) {
   return alerts.filter((a) =>
-    (!station || (a.tram || "").trim() === station) && (!device || (a.deviceName || "").trim() === device));
+    (!station || (a.tram || "").trim() === station) && (!device || (a.deviceName || "").trim() === device) &&
+    alertMatchesType(a, type) &&
+    (!data || (data === "latest" ? a.isLatest !== false : a.isLatest === false)));
+}
+
+/** Chuẩn hóa tên Trạm/Thiết bị để so "cùng thiết bị" khi xét số liệu mới nhất: bỏ khoảng trắng
+ *  thừa, không phân biệt hoa/thường (VD "AT1 " và "at1" là cùng 1 máy nhập lệch tên). */
+function alertNameKey(s) {
+  return String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+/** Vị trí của bản ghi đang được cảnh báo ("latest" của nhóm) trong TOÀN BỘ chuỗi số liệu cùng thiết bị
+ *  (cùng nguồn dữ liệu, cùng Trạm+Thiết bị đã chuẩn hóa tên, Pha tương thích — trùng Pha, hoặc 1 trong 2
+ *  không tách pha). Trả về thứ tự lần đo (k/n theo thời gian) và có phải SỐ LIỆU MỚI NHẤT trong database
+ *  không — nếu đã có bản ghi mới hơn (VD nhập lệch Pha/tên thiết bị nên rơi sang nhóm khác) thì cảnh báo
+ *  này là của QUÁ KHỨ: newerRecord = bản ghi mới nhất đó. */
+function alertSeriesContext(latest, records, phaseIdOf) {
+  const tram = alertNameKey(latest.tram), dev = alertNameKey(latest.thiet_bi), ph = phaseIdOf(latest);
+  const series = (records || []).filter((r) => {
+    if (alertNameKey(r.tram) !== tram || alertNameKey(r.thiet_bi) !== dev) return false;
+    const p = phaseIdOf(r);
+    return p === ph || p === "" || ph === "";
+  });
+  const desc = alertSortRecordsDescending(series);
+  const idx = desc.indexOf(latest);
+  const stale = idx > 0;
+  return {
+    ordinal: idx < 0 ? null : series.length - idx,
+    total: series.length,
+    isLatest: !stale,
+    newerRecord: stale ? desc[0] : null,
+  };
+}
+
+/** Gộp cảnh báo của cả 4 nguồn; với cảnh báo cũ (đã có số liệu mới hơn) đánh dấu số liệu mới nhất CÒN
+ *  cảnh báo hay KHÔNG (newerStillAlert) — bản ghi mới nhất luôn là "latest" của nhóm của nó nên chỉ cần
+ *  tra xem có cảnh báo nào gắn với đúng bản ghi đó. */
+function collectAllAlerts() {
+  const all = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
+  const byRecord = new Map();
+  all.forEach((a) => { if (a.record) byRecord.set(a.record, a); });
+  all.forEach((a) => {
+    if (a.isLatest === false && a.newerRecord) {
+      const n = byRecord.get(a.newerRecord);
+      a.newerStillAlert = !!n;
+      a.newerLevelLabel = n ? n.levelLabel : null;
+    }
+  });
+  return all;
+}
+
+/** Ô "Lần đo": số Lần đo (khí hòa tan), thứ tự k/n trong chuỗi số liệu, nhãn số liệu mới nhất / cảnh báo cũ. */
+function alertLanDoHtml(a) {
+  const parts = [];
+  if (a.lanDo !== undefined && a.lanDo !== null && a.lanDo !== "—" && a.lanDo !== "") parts.push(`<div><b>Lần ${escapeHtml(a.lanDo)}</b></div>`);
+  if (a.ordinal) parts.push(`<div style="font-size:11px; color:var(--muted);">thứ ${a.ordinal}/${a.total} lần đo</div>`);
+  if (a.isLatest === false && a.newerRecord) {
+    const nr = a.newerRecord;
+    const nrLan = nr.lan_do !== undefined && nr.lan_do !== null && nr.lan_do !== "" ? `, Lần ${nr.lan_do}` : "";
+    const nrPha = nr.pha || nr.phase;
+    const after = a.newerStillAlert ? `vẫn ${a.newerLevelLabel || "cảnh báo"}` : "đã KHÔNG còn cảnh báo";
+    parts.push(`<span class="pill warn" style="margin-top:3px; font-size:10px;" title="Đã có số liệu mới hơn trong database (ngày ${escapeHtml(nr.sample_date || "?")}${escapeHtml(nrLan)}) — cảnh báo này là của lần đo trước. Kiểm tra Pha/tên thiết bị của các bản ghi nếu cần.">⚠ Cảnh báo cũ</span>`);
+    parts.push(`<div style="font-size:11px; margin-top:2px;">Số liệu mới nhất: ${escapeHtml(nr.sample_date || "?")}${escapeHtml(nrLan)}${nrPha ? ` (${escapeHtml(DGA.phaLabelWithPrefix(nrPha))})` : ""} — ${escapeHtml(after)}</div>`);
+  } else if (a.isLatest) {
+    parts.push(`<span class="pill ok" style="margin-top:3px; font-size:10px;" title="Đây là số liệu mới nhất của thiết bị trong database">✓ Mới nhất</span>`);
+  }
+  return parts.join("") || "—";
 }
 
 /** Gợi ý cho ô "Thiết bị" (#al_deviceFilter) — CHỈ các thiết bị đang có Cảnh báo/Báo động và
@@ -127,7 +207,7 @@ function filterAlertsBy(alerts, { station, device }) {
  *  trendDeviceOptions() ở ui-trend.js). Mỗi tên thiết bị gom mọi Pha/loại đo của nó. */
 function alertDeviceOptions() {
   const { station } = alertFilters();
-  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
+  const allAlerts = collectAllAlerts();
   const byName = new Map();
   filterAlertsBy(allAlerts, { station, device: "" }).forEach((a) => {
     const name = (a.deviceName || "").trim();
@@ -166,7 +246,10 @@ function computeGasAlerts() {
   _allMeasurements.forEach((r) => {
     const tram = (r.tram || "").trim();
     const thietbi = (r.thiet_bi || "").trim();
-    const pha = (r.pha || "").trim();
+    // Pha ĐÃ CHUẨN HÓA (gasPhaseIdentity): "" (để trống) và "chung3pha" là CÙNG 1 thiết bị không tách pha —
+    // gộp theo Pha thô sẽ thành 2 nhóm, nhóm bản ghi cũ để trống Pha bị coi là "lần đo gần nhất" và hiện
+    // cảnh báo CŨ dù số liệu mới (Pha "Chung 3 pha") đã hết cảnh báo.
+    const pha = gasPhaseIdentity((r.pha || "").trim());
     const key = `${tram}|||${thietbi}|||${pha}`;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push(r);
@@ -301,6 +384,19 @@ function computeGasAlerts() {
     ]));
 
     const statusText = (overall === "Đạt" ? "Đạt" : "Không đạt") + (condemnBad ? " (Vượt ngưỡng loại bỏ)" : "");
+    // Hạng mục (ô lọc "Loại cảnh báo") — theo đúng các điều kiện của computeOverallStatus()/Điều 54
+    const faultChanged = overallStatus.reasons.some((r) => r.startsWith("Loại sự cố"));
+    const categories = [
+      ...(condemnBad ? ["condemn"] : []),
+      ...(overall !== "Đạt" ? ["absolute"] : []),
+      ...(faultChanged ? ["fault"] : []),
+      ...(exceedCount > 0 ? ["typical"] : []),
+      ...(rateGases.length > 0 ? ["rate"] : []),
+      ...(addFlags.co2co ? ["co2co"] : []),
+      ...(addFlags.o2n2 ? ["o2n2"] : []),
+      ...(bang63Bad ? ["bang63"] : []),
+    ];
+    const ctx = alertSeriesContext(latest, _allMeasurements, (r) => gasPhaseIdentity((r.pha || "").trim()));
 
     results.push({
       source: "gas",
@@ -321,6 +417,8 @@ function computeGasAlerts() {
       reasons: effectiveStatus.reasons,
       action: effectiveStatus.action,
       lanDo: latest.lan_do ?? "—",
+      categories,
+      ...ctx,
       sampleDate: latest.sample_date,
       isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
       editLog: latest.edit_log || "",
@@ -394,6 +492,8 @@ function computeOilAlerts() {
         "đối chiếu thêm kết quả phân tích khí hòa tan (DGA) cùng thời điểm nếu có; báo cáo cấp có thẩm quyền theo " +
         "Điều 6 QĐ1901.",
       lanDo: "—",
+      categories: ["oilq"],
+      ...alertSeriesContext(latest, _allOilTests, (r) => oilPhaseIdentity(r.oil_sample_point, r.phase)),
       sampleDate: latest.sample_date,
       isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
       editLog: latest.edit_log || "",
@@ -460,6 +560,8 @@ function computeOltcOilAlerts() {
       action: "Lấy mẫu dầu OLTC bổ sung xác nhận; kiểm tra tiếp điểm/hồ quang khoang đổi nấc, xem xét lọc/thay dầu " +
         "OLTC theo hướng dẫn nhà sản xuất; báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
       lanDo: "—",
+      categories: ["oilq"],
+      ...alertSeriesContext(latest, _allOltcOilTests, (r) => oltcPhaseIdentity(r.oltc_sample_point, r.phase)),
       sampleDate: latest.sample_date,
       isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
       editLog: latest.edit_log || "",
@@ -535,6 +637,8 @@ function computeInstrumentOilAlerts() {
         "ngưỡng số mặc định cho dầu TI/TU, chỉ dẫn chiếu \"theo quy định nhà sản xuất\" — bổ sung/kiểm tra lại cấu " +
         "hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" nếu cần); báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",
       lanDo: "—",
+      categories: ["oilq"],
+      ...alertSeriesContext(latest, _allTioOilTests || [], (r) => tioPhaseIdentity(r.phase)),
       sampleDate: latest.sample_date,
       isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
       editLog: latest.edit_log || "",
@@ -609,9 +713,9 @@ function refreshAlertsUI() {
   // Lọc theo Trạm biến áp (#al_stationFilter, combo tự gõ-tìm — xem alertStationOptions()
   // ở trên) — để trống = xem TẤT CẢ trạm đang có cảnh báo (mặc định, không đổi hành vi cũ).
   // + lọc theo Thiết bị thuộc trạm (#al_deviceFilter, xem alertDeviceOptions()).
-  const { station, device } = alertFilters();
-  const allAlerts = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
-  const alerts = filterAlertsBy(allAlerts, { station, device });
+  const { station, device, type, data } = alertFilters();
+  const allAlerts = collectAllAlerts();
+  const alerts = filterAlertsBy(allAlerts, { station, device, type, data });
   // Báo động (ALARM) lên trước Cảnh báo (ALERT); trong cùng mức, mới nhất lên trước.
   alerts.sort((a, b) => {
     if (a.level !== b.level) return a.level === "alarm" ? -1 : 1;
@@ -623,7 +727,9 @@ function refreshAlertsUI() {
   const emptyEl = $("alertsEmpty");
   emptyEl.classList.toggle("hidden", alerts.length > 0);
   if (alerts.length === 0) {
-    emptyEl.textContent = device
+    emptyEl.textContent = (type || data)
+      ? 'Không có cảnh báo nào khớp bộ lọc "Loại cảnh báo"/"Số liệu" đang chọn.'
+      : device
       ? `Thiết bị "${device}"${station ? ` (trạm "${station}")` : ""} hiện không ở mức Cảnh báo/Báo động (theo lần đo gần nhất).`
       : station
       ? `Trạm "${station}" hiện không có thiết bị nào đang ở mức Cảnh báo/Báo động (theo lần đo gần nhất của từng thiết bị).`
@@ -643,6 +749,7 @@ function refreshAlertsUI() {
     const editBadge = (typeof editLogBadgeHtml === "function" && a.record) ? editLogBadgeHtml(a.record) : "";
     const editedPill = a.isEdited ? `<span class="pill muted" style="margin-left:4px; font-size:10px;" title="${escapeHtml(a.editLog ? 'Log chỉnh sửa:\n' + a.editLog : 'Đã hiệu chỉnh số liệu')}">✎ Đã hiệu chỉnh</span>` : "";
 
+    if (a.isLatest === false) tr.classList.add("alert-row-stale");
     tr.innerHTML = `
       <td>${escapeHtml(a.tram || "—")}</td>
       <td>${escapeHtml(a.thietBiLabel)}</td>
@@ -652,7 +759,7 @@ function refreshAlertsUI() {
       <td style="max-width:160px;">${exceededHtml}</td>
       <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
       <td style="font-size:12px; max-width:280px; white-space:pre-line;">${escapeHtml(a.action)}</td>
-      <td>${escapeHtml(a.lanDo)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
+      <td style="min-width:120px;">${alertLanDoHtml(a)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
       <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell">${rowActionsHtml([
         a.record && rowActionBtn("view", "eye",
@@ -712,6 +819,14 @@ function refreshAlertsUI() {
   if ($("al_alertCount")) $("al_alertCount").textContent = String(alertCount);
   if ($("al_alarmCount")) $("al_alarmCount").textContent = String(alarmCount);
   if ($("btnExportAlertsExcel")) $("btnExportAlertsExcel").disabled = alerts.length === 0;
+  const staleNote = $("alertsStaleNote");
+  if (staleNote) {
+    const staleN = alerts.filter((a) => a.isLatest === false).length;
+    staleNote.classList.toggle("hidden", staleN === 0);
+    staleNote.textContent = staleN === 0 ? "" :
+      `⚠ ${staleN} cảnh báo KHÔNG phải của số liệu mới nhất (đã có lần đo mới hơn trong database — thường do bản ghi ` +
+      `nhập lệch Pha hoặc lệch tên thiết bị). Xem cột "Lần đo"; chọn "Số liệu" = "Chỉ số liệu mới nhất" để ẩn các dòng này.`;
+  }
 }
 
 /** Xuất danh sách cảnh báo đang hiển thị (_lastAlerts, xem refreshAlertsUI() ở trên)
@@ -743,7 +858,8 @@ function onExportAlertsExcel() {
 
   const HEADER = [
     "Trạm", "Thiết bị", "Loại đo", "Mức cảnh báo", "Tình trạng", "Chỉ tiêu vượt ngưỡng",
-    "Hạng mục cảnh báo", "Khuyến cáo", "Lần đo", "Ngày thí nghiệm", "Trạng thái hiệu chỉnh",
+    "Hạng mục cảnh báo", "Khuyến cáo", "Lần đo", "Thứ tự lần đo", "Số liệu mới nhất?", "Ngày thí nghiệm",
+    "Trạng thái hiệu chỉnh",
   ];
   const aoa = [
     ["BÁO CÁO CẢNH BÁO THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
@@ -766,6 +882,10 @@ function onExportAlertsExcel() {
       (a.reasons || []).join("\n"),
       a.action || "",
       a.lanDo,
+      a.ordinal ? `${a.ordinal}/${a.total}` : "—",
+      a.isLatest === false
+        ? `Không — số liệu mới nhất ngày ${(a.newerRecord && a.newerRecord.sample_date) || "?"}${a.newerStillAlert ? " (vẫn cảnh báo)" : " (đã hết cảnh báo)"}`
+        : "Có",
       a.sampleDate,
       a.isEdited ? `Đã hiệu chỉnh (${(a.editLog || "").replace(/\n/g, "; ")})` : "Nguyên bản",
     ]),
@@ -774,7 +894,7 @@ function onExportAlertsExcel() {
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"] = [
     { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 18 },
-    { wch: 55 }, { wch: 45 }, { wch: 8 }, { wch: 14 },
+    { wch: 55 }, { wch: 45 }, { wch: 8 }, { wch: 10 }, { wch: 30 }, { wch: 14 },
   ];
   // Gộp ô tiêu đề/dòng thống kê cho gọn (span hết bề rộng bảng, 10 cột).
   ws["!merges"] = [

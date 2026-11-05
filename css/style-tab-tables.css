@@ -435,3 +435,8 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   visibility: visible;
   transform: translate(0, -50%);
 }
+
+/* Tab "Cảnh báo": dòng cảnh báo CŨ (đã có số liệu mới hơn trong database — alertSeriesContext(), ui-alerts.js) */
+#alertsTable tr.alert-row-stale > td { opacity: 0.72; background: color-mix(in srgb, var(--warn) 7%, transparent); }
+#alertsTable tr.alert-row-stale:hover > td { opacity: 1; }
+#alertsStaleNote { color: var(--warn); font-weight: 600; }

@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v18-dieu54actions") {
+          if (k !== "dga-offline-v19-alertfilters") {
             caches.delete(k);
           }
         });
@@ -973,7 +973,7 @@
              THỰC SỰ đang có ít nhất 1 thiết bị ở mức Cảnh báo/Báo động; để trống = xem
              TẤT CẢ trạm đang có cảnh báo (mặc định). -->
         <div class="toolbar" style="margin-bottom:14px; justify-content:flex-start; gap:16px; flex-wrap:wrap;">
-          <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
+          <label class="field" style="max-width:320px; flex:1 1 200px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="al_stationFilter" type="text" placeholder="Gõ để tìm trạm, để trống = TẤT CẢ trạm có cảnh báo" autocomplete="off" />
               <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm đang có cảnh báo">▼</button>
@@ -982,14 +982,52 @@
           </label>
           <!-- Lọc theo Thiết bị THUỘC trạm đang chọn (xem alertDeviceOptions(), ui-alerts.js): chỉ gợi ý
                thiết bị đang có cảnh báo; để trống = tất cả thiết bị (của trạm đã chọn, hoặc mọi trạm). -->
-          <label class="field" style="max-width:340px; flex:1 1 280px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
+          <label class="field" style="max-width:320px; flex:1 1 200px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
             <div class="combo-wrap">
               <input id="al_deviceFilter" type="text" placeholder="Gõ để tìm thiết bị, để trống = TẤT CẢ thiết bị" autocomplete="off" />
               <button type="button" id="al_deviceFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị đang có cảnh báo thuộc trạm đã chọn">▼</button>
               <div id="al_deviceFilter_list" class="combo-list hidden"></div>
             </div>
           </label>
+          <!-- Lọc theo Loại cảnh báo (mức / loại đo / hạng mục) và theo Số liệu (mới nhất hay cảnh báo cũ) —
+               xem alertFilters()/alertMatchesType()/alertSeriesContext(), ui-alerts.js. -->
+          <label class="field" style="max-width:280px; flex:1 1 180px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Loại cảnh báo
+            <select id="al_typeFilter" title="Lọc theo mức cảnh báo, loại đo hoặc hạng mục cảnh báo">
+              <option value="">Tất cả</option>
+              <optgroup label="Mức cảnh báo">
+                <option value="level:alarm">Báo động (ALARM)</option>
+                <option value="level:alert">Cảnh báo (ALERT)</option>
+              </optgroup>
+              <optgroup label="Loại đo">
+                <option value="src:gas">Khí hòa tan (DGA)</option>
+                <option value="src:oil">Dầu MBA chính</option>
+                <option value="src:oltc">Dầu OLTC</option>
+                <option value="src:tio">Dầu TI/TU</option>
+              </optgroup>
+              <optgroup label="Hạng mục (khí hòa tan)">
+                <option value="cat:condemn">Vượt ngưỡng loại bỏ (NSX)</option>
+                <option value="cat:absolute">Vượt ngưỡng tuyệt đối</option>
+                <option value="cat:fault">Đổi loại sự cố (Bảng 66)</option>
+                <option value="cat:typical">Vượt giá trị điển hình (Bảng 64)</option>
+                <option value="cat:rate">Tốc độ tăng khí (Bảng 65)</option>
+                <option value="cat:co2co">Tỷ lệ CO2/CO (Điều 54)</option>
+                <option value="cat:o2n2">Tỷ lệ O2/N2 (Điều 54)</option>
+                <option value="cat:bang63">Tổng khí hòa tan (Bảng 63)</option>
+              </optgroup>
+              <optgroup label="Hạng mục (dầu)">
+                <option value="cat:oilq">Chất lượng dầu (độ ẩm, tgδ, BDV...)</option>
+              </optgroup>
+            </select>
+          </label>
+          <label class="field" style="max-width:280px; flex:1 1 180px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu
+            <select id="al_dataFilter" title="Cảnh báo của số liệu mới nhất hay của lần đo cũ (đã có số liệu mới hơn)">
+              <option value="">Tất cả</option>
+              <option value="latest">Chỉ số liệu mới nhất</option>
+              <option value="stale">Chỉ cảnh báo cũ (đã có số liệu mới hơn)</option>
+            </select>
+          </label>
         </div>
+        <p class="note warn hidden" id="alertsStaleNote"></p>
 
         <div class="stat-row" id="alertsStatRow">
           <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Thiết bị đang theo dõi</div><div class="value" id="al_totalDevices">—</div></div>

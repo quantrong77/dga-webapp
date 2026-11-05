@@ -638,6 +638,7 @@ async function initApp() {
     refreshAlertsUI();
   }));
   ["input", "change"].forEach((evt) => $("al_deviceFilter").addEventListener(evt, refreshAlertsUI));
+  ["al_typeFilter", "al_dataFilter"].forEach((id) => { if ($(id)) $(id).addEventListener("change", refreshAlertsUI); });
   toggleMbaSubtypeField();
   toggleStandardTypeFields();
   drawDuvalTriangleBase();

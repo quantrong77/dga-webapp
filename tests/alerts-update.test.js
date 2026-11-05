@@ -456,3 +456,86 @@ test("O2/N2: so ngưỡng bằng số thực; hiển thị cắt bớt 3 chữ s
     expect([v, r.o2_n2, DGA.dieu54AdditionalFlags(r).o2n2]).toEqual([v, shown, warn]);
   });
 });
+
+describe("Tab Cảnh báo: lọc Loại cảnh báo + nhận biết cảnh báo cũ (không phải số liệu mới nhất)", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const vm = require("vm");
+  let c;
+  beforeAll(() => {
+    c = {
+      console, Date, Math, Number, String, Array, Set, Map,
+      document: { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] },
+      escapeHtml: (s) => String(s ?? ""), verdictPill: (v) => v, tioVerdictPill: (v) => v, DGA: require("../dga-logic"),
+    };
+    c.window = c; c.global = c;
+    vm.createContext(c);
+    ["storage/storage-core.js", "storage/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+      .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), c));
+  });
+  const run = (recs) => {
+    c.__m = recs;
+    vm.runInContext("_allMeasurements = __m; _allOilTests = []; _allOltcOilTests = []; _allTioOilTests = []; _allStandards = [];", c);
+    return c.collectAllAlerts();
+  };
+  const MBA = "MBA/Kháng dầu";
+  const ok = { tram: "A", equipment_type: MBA, h2: 20, ch4: 10, c2h6: 10, c2h4: 20, c2h2: 0.5, co: 200, co2: 1500 };
+  const bad = { ...ok, h2: 500 };
+
+  test("Pha để trống và 'Chung 3 pha' là CÙNG thiết bị: số liệu mới đã Đạt thì không còn cảnh báo cũ", () => {
+    const alerts = run([
+      { ...bad, id: "old", thiet_bi: "T1", pha: "", lan_do: 1, sample_date: "2025-01-01" },
+      { ...ok, id: "new", thiet_bi: "T1", pha: "chung3pha", lan_do: 2, sample_date: "2026-01-01" },
+    ]);
+    expect(alerts).toHaveLength(0);
+  });
+
+  test("cảnh báo đang hiện là của lần đo mới nhất: thứ k/n + isLatest", () => {
+    const [a] = run([
+      { ...ok, id: "1", thiet_bi: "T2", pha: "chung3pha", lan_do: 1, sample_date: "2025-01-01" },
+      { ...bad, id: "2", thiet_bi: "T2", pha: "chung3pha", lan_do: 2, sample_date: "2026-01-01" },
+    ]);
+    expect([a.ordinal, a.total, a.isLatest]).toEqual([2, 2, true]);
+    expect(c.alertLanDoHtml(a)).toMatch(/Lần 2.*thứ 2\/2 lần đo.*Mới nhất/);
+  });
+
+  test("bản ghi mới hơn nhập lệch Pha/tên (rơi sang nhóm khác) -> cảnh báo cũ, ghi rõ số liệu mới nhất đã hết cảnh báo", () => {
+    const alerts = run([
+      { ...bad, id: "old", thiet_bi: "T3", pha: "chung3pha", lan_do: 1, sample_date: "2025-01-01" },
+      { ...ok, id: "new", thiet_bi: "t3 ", pha: "A", lan_do: 2, sample_date: "2026-01-01" },
+    ]);
+    expect(alerts).toHaveLength(1);
+    const [a] = alerts;
+    expect(a.isLatest).toBe(false);
+    expect(a.newerRecord.id).toBe("new");
+    expect(a.newerStillAlert).toBe(false);
+    expect(c.alertLanDoHtml(a)).toMatch(/Cảnh báo cũ.*2026-01-01, Lần 2.*đã KHÔNG còn cảnh báo/);
+    expect(c.filterAlertsBy(alerts, { data: "latest" })).toHaveLength(0);
+    expect(c.filterAlertsBy(alerts, { data: "stale" })).toHaveLength(1);
+  });
+
+  test("TI pha A và pha B là 2 thiết bị — số liệu mới của pha B không làm pha A thành 'cũ'", () => {
+    const TI = "TI (biến dòng điện)";
+    const alerts = run([
+      { ...bad, h2: 2000, id: "a", thiet_bi: "TI1", equipment_type: TI, pha: "A", lan_do: 1, sample_date: "2025-01-01" },
+      { ...ok, id: "b", thiet_bi: "TI1", equipment_type: TI, pha: "B", lan_do: 2, sample_date: "2026-01-01" },
+    ]);
+    const a = alerts.find((x) => x.record.id === "a");
+    expect(a.isLatest).toBe(true);
+  });
+
+  test("lọc Loại cảnh báo theo mức / loại đo / hạng mục", () => {
+    const alerts = run([
+      { ...bad, id: "abs", thiet_bi: "X1", pha: "chung3pha", lan_do: 1, sample_date: "2026-01-01" },
+      { ...ok, id: "o2", thiet_bi: "X2", pha: "chung3pha", lan_do: 1, sample_date: "2026-01-01", n2: 50000, o2: 10000 },
+      { ...ok, id: "co", thiet_bi: "X3", pha: "chung3pha", lan_do: 1, sample_date: "2026-01-01", co: 500, co2: 11000 },
+    ]);
+    const ids = (type) => c.filterAlertsBy(alerts, { type }).map((a) => a.record.id).sort();
+    expect(ids("cat:o2n2")).toEqual(["o2"]);
+    expect(ids("cat:co2co")).toEqual(["co"]);
+    expect(ids("cat:absolute")).toEqual(["abs"]);
+    expect(ids("level:alert")).toEqual(["co", "o2"]);
+    expect(ids("src:gas")).toEqual(["abs", "co", "o2"]);
+    expect(ids("src:oil")).toEqual([]);
+  });
+});
