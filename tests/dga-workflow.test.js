@@ -14,6 +14,14 @@ test("có đủ các bước/nhánh chính của Điều 54 và IEC 60599", () =
   expect(W.WF_NODES.map((n) => n.type)).toEqual(expect.arrayContaining(["normal", "alert", "alarm", "decision"]));
 });
 
+test("Tỷ lệ bổ sung đánh giá cho mọi dầu; Bảng 63 là nhánh rẽ riêng cho dầu mới/sau sửa chữa", () => {
+  expect(byId.extra.lines.join(" ")).toMatch(/CO2\/CO, O2\/N2.*MỌI dầu/);
+  expect(byId.extra.lines.join(" ")).not.toContain("Bảng 63");
+  expect(byId.d_b63.type).toBe("decision");
+  expect(byId.d_b63.lines.join(" ")).toMatch(/Dầu mới/);
+  expect(byId.b63.lines.join(" ")).toContain("Bảng 63");
+});
+
 test("điểm cuối mỗi mũi tên nằm trên viền 1 khối", () => {
   const onBorder = ([x, y], n) => {
     const dx = Math.abs(x - n.x), dy = Math.abs(y - n.y);

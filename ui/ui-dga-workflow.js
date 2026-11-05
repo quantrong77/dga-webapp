@@ -6,10 +6,10 @@
  * (computeOverallStatus()/buildRecommendations() ở logic/dga-logic-gas.js).
  *
  * Vẽ bằng SVG với class CSS (css/style-dga-workflow.css) dùng biến màu giao diện nên tự đổi theo chế
- * độ sáng/tối, không cần vẽ lại. Tọa độ khung cố định (viewBox 1100 × 1400), co giãn theo bề ngang. */
+ * độ sáng/tối, không cần vẽ lại. Tọa độ khung cố định (viewBox 1100 × 1550), co giãn theo bề ngang. */
 
 const WF_W = 1100;
-const WF_H = 1400;
+const WF_H = 1550;
 const WF_X = 480; // trục chính
 const WF_L = 135; // cột trái
 const WF_R = 840; // cột phải
@@ -29,11 +29,13 @@ const WF_NODES = [
   { id: "d_oltc", type: "decision", x: WF_X, y: 690, w: 330, h: 112, lines: ["MBA: C2H2/H2 > 2 – 3?", "(nghi nhiễm khí từ OLTC)"] },
   { id: "oltc", type: "note", x: WF_R, y: 690, w: 260, h: 96, lines: ["Lấy mẫu dầu khoang OLTC,", "so sánh với khoang dầu chính,", "trừ khí nền từ OLTC rồi tính", "lại hàm lượng khoang chính"] },
   { id: "ratio", type: "process", x: WF_X, y: 840, w: 540, h: 108, lines: ["Xác định tính chất khiếm khuyết: 3 tỷ số C2H2/C2H4,", "CH4/H2, C2H4/C2H6 -> Bảng 66 (= Table 1 IEC 60599);", "không khớp -> bảng đơn giản PD / D / T (sơ bộ);", "đối chiếu Tam giác Duval 1 (Bảng 67), Biểu đồ 1, 2"] },
-  { id: "extra", type: "process", x: WF_X, y: 962, w: 540, h: 66, lines: ["Đánh giá bổ sung: tỷ lệ CO2/CO, O2/N2; Bảng 63 (dầu mới /", "sau sửa chữa); đối chiếu Bảng 68, 69 (lỗi điển hình)"] },
-  { id: "d_alarm", type: "decision", x: WF_X, y: 1090, w: 400, h: 130, lines: ["Vượt ngưỡng tuyệt đối / loại bỏ NSX,", "hoặc loại sự cố đổi khác", "so với lần đo liền trước?"] },
-  { id: "alarm", type: "alarm", x: WF_R, y: 1090, w: 260, h: 96, lines: ["BÁO ĐỘNG", "Hành động ngay; nguy cơ sự cố", "-> đề xuất dừng vận hành tìm", "nguyên nhân; báo cáo (Điều 6)"] },
-  { id: "alert", type: "alert", x: WF_X, y: 1232, w: 440, h: 76, lines: ["CẢNH BÁO", "Tăng tần suất thí nghiệm, đề xuất phép thử chuyên sâu", "hoặc xin ý kiến nhà sản xuất"] },
-  { id: "save", type: "start", x: WF_X, y: 1345, w: 600, h: 62, lines: ["Lưu lịch sử đo -> theo dõi xu hướng -> lần đo kế tiếp", "(chu kỳ Điều 54: 3 ngày, 1, 3, 6 tháng sau đóng điện, sau đó 1 năm/lần)"] },
+  { id: "extra", type: "process", x: WF_X, y: 955, w: 540, h: 62, lines: ["Tỷ lệ bổ sung CO2/CO, O2/N2 — đánh giá cho MỌI dầu, kể cả", "dầu đang vận hành; đối chiếu Bảng 68, 69 (lỗi điển hình)"] },
+  { id: "d_b63", type: "decision", x: WF_X, y: 1080, w: 360, h: 120, lines: ["Dầu mới đưa vào vận hành /", "sau sửa chữa có thay dầu", "hoặc có lọc dầu?"] },
+  { id: "b63", type: "note", x: WF_R, y: 1080, w: 260, h: 96, lines: ["Bảng 63: tổng hàm lượng khí", "hòa tan < 1,0% (110–220 kV),", "< 0,5% (500 kV); vượt -> kiểm", "tra lại quy trình xử lý dầu"] },
+  { id: "d_alarm", type: "decision", x: WF_X, y: 1240, w: 400, h: 130, lines: ["Vượt ngưỡng tuyệt đối / loại bỏ NSX,", "hoặc loại sự cố đổi khác", "so với lần đo liền trước?"] },
+  { id: "alarm", type: "alarm", x: WF_R, y: 1240, w: 260, h: 96, lines: ["BÁO ĐỘNG", "Hành động ngay; nguy cơ sự cố", "-> đề xuất dừng vận hành tìm", "nguyên nhân; báo cáo (Điều 6)"] },
+  { id: "alert", type: "alert", x: WF_X, y: 1382, w: 440, h: 76, lines: ["CẢNH BÁO", "Tăng tần suất thí nghiệm, đề xuất phép thử chuyên sâu", "hoặc xin ý kiến nhà sản xuất"] },
+  { id: "save", type: "start", x: WF_X, y: 1495, w: 600, h: 62, lines: ["Lưu lịch sử đo -> theo dõi xu hướng -> lần đo kế tiếp", "(chu kỳ Điều 54: 3 ngày, 1, 3, 6 tháng sau đóng điện, sau đó 1 năm/lần)"] },
 ];
 
 // points: đường gấp khúc; label: [x, y, text, anchor?]
@@ -52,12 +54,15 @@ const WF_EDGES = [
   { pts: [[WF_X + 165, 690], [WF_R - 130, 690]], label: [WF_X + 172, 678, "Có", "start"] },
   { pts: [[WF_X, 746], [WF_X, 786]], label: [WF_X + 10, 766, "Không", "start"] },
   { pts: [[WF_R, 738], [WF_R, 840], [WF_X + 270, 840]] },
-  { pts: [[WF_X, 894], [WF_X, 929]] },
-  { pts: [[WF_X, 995], [WF_X, 1025]] },
-  { pts: [[WF_X + 200, 1090], [WF_R - 130, 1090]], label: [WF_X + 206, 1078, "Có", "start"] },
-  { pts: [[WF_X, 1155], [WF_X, 1194]], label: [WF_X + 10, 1174, "Không", "start"] },
-  { pts: [[WF_X, 1270], [WF_X, 1314]] },
-  { pts: [[WF_R, 1138], [WF_R, 1345], [WF_X + 300, 1345]] },
+  { pts: [[WF_X, 894], [WF_X, 924]] },
+  { pts: [[WF_X, 986], [WF_X, 1020]] },
+  { pts: [[WF_X + 180, 1080], [WF_R - 130, 1080]], label: [WF_X + 186, 1068, "Có", "start"] },
+  { pts: [[WF_X, 1140], [WF_X, 1175]], label: [WF_X - 10, 1152, "Không (dầu đang vận hành)", "end"] },
+  { pts: [[WF_R, 1128], [WF_R, 1160], [WF_X, 1160], [WF_X, 1175]], dash: true },
+  { pts: [[WF_X + 200, 1240], [WF_R - 130, 1240]], label: [WF_X + 206, 1228, "Có", "start"] },
+  { pts: [[WF_X, 1305], [WF_X, 1344]], label: [WF_X + 10, 1324, "Không", "start"] },
+  { pts: [[WF_X, 1420], [WF_X, 1464]] },
+  { pts: [[WF_R, 1288], [WF_R, 1495], [WF_X + 300, 1495]] },
 ];
 
 /** Escape + "->" thành mũi tên + chỉ số dưới trong công thức khí (C2H2 -> C₂H₂). */
