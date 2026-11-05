@@ -109,6 +109,46 @@ function mbaOilSectionOf(folded) {
   return null;
 }
 
+/** Kết quả của 1 chỉ tiêu trong đoạn chữ SAU nhãn → null | { all: v } | { phases: [a, b, c] }. */
+function mbaOilReadValue(def, after, threePhase) {
+  if (def.kind === "sulfur") {
+    const v = /khong an mon|non[-\s]?corrosive|khong co kha nang/.test(after) ? "khong" : /an mon|corrosive/.test(after) ? "co" : null;
+    return v ? { all: v } : null;
+  }
+  if (def.kind === "appearance") {
+    // ô kết quả ĐẦU TIÊN (bỏ ô đơn vị "/") — tránh lấy nhầm chữ ở cột Tiêu chuẩn
+    const cells = after.includes("|") ? after.split("|").slice(1).map((c) => c.trim()).filter((c) => c && c !== "/") : [after];
+    const first = cells[0] || "";
+    // PDF (không có ô): chữ xuất hiện TRƯỚC là kết quả — "/ Trong Trong, không có cặn" → Trong
+    const iDuc = first.search(/duc|turbid|dull|co can/);
+    const iTrong = first.search(/trong|clear|sach/);
+    const v = iDuc >= 0 && (iTrong < 0 || iDuc < iTrong) ? "duc" : iTrong >= 0 ? "trong" : null;
+    return v ? { all: v } : null;
+  }
+  if (def.kind === "visual") {
+    const v = /khong (thay|phat hien|co)|not (seen|visible|detected)|none/.test(after) ? "khong"
+      : /(co|thay) tap chat|visible|detected/.test(after) ? "co" : null;
+    return v ? { all: v } : null;
+  }
+  if (def.kind === "yesno") {
+    // Kết quả là ô ĐẦU TIÊN (sau ô nhãn, bỏ ô đơn vị) — "| mgkoh/g dau | khong co | khong co | dat" → "Không có".
+    // Không có dấu ô (PDF): lấy cụm "không có"/"có" xuất hiện đầu tiên sau nhãn.
+    const isUnit = (c) => !c || /^(\/|mg\s*koh\s*\/\s*1?\s*g( dau)?|-)$/.test(c);
+    const cells = after.includes("|") ? after.split("|").slice(1).map((c) => c.trim()).filter((c) => !isUnit(c)) : [];
+    const first = cells.length ? cells[0] : (/(khong co|khong phat hien|am tinh|negative|\bco\b|duong tinh|positive)/.exec(after) || [""])[0];
+    const v = /^(khong co|khong|khong phat hien|am tinh|negative|none|nil)\b/.test(first) ? "khong"
+      : /^(co|duong tinh|positive|present)\b/.test(first) ? "co" : null;
+    return v ? { all: v } : null;
+  }
+  const nums = mbaOilNumbers(mbaOilStripNonResults(after, def.field), def.field === "resistivity_90c_e12");
+  if (nums.length === 0) {
+    // "Không có" / "KPH" (dưới giới hạn phát hiện) → 0 cho các chỉ tiêu đo hàm lượng
+    const rest = after.replace(/\([^)]*\)/g, " ").replace(/mg\s*koh\s*\/\s*1?\s*g( dau)?|mg\s*\/\s*kg|ppm|%/g, " ");
+    return def.zeroWords && MBA_OIL_ZERO_WORDS.test(rest) ? { all: 0 } : null;
+  }
+  return threePhase && nums.length >= 3 ? { phases: nums.slice(0, 3) } : { all: nums[0] };
+}
+
 /** Đọc chỉ tiêu từ các dòng (đã bỏ dấu) của MỘT phần biên bản. */
 function mbaOilParseSection(folded) {
   const threePhase = folded.some((l) => /pha\s*a\b.*pha\s*b\b.*pha\s*c\b/.test(l) || /phase\s*a\b.*phase\s*b\b.*phase\s*c\b/.test(l));
@@ -118,59 +158,49 @@ function mbaOilParseSection(folded) {
   const matched = [];
   const setAll = (field, v) => { cols.forEach((c) => { values[c][field] = v; }); matched.push(field); };
 
-  folded.forEach((f) => {
+  const apply = (field, r) => {
+    if (r.phases) { ["A", "B", "C"].forEach((c, k) => { values[c][field] = r.phases[k]; }); matched.push(field); }
+    else setAll(field, r.all);
+  };
+  // dòng MỞ ĐẦU bằng nhãn chỉ tiêu khác (không tính chữ trong cột Tiêu chuẩn như "... không có cặn")
+  const labelAt = (line) => /^[\s\-–•+(]*(he so|ham luong|nhiet do|dien ap|dien tro|mau sac|suc cang|tri so|chi so|co kich thuoc|quan sat|luu huynh|khoi luong|chat (uc che|thu dong))\b/.test(line)
+    || MBA_OIL_BBTN_LABELS.some((d) => { const x = d.re.exec(line); return x && x.index <= 3; });
+  // STT đầu dòng: "6 C 144", "4.3 - Có kích thước...", "2. Hệ số..." (không nhầm với kết quả "95.9 ≥ 55")
+  const STT = /^\d{1,2}(?:\.\d{1,2})?\.?(?=\s+[^\d≤≥<>.,\s]|\s*$)/;
+  // Chỉ đọc nối dòng trong BẢNG KẾT QUẢ (sau dòng tiêu đề bảng), không đọc ở danh sách "Các hạng mục đã thí nghiệm"
+  let inTable = false;
+  const isBreak = (line) => mbaOilSectionOf(line) || /^[\s+\-–•]*(?:(?:bo\s+)?oltc\s+)?pha\s*[abc]\b/.test(line)
+    || /^(stt|hang muc|\(test items\))/.test(line.trim());
+
+  for (let i = 0; i < folded.length; i++) {
+    const f = folded[i];
+    if (/hang muc phan tich|\(test items\)|^\s*stt\b|\(result\)/.test(f)) inTable = true;
     for (const def of MBA_OIL_BBTN_LABELS) {
       if (matched.includes(def.field)) continue;
       const m = def.re.exec(f);
       if (!m) continue;
       // phần sau nhãn; bỏ chú thích tiếng Anh ngay sau nhãn ("/ (Flash point PMCC)", "(Particles content)")
       const after = f.slice(m.index + m[0].length).replace(/^[\s/]*\([^)]*\)/, " ");
-      if (def.kind === "sulfur") {
-        const v = /khong an mon|non[-\s]?corrosive|khong co kha nang/.test(after) ? "khong" : /an mon|corrosive/.test(after) ? "co" : null;
-        if (v) setAll(def.field, v);
-        break;
+      let r = mbaOilReadValue(def, after, threePhase);
+      // PDF: 1 hàng bảng bị tách thành nhiều dòng — "Nhiệt độ chớp cháy kín" / "0" (chữ o của °C) /
+      // "6 C 144 ≥ 135 C ..." / "(Flash point PMCC)". Nhãn không kèm kết quả → đọc tiếp các dòng sau của
+      // CÙNG hàng: bỏ dòng chỉ có "0", bỏ STT đầu dòng; dừng ở nhãn chỉ tiêu khác / tiêu đề phần.
+      if (!r && inTable && !after.includes("|")) {
+        for (let j = i + 1, seen = 0; j < folded.length && seen < 3; j++) {
+          const line = folded[j].trim();
+          if (/^([0o]\s*)+$/.test(line)) continue;
+          const hadStt = STT.test(line);
+          const body = line.replace(STT, " ").replace(/^[\s\-–•]+/, " ");
+          if (isBreak(line) || labelAt(body.trim())) break;
+          seen++;
+          r = mbaOilReadValue(def, " " + body, threePhase);
+          if (r || hadStt) break; // dòng có STT là dòng giữa của hàng: không có kết quả thì hàng này bỏ trống
+        }
       }
-      if (def.kind === "appearance") {
-        // ô kết quả ĐẦU TIÊN (bỏ ô đơn vị "/") — tránh lấy nhầm chữ ở cột Tiêu chuẩn
-        const cells = after.includes("|") ? after.split("|").slice(1).map((c) => c.trim()).filter((c) => c && c !== "/") : [after];
-        const first = cells[0] || "";
-        const v = /duc|turbid|dull|van duc|co can/.test(first) ? "duc" : /trong|clear|sach/.test(first) ? "trong" : null;
-        if (v) setAll(def.field, v);
-        break;
-      }
-      if (def.kind === "visual") {
-        const v = /khong (thay|phat hien|co)|not (seen|visible|detected)|none/.test(after) ? "khong"
-          : /(co|thay) tap chat|visible|detected/.test(after) ? "co" : null;
-        if (v) setAll(def.field, v);
-        break;
-      }
-      if (def.kind === "yesno") {
-        // Kết quả là ô ĐẦU TIÊN (sau ô nhãn, bỏ ô đơn vị) — "| mgkoh/g dau | khong co | khong co | dat" → "Không có".
-        // Không có dấu ô (PDF): lấy cụm "không có"/"có" xuất hiện đầu tiên sau nhãn.
-        const isUnit = (c) => !c || /^(\/|mg\s*koh\s*\/\s*1?\s*g( dau)?|-)$/.test(c);
-        const cells = after.includes("|") ? after.split("|").slice(1).map((c) => c.trim()).filter((c) => !isUnit(c)) : [];
-        const first = cells.length ? cells[0] : (/(khong co|khong phat hien|am tinh|negative|\bco\b|duong tinh|positive)/.exec(after) || [""])[0];
-        const v = /^(khong co|khong|khong phat hien|am tinh|negative|none|nil)\b/.test(first) ? "khong"
-          : /^(co|duong tinh|positive|present)\b/.test(first) ? "co" : null;
-        if (v) setAll(def.field, v);
-        break;
-      }
-      const nums = mbaOilNumbers(mbaOilStripNonResults(after, def.field), def.field === "resistivity_90c_e12");
-      if (nums.length === 0) {
-        // "Không có" / "KPH" (dưới giới hạn phát hiện) → 0 cho các chỉ tiêu đo hàm lượng
-        const rest = after.replace(/\([^)]*\)/g, " ").replace(/mg\s*koh\s*\/\s*1?\s*g( dau)?|mg\s*\/\s*kg|ppm|%/g, " ");
-        if (def.zeroWords && MBA_OIL_ZERO_WORDS.test(rest)) setAll(def.field, 0);
-        break;
-      }
-      if (threePhase && nums.length >= 3) {
-        ["A", "B", "C"].forEach((c, k) => { values[c][def.field] = nums[k]; });
-        matched.push(def.field);
-      } else {
-        setAll(def.field, nums[0]);
-      }
+      if (r) apply(def.field, r);
       break; // mỗi dòng 1 chỉ tiêu
     }
-  });
+  }
   return { threePhase, values, matched };
 }
 
@@ -221,8 +251,16 @@ function parseMbaOilBbtnLines(lines) {
   }
 
   const header = { tram: "", thietBi: "", ngay: "", voltageClass: "", oilState: "", phase: "", hangSx: "", serial: "", loaiDau: "", ghiChu: "" };
-  // Giá trị sau nhãn (lấy trên chuỗi GỐC có dấu; cắt ở ô kế tiếp " | ")
-  const valueAfter = (i, m) => raw[i].slice(m.index + m[0].length).split(/\s*\|\s*/)[0].trim();
+  // Giá trị sau nhãn (lấy trên chuỗi GỐC có dấu; cắt ở ô kế tiếp " | "). PDF không có dấu ô: 2 ô cùng hàng
+  // nằm chung 1 dòng ("Hãng sản xuất: EEMC Năm sản xuất: 2019") → cắt ở nhãn kế tiếp (chuỗi bỏ dấu cùng độ dài).
+  // Ô chỉ ghi "-" / "—" / "/" / "N/A" (không có thông tin) → để trống
+  const NEXT_LBL = /\s(nam san xuat|nam van hanh|ngay (lay mau|thi nghiem|kiem dinh)|cong suat|kieu loai|so che tao|dien ap dinh muc|loai dau|hang san xuat|vi tri lay mau)\s*(\([^)]*\))?\s*:/;
+  const valueAfter = (i, m) => {
+    const start = m.index + m[0].length;
+    const nx = NEXT_LBL.exec(folded[i].slice(start));
+    const v = raw[i].slice(start, nx ? start + nx.index : undefined).split(/\s*\|\s*/)[0].trim();
+    return /^([-–—/.]+|n\s*\/\s*a|k\s*\/\s*c)$/i.test(v) ? "" : v;
+  };
   const LBL = (words) => new RegExp(`(?:^|\\s|\\|)(?:${words})\\s*(?:\\([^)]*\\))?\\s*[:\\-–]\\s*`);
   for (let i = 0; i < folded.length; i++) {
     const f = folded[i];
@@ -230,7 +268,7 @@ function parseMbaOilBbtnLines(lines) {
     let m;
     if (!header.tram && (m = LBL("ten du an\\s*\\/\\s*ten tram|ten tram|tram bien ap|tram").exec(f))) {
       const v = valueAfter(i, m);
-      const tba = /(TBA|Trạm biến áp)\s.+$/i.exec(v);
+      const tba = /(TBA|Trạm biến áp|Trạm(?=\s+\d+\s*kV))\s.+$/i.exec(v);
       header.tram = (tba ? tba[0] : v).trim();
     }
     if (!header.thietBi && (m = LBL("vi tri lap dat|ten thiet bi|thiet bi").exec(f))) header.thietBi = valueAfter(i, m);
@@ -245,13 +283,20 @@ function parseMbaOilBbtnLines(lines) {
       if (ph && !multi) header.phase = ph[1].toUpperCase();
     }
     // Điện áp định mức: lấy cấp CAO nhất ghi trên dòng — "500 kV", "(225/√3±8x1,25%)/115/√3/23 (kV)" → 225.
-    if (!header.voltageClass && /(dien ap dinh muc|cap dien ap|rated voltage|\budm\b)/.test(f) && /kv/.test(f)) {
-      const part = f.replace(/^.*?(dien ap dinh muc|cap dien ap|rated voltage|\budm\b)[^:]*:?/, "").split("|")[0];
+    // PDF: giá trị có thể rơi xuống dòng sau — "Điện áp định mức (Rated voltage): Công suất (Rated power): 150/200/250
+    // (MVA)" rồi "(225/√3±8x1,25%)/115/√3/23 (kV)".
+    if (!header.voltageClass && /(dien ap dinh muc|cap dien ap|rated voltage|\budm\b)/.test(f)) {
+      let part = f.replace(/^.*?(dien ap dinh muc|cap dien ap|rated voltage|\budm\b)[^:]*:?/, "").split("|")[0];
+      const nx = NEXT_LBL.exec(" " + part);
+      if (nx) part = part.slice(0, Math.max(0, nx.index - 1));
+      if (!/kv/.test(part) && i + 1 < folded.length && /^[\s(]*\d[^:]*kv/.test(folded[i + 1])) part = folded[i + 1];
+      if (!/kv/.test(part)) part = "";
       const nums = (part.match(/\d+(?:[.,]\d+)?/g) || []).map((s) => Number(s.replace(",", "."))).filter((n) => n >= 6 && n <= 800);
       if (nums.length) header.voltageClass = mbaOilVoltageClass(Math.max(...nums));
     }
     if (!header.oilState && /(ly do|muc dich|purpose)/.test(f)) {
-      if (/(lap dat|lap moi|sau sua chua|nghiem thu|dau moi|truoc khi dong dien)/.test(f)) header.oilState = "new";
+      // "Thí nghiệm sau nạp vào máy" / "sau nạp dầu" → dầu mới sau khi nạp vào thiết bị
+      if (/(lap dat|lap moi|sau sua chua|nghiem thu|dau moi|truoc khi dong dien|(sau (khi )?|da )nap|nap (dau )?vao)/.test(f)) header.oilState = "new";
       else if (/(dinh ky|van hanh|bat thuong)/.test(f)) header.oilState = "inservice";
     }
   }

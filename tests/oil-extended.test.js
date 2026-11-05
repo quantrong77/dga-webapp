@@ -241,6 +241,91 @@ describe("đọc BBTN dầu MBA (PDF -> dòng chữ)", () => {
     expect(p.oltc.values).toEqual({ A: { bdv_kv: 90, tgd_90c_percent: 0.247 }, B: { bdv_kv: 88 }, C: { bdv_kv: 87.4 } });
   });
 
+  test("mẫu PTC3 form 2 — MBA 3 pha: thùng chính và OLTC đều 1 bảng có 3 cột Pha A/B/C; 'sau nạp vào máy' = dầu mới", () => {
+    const p = MbaOilBbtn.parseMbaOilBbtnLines([
+      "Tên dự án/tên trạm (Project): Công trình NCS TBA 500kV Di Linh",
+      "Vị trí lắp đặt (Site): MBA AT1",
+      "Vị trí lấy mẫu (Sampling position): Van đáy thân máy, OLTC",
+      "Hãng sản xuất (Manufacturer): Nynas | Năm sản xuất: 2026",
+      "Điện áp định mức (Rated voltage): 500kV | Công suất (Rated power):",
+      "Số chế tạo (Serial No): - | Năm vận hành (Year of operation): -",
+      "Loại dầu (Type): NYTRO 10XN | Ngày lấy mẫu (Date): 22/10/2026",
+      "Lý do thí nghiệm (Purpose of test): Thí nghiệm sau nạp vào máy",
+      "1. Điện áp chọc thủng (Breakdown voltage) | ✓ | Đạt",
+      "Dầu cách điện trong thùng dầu chính (Insulation oil of main tank):",
+      "STT | Hạng mục phân tích (Test items) | Đơn vị (Unit) | Kết quả (Result) | Tiêu chuẩn (Limits) | Đánh giá (Estimate)",
+      "Pha A (Phase A) | Pha B (Phase B) | Pha C (Phase C)",
+      "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 90,1 | 90,3 | 94,2 | ≥ 70 | Đạt",
+      "2 | Hệ số tổn hao điện môi Tgδ 900C (Dielectric dissipation factor) | % | 0,278 | 0,078 | 0,085 | ≤ 1 | Đạt",
+      "3 | Hàm lượng nước trong dầu (Water content) | ppm | 4 | 5 | 5 | < 10 | Đạt",
+      "Dầu cách điện trong bộ OLTC (Insulation oil of on - load tap changer):",
+      "Pha A (Phase A) | Pha B (Phase B) | Pha C (Phase C)",
+      "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 80,6 | 83,8 | 87,9 | ≥ 70 | Đạt",
+      "2 | Hệ số tổn hao điện môi Tgδ 900C (Dielectric dissipation factor) | % | 0,118 | 0,127 | 0,132 | ≤ 1 | Đạt",
+      "3 | Hàm lượng nước trong dầu (Water content) | ppm",
+      "THIẾT BỊ THÍ NGHIỆM (Testing instruments):",
+    ]);
+    expect(p.header).toMatchObject({ tram: "TBA 500kV Di Linh", thietBi: "MBA AT1", ngay: "2026-10-22", voltageClass: "500",
+      oilState: "new", phase: "", hangSx: "Nynas", serial: "", loaiDau: "NYTRO 10XN" });
+    expect(p.threePhase).toBe(true);
+    expect(p.values).toEqual({
+      A: { bdv_kv: 90.1, tgd_90c_percent: 0.278, moisture_ppm: 4 },
+      B: { bdv_kv: 90.3, tgd_90c_percent: 0.078, moisture_ppm: 5 },
+      C: { bdv_kv: 94.2, tgd_90c_percent: 0.085, moisture_ppm: 5 },
+    });
+    expect(p.oltc.threePhase).toBe(true);
+    expect(p.oltc.values).toEqual({ A: { bdv_kv: 80.6, tgd_90c_percent: 0.118 }, B: { bdv_kv: 83.8, tgd_90c_percent: 0.127 }, C: { bdv_kv: 87.9, tgd_90c_percent: 0.132 } });
+  });
+
+  test("PDF: 1 hàng bảng tách nhiều dòng (nhãn / '0' của °C / STT + kết quả / chú thích tiếng Anh); header không có dấu ô", () => {
+    const p = MbaOilBbtn.parseMbaOilBbtnLines([
+      "Tên dự án/tên trạm (Project): Công trình nâng công suất Trạm 220kV Hàm Tân",
+      "Hãng sản xuất (Manufacturer): EEMC Năm sản xuất: 2019",
+      "Điện áp định mức (Rated voltage): Công suất (Rated power): 150/200/250 (MVA)",
+      "(225/√3±8x1,25%)/115/√3/23 (kV)",
+      "Số chế tạo (Serial No): 194839-124 Năm vận hành (Year of operation): 2019",
+      "Loại dầu (Type): ERGON-Mỹ Ngày lấy mẫu (Date): 18/10/2026",
+      "1. Điện áp chọc thủng (Breakdown voltage) ✓ Đạt",
+      "0",
+      "2. Hệ số tổn hao điện môi Tgδ 90 C (Dielectric dissipation factor) ✓ Đạt",
+      "6. Nhiệt độ chớp cháy kín (Flash point PMCC)",
+      "1. Dầu cách điện trong thùng dầu chính (Insulation oil of main tank):",
+      "Hạng mục phân tích Đơn vị Kết quả Tiêu chuẩn Đánh giá",
+      "STT",
+      "(Test items) (Unit) (Result) (Limits) (Estimate)",
+      "Điện áp chọc thủng",
+      "1 kV 95.9 ≥ 55 Đạt",
+      "(Breakdown voltage)",
+      "0",
+      "Hệ số tổn hao điện môi Tgδ 90 C",
+      "2 % 0.092 ≤ 10 Đạt",
+      "(Dielectric dissipation factor)",
+      "Màu sắc và độ trong",
+      "3 / Trong Trong, không có cặn Đạt",
+      "(Appearance)",
+      "Hàm lượng tạp chất cơ học",
+      "4",
+      "(Particles content)",
+      "4.1 - Quan sát bằng mắt / Không thấy Không thấy Đạt",
+      "4.2 - Có kích thước hạt lớn hơn 6μm Số lượng tạp",
+      "4.3 - Có kích thước hạt lớn hơn 14μm chất/1ml dầu",
+      "Hàm lượng nước trong dầu",
+      "5 ppm",
+      "(Water content)",
+      "Nhiệt độ chớp cháy kín",
+      "0",
+      "6 C 144 ≥ 135 C và giảm không quá 5 C Đạt",
+      "(Flash point PMCC)",
+      "7 Hàm lượng axit (Acid number) mgKOH/g 0.02 ≤ 0.15 Đạt",
+      "THIẾT BỊ THÍ NGHIỆM (Testing instruments):",
+    ]);
+    expect(p.header).toMatchObject({ tram: "Trạm 220kV Hàm Tân", hangSx: "EEMC", serial: "194839-124", loaiDau: "ERGON-Mỹ",
+      voltageClass: "220", ngay: "2026-10-18" });
+    // nước để trống → không lấy STT "5"; tạp chất 6μm không lấy nhầm "14" của dòng sau; chớp cháy không lấy "0" của °C
+    expect(p.values.X).toEqual({ bdv_kv: 95.9, tgd_90c_percent: 0.092, appearance: "trong", mech_visual: "khong",
+      flash_point_c: 144, acid_mgkoh: 0.02 });
+  });
+
   test("DOCX (word/document.xml) → dòng: đoạn văn 1 dòng, hàng bảng nối ô bằng ' | '", () => {
     const xml = '<w:document><w:body><w:p><w:r><w:t>Dầu cách điện trong thùng dầu chính:</w:t></w:r></w:p>' +
       '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>1</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Điện áp chọc thủng</w:t></w:r></w:p>' +
