@@ -21,24 +21,30 @@ function populateOilVoltageClasses() {
 }
 
 // ---------------------------------------------------------------------
-// Bảng nhập chỉ tiêu (1 cột "Kết quả" hoặc 3 cột Pha A/B/C)
+// Bảng nhập chỉ tiêu (1 cột "Kết quả" hoặc 3 cột Pha A/B/C) — DÙNG CHUNG cho form dầu thùng chính
+// (tiền tố "o") và form dầu OLTC (tiền tố "ot"). OLTC chỉ có nhóm cơ bản + QĐ1901 + chỉ tiêu khác
+// (Điều 37: dầu OLTC mới đánh giá như dầu thùng chính; vận hành theo Bảng 49).
 // ---------------------------------------------------------------------
-function oilFormCols() {
-  return $("o_samplepoint").value === "pharieng" ? ["A", "B", "C"] : ["X"];
+const OIL_PARAM_FORMS = {
+  o: { groups: ["base", "qd1901", "iec", "other", "oxidation"] },
+  ot: { groups: ["base", "qd1901", "other"] },
+};
+function oilFormCols(p = "o") {
+  return $(`${p}_samplepoint`).value === "pharieng" ? ["A", "B", "C"] : ["X"];
 }
 function oilColLabel(col) {
   return col === "X" ? "Kết quả" : "Pha " + col;
 }
-function oilInputId(field, col) {
-  return `o_p_${field}_${col}`;
+function oilInputId(field, col, p = "o") {
+  return `${p}_p_${field}_${col}`;
 }
 
 /** Đọc toàn bộ ô nhập hiện có: { col: { field: value } } (chỉ ô có giá trị). */
-function readOilParamValues() {
+function readOilParamValues(p = "o") {
   const out = {};
   ["X", "A", "B", "C"].forEach((col) => {
     DGA.OIL_PARAM_DEFS.forEach((d) => {
-      const el = $(oilInputId(d.field, col));
+      const el = $(oilInputId(d.field, col, p));
       if (!el || el.value === "") return;
       out[col] = out[col] || {};
       out[col][d.field] = d.type === "select" ? el.value : Number(el.value);
@@ -49,19 +55,19 @@ function readOilParamValues() {
 
 /** Vẽ lại bảng nhập theo điểm lấy mẫu; preserve: giữ số đã gõ (chuyển chung <-> pha riêng: cột "Kết quả"
  *  <-> "Pha A"). */
-function renderOilParamTable(preserve = true) {
-  const wrap = $("o_paramTableWrap");
+function renderOilParamTable(preserve = true, p = "o") {
+  const wrap = $(`${p}_paramTableWrap`);
   if (!wrap) return;
-  const cols = oilFormCols();
-  const old = preserve ? readOilParamValues() : {};
+  const cols = oilFormCols(p);
+  const old = preserve ? readOilParamValues(p) : {};
   if (cols.length === 3 && old.X && !old.A) old.A = old.X;
   if (cols.length === 1 && !old.X && old.A) old.X = old.A;
 
-  wrap.innerHTML = ["base", "qd1901", "iec", "oxidation"].map((g) => {
+  wrap.innerHTML = OIL_PARAM_FORMS[p].groups.map((g) => {
     const defs = DGA.OIL_PARAM_DEFS.filter((d) => d.group === g);
     const rows = defs.map((d) => {
       const cells = cols.map((col) => {
-        const id = oilInputId(d.field, col);
+        const id = oilInputId(d.field, col, p);
         const aria = `${d.label}${col === "X" ? "" : " pha " + col}`;
         if (d.type === "select") {
           return `<td><select id="${id}" aria-label="${escapeHtml(aria)}"><option value="">—</option>${d.options
@@ -80,29 +86,42 @@ function renderOilParamTable(preserve = true) {
 
   Object.entries(old).forEach(([col, vals]) => {
     if (!cols.includes(col)) return;
-    Object.entries(vals).forEach(([field, v]) => { const el = $(oilInputId(field, col)); if (el) el.value = v; });
+    Object.entries(vals).forEach(([field, v]) => { const el = $(oilInputId(field, col, p)); if (el) el.value = v; });
   });
-  wrap.querySelectorAll("input, select").forEach((el) => el.addEventListener("input", updateOilGroupCounts));
-  wrap.querySelectorAll("select").forEach((el) => el.addEventListener("change", updateOilGroupCounts));
-  updateOilGroupCounts(true);
+  const upd = () => updateOilGroupCounts(false, p);
+  wrap.querySelectorAll("input, select").forEach((el) => el.addEventListener("input", upd));
+  wrap.querySelectorAll("select").forEach((el) => el.addEventListener("change", upd));
+  updateOilGroupCounts(true, p);
 }
 
 /** Số chỉ tiêu đã nhập của từng nhóm (hiện cạnh tiêu đề nhóm); openFilled: mở sẵn nhóm có số liệu. */
-function updateOilGroupCounts(openFilled) {
-  const vals = readOilParamValues();
-  ["base", "qd1901", "iec", "oxidation"].forEach((g) => {
+function updateOilGroupCounts(openFilled, p = "o") {
+  const wrap = $(`${p}_paramTableWrap`);
+  if (!wrap) return;
+  const vals = readOilParamValues(p);
+  OIL_PARAM_FORMS[p].groups.forEach((g) => {
     const fields = new Set();
     Object.values(vals).forEach((v) => Object.keys(v).forEach((f) => {
       const d = DGA.oilParamDef(f);
       if (d && d.group === g) fields.add(f);
     }));
-    const badge = document.querySelector(`[data-count-for="${g}"]`);
+    const badge = wrap.querySelector(`[data-count-for="${g}"]`);
     if (badge) badge.textContent = fields.size ? ` — đã nhập ${fields.size} chỉ tiêu` : "";
     if (openFilled === true && fields.size) {
-      const det = document.querySelector(`.oil-param-group[data-group="${g}"]`);
+      const det = wrap.querySelector(`.oil-param-group[data-group="${g}"]`);
       if (det) det.open = true;
     }
   });
+}
+
+/** Điền giá trị đã đọc (BBTN) vào bảng nhập; col "X" sang bảng 3 pha thì vào đúng phase (nếu có) hoặc A. */
+function oilFillParamValues(values, p = "o", phaseForX = "") {
+  const cols = oilFormCols(p);
+  Object.entries(values || {}).forEach(([col, vals]) => {
+    const target = cols.length === 3 && col === "X" ? (phaseForX || "A") : col;
+    Object.entries(vals).forEach(([field, v]) => { const el = $(oilInputId(field, target, p)); if (el) el.value = v; });
+  });
+  updateOilGroupCounts(true, p);
 }
 
 // Pha giờ chọn bằng CỘT trong bảng nhập (#o_phase_wrap luôn ẩn, giữ trong DOM cho tương thích).
@@ -129,7 +148,6 @@ function toggleOilMembraneField() {
 // _editingOilRecords: { col: bản ghi } đang SỬA (rỗng = nhập MỚI) — mở 1 bản ghi pha riêng sẽ nạp cả các
 // pha cùng biên bản (cùng bbtn_group_id, hoặc cùng thiết bị + ngày lấy mẫu).
 let _editingOilRecords = {};
-let _oilBbtnFileInfo = null; // tên file BBTN vừa đọc (để hiện ghi chú)
 
 function clearOilForm() {
   ["o_tram", "o_thietbi", "o_ghichu"].forEach((id) => ($(id).value = ""));
@@ -138,8 +156,7 @@ function clearOilForm() {
   $("o_inhibited").value = "";
   $("o_oxmethod").value = "";
   $("o_samplepoint").value = "chung";
-  if ($("o_bbtn_file")) $("o_bbtn_file").value = "";
-  oilRenderFileLabel();
+  oilBbtnClearImport();
   $("oImportNote").classList.add("hidden");
   $("o_phase_wrap").classList.add("hidden");
   renderOilParamTable(false);
@@ -283,8 +300,8 @@ async function onAnalyzeOil() {
     if (!confirm(`Đã có thí nghiệm dầu ${what}của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
   }
   const wasEditing = Object.keys(_editingOilRecords).length > 0;
-  const file = $("o_bbtn_file") && $("o_bbtn_file").files && $("o_bbtn_file").files[0];
-  const groupId = records.find((r) => r.bbtn_group_id)?.bbtn_group_id ||
+  const file = oilBbtnPendingFile();
+  const groupId = records.find((r) => r.bbtn_group_id)?.bbtn_group_id || oilBbtnGroupId() ||
     (records.length > 1 || file ? Storage.newId() : "");
   records.forEach((r) => { if (groupId) r.bbtn_group_id = groupId; });
 
@@ -293,7 +310,7 @@ async function onAnalyzeOil() {
   try {
     if (file) {
       try {
-        const attachment = await Storage.uploadAttachment(groupId, file);
+        const attachment = await oilBbtnUpload(groupId);
         records.forEach((rec) => Object.assign(rec, attachment));
       } catch (err) {
         notifyError("Đã hiển thị kết quả, nhưng CHƯA LƯU vì không tải được file BBTN lên: " + storageErrorMessage(err));
@@ -313,10 +330,11 @@ async function onAnalyzeOil() {
     }
     await registerStationIfNew(header.tram);
     resetOilTestEditState();
-    if ($("o_bbtn_file")) $("o_bbtn_file").value = "";
-    oilRenderFileLabel();
+    // Biên bản đọc từ file: GIỮ file + bbtn_group_id để phần OLTC cùng biên bản đính kèm đúng file đó
+    if (!_oilBbtnImport && $("o_bbtn_file")) { $("o_bbtn_file").value = ""; oilRenderFileLabel(); }
     await refreshOilTestsUI();
-    showToast(`${wasEditing ? "Đã cập nhật" : "Đã lưu"} thí nghiệm dầu: ${saved.join(", ")}.`);
+    showToast(`${wasEditing ? "Đã cập nhật" : "Đã lưu"} thí nghiệm dầu thùng chính: ${saved.join(", ")}.`);
+    return true;
   } finally {
     btn.disabled = false;
   }
@@ -458,52 +476,114 @@ async function refreshOilTestsUI() {
 }
 
 // ---------------------------------------------------------------------
-// Đọc BBTN dầu MBA (PDF) — nhập biên bản mới hoặc lịch sử
+// Đọc BBTN dầu MBA (PDF hoặc DOCX) — nhập biên bản mới hoặc lịch sử. 1 biên bản PTC3 gồm phần dầu THÙNG
+// CHÍNH và phần dầu OLTC → điền cả 2 form, dùng CHUNG 1 file đính kèm + 1 bbtn_group_id.
+//   - MBA 1 pha ("Vị trí lấy mẫu: ... pha C"): thùng chính + OLTC đều là cột pha C ("riêng từng pha").
+//   - MBA 3 pha: thùng chính 1 cột (thùng chung); OLTC tách 3 bảng con pha A/B/C → OLTC "một pha" 3 cột.
 // ---------------------------------------------------------------------
+
+// Biên bản đang mở từ file: { file, groupId, attachment|null, fileName }
+let _oilBbtnImport = null;
+
+/** File BBTN sẽ đính kèm khi lưu (đọc từ ô chọn file, hoặc file của biên bản đang mở). */
+function oilBbtnPendingFile() {
+  if (_oilBbtnImport && _oilBbtnImport.file) return _oilBbtnImport.file;
+  const input = $("o_bbtn_file");
+  return (input && input.files && input.files[0]) || null;
+}
+function oilBbtnGroupId() {
+  return _oilBbtnImport ? _oilBbtnImport.groupId : "";
+}
+/** Tải file BBTN lên 1 LẦN cho cả biên bản (thùng chính + OLTC), các lần lưu sau dùng lại. */
+async function oilBbtnUpload(groupId) {
+  const file = oilBbtnPendingFile();
+  if (!file) return {};
+  if (_oilBbtnImport && _oilBbtnImport.attachment) return _oilBbtnImport.attachment;
+  const att = await Storage.uploadAttachment(groupId, file);
+  if (_oilBbtnImport) _oilBbtnImport.attachment = att;
+  return att;
+}
+function oilBbtnClearImport() {
+  _oilBbtnImport = null;
+  if ($("o_bbtn_file")) $("o_bbtn_file").value = "";
+  oilRenderFileLabel();
+  if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").classList.add("hidden");
+}
+
 function oilRenderFileLabel() {
   const input = $("o_bbtn_file");
   const label = $("oDropzoneText");
   if (!input || !label) return;
-  const file = input.files && input.files[0];
+  const file = (input.files && input.files[0]) || (_oilBbtnImport && _oilBbtnImport.file) || null;
   $("oDropzone").classList.toggle("has-file", !!file);
   label.innerHTML = file
-    ? `Đã chọn: <strong>${escapeHtml(file.name)}</strong> — file sẽ được đính kèm khi lưu. <span class="file-dropzone-link">Chọn file khác</span>`
-    : 'Kéo thả file PDF BBTN dầu MBA (mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span>';
+    ? `Đã chọn: <strong>${escapeHtml(file.name)}</strong> — file sẽ được đính kèm khi lưu (cả phần thùng chính và OLTC). <span class="file-dropzone-link">Chọn file khác</span>`
+    : 'Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span>';
 }
 
-/** Điền form từ kết quả MbaOilBbtn.parseMbaOilBbtnLines() — chỉ ghi đè ô ĐỌC ĐƯỢC. */
+/** Điền form THÙNG CHÍNH từ kết quả MbaOilBbtn.parseMbaOilBbtnLines() — chỉ ghi đè ô ĐỌC ĐƯỢC. */
 function oilFillFromParsed(parsed) {
   const h = parsed.header || {};
-  if (h.tram && !$("o_tram").value.trim()) $("o_tram").value = h.tram;
-  if (h.thietBi && !$("o_thietbi").value.trim()) $("o_thietbi").value = h.thietBi;
+  if (h.tram) $("o_tram").value = h.tram;
+  if (h.thietBi) $("o_thietbi").value = h.thietBi;
   if (h.ngay) $("o_ngay").value = h.ngay;
   if (h.voltageClass) { $("o_voltage_class").value = h.voltageClass; toggleOilMembraneField(); }
   if (h.oilState) $("o_oilstate").value = h.oilState;
-  $("o_samplepoint").value = parsed.threePhase ? "pharieng" : ($("o_samplepoint").value === "pharieng" ? "pharieng" : "chung");
+  if (h.ghiChu && !$("o_ghichu").value.trim()) $("o_ghichu").value = h.ghiChu;
+  // MBA 1 pha (biên bản ghi 1 pha cụ thể) hoặc bảng có 3 cột pha → thùng dầu riêng từng pha
+  $("o_samplepoint").value = h.phase || parsed.threePhase ? "pharieng" : "chung";
   renderOilParamTable(false);
-  const cols = oilFormCols();
-  Object.entries(parsed.values || {}).forEach(([col, vals]) => {
-    const target = cols.length === 3 && col === "X" ? "A" : col;
-    Object.entries(vals).forEach(([field, v]) => { const el = $(oilInputId(field, target)); if (el) el.value = v; });
-  });
-  updateOilGroupCounts(true);
+  oilFillParamValues(parsed.values, "o", h.phase);
+}
+
+/** Điền form OLTC từ phần OLTC của biên bản. */
+function oltcFillFromParsed(parsed) {
+  const h = parsed.header || {};
+  const o = parsed.oltc;
+  if (!o) return false;
+  if (h.tram) $("ot_tram").value = h.tram;
+  if (h.thietBi) $("ot_thietbi").value = h.thietBi;
+  if (h.ngay) $("ot_ngay").value = h.ngay;
+  if (h.voltageClass) { $("ot_voltage_class").value = h.voltageClass; toggleOltcMembraneField(); }
+  if (h.oilState) $("ot_oilstate").value = h.oilState;
+  if (h.ghiChu && !$("ot_ghichu").value.trim()) $("ot_ghichu").value = h.ghiChu;
+  // OLTC từng pha (MBA 3 pha tách bảng A/B/C, hoặc MBA 1 pha) → "Một pha / điểm không trung tính"
+  $("ot_samplepoint").value = o.threePhase || h.phase ? "pharieng" : "trungtinh";
+  resetOltcOilTestEditState();
+  renderOilParamTable(false, "ot");
+  oilFillParamValues(o.values, "ot", h.phase);
+  return true;
+}
+
+/** Đọc file thành dòng chữ: .docx đọc thẳng word/document.xml (PizZip), PDF qua BbtnImport.readLines(). */
+async function oilBbtnReadLines(file, onProgress) {
+  if (/\.docx$/i.test(file.name) || file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    if (typeof PizZip === "undefined") throw new Error("Thư viện đọc Word (PizZip) chưa tải xong");
+    const zip = new PizZip(await file.arrayBuffer());
+    const doc = zip.file("word/document.xml");
+    if (!doc) throw new Error("File Word không hợp lệ");
+    return { lines: window.MbaOilBbtn.mbaOilDocxXmlToLines(doc.asText()), viaOCR: false };
+  }
+  if (!window.BbtnImport || !window.BbtnImport.readLines) throw new Error("Bộ đọc PDF chưa tải xong — thử lại sau vài giây");
+  return window.BbtnImport.readLines(file, onProgress);
 }
 
 async function onOilBbtnFileSelected() {
-  oilRenderFileLabel();
   const file = $("o_bbtn_file").files && $("o_bbtn_file").files[0];
+  _oilBbtnImport = null;
+  oilRenderFileLabel();
   if (!file) return;
   const note = $("oImportNote");
   note.classList.remove("hidden");
-  if (!window.BbtnImport || !window.BbtnImport.readLines || !window.MbaOilBbtn) {
-    note.textContent = "Bộ đọc PDF chưa tải xong hoặc tải lỗi — vui lòng thử lại sau vài giây, hoặc nhập tay.";
+  if (!window.MbaOilBbtn) {
+    note.textContent = "Bộ đọc BBTN chưa tải xong hoặc tải lỗi — vui lòng thử lại sau vài giây, hoặc nhập tay.";
     return;
   }
   note.textContent = "Đang đọc biên bản...";
   let parsed;
   let viaOCR = false;
   try {
-    const read = await window.BbtnImport.readLines(file, (m) => {
+    const read = await oilBbtnReadLines(file, (m) => {
       if (m && m.status === "recognizing text") {
         note.textContent = "File là ảnh scan — đang nhận diện chữ (OCR)" + (typeof m.progress === "number" ? ` (${Math.round(m.progress * 100)}%)` : "") + "...";
       }
@@ -514,28 +594,54 @@ async function onOilBbtnFileSelected() {
     note.textContent = "Không đọc được file này — vui lòng nhập tay. (" + ((err && err.message) || err) + ")";
     return;
   }
-  if (!parsed.matched.length) {
+  if (!parsed.matched.length && !parsed.oltc) {
     note.textContent = "Không nhận ra chỉ tiêu dầu nào trong file này — vui lòng nhập tay (file vẫn được đính kèm khi lưu).";
     return;
   }
-  // Biên bản mới = nhập mới (bỏ liên kết với bản ghi đang sửa nếu có)
+  // Biên bản mới = nhập mới (bỏ liên kết với bản ghi đang sửa nếu có); 1 file + 1 nhóm cho cả biên bản
   resetOilTestEditState();
+  _oilBbtnImport = { file, groupId: Storage.newId(), attachment: null };
   oilFillFromParsed(parsed);
-  const labels = parsed.matched.map((f) => (DGA.oilParamDef(f) || {}).label || f);
+  const hasOltc = oltcFillFromParsed(parsed);
+  const h = parsed.header;
+  const lbl = (fields) => fields.map((f) => (DGA.oilParamDef(f) || {}).label || f).join(", ");
+  const parts = [];
+  parts.push(`Thùng dầu chính${h.phase ? ` (pha ${h.phase})` : parsed.threePhase ? " (3 pha A/B/C)" : ""}: ${parsed.matched.length ? lbl(parsed.matched) : "không có số liệu"}`);
+  if (hasOltc) parts.push(`OLTC${parsed.oltc.threePhase ? ` (pha ${(parsed.oltc.phases || ["A", "B", "C"]).join(", ")})` : h.phase ? ` (pha ${h.phase})` : ""}: ${lbl(parsed.oltc.matched)}`);
   const warn = [];
   if (viaOCR) warn.push("file là ảnh scan, số liệu đọc bằng OCR nên cần so kỹ từng ô");
-  if (!parsed.header.ngay) warn.push("chưa đọc được Ngày lấy mẫu");
-  if (!parsed.header.thietBi) warn.push("chưa đọc được tên Thiết bị");
-  note.textContent = `Đã đọc ${labels.length} chỉ tiêu${parsed.threePhase ? " cho 3 pha A/B/C" : ""}: ${labels.join(", ")}. ` +
-    (warn.length ? `Lưu ý: ${warn.join("; ")}. ` : "") +
-    "Đối chiếu lại với biên bản (Cấp điện áp, Trạng thái dầu, các ô số) rồi bấm \"Đánh giá & Lưu\".";
+  if (!h.ngay) warn.push("chưa đọc được Ngày lấy mẫu");
+  if (!h.thietBi) warn.push("chưa đọc được tên Thiết bị");
+  if (!h.voltageClass) warn.push("chưa đọc được Điện áp định mức — chọn Cấp điện áp");
+  if ([parsed.values, parsed.oltc && parsed.oltc.values].some((v) => v && Object.values(v).some((x) => x.acid_mgkoh === 0))) {
+    warn.push("trị số axit ghi \"Không có\" được nhập là 0");
+  }
+  note.textContent = `Đã đọc biên bản ${file.name} — ${parts.join(" · ")}. ` + (warn.length ? `Lưu ý: ${warn.join("; ")}. ` : "") +
+    (hasOltc ? "Đối chiếu lại rồi bấm \"Đánh giá & Lưu cả biên bản\" (hoặc lưu từng phần ở mỗi khối)." : "Đối chiếu lại với biên bản rồi bấm \"Đánh giá & Lưu\".");
+  if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").classList.toggle("hidden", !hasOltc);
 }
+
+/** Lưu cả biên bản: phần thùng chính rồi phần OLTC (cùng file đính kèm, cùng bbtn_group_id). */
+async function onSaveOilBbtnAll() {
+  const hasMain = Object.keys(readOilParamValues("o")).length > 0;
+  const hasOltc = Object.keys(readOilParamValues("ot")).length > 0;
+  let ok = true;
+  if (hasMain) ok = (await onAnalyzeOil()) === true;
+  if (ok && hasOltc) ok = (await onAnalyzeOltcOil()) === true;
+  if (ok && (hasMain || hasOltc)) {
+    oilBbtnClearImport();
+    showToast("Đã lưu cả biên bản (thùng dầu chính và OLTC).");
+  }
+}
+
+const OIL_BBTN_ACCEPT_RE = /\.(pdf|docx)$/i;
 
 function setupOilBbtnImport() {
   const input = $("o_bbtn_file");
   const zone = $("oDropzone");
   if (!input || !zone) return;
   input.addEventListener("change", onOilBbtnFileSelected);
+  if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").addEventListener("click", onSaveOilBbtnAll);
   ["dragenter", "dragover"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add("dragover"); }));
   ["dragleave", "dragend"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove("dragover"); }));
   zone.addEventListener("drop", (e) => {
@@ -543,9 +649,9 @@ function setupOilBbtnImport() {
     zone.classList.remove("dragover");
     const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (!file) return;
-    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+    if (!OIL_BBTN_ACCEPT_RE.test(file.name)) {
       const note = $("oImportNote");
-      note.textContent = `Chỉ nhận file PDF — "${file.name}" không phải PDF.`;
+      note.textContent = `Chỉ nhận file PDF hoặc Word (.docx) — "${file.name}" không đúng định dạng.`;
       note.classList.remove("hidden");
       return;
     }

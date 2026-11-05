@@ -60,7 +60,9 @@ const TREND_PARAM_DEFS = Object.assign(
   },
   // Chỉ tiêu lý-hóa BỔ SUNG của dầu chính (số) — DGA.OIL_PARAM_DEFS nhóm qd1901/iec, mỗi chỉ tiêu 1 trục riêng
   // (đơn vị khác hẳn nhau). Trục chỉ hiện khi chỉ tiêu đó đang được chọn (xem usedAxes ở renderTrendChart()).
-  ...TREND_OIL_EXT_DEFS().map((d) => ({ ["oil:" + d.key]: { label: d.label, unit: d.unit, axis: "yOil_" + d.key, field: d.field } }))
+  ...TREND_OIL_EXT_DEFS().map((d) => ({ ["oil:" + d.key]: { label: d.label, unit: d.unit, axis: "yOil_" + d.key, field: d.field } })),
+  ...TREND_OIL_EXT_DEFS().filter((d) => d.group === "qd1901")
+    .map((d) => ({ ["oltc:" + d.key]: { label: d.label + " OLTC", unit: d.unit, axis: "yOil_" + d.key, field: d.field } }))
 );
 
 // Được giữ nguyên khi đổi thiết bị, để người dùng không phải chọn lại các thông số
@@ -293,7 +295,9 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
   const oilExtKeys = TREND_OIL_EXT_DEFS().filter((d) => oilRecords.some((r) => r[d.field] !== null && r[d.field] !== undefined && r[d.field] !== ""))
     .map((d) => "oil:" + d.key);
   if (hasOil) buildChecks("trParamsOil", ["oil:moisture", "oil:tgd90", "oil:bdv", ...oilExtKeys]);
-  if (hasOltc) buildChecks("trParamsOltc", ["oltc:moisture", "oltc:tgd90", "oltc:bdv"]);
+  const oltcExtKeys = TREND_OIL_EXT_DEFS().filter((d) => d.group === "qd1901" &&
+    oltcRecords.some((r) => r[d.field] !== null && r[d.field] !== undefined && r[d.field] !== "")).map((d) => "oltc:" + d.key);
+  if (hasOltc) buildChecks("trParamsOltc", ["oltc:moisture", "oltc:tgd90", "oltc:bdv", ...oltcExtKeys]);
 }
 
 function renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords) {

@@ -109,7 +109,7 @@ const OIL_PARAM_DEFS = [
   { field: "moisture_ppm", key: "moisture", group: "base", label: "Hàm lượng nước (độ ẩm)", unit: "ppm", step: "0.1" },
   { field: "acid_mgkoh", key: "acid", group: "qd1901", label: "Trị số axit", unit: "mgKOH/g", step: "0.001" },
   { field: "flash_point_c", key: "flash", group: "qd1901", label: "Nhiệt độ chớp cháy cốc kín", unit: "°C", step: "0.1" },
-  { field: "mech_visual", key: "mechvis", group: "qd1901", label: "Tạp chất cơ học — quan sát bằng mắt (≤110 kV)", unit: "", type: "select",
+  { field: "mech_visual", key: "mechvis", group: "qd1901", label: "Tạp chất cơ học — quan sát bằng mắt", unit: "", type: "select",
     options: [{ value: "khong", label: "Không thấy" }, { value: "co", label: "Có tạp chất" }] },
   { field: "mech_impurity_percent", key: "mech", group: "qd1901", label: "Hàm lượng tạp chất cơ học", unit: "%", step: "0.0001" },
   { field: "particles_6um", key: "p6", group: "qd1901", label: "Số hạt tạp chất > 6 μm", unit: "hạt/ml", step: "1" },
@@ -127,6 +127,8 @@ const OIL_PARAM_DEFS = [
   { field: "sludge_percent", key: "sludge", group: "iec", label: "Bùn (sludge)", unit: "%", step: "0.001" },
   { field: "inhibitor_pct_original", key: "inhibitor", group: "iec", label: "Hàm lượng chất ức chế (so với ban đầu)", unit: "%", step: "1" },
   { field: "passivator_mgkg", key: "passivator", group: "iec", label: "Hàm lượng chất thụ động (passivator)", unit: "mg/kg", step: "1" },
+  { field: "acid_base_soluble", key: "acidbase", group: "other", label: "Axit – kiềm hòa tan trong dầu (phản ứng axit-bazơ)", unit: "", type: "select",
+    options: [{ value: "khong", label: "Không có" }, { value: "co", label: "Có" }] },
   { field: "ox_sludge_percent", key: "oxsludge", group: "oxidation", label: "Khối lượng cặn sau ôxi hóa", unit: "%", step: "0.001" },
   { field: "ox_acid_mgkoh", key: "oxacid", group: "oxidation", label: "Trị số axit sau ôxi hóa", unit: "mgKOH/g", step: "0.001" },
   { field: "ox_tgd", key: "oxtgd", group: "oxidation", label: "Tổn thất điện môi tgδ 90°C sau ôxi hóa", unit: "", step: "0.001" },
@@ -139,6 +141,7 @@ const OIL_GROUP_LABELS = {
   base: "Chỉ tiêu cơ bản (Bảng 54, 55, 58 QĐ1901)",
   qd1901: "Chỉ tiêu lý-hóa bổ sung theo QĐ1901 (Điều 48–56)",
   iec: "Chỉ tiêu bổ sung theo IEC 60422:2024 (QĐ1901 không quy định)",
+  other: "Chỉ tiêu khác ghi trên BBTN (QĐ1901, IEC 60422 không quy định)",
   oxidation: "Độ ổn định ôxi hóa — chỉ khi pha trộn dầu (Điều 53, Bảng 60–62)",
 };
 
@@ -218,7 +221,7 @@ function evaluateOilExtendedQd1901({ voltageClass, oilState, extra, prevFlashPoi
     push({
       key: "mechvis", label: "Tạp chất cơ học (quan sát bằng mắt)", value: oilSelectLabel("mech_visual", mechVis), limit: null,
       limitText: "Không thấy", unit: "", direction: "le", verdict: mechVis === "co" ? "Không đạt" : "Đạt",
-      ref: REGULATION_CITATIONS.BANG56_MECH + " / " + REGULATION_CITATIONS.BANG57_PARTICLES + " — đến 110 kV quan sát bằng mắt",
+      ref: REGULATION_CITATIONS.BANG56_MECH + " / " + REGULATION_CITATIONS.BANG57_PARTICLES + " — quan sát bằng mắt phải \"Không thấy\"",
     });
   }
   const mech = oilExtNum(extra, "mech_impurity_percent");
@@ -267,6 +270,17 @@ function evaluateOilExtendedQd1901({ voltageClass, oilState, extra, prevFlashPoi
       key: "color", label: "Màu sắc (thang ISO 2049)", value: color, limit: null, limitText: "—", unit: "", direction: "le",
       verdict: "Không có ngưỡng",
       ref: REGULATION_CITATIONS.DIEU48_COLOR + " — không bắt buộc, không có ngưỡng số: dầu mới màu tối = độ sạch không đạt; trong vận hành tối nhanh = dầu bị nóng hoặc tạo than",
+    });
+  }
+
+  // Axit – kiềm hòa tan (water-soluble acids & bases): QĐ1901 KHÔNG quy định — chỉ đánh giá theo đúng giới hạn
+  // "Không có" mà phòng thí nghiệm ghi trên BBTN (mẫu BBTN dầu cách điện PTC3).
+  const acidBase = extra && hasVal(extra.acid_base_soluble) ? String(extra.acid_base_soluble) : null;
+  if (acidBase) {
+    push({
+      key: "acidbase", label: "Axit – kiềm hòa tan trong dầu", value: oilSelectLabel("acid_base_soluble", acidBase), limit: null,
+      limitText: "Không có", unit: "", direction: "le", verdict: acidBase === "co" ? "Không đạt" : "Đạt",
+      ref: "Giới hạn ghi trên BBTN của phòng thí nghiệm — QĐ1901 không quy định chỉ tiêu này",
     });
   }
 
@@ -401,8 +415,20 @@ function oilExtraFromRecord(rec) {
  *  + Pha (chỉ khi lấy mẫu riêng từng pha). */
 function oilSeriesKey(rec) {
   const n = (s) => String(s || "").trim().replace(/\s+/g, " ").toLowerCase();
-  const phase = rec && rec.oil_sample_point === "pharieng" ? String(rec.phase || "").trim() : "";
+  const sp = rec ? rec.oil_sample_point || rec.oltc_sample_point : "";
+  const phase = sp === "pharieng" ? String(rec.phase || "").trim() : "";
   return `${n(rec && rec.tram)}|${n(rec && rec.thiet_bi)}|${phase}`;
+}
+
+/** Đánh giá 1 bản ghi dầu OLTC (oltc_oil_tests) — Điều 37: dầu MỚI như dầu thùng chính (đủ chỉ tiêu bổ sung),
+ *  dầu VẬN HÀNH theo Bảng 49 (BDV, độ ẩm); chỉ tiêu bổ sung khi vận hành chỉ ghi nhận (xem evaluateOltcOilTest()). */
+function evaluateOltcRecord(rec, manufacturerOilStandards, allRecords) {
+  return evaluateOltcOilTest({
+    oltcSamplePoint: rec.oltc_sample_point, voltageClass: rec.voltage_class, oilState: rec.oil_state,
+    hasMembraneN2: rec.has_membrane_n2, manufacturer: rec.manufacturer || null, manufacturerOilStandards,
+    moisture: rec.moisture_ppm, tgd90: rec.tgd_90c_percent, bdv: rec.bdv_kv,
+    extra: oilExtraFromRecord(rec), prevFlashPoint: findPreviousOilFlashPoint(allRecords, rec), oxMethod: rec.ox_method || "",
+  });
 }
 
 /** Nhiệt độ chớp cháy của lần thí nghiệm LIỀN TRƯỚC (ngày lấy mẫu nhỏ hơn hẳn) cùng thùng dầu — Điều 51

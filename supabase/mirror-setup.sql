@@ -172,6 +172,24 @@ alter table instrument_oil_tests
   add column if not exists bbtn_group_id text, add column if not exists bbtn_info text,
   add column if not exists bbtn_file_id text, add column if not exists bbtn_url text,
   add column if not exists bbtn_name text;
+-- Thí nghiệm dầu OLTC: chỉ tiêu lý-hóa bổ sung + BBTN đính kèm.
+alter table oltc_oil_tests
+  add column if not exists acid_mgkoh numeric,
+  add column if not exists flash_point_c numeric,
+  add column if not exists mech_visual text,
+  add column if not exists mech_impurity_percent numeric,
+  add column if not exists particles_6um numeric,
+  add column if not exists particles_14um numeric,
+  add column if not exists resistivity_90c_e12 numeric,
+  add column if not exists furfural_ppm numeric,
+  add column if not exists color_iso2049 numeric,
+  add column if not exists acid_base_soluble text,
+  add column if not exists ox_method text,
+  add column if not exists bbtn_group_id text,
+  add column if not exists bbtn_file_id text,
+  add column if not exists bbtn_url text,
+  add column if not exists bbtn_name text;
+alter table oil_tests add column if not exists acid_base_soluble text;
 -- Thí nghiệm dầu MBA: chỉ tiêu lý-hóa BỔ SUNG (QĐ1901 Điều 48–56, IEC 60422:2024) + BBTN đính kèm.
 alter table oil_tests
   add column if not exists acid_mgkoh numeric,

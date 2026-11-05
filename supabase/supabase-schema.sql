@@ -178,6 +178,7 @@ create table if not exists oil_tests (
   bbtn_file_id text,
   bbtn_url text,
   bbtn_name text,
+  acid_base_soluble text,
   ghi_chu text,
   created_at timestamptz default now()
 );
@@ -203,6 +204,22 @@ create table if not exists oltc_oil_tests (
   moisture_ppm numeric,
   tgd_90c_percent numeric,
   bdv_kv numeric,
+  -- Chỉ tiêu lý-hóa bổ sung (Điều 37) + BBTN đính kèm dùng chung với phần thùng chính
+  acid_mgkoh numeric,
+  flash_point_c numeric,
+  mech_visual text,
+  mech_impurity_percent numeric,
+  particles_6um numeric,
+  particles_14um numeric,
+  resistivity_90c_e12 numeric,
+  furfural_ppm numeric,
+  color_iso2049 numeric,
+  acid_base_soluble text,
+  ox_method text,
+  bbtn_group_id text,
+  bbtn_file_id text,
+  bbtn_url text,
+  bbtn_name text,
   ghi_chu text,
   created_at timestamptz default now()
 );

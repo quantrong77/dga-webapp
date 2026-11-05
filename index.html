@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v20-oilparams") {
+          if (k !== "dga-offline-v21-oltcparams") {
             caches.delete(k);
           }
         });
@@ -905,7 +905,7 @@
           <div class="table-scroll"><table>
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
             </tr></thead>
             <tbody id="lichsuOltcHistoryTable"></tbody>
           </table></div>
@@ -2100,10 +2100,12 @@
         <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem bbtn/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
         <div class="file-dropzone" id="oDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-          <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file PDF BBTN dầu MBA (mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-          <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf" />
+          <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
+          <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
         </div>
         <p class="note hidden" id="oImportNote" role="status"></p>
+        <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
+        <div style="margin:-4px 0 10px;"><button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button></div>
 
         <div class="loading-hint combo-loading-hint hidden" id="oilComboLoadingHint">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
@@ -2239,7 +2241,9 @@
           khoang/1 mẫu, ngưỡng cố định không theo cấp điện áp) hoặc <strong>một pha / điểm không trung tính</strong>
           (mỗi pha A/B/C có khoang/mẫu riêng, ngưỡng theo cấp điện áp MBA). QĐ1901 Bảng 49 không có số liệu riêng
           cho cấp điện áp 35kV–110kV ở kiểu lấy mẫu pha riêng — công cụ sẽ báo "Không có ngưỡng" thay vì tự suy
-          diễn số liệu.</p>
+          diễn số liệu. Dầu OLTC lấy mẫu riêng từng pha (MBA 3 pha có OLTC từng pha, hoặc MBA 1 pha) nhập theo cột Pha A/B/C;
+          các chỉ tiêu bổ sung (tạp chất, chớp cháy, axit...) đánh giá như dầu thùng chính khi dầu mới, chỉ ghi nhận khi dầu vận hành.
+          BBTN có cả phần OLTC: đọc file ở khối "Thí nghiệm dầu cách điện MBA/Kháng dầu" phía trên, app tự điền cả khối này.</p>
 
         <div class="loading-hint combo-loading-hint hidden" id="oltcComboLoadingHint">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
@@ -2270,7 +2274,7 @@
             <p><strong>Điểm cuối trung tính (neutral point end):</strong> với MBA 3 pha đấu sao (Y), điểm trung tính là điểm chung nơi 3 đầu cuộn dây gặp nhau (thường nối đất). Nếu OLTC được đặt ở đầu cuộn dây phía điểm trung tính — nơi điện áp so với đất thấp nhất — thì 3 pha có thể dùng CHUNG một khoang dầu/buồng dập hồ quang duy nhất, vì không cần cách điện pha-pha lớn ở vị trí đó. Do dùng chung khoang, khi lấy mẫu dầu chỉ cần 1 mẫu đại diện cho cả 3 pha, và ngưỡng đánh giá theo Bảng 49 là cố định, không phân theo cấp điện áp MBA.</p>
             <p><strong>Điểm không trung tính (line end / một pha):</strong> nếu OLTC đặt ở đầu dây phía đường dây (không phải điểm trung tính), điện áp tại đó cao hơn nhiều nên mỗi pha A/B/C cần khoang dầu và buồng dập hồ quang RIÊNG, phải lấy mẫu riêng từng pha. Trường hợp MBA 1 pha thì OLTC vốn chỉ có 1 pha nên cũng xếp vào nhóm này. Ngưỡng Bảng 49 cho kiểu này phân theo cấp điện áp MBA (≤35kV / 110kV / 220kV / 500kV), riêng bậc 35kV–110kV thì Bảng 49 gốc không có số liệu nên app báo "Không có ngưỡng".</p>
           </div>
-          <label class="field" id="ot_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+          <label class="field hidden" id="ot_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
             <select id="ot_phase">
               <option value="A">Pha A</option>
               <option value="B">Pha B</option>
@@ -2304,11 +2308,9 @@
         </div>
 
         <div class="section-title">Kết quả thí nghiệm</div>
-        <div class="grid gases">
-          <label class="field">Độ ẩm dầu OLTC (ppm) <input id="ot_moisture" type="number" min="0" step="0.1" /></label>
-          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="ot_tgd90" type="number" min="0" step="0.01" /></label>
-          <label class="field">Điện áp chọc thủng (kV) <input id="ot_bdv" type="number" min="0" step="0.1" /></label>
-        </div>
+        <!-- Bảng chỉ tiêu OLTC — renderOilParamTable(..., "ot") (ui-oil.js): 1 cột (điểm cuối trung tính)
+             hoặc 3 cột Pha A/B/C (một pha / điểm không trung tính). -->
+        <div id="ot_paramTableWrap"></div>
 
         <p class="note hidden" id="editingOltcOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
         <div style="margin-top:18px; display:flex; gap:10px;">
@@ -2334,7 +2336,7 @@
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
           </tr></thead>
           <tbody id="oltcOilHistoryTable"></tbody>
         </table></div>

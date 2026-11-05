@@ -520,12 +520,8 @@ function computeOltcOilAlerts() {
   groups.forEach((records) => {
     const sorted = alertSortRecordsDescending(records);
     const latest = sorted[0];
-    const evalResult = DGA.evaluateOltcOilTest({
-      oltcSamplePoint: latest.oltc_sample_point, voltageClass: latest.voltage_class, oilState: latest.oil_state,
-      hasMembraneN2: latest.has_membrane_n2, manufacturer: latest.manufacturer || null,
-      manufacturerOilStandards: oilStandardsForLogic,
-      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent, bdv: latest.bdv_kv,
-    });
+    // Gồm cả chỉ tiêu bổ sung (dầu OLTC mới — Điều 37) — DGA.evaluateOltcRecord() (dga-logic-oil-extended.js)
+    const evalResult = DGA.evaluateOltcRecord(latest, oilStandardsForLogic, _allOltcOilTests);
     if (evalResult.overall !== "Không đạt") return;
 
     const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
@@ -552,7 +548,7 @@ function computeOltcOilAlerts() {
       // ghép đúng với pha tương ứng của khí hòa tan/dầu chính khi MBA/Kháng 3 pha rời.
       identityPhase: oltcPhaseIdentity(latest.oltc_sample_point, latest.phase),
       reasons: failing.map((r) =>
-        `${r.label}: ${r.value} ${r.unit}${r.limit === null ? "" : ` (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit})`}, ${r.ref}.`
+        `${r.label}: ${r.value}${r.unit ? " " + r.unit : ""}${r.limit === null || r.limit === undefined ? (r.limitText && r.limitText !== "—" ? ` (giới hạn ${r.limitText})` : "") : ` (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit})`}, ${r.ref}.`
       ),
       action: "Lấy mẫu dầu OLTC bổ sung xác nhận; kiểm tra tiếp điểm/hồ quang khoang đổi nấc, xem xét lọc/thay dầu " +
         "OLTC theo hướng dẫn nhà sản xuất; báo cáo cấp có thẩm quyền theo Điều 6 QĐ1901.",

@@ -193,6 +193,8 @@ const OILTEST_HEADERS = [
   "pcb_mgkg", "sediment_percent", "sludge_percent", "inhibitor_pct_original", "passivator_mgkg", "oil_inhibited",
   "ox_method", "ox_sludge_percent", "ox_acid_mgkoh", "ox_tgd", "bbtn_group_id", "bbtn_file_id",
   "bbtn_url", "bbtn_name",
+  // Axit – kiềm hòa tan (chỉ tiêu ghi trên BBTN PTC3) — thêm ở CUỐI.
+  "acid_base_soluble",
 ];
 
 // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49. Sheet TÁCH RIÊNG
@@ -212,6 +214,11 @@ const OLTC_OILTEST_HEADERS = [
   "manufacturer", "created_at",
   // "Lưu vết" (audit) — xem chú thích đầy đủ ở MEASUREMENT_HEADERS, cùng cơ chế.
   "created_by", "updated_by", "updated_at",
+  // Chỉ tiêu lý-hóa bổ sung (Điều 37: dầu OLTC mới đánh giá như dầu thùng chính) + BBTN đính kèm dùng chung
+  // với phần thùng chính cùng biên bản (bbtn_group_id). Thêm ở CUỐI — bản ghi cũ để trống.
+  "acid_mgkoh", "flash_point_c", "mech_visual", "mech_impurity_percent", "particles_6um", "particles_14um",
+  "resistivity_90c_e12", "furfural_ppm", "color_iso2049", "acid_base_soluble", "ox_method", "bbtn_group_id",
+  "bbtn_file_id", "bbtn_url", "bbtn_name",
 ];
 
 // Thí nghiệm dầu cách điện TI/TU (biến dòng điện/biến điện áp kiểu kín, cách điện

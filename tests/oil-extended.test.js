@@ -94,6 +94,24 @@ describe("IEC 60422:2024 — Bảng 3 (dầu mới) / Bảng 5 bổ sung", () =>
   });
 });
 
+describe("Dầu OLTC — Điều 37", () => {
+  const ex = { particles_6um: 90, flash_point_c: 144, acid_mgkoh: 0 };
+  test("dầu OLTC MỚI: chỉ tiêu bổ sung đánh giá như dầu thùng chính", () => {
+    const r = DGA.evaluateOltcOilTest({ oltcSamplePoint: "pharieng", voltageClass: "500", oilState: "new", extra: ex });
+    expect(rowOf(r, "p6").verdict).toBe("Không đạt"); // 500 kV dầu mới: ≤ 80
+    expect(rowOf(r, "p6").label).toMatch(/OLTC/);
+    expect(r.overall).toBe("Không đạt");
+  });
+  test("dầu OLTC VẬN HÀNH: Bảng 49 cho BDV/độ ẩm, chỉ tiêu bổ sung chỉ ghi nhận", () => {
+    const r = DGA.evaluateOltcOilTest({ oltcSamplePoint: "pharieng", voltageClass: "220", oilState: "inservice", bdv: 88, extra: ex });
+    expect(rowOf(r, "bdv").verdict).toBe("Đạt");
+    expect(rowOf(r, "p6").verdict).toBe("Không có ngưỡng");
+    expect(r.overall).toBe("Đạt");
+    const onlyExtra = DGA.evaluateOltcOilTest({ oltcSamplePoint: "trungtinh", voltageClass: "220", oilState: "inservice", extra: ex });
+    expect(onlyExtra.overall).toBe("Chưa đủ dữ liệu");
+  });
+});
+
 describe("theo bản ghi đã lưu", () => {
   const recs = [
     { id: "1", tram: "A", thiet_bi: "T1", oil_sample_point: "chung", voltage_class: "220", oil_state: "inservice", sample_date: "2024-01-01", flash_point_c: 150 },
@@ -128,7 +146,7 @@ describe("đọc BBTN dầu MBA (PDF -> dòng chữ)", () => {
       bdv_kv: 68.5, tgd_90c_percent: 0.85, moisture_ppm: 12, acid_mgkoh: 0.045, flash_point_c: 146,
       resistivity_90c_e12: 2.5, particles_6um: 450, particles_14um: 35, corrosive_sulfur: "khong",
     });
-    expect(p.header).toEqual({ tram: "TBA 220kV Bảo Lộc", thietBi: "MBA AT1", ngay: "2024-03-05", voltageClass: "220", oilState: "inservice" });
+    expect(p.header).toMatchObject({ tram: "TBA 220kV Bảo Lộc", thietBi: "MBA AT1", ngay: "2024-03-05", voltageClass: "220", oilState: "inservice" });
   });
 
   test("biên bản 3 pha A/B/C", () => {
@@ -139,6 +157,91 @@ describe("đọc BBTN dầu MBA (PDF -> dòng chữ)", () => {
     expect(p.threePhase).toBe(true);
     expect(p.values.A).toEqual({ bdv_kv: 70, moisture_ppm: 8 });
     expect(p.values.C).toEqual({ bdv_kv: 69, moisture_ppm: 11 });
+  });
+
+  // Dòng chữ trích từ mẫu thật template/BBTN lyhoadau MBA_OLTC 1 pha.docx (MBA 1 pha 500 kV) — bỏ phần ký tên
+  const BBTN_1PHA = [
+    "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN (Insulation oil test report)",
+    "Tên dự án/tên trạm (Project): Công trình nâng công suất TBA 500kV Di Linh",
+    "Vị trí lắp đặt (Site): Máy biến áp 500kV AT1",
+    "Vị trí lấy mẫu (Sampling position): Thân máy và bộ OLTC pha C",
+    "Hãng sản xuất (Manufacturer): TOSHIBA | Năm sản xuất (Year of manufacture): 2026",
+    "Điện áp định mức (Rated voltage): 500 kV | Công suất (Rated power): 300 MVA",
+    "Loại dầu (Type): Nynas Nytro 10XN | Ngày lấy mẫu (Date): 23/10/2026",
+    "Lý do thí nghiệm (Purpose of test): Lắp mới",
+    "Các hạng mục đã thí nghiệm (Tested items): | Đánh giá (Estimate)",
+    "2. Nhiệt độ chớp cháy kín (Flash point PMCC) | ✓ | Đạt",
+    "4. Hàm lượng axit – kiềm hòa tan trong dầu (Acid-base reaction) | ✓ | Đạt",
+    "KẾT QUẢ THÍ NGHIỆM",
+    "Dầu cách điện trong thùng dầu chính (Insulation oil of main tank):",
+    "STT | Hạng mục phân tích (Test items) | Đơn vị (Unit) | Kết quả (Result) | Tiêu chuẩn (Limits) | Đánh giá (Estimate)",
+    "1 | Hàm lượng tạp chất cơ học (Particles content)",
+    "1.1 | - Quan sát bằng mắt | / | Không thấy | Không thấy | Đạt",
+    "1.2 | - Có kích thước hạt lớn hơn 6μm | Số lượng tạp chất/1ml dầu | 12.1 | ≤ 80 | Đạt",
+    "1.3 | - Có kích thước hạt lớn hơn 14μm | 1.2 | ≤ 10 | Đạt",
+    "2 | Nhiệt độ chớp cháy kín (Flash point PMCC) | 0C | 144 | ≥ 135°C và Giảm không quá 5°C | Đạt",
+    "3 | Hàm lượng axit (Acid number) | mgKOH/g dầu | Không có | ≤ 0.02 | Đạt",
+    "4 | Hàm lượng axit – kiềm hòa tan trong dầu (Acid-base reaction) | mgKOH/g dầu | Không có | Không có | Đạt",
+    "Dầu cách điện trong bộ OLTC (Insulation oil of on - load tap changer):",
+    "1.2 | - Có kích thước hạt lớn hơn 6μm | Số lượng tạp chất/1ml dầu | 48.3 | ≤ 80 | Đạt",
+    "1.3 | - Có kích thước hạt lớn hơn 14μm | 4.1 | ≤ 10 | Đạt",
+    "2 | Nhiệt độ chớp cháy kín (Flash point PMCC) | 0C | 144 | ≥ 135°C và Giảm không quá 5°C | Đạt",
+    "THIẾT BỊ THÍ NGHIỆM (Testing instruments):",
+    "Thiết bị đo nhiệt độ chớp cháy kín (Flash point PMCC tester) Koehler K16270 – S/N: R61490095.",
+  ];
+
+  test("mẫu PTC3 — MBA 1 pha: thùng chính + OLTC đều là pha C, chữ 'Không thấy'/'Không có'", () => {
+    const p = MbaOilBbtn.parseMbaOilBbtnLines(BBTN_1PHA);
+    expect(p.header).toMatchObject({ tram: "TBA 500kV Di Linh", thietBi: "Máy biến áp 500kV AT1", ngay: "2026-10-23",
+      voltageClass: "500", oilState: "new", phase: "C", hangSx: "TOSHIBA", loaiDau: "Nynas Nytro 10XN" });
+    expect(p.values.X).toEqual({ mech_visual: "khong", particles_6um: 12.1, particles_14um: 1.2, flash_point_c: 144, acid_mgkoh: 0, acid_base_soluble: "khong" });
+    expect(p.oltc.threePhase).toBe(false);
+    expect(p.oltc.values.X).toEqual({ particles_6um: 48.3, particles_14um: 4.1, flash_point_c: 144 });
+    // dầu mới 500 kV: hạt >6μm ≤ 80, >14μm ≤ 10, chớp cháy ≥ 135, axit ≤ 0,02 → Đạt
+    const r = DGA.evaluateOilTest({ voltageClass: "500", oilState: "new", extra: p.values.X });
+    expect(r.overall).toBe("Đạt");
+  });
+
+  test("mẫu PTC3 — MBA 3 pha: thùng chính 1 cột, OLTC tách bảng con pha A/B/C; 'pha A,B,C' không gán 1 pha", () => {
+    const p = MbaOilBbtn.parseMbaOilBbtnLines([
+      "Tên dự án/tên trạm (Project): Trạm 220kV Hàm Tân",
+      "Vị trí lắp đặt (Site): Máy biến áp AT2",
+      "Vị trí lấy mẫu (Sampling position): Van thùng chính, van OLTC pha A,B,C máy biến áp AT2",
+      "Điện áp định mức (Rated voltage): (225/√3±8x1,25%)/115/√3/23 (kV) | Công suất (Rated power): 150/200/250 (MVA)",
+      "Loại dầu (Type): ERGON-Mỹ | Ngày lấy mẫu (Date): 18/10/2026",
+      "Lý do thí nghiệm (Purpose of test): Định kỳ 1 năm",
+      "1. Điện áp chọc thủng (Breakdown voltage) | ✓ | Đạt",
+      "Dầu cách điện trong thùng dầu chính (Insulation oil of main tank):",
+      "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 95.9 | ≥ 55 | Đạt",
+      "2 | Hệ số tổn hao điện môi Tgδ 900C (Dielectric dissipation factor) | % | 0.092 | ≤ 10 | Đạt",
+      "5 | Hàm lượng nước trong dầu (Water content) | ppm",
+      "Dầu cách điện trong bộ OLTC (Insulation oil of on - load tap changer):",
+      "Dầu cách điện trong bộ OLTC máy biến áp 220kV.",
+      "+ OLTC pha A",
+      "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 90 | ≥ 50 | Đạt",
+      "2 | Hệ số tổn hao điện môi Tgδ 900C (Dielectric dissipation factor) | % | 0.247 | ≤ 10 | Đạt",
+      "+ OLTC pha B",
+      "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 88 | ≥ 50 | Đạt",
+      "+ OLTC pha C",
+      "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 87.4 | ≥ 50 | Đạt",
+      "Dầu cách điện trong bộ OLTC máy biến áp 110kV/500kV.",
+      "THIẾT BỊ THÍ NGHIỆM (Testing instruments):",
+    ]);
+    expect(p.header).toMatchObject({ tram: "Trạm 220kV Hàm Tân", voltageClass: "220", oilState: "inservice", phase: "" });
+    expect(p.threePhase).toBe(false);
+    expect(p.values.X).toEqual({ bdv_kv: 95.9, tgd_90c_percent: 0.092 });
+    expect(p.oltc.threePhase).toBe(true);
+    expect(p.oltc.values).toEqual({ A: { bdv_kv: 90, tgd_90c_percent: 0.247 }, B: { bdv_kv: 88 }, C: { bdv_kv: 87.4 } });
+  });
+
+  test("DOCX (word/document.xml) → dòng: đoạn văn 1 dòng, hàng bảng nối ô bằng ' | '", () => {
+    const xml = '<w:document><w:body><w:p><w:r><w:t>Dầu cách điện trong thùng dầu chính:</w:t></w:r></w:p>' +
+      '<w:tbl><w:tr><w:tc><w:p><w:r><w:t>1</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Điện áp chọc thủng</w:t></w:r></w:p>' +
+      '<w:p><w:r><w:t>(Breakdown voltage)</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t xml:space="preserve">kV</w:t></w:r></w:p></w:tc>' +
+      '<w:tc><w:p><w:r><w:t>95.9</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>≥ 55</w:t></w:r></w:p></w:tc></w:tr></w:tbl></w:body></w:document>';
+    const lines = MbaOilBbtn.mbaOilDocxXmlToLines(xml);
+    expect(lines).toEqual(["Dầu cách điện trong thùng dầu chính:", "1 | Điện áp chọc thủng (Breakdown voltage) | kV | 95.9 | ≥ 55"]);
+    expect(MbaOilBbtn.parseMbaOilBbtnLines(lines).values.X).toEqual({ bdv_kv: 95.9 });
   });
 
   test("điện trở suất ghi số mũ khác 12 được quy về ×10¹²", () => {

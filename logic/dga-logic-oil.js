@@ -3,11 +3,12 @@
    dầu khoang điều áp dưới tải OLTC (Điều 37/Bảng 49) — dùng các bảng hằng số từ
    dga-logic-core.js. */
 
-function evaluateOltcOilTest({ oltcSamplePoint, voltageClass, oilState, hasMembraneN2, moisture, tgd90, bdv, manufacturer, manufacturerOilStandards }) {
+function evaluateOltcOilTest({ oltcSamplePoint, voltageClass, oilState, hasMembraneN2, moisture, tgd90, bdv, manufacturer, manufacturerOilStandards, extra, prevFlashPoint, oxMethod }) {
   const state = oilState === "new" ? "new" : "inservice";
 
   if (state === "new") {
-    const result = evaluateOilTest({ voltageClass, oilState: state, hasMembraneN2, moisture, tgd90, bdv, manufacturer, manufacturerOilStandards });
+    // Điều 37: dầu OLTC lắp mới đánh giá như dầu thùng chính — gồm cả chỉ tiêu bổ sung (axit, chớp cháy, tạp chất...)
+    const result = evaluateOilTest({ voltageClass, oilState: state, hasMembraneN2, moisture, tgd90, bdv, manufacturer, manufacturerOilStandards, extra, prevFlashPoint, oxMethod });
     return {
       overall: result.overall,
       rows: result.rows.map((r) => ({
@@ -51,7 +52,19 @@ function evaluateOltcOilTest({ oltcSamplePoint, voltageClass, oilState, hasMembr
     });
   }
 
-  const overall = rows.length === 0 ? "Chưa đủ dữ liệu" : rows.some((r) => r.verdict === "Không đạt") ? "Không đạt" : "Đạt";
+  const baseCount = rows.length;
+  // Dầu OLTC VẬN HÀNH: Bảng 49 chỉ quy định BDV + độ ẩm — các chỉ tiêu bổ sung (nếu có trên BBTN) chỉ GHI NHẬN
+  // để theo dõi xu hướng, không kết luận (theo chỉ dẫn nhà sản xuất OLTC nếu có).
+  if (extra) {
+    evaluateOilExtendedQd1901({ voltageClass, oilState: "inservice", extra, prevFlashPoint, oxMethod }).forEach((r) => rows.push({
+      ...r, label: r.label + " (OLTC)", limit: null, limitText: "—", verdict: "Không có ngưỡng",
+      ref: REGULATION_CITATIONS.BANG49_OLTC + " chỉ quy định điện áp chọc thủng và hàm lượng nước cho dầu OLTC vận hành — chỉ ghi nhận (theo chỉ dẫn nhà sản xuất OLTC nếu có)",
+    }));
+  }
+  rows.forEach((r) => { if (r.limitText === undefined) r.limitText = oilLimitText(r.limit, r.direction); });
+
+  const overall = baseCount === 0 ? oilOverallFromRows(rows)
+    : rows.some((r) => r.verdict === "Không đạt") ? "Không đạt" : "Đạt";
   return { rows, overall };
 }
 
