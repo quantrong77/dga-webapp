@@ -9,11 +9,13 @@
  *   npm run build-guide          ghi lại index.html
  *   npm run build-guide:check    chỉ kiểm tra (thoát mã 1 nếu index.html đã lỗi thời)
  *
- * Tự động dùng pandoc nếu có trong PATH; nếu không có, tự động dùng bộ phân tích cú pháp Markdown JavaScript tích hợp sẵn.
+ * LUÔN dùng bộ chuyển Markdown -> HTML viết bằng JavaScript có sẵn (scripts/md-to-html.js) để kết quả
+ * GIỐNG HỆT nhau trên mọi máy. (Trước đây tự chọn pandoc nếu máy có cài -> pandoc xuống dòng, đổi dấu
+ * ngoặc kép, thêm <colgroup>... khác bộ JS, nên `build-guide:check` / tests/user-guide.test.js báo
+ * "lỗi thời" trên máy có pandoc dù user_manual.md không đổi.)
  */
 const fs = require("fs");
 const path = require("path");
-const { spawnSync } = require("child_process");
 const { mdToHtml } = require("./md-to-html");
 
 const ROOT = path.resolve(__dirname, "..");
@@ -41,17 +43,8 @@ function parseSections(md) {
     .filter((s) => /^\d+\./.test(s.title)); // chỉ các mục đánh số 1..19 (bỏ "Mục lục")
 }
 
-function pandocToHtml(markdown) {
-  try {
-    const r = spawnSync("pandoc", ["-f", "markdown-auto_identifiers", "-t", "html", "--wrap=auto"], {
-      input: markdown, encoding: "utf8",
-    });
-    if (!r.error && r.status === 0) {
-      return norm(r.stdout);
-    }
-  } catch (e) {}
-  // Fallback to pure JS converter when pandoc is not installed
-  return mdToHtml(markdown);
+function markdownToHtml(markdown) {
+  return norm(mdToHtml(markdown));
 }
 
 function decorate(html) {
@@ -70,7 +63,7 @@ function decorate(html) {
 }
 
 function renderSection(sec) {
-  const body = decorate(pandocToHtml(sec.body)).trimEnd();
+  const body = decorate(markdownToHtml(sec.body)).trimEnd();
   const indent = (text, n) => text.split("\n").map((l) => (l.length ? " ".repeat(n) + l : l)).join("\n");
   return [
     '        <details class="mm-node">',

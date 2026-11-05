@@ -1,5 +1,5 @@
 // Tài liệu hướng dẫn người dùng: user_manual.md là nguồn duy nhất; tab "Hướng dẫn" trong index.html được SINH từ đó
-// (scripts/build-user-guide.js, cần pandoc). Test bảo đảm cấu trúc tài liệu đúng và tab trong app không lỗi thời.
+// (scripts/build-user-guide.js, bộ chuyển Markdown JS có sẵn — không cần pandoc). Test bảo đảm cấu trúc tài liệu đúng và tab trong app không lỗi thời.
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
@@ -8,11 +8,6 @@ const { parseSections } = require("../scripts/build-user-guide");
 
 const manual = fs.readFileSync(path.join(ROOT, "user_manual.md"), "utf8").replace(/\r\n/g, "\n");
 const sections = parseSections(manual);
-
-function pandocAvailable() {
-  const r = spawnSync("pandoc", ["--version"], { encoding: "utf8" });
-  return !r.error && r.status === 0;
-}
 
 describe("user_manual.md", () => {
   test("có 19 mục đánh số liên tục 1..19", () => {
@@ -45,9 +40,8 @@ describe("user_manual.md", () => {
   });
 });
 
-const maybe = pandocAvailable() ? test : test.skip;
 describe("tab Hướng dẫn trong app", () => {
-  maybe("index.html khớp user_manual.md (nếu lỗi: chạy `npm run build-guide`)", () => {
+  test("index.html khớp user_manual.md (nếu lỗi: chạy `npm run build-guide`)", () => {
     const r = spawnSync(process.execPath, [path.join(ROOT, "scripts", "build-user-guide.js"), "--check"], { encoding: "utf8" });
     expect({ status: r.status, out: r.stderr.replace(/\(node:\d+\)[^\n]*\n?/g, "").trim() }).toEqual({ status: 0, out: "" });
   });
