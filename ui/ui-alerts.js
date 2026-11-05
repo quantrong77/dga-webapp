@@ -240,6 +240,8 @@ function computeGasAlerts() {
     // Điều 54 chỉ áp cho MBA/Kháng dầu (dieu54Applies()) — TI/TU, sứ xuyên không xét tỷ lệ bổ sung/Bảng 63.
     const dieu54On = DGA.dieu54Applies(latest.equipment_type);
     const dieu54Msgs = DGA.dieu54AdvisoryMessages({ additionalRatios, bang63, equipmentType: latest.equipment_type });
+    // Khuyến cáo hành động RIÊNG theo đúng điều kiện đã kích hoạt (CO2/CO thấp/cao, O2/N2, Bảng 63)
+    const dieu54Acts = DGA.dieu54ActionMessages({ additionalRatios, bang63, equipmentType: latest.equipment_type });
     const addFlags = dieu54On ? DGA.dieu54AdditionalFlags(additionalRatios) : { co2co: false, o2n2: false };
     const bang63Bad = dieu54On && bang63 && bang63.verdict === "Không đạt";
 
@@ -257,11 +259,14 @@ function computeGasAlerts() {
             level: "alert",
             label: "CẢNH BÁO (ALERT)",
             reasons: dieu54Msgs,
-            action: "Đối chiếu Điều 54 QĐ1901 (tỷ lệ bổ sung CO2/CO, O2/N2, Tổng hàm lượng khí hòa tan Bảng 63) ở tab " +
-              "\"DGA\"; xem xét phân tích furanic/đo độ trùng hợp giấy nếu nghi carbon hóa giấy cách điện, hoặc kiểm " +
-              "tra lại quy trình xử lý dầu nếu vượt ngưỡng Bảng 63.",
+            action: dieu54Acts.map((t) => "• " + t).join("\n"),
           }
-        : { ...overallStatus, reasons: [...overallStatus.reasons, ...dieu54Msgs] };
+        : {
+            ...overallStatus,
+            reasons: [...overallStatus.reasons, ...dieu54Msgs],
+            // Giữ khuyến cáo của mức Cảnh báo/Báo động hiện có, nối thêm khuyến cáo Điều 54 tương ứng
+            action: [overallStatus.action, ...dieu54Acts.map((t) => "• " + t)].filter(Boolean).join("\n"),
+          };
     }
     if (effectiveStatus.level === "normal") return;
 
@@ -646,7 +651,7 @@ function refreshAlertsUI() {
       <td>${a.statusHtml}${editedPill}</td>
       <td style="max-width:160px;">${exceededHtml}</td>
       <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
-      <td style="font-size:12px; max-width:280px;">${escapeHtml(a.action)}</td>
+      <td style="font-size:12px; max-width:280px; white-space:pre-line;">${escapeHtml(a.action)}</td>
       <td>${escapeHtml(a.lanDo)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
       <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell">${rowActionsHtml([

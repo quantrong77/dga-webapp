@@ -407,6 +407,27 @@ describe("Tab Cảnh báo: tỷ lệ bổ sung Điều 54 (O2/N2, CO2/CO) cho MB
     c.DGA.resetRegulationConfigItem("DIEU54_ADDITIONAL");
   });
 
+  test("cột Khuyến cáo: hành động riêng theo đúng điều kiện O2/N2, CO2/CO thấp, CO2/CO cao", () => {
+    const [o] = run([{ ...ok, id: "k1", thiet_bi: "K1", equipment_type: MBA, co: 200, co2: 1500, n2: 50000, o2: 10000 }]);
+    expect(o.action).toMatch(/^• O2\/N2 = 0,2 < 0,3/);
+    expect(o.action).toMatch(/chỉ số axit/);
+    expect(o.action).not.toMatch(/CO2\/CO/);
+
+    const [lo] = run([{ ...ok, id: "k2", thiet_bi: "K2", equipment_type: MBA, co: 1200, co2: 2400 }]);
+    expect(lo.action).toMatch(/CO2\/CO = 2 < 3 và CO > 1000 ppm/);
+    expect(lo.action).toMatch(/furan \(2-FAL\).*độ trùng hợp giấy \(DP\)/);
+    expect(lo.action).not.toMatch(/quá nhiệt nhẹ/);
+
+    const [hi] = run([{ ...ok, id: "k3", thiet_bi: "K3", equipment_type: MBA, co: 500, co2: 11000 }]);
+    expect(hi.action).toMatch(/CO2\/CO = 22 > 10 và CO2 > 10\.000 ppm/);
+    expect(hi.action).toMatch(/hệ thống làm mát/);
+    expect(hi.action).not.toMatch(/carbon hóa/);
+
+    // Cả CO2/CO cao và O2/N2 thấp -> 2 khuyến cáo, mỗi dòng 1 gạch đầu dòng
+    const [both] = run([{ ...ok, id: "k4", thiet_bi: "K4", equipment_type: MBA, co: 500, co2: 11000, n2: 50000, o2: 10000 }]);
+    expect(both.action.split("\n")).toHaveLength(2);
+  });
+
   test("TI/TU, sứ xuyên KHÔNG bị gắn tỷ lệ bổ sung Điều 54 (chỉ quy định cho MBA)", () => {
     const alerts = run([
       { ...ok, id: "ti", thiet_bi: "TI1", equipment_type: "TI (biến dòng điện)", h2: 20, ch4: 5, c2h6: 5, c2h4: 2, co: 100, co2: 500, n2: 50000, o2: 10000 },

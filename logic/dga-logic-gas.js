@@ -654,11 +654,14 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
   const R = DIEU54_ADDITIONAL_RATIOS; // ngưỡng cấu hình được (dga-logic-core.js)
   const vn = (v) => Number(v).toLocaleString("vi-VN");
   let co2coNote;
+  let co2coCase = null; // "carbonization" (CO2/CO thấp + CO cao) | "overheat" (CO2/CO cao + CO2 cao) | null
   if (co2_co === null) {
     co2coNote = "Không đủ dữ liệu để tính (CO và CO2 đều bằng 0).";
   } else if (co2_co < R.co2co_low && co > R.co_min) {
+    co2coCase = "carbonization";
     co2coNote = `CO2/CO < ${vn(R.co2co_low)} và CO > ${vnNum(R.co_min)} ppm — có khả năng liên quan đến giấy cách điện bị carbon hóa, cần xác nhận bằng phân tích furanic hoặc đo độ trùng hợp giấy.`;
   } else if (co2_co > R.co2co_high && co2 > R.co2_min) {
+    co2coCase = "overheat";
     co2coNote = `CO2/CO > ${vn(R.co2co_high)} và CO2 > ${vn(R.co2_min)} ppm — có thể do quá nhiệt nhẹ (<160°C) hoặc oxy hóa dầu, đặc biệt ở máy biến áp hở.`;
   } else {
     co2coNote = `Không rơi vào 2 điều kiện cảnh báo bổ sung của Điều 54 (CO2/CO<${vn(R.co2co_low)} và CO>${vnNum(R.co_min)} ppm; hoặc CO2/CO>${vn(R.co2co_high)} và CO2>${vn(R.co2_min)} ppm).`;
@@ -679,6 +682,7 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
   return {
     co2_co: co2_co === null ? null : round1(co2_co),
     co2coNote,
+    co2coCase,
     // O2/N2 hiển thị: CẮT (không làm tròn) ở 3 chữ số — làm tròn có thể đẩy 0,2998 thành "0,3" trong khi
     // số thực vẫn < 0,3 (có cảnh báo), gây mâu thuẫn. Cắt bớt thì số < 0,3 luôn hiện ra < 0,3.
     o2_n2: o2_n2 === null ? null : Math.floor(o2_n2 * 1000 + 1e-9) / 1000, // +1e-9: bù sai số dấu phẩy động (4,35*1000 = 4349,999…)
@@ -733,6 +737,46 @@ function dieu54AdvisoryMessages({ additionalRatios, bang63, equipmentType }) {
     );
   }
   return msgs;
+}
+
+/** Hành động khuyến cáo RIÊNG cho từng điều kiện Điều 54 (cột "Khuyến cáo" tab "Cảnh báo"):
+ *  CO2/CO thấp + CO cao (carbon hóa giấy), CO2/CO cao + CO2 cao (quá nhiệt nhẹ/oxy hóa dầu),
+ *  O2/N2 thấp (tiêu thụ oxy), Bảng 63. Ngưỡng lấy từ DIEU54_ADDITIONAL_RATIOS (cấu hình được).
+ *  Trả về mảng chuỗi — rỗng nếu không rơi vào điều kiện nào / thiết bị không phải MBA/Kháng. */
+function dieu54ActionMessages({ additionalRatios, bang63, equipmentType }) {
+  const acts = [];
+  if (!dieu54Applies(equipmentType)) return acts;
+  const a = additionalRatios;
+  const R = DIEU54_ADDITIONAL_RATIOS;
+  const vn = (v) => Number(v).toLocaleString("vi-VN");
+  const flags = dieu54AdditionalFlags(a);
+  if (flags.co2co && a.co2coCase === "carbonization") {
+    acts.push(
+      `CO2/CO = ${vn(a.co2_co)} < ${vn(R.co2co_low)} và CO > ${vnNum(R.co_min)} ppm (nghi giấy cách điện bị carbon hóa): ` +
+      `lấy mẫu dầu phân tích hợp chất furan (2-FAL) và/hoặc đo độ trùng hợp giấy (DP) để xác nhận; rút ngắn chu kỳ ` +
+      `lấy mẫu DGA, theo dõi tốc độ tăng CO, CO2; đối chiếu chẩn đoán Bảng 66/Tam giác Duval (sự cố nhiệt/phóng điện có liên quan giấy).`
+    );
+  } else if (flags.co2co && a.co2coCase === "overheat") {
+    acts.push(
+      `CO2/CO = ${vn(a.co2_co)} > ${vn(R.co2co_high)} và CO2 > ${vn(R.co2_min)} ppm (nghi quá nhiệt nhẹ <160°C hoặc oxy hóa dầu): ` +
+      `kiểm tra chế độ mang tải, nhiệt độ dầu/cuộn dây và hệ thống làm mát (quạt, bơm, bộ tản nhiệt); với MBA hở (bình dầu ` +
+      `phụ không màng ngăn) kiểm tra bình hút ẩm/silicagel; thí nghiệm chỉ số axit, sức căng bề mặt, tgδ dầu để đánh giá mức oxy hóa; theo dõi xu hướng CO2.`
+    );
+  }
+  if (flags.o2n2) {
+    acts.push(
+      `O2/N2 = ${vn(a.o2_n2)} < ${vn(R.o2n2_low)} (tiêu thụ oxy quá mức do oxy hóa dầu hoặc lão hóa giấy): ` +
+      `thí nghiệm chất lượng dầu (chỉ số axit, sức căng bề mặt, tgδ, cặn bùn) và phân tích furan để đánh giá lão hóa giấy; ` +
+      `đối chiếu kết cấu bình dầu phụ (MBA kín/có màng ngăn thường có O2 thấp) và xu hướng O2, N2 các lần đo trước khi kết luận.`
+    );
+  }
+  if (bang63 && bang63.verdict === "Không đạt") {
+    acts.push(
+      `Tổng hàm lượng khí hòa tan vượt ${REGULATION_CITATIONS.BANG63_TDGC} (<${bang63.limit}%): kiểm tra lại quy trình xử lý dầu ` +
+      `(chân không hóa/lọc khí) trước khi đưa thiết bị vào vận hành chính thức.`
+    );
+  }
+  return acts;
 }
 
 function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType, bushingCodes, gases }) {
