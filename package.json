@@ -10,7 +10,8 @@
     "sync-mobile": "node scripts/sync-mobile.js",
     "sync-mobile:check": "node scripts/sync-mobile.js --check",
     "build-guide": "node scripts/build-user-guide.js",
-    "build-guide:check": "node scripts/build-user-guide.js --check"
+    "build-guide:check": "node scripts/build-user-guide.js --check",
+    "extract-images": "node scripts/extract-md-images.js"
   },
   "devDependencies": {
     "@babel/parser": "^7.29.9",
