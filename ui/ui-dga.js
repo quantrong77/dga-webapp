@@ -759,7 +759,7 @@ function onViewMeasurement(rec) {
     const bang63Percent = DGA.computeTotalDissolvedGasPercent(gases, n2, o2);
     const bang63 = DGA.evaluateBang63(bang63Percent, rec.bang63_voltage_class || "110-220", !!rec.bang63_applicable);
     bang63.value = bang63Percent;
-    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows: null, condemningRows, additionalRatios, bang63, equipmentType, bushingCodes });
+    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows: null, condemningRows, additionalRatios, bang63, equipmentType, bushingCodes, gases });
     const overallStatus = DGA.computeOverallStatus({ overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis: null, rateRows: null, condemningRows });
 
     _lastAnalysis = { measurement: rec, tcg, evalRows, overall, diagnosis, bushingCodes, standard, ratios, applicability, duval, rateRows: null, tcgRate: null, prior: null, recs, condemningRows, overallStatus, additionalRatios, bang63, peerAnomaly: null, similarCases: null, kphGases };
@@ -828,14 +828,14 @@ function drawDuvalTriangleBase() {
     [P(50, 50, 0), P(46, 50, 4)],
     // D1/D2 biên %C2H2 = 13 (phần %C2H4 0-23), từ cạnh CH4-C2H2 tới góc (23,13)
     [P(87, 0, 13), P(64, 23, 13)],
-    // D1/D2 biên %C2H4 = 23 (phần %C2H2 13-29), từ góc (23,13) tới góc (23,29)
-    [P(64, 23, 13), P(48, 23, 29)],
+    // D1/D2 biên %C2H4 = 23, từ góc (23,13) tới cạnh đáy (%CH4 = 0, %C2H2 = 77)
+    [P(64, 23, 13), P(0, 23, 77)],
     // D2/D+T biên %C2H2 = 13 (phần %C2H4 23-40), từ góc (23,13) tới góc (40,13)
     [P(64, 23, 13), P(47, 40, 13)],
     // D2/D+T biên %C2H4 = 40 (phần %C2H2 13-29), từ góc (40,13) tới góc (40,29)
     [P(47, 40, 13), P(31, 40, 29)],
-    // D2/D+T biên %C2H2 = 29 (phần %C2H4 23-40), từ góc (23,29) tới góc (40,29)
-    [P(48, 23, 29), P(31, 40, 29)],
+    // D2/D+T biên %C2H2 = 29, từ góc (40,29) tới cạnh đáy (%CH4 = 0, %C2H4 = 71)
+    [P(31, 40, 29), P(0, 71, 29)],
     // T3(mở rộng)/D+T biên %C2H2 = 15 (từ %C2H4=50 tới cạnh đáy)
     [P(35, 50, 15), P(0, 85, 15)],
   ];
@@ -1118,7 +1118,7 @@ async function onAnalyze() {
   };
 
   // 5) Khuyến cáo tổng hợp
-  const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType: measurement.equipment_type, bushingCodes });
+  const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType: measurement.equipment_type, bushingCodes, gases });
 
   // 5bis) Trạng thái tổng thể (Bình thường/Cảnh báo/Báo động) — số hóa lưu đồ Hình 1
   //    IEC 60599:2022; xem giải thích đầy đủ ở tab "Quy trình đánh giá".
@@ -1245,7 +1245,9 @@ function renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standa
     }
   }
   $("r_overall").innerHTML = overall === "Đạt" ? `<span class="pill ok">Đạt</span>` : `<span class="pill bad">Không đạt</span>`;
-  $("r_diag").textContent = diagnosis;
+  // Bảng 66 không khớp -> kèm chẩn đoán SƠ BỘ theo bảng đơn giản PD/D/T của Điều 54.
+  const simplePdt = diagnosis === DGA.NO_DIAGNOSIS && ratios ? DGA.diagnoseSimplifiedPDT(ratios) : null;
+  $("r_diag").textContent = simplePdt ? `${diagnosis} — ${simplePdt.label}` : diagnosis;
   $("r_duval").textContent = duval ? duval.zone : "—";
   $("r_standard").textContent = standard.sourceLabel;
 

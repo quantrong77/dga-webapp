@@ -155,9 +155,14 @@ describe("Tam giác Duval 1 — IEC 60599:2022 Annex B, Figure B.3", () => {
     expect(zone(60, 10, 30)).toBe("D1");
     expect(zone(64, 23, 13)).toBe("D1");
   });
-  test("D2: 13 ≤ %C2H2 ≤ 29 và 23 < %C2H4 ≤ 40", () => {
+  test("D2: %C2H4 > 23 và %C2H2 ≥ 13, trừ phần %C2H4 > 40 với %C2H2 < 29 (Bảng 67, Biểu đồ 3)", () => {
     expect(zone(50, 30, 20)).toBe("D2");
     expect(zone(31, 40, 29)).toBe("D2");
+    // vùng D2 lớn kéo xuống cạnh đáy — trước đây bị xếp nhầm vào D+T
+    expect(zone(40, 30, 30)).toBe("D2");
+    expect(zone(10, 40, 50)).toBe("D2");
+    expect(zone(0, 60, 40)).toBe("D2");
+    expect(zone(0, 70, 30)).toBe("D2");
   });
   test("vùng chồng lấn D+T (hình gốc IEC cũng không phân định rõ)", () => {
     expect(zone(45, 45, 10)).toBe("D+T"); // %C2H2 từ 4 đến 13, %C2H4 không đủ lớn cho T3 mở rộng

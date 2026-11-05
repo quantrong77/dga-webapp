@@ -686,7 +686,7 @@ async function onAnalyze() {
       priorDiagnosis = DGA.diagnoseGasFault(priorGases, measurement.equipment_type, standard.pdThreshold);
     }
 
-    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, equipmentType: measurement.equipment_type, bushingCodes });
+    const recs = DGA.buildRecommendations({ overallOk: overall === "Đạt", exceedCount, diagnosis, duval, rateRows, condemningRows, equipmentType: measurement.equipment_type, bushingCodes, gases });
     const overallStatus = DGA.computeOverallStatus({ overallOk: overall === "Đạt", exceedCount, diagnosis, priorDiagnosis, rateRows, condemningRows });
 
     _lastAnalysis = { measurement, tcg, evalRows, overall, diagnosis, standard, ratios, applicability, duval, rateRows, prior, recs, condemningRows, overallStatus };

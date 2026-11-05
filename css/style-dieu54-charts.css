@@ -1,0 +1,95 @@
+/* css/style-dieu54-charts.css — Biểu đồ chẩn đoán Điều 54 QĐ1901 (tab "Quy trình"), vẽ bởi
+   ui/ui-dieu54-charts.js. Màu nền/chữ/viền theo biến giao diện (css/style-base.css) nên tự đổi
+   theo chế độ sáng/tối; màu các vùng lỗi do JS đặt theo cùng giao diện. */
+
+.d54-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-3);
+}
+
+.d54-fig {
+  margin: 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.d54-fig.d54-wide { grid-column: 1 / -1; }
+
+.d54-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-3);
+}
+
+.d54-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(120% 90% at 50% 20%, var(--surface) 0%, var(--surface-sunken) 100%);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
+}
+.d54-svg.dragging { cursor: grabbing; }
+.d54-svg:focus-visible { outline: 2px solid var(--blue-500, #3b82f6); outline-offset: 2px; }
+
+.d54-tools {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.d54-tools .btn { padding: 4px 10px; font-size: var(--text-xs); }
+
+.d54-fig figcaption {
+  text-align: center;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+
+.d54-notes-title {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+}
+.d54-notes {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+  columns: 2 260px;
+}
+.d54-formula {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+.d54-current { color: var(--text-primary); }
+
+.d54-table { font-size: var(--text-sm); }
+.d54-table caption {
+  caption-side: top;
+  text-align: left;
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  padding-bottom: 4px;
+}
+.d54-table th:first-child { text-align: center; }
+
+@media (max-width: 520px) {
+  .d54-grid { grid-template-columns: 1fr; }
+  .d54-pair { grid-template-columns: 1fr; }
+}

@@ -267,13 +267,61 @@ function diagnoseRatios(ratios, pdThreshold) {
   const g = ratios.c2h2_c2h4, h = ratios.ch4_h2, i = ratios.c2h4_c2h6;
   const pd = pdThreshold === undefined || pdThreshold === null ? DEFAULT_PD_THRESHOLD : pdThreshold;
   if (h < pd && i < 0.2) return "PD - Phóng điện cục bộ";
-  if (g > 1 && h >= 0.1 && h <= 0.5 && i > 1 && g >= 0.6 && g <= 2.5 && h <= 1) return "D1/D2 - Phóng điện (vùng chồng lấn)";
+  // Vùng chồng lấn = khớp ĐỒNG THỜI cả D1 VÀ D2 — D2 đòi C2H4/C2H6 > 2 (không phải > 1 như D1).
+  if (g > 1 && h >= 0.1 && h <= 0.5 && i > 2 && g <= 2.5) return "D1/D2 - Phóng điện (vùng chồng lấn)";
   if (g > 1 && h >= 0.1 && h <= 0.5 && i > 1) return "D1 - Phóng điện năng lượng thấp";
   if (g >= 0.6 && g <= 2.5 && h >= 0.1 && h <= 1 && i > 2) return "D2 - Phóng điện năng lượng cao";
   if (h > 1 && i < 1) return "T1 - Tăng nhiệt, t<300°C";
   if (g < 0.1 && h > 1 && i >= 1 && i <= 4) return "T2 - Tăng nhiệt, 300-700°C";
   if (g < 0.2 && h > 1 && i > 4) return "T3 - Tăng nhiệt, t>700°C";
   return NO_DIAGNOSIS;
+}
+
+/**
+ * Bảng đơn giản hóa PD / D / T của Điều 54 QĐ1901 (ngay dưới Bảng 66 = Table 2 IEC 60599):
+ * "nếu tỷ lệ không nằm trong giới hạn của bảng trên, sử dụng bảng dưới để xác định lỗi khiếm
+ * khuyết SƠ BỘ giữa phóng điện cục bộ (PD), phóng điện (D) và lỗi tăng nhiệt (T)":
+ *   PD — CH4/H2 < 0,2      D — C2H2/C2H4 > 0,2      T — C2H2/C2H4 < 0,2
+ * Chỉ dùng khi diagnoseRatios() trả NO_DIAGNOSIS. Kết quả là chẩn đoán SƠ BỘ — KHÔNG thay
+ * NO_DIAGNOSIS trong luồng "đổi loại sự cố" (computeOverallStatus) để tránh Báo động giả.
+ * @returns {{codes: string[], text: string, label: string}|null} null nếu không tính được tỷ số
+ */
+function diagnoseSimplifiedPDT(ratios) {
+  if (!ratios) return null;
+  const g = ratios.c2h2_c2h4, h = ratios.ch4_h2;
+  const codes = [];
+  if (Number.isFinite(h) && h < 0.2) codes.push("PD");
+  if (Number.isFinite(g) && g > 0.2) codes.push("D");
+  else if (Number.isFinite(g) && g < 0.2) codes.push("T");
+  if (codes.length === 0) return null;
+  const names = { PD: "PD — phóng điện cục bộ", D: "D — phóng điện", T: "T — lỗi tăng nhiệt" };
+  const text = codes.map((c) => names[c]).join(" + ");
+  return { codes, text, label: `Sơ bộ (bảng PD/D/T, Điều 54): ${text}` };
+}
+
+/**
+ * Bước "kiểm tra nhiễm khí từ OLTC" của lưu đồ Điều 54 (sau khi khí vượt điển hình và tốc độ
+ * tăng cao): "Tính tỷ lệ C2H2/H2, nếu C2H2/H2 > 2 - 3, nghi ngờ nhiễm khí từ OLTC". Văn bản cho
+ * ngưỡng là KHOẢNG 2–3 nên chia 2 mức: > 3 nghi ngờ rõ, 2–3 có thể.
+ * @returns {{ratio:number|null, level:"none"|"possible"|"likely"}}
+ */
+function oltcContaminationCheck(gases) {
+  const h2 = num(gases.H2), c2h2 = num(gases.C2H2);
+  if (h2 <= 0) return { ratio: null, level: "none" };
+  const ratio = c2h2 / h2;
+  return { ratio: Math.round(ratio * 100) / 100, level: ratio > 3 ? "likely" : ratio > 2 ? "possible" : "none" };
+}
+
+/**
+ * Nhánh "hàm lượng khí THẤP HƠN khoảng giá trị điển hình" của lưu đồ Điều 54 (Bảng 64, MBA) ->
+ * "kiểm tra lỗi lấy mẫu, đo lường hoặc do xử lý dầu gần đây, tiếp tục theo dõi định kỳ".
+ * Chỉ coi là "thấp hơn khoảng điển hình" khi TẤT CẢ 7 khí đều dưới cận dưới Bảng 64 — từng khí
+ * riêng lẻ thấp (VD C2H2 = 0) là bình thường ở MBA khỏe nên không nhắc.
+ * @returns {boolean}
+ */
+function gasesBelowTypicalLow(gases, equipmentType) {
+  if (equipmentType !== EQUIPMENT_TYPES.MBA) return false;
+  return GASES.every((g) => num(gases[g]) < QD1901_BANG64_MBA_LOW[g]);
 }
 
 // ---------------------------------------------------------------------------
@@ -337,6 +385,9 @@ function diagnoseGasFault(gases, equipmentType, pdThreshold, kphGases) {
       return "Không áp dụng (các khí đều trong khoảng điển hình / dưới ngưỡng phát hiện — Điều 54 QĐ1901 & IEC 60599)";
     }
   }
+  // Mẫu không có khí nào (5 khí dùng cho tỷ số đều = 0): mọi tỷ số đều 0/0 — không được
+  // suy ra mã sự cố (computeRatios() quy ước x/0 = 999 nên sẽ ra nhầm "T3").
+  if (["H2", "CH4", "C2H6", "C2H4", "C2H2"].every((g) => num(gases[g]) === 0)) return NO_DIAGNOSIS;
   const ratios = computeRatios(gases);
   if (equipmentType === EQUIPMENT_TYPES.BUSHING) {
     const codes = diagnoseBushingRatios(ratios);
@@ -371,14 +422,17 @@ function ratioApplicability(exceedCount) {
 //    của D2 theo %C2H2 (29%) cũng như vùng T3 mở rộng theo %C2H2 (15%)):
 //      PD: %CH4 ≥ 98
 //      D1: %C2H4 ≤ 23  và %C2H2 ≥ 13                (không giới hạn trên của %C2H2)
-//      D2: 23 < %C2H4 ≤ 40  và  13 ≤ %C2H2 ≤ 29
+//      D2: %C2H4 > 23 và %C2H2 ≥ 13, TRỪ phần (%C2H4 > 40 và %C2H2 < 29) — 4 đường biên đúng như
+//          Bảng 67 Điều 54 (23% C2H4, 13% C2H2, 40% C2H4, 29% C2H2); D2 kéo xuống tận cạnh đáy
+//          (%CH4 = 0) như Biểu đồ 3. (Bản cũ chỉ lấy ô 13–29% C2H2 × 23–40% C2H4 nên xếp nhầm toàn
+//          bộ vùng %C2H2 > 29, %C2H4 > 23 vào "D+T" — sửa 11/2026 khi rà soát theo Điều 54.)
 //      T1: %C2H2 ≤ 4  và %C2H4 ≤ 20
 //      T2: %C2H2 ≤ 4  và 20 < %C2H4 ≤ 50
 //      T3: (%C2H2 ≤ 4 và %C2H4 > 50) — dải hẹp sát cạnh %C2H2=0 —
 //          hoặc (%C2H2 ≤ 15 và %C2H4 > 50) — vùng mở rộng của T3 theo đúng dòng T3
 //          trong bảng "Limits of zones" (15 % C2H2, 50 % C2H4)
-//    Phần diện tích còn lại (vượt khỏi D1/D2 nhưng %C2H4 ≤ 50, hoặc %C2H2 > 15 với
-//    %C2H4 > 50) là vùng ranh giới "D+T" mà chính hình vẽ gốc IEC 60599:2022
+//    Phần diện tích còn lại (4 < %C2H2 < 13 với %C2H4 ≤ 50; hoặc 13 ≤ %C2H2 < 29 với %C2H4 > 40,
+//    ngoài T3) là vùng ranh giới "D+T" mà chính hình vẽ gốc IEC 60599:2022
 //    (Figure B.3) cũng ghi chú là chồng lấn/không phân định rõ giữa phóng điện và
 //    tăng nhiệt — công cụ trả về nhãn riêng cho vùng này thay vì gán cứng vào D2
 //    hoặc T3.
@@ -415,7 +469,7 @@ function classifyDuval1(pct) {
     return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval)" };
   }
 
-  if (a >= 13 && a <= 29 && e > 23 && e <= 40) {
+  if (a >= 13 && e > 23 && (e <= 40 || a >= 29)) {
     return { zone: "D2", label: "D2 - Phóng điện năng lượng cao (Tam giác Duval)" };
   }
   if (a >= 13 && e <= 23) {
@@ -484,7 +538,9 @@ function computeRateOfChange(prevGases, currGases, deltaDays, rateRanges, equipm
     if (gasIsKph) verdict = "Dưới ngưỡng phát hiện (KPH) — bình thường";
     else if (delta < 0) verdict = "Giảm — có thể do lọc/xử lý/thay dầu, hoặc khiếm khuyết cũ ngừng phát triển";
     else if (ratePerYear > hi) verdict = `⚠ Vượt cận trên ${REGULATION_CITATIONS.BANG65_RATE} — nghi khiếm khuyết đang phát triển`;
-    else if (ratePerYear < lo) verdict = `Dưới cận dưới ${REGULATION_CITATIONS.BANG65_RATE} — tốc độ thấp, bình thường`;
+    // Điều 54: "Nếu độ tăng hàm lượng khí thấp hơn khoảng giá trị tốc độ tăng hàm lượng khí điển hình,
+    // kiểm tra lỗi đo lường hoặc do xử lý dầu gần đây, tiếp tục theo dõi định kỳ".
+    else if (ratePerYear < lo) verdict = `Dưới cận dưới ${REGULATION_CITATIONS.BANG65_RATE} — kiểm tra lỗi đo lường hoặc do xử lý dầu gần đây; tiếp tục theo dõi định kỳ`;
     else verdict = `Trong khoảng điển hình ${REGULATION_CITATIONS.BANG65_RATE}`;
     return {
       gas, before, after, delta,
@@ -647,7 +703,7 @@ function dieu54AdvisoryMessages({ additionalRatios, bang63 }) {
   return msgs;
 }
 
-function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType, bushingCodes }) {
+function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRows, condemningRows, additionalRatios, bang63, equipmentType, bushingCodes, gases }) {
   const recs = [];
   const rateWarnings = (rateRows || []).filter((r) => r.verdict && r.verdict.startsWith("⚠"));
   const condemnExceeded = condemningExceededRows(condemningRows);
@@ -704,6 +760,26 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
     } else if (!diagnosis || !diagnosis.startsWith(duval.zone.split("/")[0])) {
       recs.push(`Lưu ý: Tam giác Duval cho mã ${duval.zone}, khác với mã tra theo Bảng 66/Ba tỷ số khí cơ bản ở trên — hai phương pháp có thể lệch nhau khi khí ở gần ranh giới vùng; nên đối chiếu thêm dữ liệu vận hành/pha khác trước khi kết luận.`);
     }
+  }
+  // Bảng 66 không khớp mã nào -> bảng đơn giản hóa PD/D/T (Điều 54) để xác định lỗi SƠ BỘ.
+  if (gases && equipmentType !== EQUIPMENT_TYPES.BUSHING && diagnosis === NO_DIAGNOSIS) {
+    const simple = diagnoseSimplifiedPDT(computeRatios(gases));
+    if (simple) {
+      recs.push(`Tỷ số khí không nằm trong giới hạn Bảng 66 — theo bảng đơn giản hóa của Điều 54, lỗi khiếm khuyết sơ bộ: ${simple.text}; đối chiếu thêm Tam giác Duval và biểu đồ tỷ số khí.`);
+    }
+  }
+  // Lưu đồ Điều 54: khí vượt điển hình + tốc độ tăng cao -> kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3).
+  if (gases && equipmentType === EQUIPMENT_TYPES.MBA && exceedCount > 0) {
+    const oltc = oltcContaminationCheck(gases);
+    if (oltc.level !== "none") {
+      recs.push(
+        `C2H2/H2 = ${oltc.ratio} ${oltc.level === "likely" ? "> 3" : "trong khoảng 2–3"} — ${oltc.level === "likely" ? "nghi ngờ rõ" : "có thể"} nhiễm khí từ khoang OLTC (Điều 54): lấy mẫu dầu khoang OLTC, phân tích khí hòa tan so sánh với khoang dầu chính, trừ khí nền từ OLTC để tính lại hàm lượng khí trong khoang dầu chính trước khi tra tỷ số khí; kiểm tra tiếp điểm chuyển nấc và độ kín giữa 2 khoang.`
+      );
+    }
+  }
+  // Lưu đồ Điều 54: hàm lượng khí thấp hơn khoảng điển hình.
+  if (gases && gasesBelowTypicalLow(gases, equipmentType)) {
+    recs.push("Hàm lượng tất cả các khí đều thấp hơn khoảng giá trị điển hình (Bảng 64) — kiểm tra lỗi lấy mẫu, đo lường hoặc do xử lý dầu gần đây; tiếp tục theo dõi định kỳ (Điều 54).");
   }
   if (rateWarnings.length > 0) {
     recs.push(`Tốc độ sinh khí vượt ${REGULATION_CITATIONS.BANG65_RATE} ở ${rateWarnings.length} khí (${rateWarnings.map((r) => r.gas).join(", ")}) — nghi khiếm khuyết đang phát triển, khuyến cáo rút ngắn chu kỳ giám sát và lấy mẫu DGA lại sớm hơn dự kiến.`);

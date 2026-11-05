@@ -109,6 +109,10 @@ const QD1901_BANG12_TI = { H2: 300, CH4: 30, C2H6: 50, C2H4: 10, C2H2: 2, CO: 30
 
 // Bảng 64, Điều 54 — MBA, cận trên khoảng giá trị hàm lượng khí ĐIỂN HÌNH (sàng lọc/tham khảo, không phải giới hạn bắt buộc)
 const QD1901_BANG64_MBA = { H2: 150, CH4: 130, C2H6: 90, C2H4: 280, C2H2: 20, CO: 600, CO2: 14000 };
+// Bảng 64 — CẬN DƯỚI của cùng khoảng điển hình (H2 50–150, CO 400–600, CO2 3.800–14.000, CH4 30–130,
+// C2H6 20–90, C2H4 60–280, C2H2 2–20). Dùng cho nhánh lưu đồ Điều 54 "hàm lượng khí THẤP HƠN khoảng
+// điển hình -> kiểm tra lỗi lấy mẫu, đo lường hoặc do xử lý dầu gần đây" (xem gasesBelowTypicalLow()).
+const QD1901_BANG64_MBA_LOW = { H2: 50, CH4: 30, C2H6: 20, C2H4: 60, C2H2: 2, CO: 400, CO2: 3800 };
 
 // Bảng 65, Điều 54 — MBA, khoảng tốc độ tăng hàm lượng khí điển hình (ppm/năm)
 const QD1901_BANG65_RATE = {

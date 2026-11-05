@@ -99,24 +99,21 @@ describe("Bất biến trên 300 tổ hợp khí ngẫu nhiên (seed cố địn
 });
 
 // ---------------------------------------------------------------------------
-// Các trường hợp LỆCH văn bản gốc đã phát hiện khi viết test. Dùng test.failing để:
-//  - bộ test vẫn xanh (không chặn CI) nhưng lỗi được ghi nhận có chủ đích;
-//  - khi ai đó SỬA code, các test này sẽ ĐỎ ("expected to fail but passed") — lúc đó chỉ
-//    cần đổi test.failing thành test thường.
-// Chưa tự sửa code chẩn đoán: cần người có thẩm quyền xác nhận trước khi đổi hành vi kết luận.
+// Các trường hợp TỪNG LỆCH văn bản gốc (trước đây ghi nhận bằng test.failing) — đã sửa theo đợt rà
+// soát Điều 54 QĐ1901 (11/2026), giữ lại làm test hồi quy.
 // ---------------------------------------------------------------------------
-describe("Lệch văn bản gốc (đã biết, chờ quyết định)", () => {
+describe("Từng lệch văn bản gốc — đã sửa theo Điều 54", () => {
   // IEC 60599:2022 Table 1: D1 = C2H2/C2H4 > 1 & CH4/H2 0,1–0,5 & C2H4/C2H6 > 1;
   // D2 = 0,6–2,5 & 0,1–1 & C2H4/C2H6 > 2. Điểm (1,5; 0,3; 1,5) chỉ khớp D1 (C2H4/C2H6 = 1,5 không > 2
   // nên không khớp D2) — nhưng code trả "D1/D2 (vùng chồng lấn)" vì nhánh chồng lấn chỉ xét C2H4/C2H6 > 1.
-  test.failing("D1/D2: chỉ gán 'vùng chồng lấn' khi C2H4/C2H6 > 2 (điểm này chỉ là D1)", () => {
+  test("D1/D2: chỉ gán 'vùng chồng lấn' khi C2H4/C2H6 > 2 (điểm này chỉ là D1)", () => {
     const out = DGA.diagnoseRatios({ c2h2_c2h4: 1.5, ch4_h2: 0.3, c2h4_c2h6: 1.5 });
     expect(out).toMatch(/^D1 -/);
   });
 
   // computeRatios trả 999 khi mẫu số = 0, kể cả 0/0 (CH4 = H2 = 0). Bộ khí rỗng vì vậy thành
   // CH4/H2 = 999, C2H4/C2H6 = 999, C2H2/C2H4 = 0 => "T3 - Tăng nhiệt > 700°C" (kết luận rõ ràng, sai).
-  test.failing("mẫu không có khí nào KHÔNG được chẩn đoán ra mã sự cố cụ thể", () => {
+  test("mẫu không có khí nào KHÔNG được chẩn đoán ra mã sự cố cụ thể", () => {
     expect(DGA.diagnoseGasFault(gases(), T.MBA, 0.1)).toBe(NO_DIAGNOSIS);
   });
 });

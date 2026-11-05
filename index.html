@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="css/style-tab-tables.css" />
   <link rel="stylesheet" href="css/style-tabs-secondary.css" />
   <link rel="stylesheet" href="css/style-tab-regulation-config.css" />
+  <link rel="stylesheet" href="css/style-dieu54-charts.css" />
   <script src="vendor/supabase/supabase.js"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
   <script src="vendor/chartjs/chart.umd.min.js"></script>
@@ -55,7 +56,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v10-google-auth") {
+          if (k !== "dga-offline-v11-dieu54") {
             caches.delete(k);
           }
         });
@@ -673,7 +674,7 @@
           <tbody id="r_gasTable"></tbody>
         </table></div>
 
-        <div class="section-title">Ba tỷ số khí cơ bản (Bảng 66, Điều 54 QĐ1901 = Table 2, IEC 60599:2022)</div>
+        <div class="section-title">Ba tỷ số khí cơ bản (Bảng 66, Điều 54 QĐ1901 = Table 1, IEC 60599:2022)</div>
         <div class="table-scroll"><table>
           <thead><tr><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th><th>Ngưỡng PD (CH4/H2)</th><th>Điều kiện áp dụng</th></tr></thead>
           <tbody><tr>
@@ -1511,7 +1512,7 @@
           <div class="process-step">
             <div class="step-num">4</div>
             <h3>Tính tỷ số khí &amp; tra mã loại sự cố</h3>
-            <p>Tính 3 tỷ số cơ bản (C2H2/C2H4, CH4/H2, C2H4/C2H6), tra mã loại sự cố theo Bảng 66 QĐ1901/Table 2
+            <p>Tính 3 tỷ số cơ bản (C2H2/C2H4, CH4/H2, C2H4/C2H6), tra mã loại sự cố theo Bảng 66 QĐ1901/Table 1
               IEC 60599 (PD, D1, D2, T1, T2, T3); đối chiếu độc lập bằng Tam giác Duval 1 (Annex B) để tăng độ tin
               cậy chẩn đoán.</p>
             <p class="maps-to">Hiển thị ở mục "Ba tỷ số khí cơ bản" và "Tam giác Duval 1" trong kết quả phân tích.</p>
@@ -1562,6 +1563,103 @@
             <p class="maps-to">Lưu trữ ở <strong>Tab "Lịch sử đo"</strong>; xem diễn biến ở
               <strong>Tab "Xu hướng"</strong>.</p>
           </div>
+        </div>
+      </div>
+
+      <!-- Biểu đồ chẩn đoán Điều 54 QĐ1901 — vẽ bởi ui/ui-dieu54-charts.js (3D, xoay được, theo giao diện sáng/tối) -->
+      <div class="panel" id="dieu54ChartsPanel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Biểu đồ chẩn đoán khí hòa tan — Điều 54 QĐ1901</h2>
+        <p class="note">Xác định tính chất khiếm khuyết MBA theo biểu đồ 1, biểu đồ 2 của tỷ số hàm lượng khí và biểu đồ 3 — tam
+          giác Duval 1 để xác định các lỗi khiếm khuyết phóng điện cục bộ (PD), phóng điện năng lượng thấp/cao (D1/D2) và lỗi
+          nhiệt (T1, T2, T3). <b>Kéo chuột (hoặc chạm, phím mũi tên)</b> để xoay hình 3D; nháy đúp hoặc bấm "Mặc định" để về góc
+          nhìn ban đầu, "Nhìn thẳng (2D)" để xem như hình gốc.</p>
+        <p class="note d54-current hidden" id="d54CurrentNote"></p>
+
+        <div class="d54-grid">
+          <figure class="d54-fig d54-wide">
+            <div class="d54-tools">
+              <button type="button" class="btn ghost" data-d54="reset" title="Về góc nhìn 3D mặc định">Mặc định</button>
+              <button type="button" class="btn ghost" data-d54="top" title="Nhìn thẳng từ trên xuống như hình gốc">Nhìn thẳng (2D)</button>
+            </div>
+            <div class="d54-pair">
+              <svg id="d54Chart1Left" class="d54-svg" viewBox="0 0 520 400" role="img" tabindex="0" aria-label="Biểu đồ 1 (trái): C2H2/C2H4 theo CH4/H2"></svg>
+              <svg id="d54Chart1Right" class="d54-svg" viewBox="0 0 520 400" role="img" tabindex="0" aria-label="Biểu đồ 1 (phải): C2H2/C2H4 theo C2H4/C2H6"></svg>
+            </div>
+            <figcaption>Biểu đồ 1 của tỷ số hàm lượng khí</figcaption>
+            <div class="d54-notes-title">Ghi chú:</div>
+            <ul class="d54-notes">
+              <li><b>PD:</b> Vùng có phóng điện cục bộ.</li>
+              <li><b>D1:</b> Vùng có phóng điện năng lượng thấp.</li>
+              <li><b>D2:</b> Vùng có phóng điện năng lượng cao.</li>
+              <li><b>T1:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ thấp (t &lt; 300 °C).</li>
+              <li><b>T2:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ trung bình (300 °C &lt; t &lt; 700 °C).</li>
+              <li><b>T3:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ cao (t &gt; 700 °C).</li>
+            </ul>
+          </figure>
+
+          <figure class="d54-fig">
+            <div class="d54-tools">
+              <button type="button" class="btn ghost" data-d54="reset" title="Về góc nhìn 3D mặc định">Mặc định</button>
+              <button type="button" class="btn ghost" data-d54="top" title="Nhìn thẳng từ trên xuống như hình gốc">Nhìn thẳng (2D)</button>
+            </div>
+            <svg id="d54Chart2" class="d54-svg" viewBox="0 0 520 420" role="img" tabindex="0" aria-label="Biểu đồ 2: không gian 3 tỷ số khí C2H4/C2H6, CH4/H2, C2H2/C2H4"></svg>
+            <figcaption>Biểu đồ 2 của tỷ số hàm lượng khí</figcaption>
+            <div class="d54-notes-title">Ghi chú:</div>
+            <ul class="d54-notes">
+              <li><b>PD:</b> Vùng có phóng điện cục bộ.</li>
+              <li><b>D1:</b> Vùng có phóng điện năng lượng thấp.</li>
+              <li><b>D2:</b> Vùng có phóng điện năng lượng cao.</li>
+              <li><b>T1:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ thấp (t &lt; 300 °C).</li>
+              <li><b>T2:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ trung bình (300 °C &lt; t &lt; 700 °C).</li>
+              <li><b>T3:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ cao (t &gt; 700 °C).</li>
+            </ul>
+          </figure>
+
+          <figure class="d54-fig">
+            <div class="d54-tools">
+              <button type="button" class="btn ghost" data-d54="reset" title="Về góc nhìn 3D mặc định">Mặc định</button>
+              <button type="button" class="btn ghost" data-d54="top" title="Nhìn thẳng từ trên xuống như hình gốc">Nhìn thẳng (2D)</button>
+            </div>
+            <svg id="d54Duval" class="d54-svg" viewBox="0 0 520 420" role="img" tabindex="0" aria-label="Biểu đồ 3: tam giác Duval 1"></svg>
+            <figcaption>Biểu đồ 3 – tam giác Duval 1</figcaption>
+            <p class="d54-formula"><b>Trong đó:</b> thành phần các khí tính bằng ppm<br>
+              C<sub>2</sub>H<sub>2</sub> (%) = [C<sub>2</sub>H<sub>2</sub> / (C<sub>2</sub>H<sub>2</sub> + C<sub>2</sub>H<sub>4</sub> + CH<sub>4</sub>)] × 100<br>
+              C<sub>2</sub>H<sub>4</sub> (%) = [C<sub>2</sub>H<sub>4</sub> / (C<sub>2</sub>H<sub>2</sub> + C<sub>2</sub>H<sub>4</sub> + CH<sub>4</sub>)] × 100<br>
+              CH<sub>4</sub> (%) = [CH<sub>4</sub> / (C<sub>2</sub>H<sub>2</sub> + C<sub>2</sub>H<sub>4</sub> + CH<sub>4</sub>)] × 100</p>
+            <div class="table-scroll"><table class="d54-table">
+              <caption>Bảng 67. Giới hạn các vùng lỗi</caption>
+              <thead><tr><th>Mã lỗi</th><th colspan="4">Giới hạn theo các vùng</th></tr></thead>
+              <tbody>
+                <tr><th>PD</th><td>98% CH<sub>4</sub></td><td></td><td></td><td></td></tr>
+                <tr><th>D1</th><td>23% C<sub>2</sub>H<sub>4</sub></td><td>13% C<sub>2</sub>H<sub>2</sub></td><td></td><td></td></tr>
+                <tr><th>D2</th><td>23% C<sub>2</sub>H<sub>4</sub></td><td>13% C<sub>2</sub>H<sub>2</sub></td><td>40% C<sub>2</sub>H<sub>4</sub></td><td>29% C<sub>2</sub>H<sub>2</sub></td></tr>
+                <tr><th>T1</th><td>4% C<sub>2</sub>H<sub>2</sub></td><td>20% C<sub>2</sub>H<sub>4</sub></td><td></td><td></td></tr>
+                <tr><th>T2</th><td>4% C<sub>2</sub>H<sub>2</sub></td><td>20% C<sub>2</sub>H<sub>4</sub></td><td>50% C<sub>2</sub>H<sub>4</sub></td><td></td></tr>
+                <tr><th>T3</th><td>15% C<sub>2</sub>H<sub>2</sub></td><td>50% C<sub>2</sub>H<sub>4</sub></td><td></td><td></td></tr>
+              </tbody>
+            </table></div>
+            <div class="d54-notes-title">Ghi chú:</div>
+            <ul class="d54-notes">
+              <li><b>PD:</b> Vùng có phóng điện cục bộ.</li>
+              <li><b>D1:</b> Vùng có phóng điện năng lượng thấp.</li>
+              <li><b>D2:</b> Vùng có phóng điện năng lượng cao.</li>
+              <li><b>T1:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ thấp (t &lt; 300 °C).</li>
+              <li><b>T2:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ trung bình (300 °C &lt; t &lt; 700 °C).</li>
+              <li><b>T3:</b> Vùng có lỗi tăng nhiệt, ở nhiệt độ cao (t &gt; 700 °C).</li>
+            </ul>
+            <p class="d54-formula">D+T: vùng chồng lấn phóng điện/tăng nhiệt (ranh giới không phân định rõ trong hình gốc).</p>
+          </figure>
+
+          <figure class="d54-fig">
+            <div class="d54-tools">
+              <button type="button" class="btn ghost" data-d54="reset" title="Về góc nhìn 3D mặc định">Mặc định</button>
+              <button type="button" class="btn ghost" data-d54="top" title="Nhìn thẳng từ trên xuống như hình gốc">Nhìn thẳng (2D)</button>
+            </div>
+            <svg id="d54DuvalExample" class="d54-svg" viewBox="0 0 520 420" role="img" tabindex="0" aria-label="Ví dụ xác định điểm trên tam giác Duval: C2H2 20%, C2H4 30%, CH4 50% nằm trong vùng D2"></svg>
+            <figcaption>Ví dụ: xác định tính chất khiếm khuyết MBA theo phương pháp tam giác Duval</figcaption>
+            <p class="d54-formula">Với kết quả khí hòa tan trong dầu MBA có tỷ lệ C<sub>2</sub>H<sub>2</sub> = 20%, C<sub>2</sub>H<sub>4</sub> = 30%,
+              CH<sub>4</sub> = 50%: điểm giao của các thành phần khí nằm trong vùng <b>D2</b>, cho thấy có phóng điện năng lượng cao.</p>
+          </figure>
         </div>
       </div>
 
@@ -3544,6 +3642,7 @@
   <script src="ui/ui-busy.js"></script>
   <script src="ui/ui-theme.js"></script>
   <script src="ui/ui-guides.js"></script>
+  <script src="ui/ui-dieu54-charts.js"></script>
   <script src="ui/ui-dga.js"></script>
   <script src="bbtn/bbtn-export.js"></script>
   <script src="bbtn/oil-bbtn.js"></script>
