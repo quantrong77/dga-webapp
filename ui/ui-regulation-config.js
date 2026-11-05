@@ -34,6 +34,8 @@ async function applyAllRegulationConfigOverrides() {
       DGA.applyRegulationConfigOverride(r.id, { citation: r.citation, values: r.values });
     }
   });
+  // Báo cho các hình vẽ phụ thuộc ngưỡng (Tam giác Duval, biểu đồ Điều 54) vẽ lại theo cấu hình mới.
+  if (typeof document !== "undefined") document.dispatchEvent(new Event("dga:regulationchange"));
   return records || [];
 }
 
@@ -74,7 +76,7 @@ function regulationFieldValueHtml(current, field) {
     </label>`;
 }
 
-function renderRegulationConfigItem(item, overriddenKeys) {
+function renderRegulationConfigItem(item, overriddenKeys = new Set()) {
   const current = DGA.getRegulationConfigCurrentValues(item.key);
   const isCustom = overriddenKeys.has(item.key);
   const fieldsHtml = item.fields.map((f) => regulationFieldValueHtml(current.values, f)).join("");
@@ -96,7 +98,7 @@ function renderRegulationConfigItem(item, overriddenKeys) {
     </div>`;
 }
 
-function renderRegulationConfigUI(overriddenKeys) {
+function renderRegulationConfigUI(overriddenKeys = new Set()) {
   const container = $("regulationConfigContainer");
   if (!container) return;
   const registry = DGA.getRegulationConfigRegistry();
@@ -147,6 +149,10 @@ function validateRegulationValues(item, valuesObj) {
       problems.push(`${f.label}: không được âm`);
     }
   });
+  // Luật thứ tự riêng của từng bảng (VD "từ" < "đến", ranh giới Duval không chồng chéo).
+  if (problems.length === 0 && typeof DGA.validateRegulationConfigValues === "function") {
+    problems.push(...DGA.validateRegulationConfigValues(item.key, valuesObj));
+  }
   return problems;
 }
 

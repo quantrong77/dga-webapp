@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v13-workflow") {
+          if (k !== "dga-offline-v14-config") {
             caches.delete(k);
           }
         });
@@ -1637,6 +1637,8 @@
           giác Duval 1 để xác định các lỗi khiếm khuyết phóng điện cục bộ (PD), phóng điện năng lượng thấp/cao (D1/D2) và lỗi
           nhiệt (T1, T2, T3). <b>Kéo chuột (hoặc chạm, phím mũi tên)</b> để xoay hình 3D; nháy đúp hoặc bấm "Mặc định" để về góc
           nhìn ban đầu, "Nhìn thẳng (2D)" để xem như hình gốc.</p>
+        <p class="note">Ranh giới các vùng và Bảng 67 dưới đây vẽ theo ngưỡng <b>đang áp dụng</b> — mặc định đúng văn bản
+          QĐ1901/IEC 60599; nếu Admin đã hiệu chỉnh ở tab "Cấu hình" — mục "Quy định" (Bảng 66, Bảng 67…), hình tự cập nhật theo.</p>
         <p class="note d54-current hidden" id="d54CurrentNote"></p>
 
         <div class="d54-grid">
@@ -1693,14 +1695,7 @@
             <div class="table-scroll"><table class="d54-table">
               <caption>Bảng 67. Giới hạn các vùng lỗi</caption>
               <thead><tr><th>Mã lỗi</th><th colspan="4">Giới hạn theo các vùng</th></tr></thead>
-              <tbody>
-                <tr><th>PD</th><td>98% CH<sub>4</sub></td><td></td><td></td><td></td></tr>
-                <tr><th>D1</th><td>23% C<sub>2</sub>H<sub>4</sub></td><td>13% C<sub>2</sub>H<sub>2</sub></td><td></td><td></td></tr>
-                <tr><th>D2</th><td>23% C<sub>2</sub>H<sub>4</sub></td><td>13% C<sub>2</sub>H<sub>2</sub></td><td>40% C<sub>2</sub>H<sub>4</sub></td><td>29% C<sub>2</sub>H<sub>2</sub></td></tr>
-                <tr><th>T1</th><td>4% C<sub>2</sub>H<sub>2</sub></td><td>20% C<sub>2</sub>H<sub>4</sub></td><td></td><td></td></tr>
-                <tr><th>T2</th><td>4% C<sub>2</sub>H<sub>2</sub></td><td>20% C<sub>2</sub>H<sub>4</sub></td><td>50% C<sub>2</sub>H<sub>4</sub></td><td></td></tr>
-                <tr><th>T3</th><td>15% C<sub>2</sub>H<sub>2</sub></td><td>50% C<sub>2</sub>H<sub>4</sub></td><td></td><td></td></tr>
-              </tbody>
+              <tbody id="d54Bang67Body"><!-- dựng bởi renderDieu54Bang67Table() theo cấu hình hiện hành --></tbody>
             </table></div>
             <div class="d54-notes-title">Ghi chú:</div>
             <ul class="d54-notes">

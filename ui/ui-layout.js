@@ -115,8 +115,10 @@ function setupCauHinhSubtabs() {
       const targetSubtab = btn.dataset.subtab;
       const subpanel = $("cauhinh-" + targetSubtab);
       if (subpanel) subpanel.classList.remove("hidden");
-      if (targetSubtab === "quydinh" && typeof renderRegulationConfigUI === "function") {
-        renderRegulationConfigUI();
+      // refreshRegulationConfigUI() nạp danh sách bảng đã tùy chỉnh rồi mới vẽ — gọi thẳng
+      // renderRegulationConfigUI() không tham số làm lỗi "overriddenKeys.has" (form vẽ dở dang).
+      if (targetSubtab === "quydinh" && typeof refreshRegulationConfigUI === "function") {
+        refreshRegulationConfigUI();
       }
     });
   });

@@ -226,6 +226,13 @@ const REGULATION_CITATIONS = {
   BANG55_TGD90: "Bảng 55, Điều 47 QĐ1901",
   BANG58_WATER: "Bảng 58, Điều 50 QĐ1901",
   BANG49_OLTC: "Bảng 49, Điều 37 QĐ1901",
+  BANG64_MBA_LOW: "QĐ1901 Bảng 64, Điều 54 (cận dưới khoảng điển hình)",
+  BANG66_TABLE1: "QĐ1901 Bảng 66, Điều 54 = IEC 60599:2022 Table 1 (mục 5.4)",
+  BANG66_PDT: "QĐ1901 Điều 54 — bảng đơn giản PD/D/T dưới Bảng 66 (= IEC 60599:2022 Table 2)",
+  IEC_A10_BUSHING: "IEC 60599:2022 Annex A.5.3 Table A.10 (sứ xuyên)",
+  BANG67_DUVAL: "QĐ1901 Bảng 67, Điều 54 = IEC 60599:2022 Annex B, Figure B.3",
+  DIEU54_OLTC: "QĐ1901 Điều 54 mục 3 — kiểm tra nhiễm khí từ OLTC",
+  DIEU54_ADDITIONAL: "QĐ1901 Điều 54 — Đánh giá các tỷ lệ bổ sung (= IEC 60599:2022 mục 5.5, 5.6)",
 };
 
 
@@ -236,6 +243,54 @@ const REGULATION_CITATIONS = {
 // sửa chữa không thay dầu có lọc dầu — QĐ1901 KHÔNG nêu ngưỡng nào cho dầu đang vận
 // hành định kỳ thông thường (xem evaluateBang63()).
 const QD1901_BANG63_TDGC = { "110-220": 1.0, "500": 0.5 };
+
+// ---------------------------------------------------------------------------
+// Ngưỡng TỶ SỐ KHÍ / RANH GIỚI VÙNG dùng trong logic chẩn đoán — tách thành tham số (object
+// literal, sửa được property) để Admin cấu hình qua tab "Cấu hình" > "Quy định" khi QĐ1901 /
+// IEC 60599 thay đổi (xem dga-logic-regulation-config.js). Giá trị mặc định = đúng văn bản gốc.
+// Chỉ CON SỐ là cấu hình được; dấu so sánh (<, ≤, >, ≥) và cấu trúc rẽ nhánh giữ đúng văn bản.
+// ---------------------------------------------------------------------------
+
+// Bảng 66 = Table 1 IEC 60599 (mục 5.4). Ngưỡng CH4/H2 của PD lấy theo loại thiết bị ở
+// PD_THRESHOLD_BY_TYPE (cấu hình riêng); ở đây là các ngưỡng còn lại. Quy ước so sánh:
+//   PD: C2H4/C2H6 < i_max
+//   D1: C2H2/C2H4 > g_min; h_min ≤ CH4/H2 ≤ h_max; C2H4/C2H6 > i_min
+//   D2: g_min ≤ C2H2/C2H4 ≤ g_max; h_min ≤ CH4/H2 ≤ h_max; C2H4/C2H6 > i_min
+//   T1: CH4/H2 > h_min; C2H4/C2H6 < i_max
+//   T2: C2H2/C2H4 < g_max; CH4/H2 > h_min; i_min ≤ C2H4/C2H6 ≤ i_max
+//   T3: C2H2/C2H4 < g_max; CH4/H2 > h_min; C2H4/C2H6 > i_min
+const QD1901_BANG66_TABLE1 = {
+  PD: { i_max: 0.2 },
+  D1: { g_min: 1, h_min: 0.1, h_max: 0.5, i_min: 1 },
+  D2: { g_min: 0.6, g_max: 2.5, h_min: 0.1, h_max: 1, i_min: 2 },
+  T1: { h_min: 1, i_max: 1 },
+  T2: { g_max: 0.1, h_min: 1, i_min: 1, i_max: 4 },
+  T3: { g_max: 0.2, h_min: 1, i_min: 4 },
+};
+
+// Bảng đơn giản PD / D / T (dưới Bảng 66): PD: CH4/H2 < pd_h_max; D: C2H2/C2H4 > dt_g; T: C2H2/C2H4 < dt_g
+const QD1901_BANG66_PDT = { pd_h_max: 0.2, dt_g: 0.2 };
+
+// Table A.10 sứ xuyên: PD: CH4/H2 < pd_h_max; D: C2H2/C2H4 > d_g_min; T: C2H4/C2H6 > t_i_min;
+// TP: CO2/CO < tp_low hoặc > tp_high
+const IEC_A10_BUSHING_RATIOS = { pd_h_max: 0.07, d_g_min: 1, t_i_min: 1, tp_low: 1, tp_high: 20 };
+
+// Bảng 67 — giới hạn các vùng Tam giác Duval 1 (%):
+//   PD: %CH4 ≥ pd_ch4
+//   T1: %C2H2 ≤ t_c2h2 và %C2H4 ≤ t1_c2h4;  T2: %C2H2 ≤ t_c2h2 và t1_c2h4 < %C2H4 ≤ t2_c2h4
+//   D1: %C2H2 ≥ d_c2h2 và %C2H4 ≤ d1_c2h4
+//   D2: %C2H2 ≥ d_c2h2 và %C2H4 > d1_c2h4, trừ phần (%C2H4 > d2_c2h4 và %C2H2 < d2_c2h2)
+//   T3: %C2H4 > t2_c2h4 và %C2H2 ≤ t3_c2h2;  còn lại: D+T
+const QD1901_BANG67_DUVAL = { pd_ch4: 98, t_c2h2: 4, t1_c2h4: 20, t2_c2h4: 50, d_c2h2: 13, d1_c2h4: 23, d2_c2h4: 40, d2_c2h2: 29, t3_c2h2: 15 };
+
+// Điều 54 — nghi nhiễm khí từ OLTC khi C2H2/H2 > possible (có thể) / > likely (nghi ngờ rõ) — văn bản: "> 2 - 3"
+const DIEU54_OLTC_C2H2_H2 = { possible: 2, likely: 3 };
+
+// Điều 54 — Đánh giá các tỷ lệ bổ sung
+//   CO2/CO < co2co_low và CO > co_min -> giấy cách điện carbon hóa
+//   CO2/CO > co2co_high và CO2 > co2_min -> quá nhiệt nhẹ / oxy hóa dầu
+//   O2/N2 < o2n2_low -> tiêu thụ oxy quá mức; o2n2_normal: mốc tham khảo "bình thường" (~)
+const DIEU54_ADDITIONAL_RATIOS = { co2co_low: 3, co_min: 1000, co2co_high: 10, co2_min: 10000, o2n2_low: 0.3, o2n2_normal: 0.5 };
 
 // ---------------------------------------------------------------------------
 // Thí nghiệm dầu MBA: Độ ẩm (Điều 50/Bảng 58), Tổn hao điện môi tgδ ở 90°C

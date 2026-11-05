@@ -12,11 +12,11 @@
 //    có logic rẽ nhánh phức tạp) có thể XEM/SỬA qua giao diện (mục "Quy định" trong tab
 //    "Cấu hình", xem ui/ui-regulation-config.js), để khi QĐ1901/IEC 60599 có bản cập nhật trong
 //    tương lai, người dùng KHÔNG cần sửa code — chỉ cần sửa số + tham chiếu nguồn qua
-//    giao diện. CỐ Ý KHÔNG đưa vào đây (theo đúng phạm vi người dùng đã xác nhận): Bảng
-//    66/Table 1 (diagnoseRatios() — logic rẽ nhánh 6 mã loại trừ nhau), Table A.10 sứ
-//    xuyên (diagnoseBushingRatios()), ranh giới Tam giác Duval (classifyDuval1()), và
-//    các enum thuần key/nhãn (EQUIPMENT_TYPES/MBA_SUBTYPES/INSTRUMENT_SUBTYPES — không
-//    phải ngưỡng số).
+//    giao diện. Từ 11/2026 gồm cả NGƯỠNG SỐ của các logic rẽ nhánh: Bảng 66/Table 1
+//    (diagnoseRatios()), bảng PD/D/T, Table A.10 sứ xuyên (diagnoseBushingRatios()), ranh giới
+//    Tam giác Duval (classifyDuval1() — Bảng 67), C2H2/H2 nhiễm khí OLTC, tỷ lệ bổ sung CO2/CO,
+//    O2/N2 — chỉ CON SỐ sửa được, cấu trúc rẽ nhánh/dấu so sánh giữ đúng văn bản gốc. Không
+//    đưa vào: các enum thuần key/nhãn (EQUIPMENT_TYPES/MBA_SUBTYPES/INSTRUMENT_SUBTYPES).
 //
 // CƠ CHẾ: mỗi bảng hằng số ở các mục 2/2bis/7bis/8 phía trên VẪN LÀ nguồn "mặc định"
 // (khai báo bằng const, nhưng object literal nên PROPERTY của nó vẫn sửa được —
@@ -161,6 +161,96 @@ function buildRegulationConfigRegistry() {
       fields: Object.values(EQUIPMENT_TYPES).map((t) => ({ path: [t], label: t, unit: "", kind: "number" })),
     },
     {
+      key: "BANG64_MBA_LOW", category: "MBA/Kháng dầu — Khí hòa tan (khoảng điển hình, lưu đồ Điều 54)",
+      title: "QĐ1901 Bảng 64 — Cận DƯỚI khoảng giá trị điển hình (MBA): tất cả khí thấp hơn -> kiểm tra lỗi lấy mẫu/đo lường/xử lý dầu",
+      citationKey: "BANG64_MBA_LOW", target: QD1901_BANG64_MBA_LOW, fields: gasMapFields("ppm"),
+    },
+    {
+      key: "BANG66_TABLE1", category: "Chẩn đoán tỷ số khí — Bảng 66 (= Table 1 IEC 60599)",
+      title: "QĐ1901 Bảng 66 / IEC 60599 Table 1 — Ngưỡng 3 tỷ số khí xác định mã PD, D1, D2, T1, T2, T3 (ngưỡng CH4/H2 của PD: xem bảng \"Ngưỡng CH4/H2 ... PD\")",
+      citationKey: "BANG66_TABLE1", target: QD1901_BANG66_TABLE1,
+      fields: [
+        { path: ["PD", "i_max"], label: "PD — C2H4/C2H6 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["D1", "g_min"], label: "D1 — C2H2/C2H4 lớn hơn", unit: "", kind: "number" },
+        { path: ["D1", "h_min"], label: "D1 — CH4/H2 từ", unit: "", kind: "number" },
+        { path: ["D1", "h_max"], label: "D1 — CH4/H2 đến", unit: "", kind: "number" },
+        { path: ["D1", "i_min"], label: "D1 — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+        { path: ["D2", "g_min"], label: "D2 — C2H2/C2H4 từ", unit: "", kind: "number" },
+        { path: ["D2", "g_max"], label: "D2 — C2H2/C2H4 đến", unit: "", kind: "number" },
+        { path: ["D2", "h_min"], label: "D2 — CH4/H2 từ", unit: "", kind: "number" },
+        { path: ["D2", "h_max"], label: "D2 — CH4/H2 đến", unit: "", kind: "number" },
+        { path: ["D2", "i_min"], label: "D2 — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+        { path: ["T1", "h_min"], label: "T1 — CH4/H2 lớn hơn", unit: "", kind: "number" },
+        { path: ["T1", "i_max"], label: "T1 — C2H4/C2H6 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["T2", "g_max"], label: "T2 — C2H2/C2H4 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["T2", "h_min"], label: "T2 — CH4/H2 lớn hơn", unit: "", kind: "number" },
+        { path: ["T2", "i_min"], label: "T2 — C2H4/C2H6 từ", unit: "", kind: "number" },
+        { path: ["T2", "i_max"], label: "T2 — C2H4/C2H6 đến", unit: "", kind: "number" },
+        { path: ["T3", "g_max"], label: "T3 — C2H2/C2H4 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["T3", "h_min"], label: "T3 — CH4/H2 lớn hơn", unit: "", kind: "number" },
+        { path: ["T3", "i_min"], label: "T3 — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "BANG66_PDT", category: "Chẩn đoán tỷ số khí — Bảng 66 (= Table 1 IEC 60599)",
+      title: "QĐ1901 Điều 54 — Bảng đơn giản PD / D / T (khi tỷ số không nằm trong giới hạn Bảng 66)",
+      citationKey: "BANG66_PDT", target: QD1901_BANG66_PDT,
+      fields: [
+        { path: ["pd_h_max"], label: "PD — CH4/H2 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["dt_g"], label: "Ranh giới D / T — C2H2/C2H4 (lớn hơn: D, nhỏ hơn: T)", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "IEC_A10_BUSHING", category: "Sứ xuyên (Bushing) — Chẩn đoán tỷ số khí",
+      title: "IEC 60599:2022 Annex A.5.3 Table A.10 — Ngưỡng tỷ số khí chẩn đoán sứ xuyên",
+      citationKey: "IEC_A10_BUSHING", target: IEC_A10_BUSHING_RATIOS,
+      fields: [
+        { path: ["pd_h_max"], label: "PD — CH4/H2 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["d_g_min"], label: "D — C2H2/C2H4 lớn hơn", unit: "", kind: "number" },
+        { path: ["t_i_min"], label: "T — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+        { path: ["tp_low"], label: "TP — CO2/CO nhỏ hơn", unit: "", kind: "number" },
+        { path: ["tp_high"], label: "TP — hoặc CO2/CO lớn hơn", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "BANG67_DUVAL", category: "Chẩn đoán — Tam giác Duval 1 (Bảng 67)",
+      title: "QĐ1901 Bảng 67 — Giới hạn các vùng lỗi Tam giác Duval 1 (% trên tổng CH4 + C2H4 + C2H2)",
+      citationKey: "BANG67_DUVAL", target: QD1901_BANG67_DUVAL,
+      fields: [
+        { path: ["pd_ch4"], label: "PD — %CH4 từ", unit: "%", kind: "number" },
+        { path: ["t_c2h2"], label: "T1, T2 — %C2H2 không quá", unit: "%", kind: "number" },
+        { path: ["t1_c2h4"], label: "T1 / T2 — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["t2_c2h4"], label: "T2 / T3 — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["t3_c2h2"], label: "T3 — %C2H2 không quá", unit: "%", kind: "number" },
+        { path: ["d_c2h2"], label: "D1, D2 — %C2H2 từ", unit: "%", kind: "number" },
+        { path: ["d1_c2h4"], label: "D1 / D2 — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["d2_c2h4"], label: "D2 / D+T — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["d2_c2h2"], label: "D2 / D+T — ranh giới %C2H2", unit: "%", kind: "number" },
+      ],
+    },
+    {
+      key: "DIEU54_OLTC", category: "MBA/Kháng dầu — Kiểm tra nhiễm khí từ OLTC (lưu đồ Điều 54)",
+      title: "QĐ1901 Điều 54 — Tỷ lệ C2H2/H2 nghi nhiễm khí từ OLTC (văn bản: \"> 2 - 3\")",
+      citationKey: "DIEU54_OLTC", target: DIEU54_OLTC_C2H2_H2,
+      fields: [
+        { path: ["possible"], label: "C2H2/H2 lớn hơn — có thể nhiễm khí OLTC", unit: "", kind: "number" },
+        { path: ["likely"], label: "C2H2/H2 lớn hơn — nghi ngờ rõ nhiễm khí OLTC", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "DIEU54_ADDITIONAL", category: "Đánh giá các tỷ lệ bổ sung (Điều 54) — áp dụng cho mọi dầu",
+      title: "QĐ1901 Điều 54 — Ngưỡng tỷ lệ bổ sung CO2/CO và O2/N2",
+      citationKey: "DIEU54_ADDITIONAL", target: DIEU54_ADDITIONAL_RATIOS,
+      fields: [
+        { path: ["co2co_low"], label: "Carbon hóa giấy — CO2/CO nhỏ hơn", unit: "", kind: "number" },
+        { path: ["co_min"], label: "Carbon hóa giấy — và CO lớn hơn", unit: "ppm", kind: "number" },
+        { path: ["co2co_high"], label: "Quá nhiệt nhẹ / oxy hóa dầu — CO2/CO lớn hơn", unit: "", kind: "number" },
+        { path: ["co2_min"], label: "Quá nhiệt nhẹ / oxy hóa dầu — và CO2 lớn hơn", unit: "ppm", kind: "number" },
+        { path: ["o2n2_low"], label: "Tiêu thụ oxy quá mức — O2/N2 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["o2n2_normal"], label: "Mốc tham khảo bình thường — O2/N2 khoảng", unit: "", kind: "number" },
+      ],
+    },
+    {
       key: "BANG63_TDGC", category: "MBA/Kháng dầu — Tổng hàm lượng khí hòa tan (dầu mới/sau xử lý)",
       title: "QĐ1901 Bảng 63 — Ngưỡng tổng hàm lượng khí hòa tan (%)",
       citationKey: "BANG63_TDGC", target: QD1901_BANG63_TDGC,
@@ -252,6 +342,62 @@ REGULATION_CONFIG_REGISTRY.forEach((item) => {
     values: deepClone(item.target),
   };
 });
+
+// ---------------------------------------------------------------------------
+// Kiểm tra THỨ TỰ HỢP LÝ giữa các ngưỡng của cùng 1 bảng (ngoài kiểm tra "không âm" chung ở
+// giao diện) — tránh Admin nhập số làm logic rẽ nhánh/hình vẽ sai (VD "CH4/H2 từ 0,5 đến 0,1",
+// ranh giới Duval chồng chéo). Trả về mảng thông báo lỗi tiếng Việt, rỗng nếu hợp lệ.
+// ---------------------------------------------------------------------------
+function rcRequireOrder(problems, pairs) {
+  pairs.forEach(([a, b, msg, strict]) => {
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return;
+    if (strict === false ? a > b : a >= b) problems.push(msg);
+  });
+  return problems;
+}
+
+const REGULATION_CONFIG_VALIDATORS = {
+  BANG66_TABLE1: (v) => rcRequireOrder([], [
+    [v.D1.h_min, v.D1.h_max, "D1: CH4/H2 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.D2.g_min, v.D2.g_max, "D2: C2H2/C2H4 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.D2.h_min, v.D2.h_max, "D2: CH4/H2 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.T2.i_min, v.T2.i_max, "T2: C2H4/C2H6 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.T2.i_max, v.T3.i_min, "T3: C2H4/C2H6 \"lớn hơn\" không được nhỏ hơn T2 \"đến\"", false],
+    [v.T2.g_max, v.T3.g_max, "T3: C2H2/C2H4 \"nhỏ hơn\" không được nhỏ hơn của T2", false],
+  ]),
+  DIEU54_OLTC: (v) => rcRequireOrder([], [[v.possible, v.likely, "Ngưỡng \"nghi ngờ rõ\" không được nhỏ hơn ngưỡng \"có thể\"", false]]),
+  DIEU54_ADDITIONAL: (v) => rcRequireOrder([], [[v.co2co_low, v.co2co_high, "CO2/CO: ngưỡng carbon hóa giấy phải nhỏ hơn ngưỡng quá nhiệt nhẹ"]]),
+  IEC_A10_BUSHING: (v) => rcRequireOrder([], [[v.tp_low, v.tp_high, "TP: CO2/CO \"nhỏ hơn\" phải nhỏ hơn \"hoặc lớn hơn\""]]),
+  BANG67_DUVAL: (v) => {
+    const p = rcRequireOrder([], [
+      [50, v.pd_ch4, "PD: %CH4 phải lớn hơn 50%"],
+      [v.pd_ch4, 100, "PD: %CH4 phải nhỏ hơn 100%"],
+      [100 - v.pd_ch4, v.t_c2h2, "Vùng PD phải nhỏ hơn dải T1/T2 (100 − %CH4 của PD < %C2H2 của T1, T2)"],
+      [100 - v.pd_ch4, v.t1_c2h4, "Vùng PD phải nhỏ hơn T1 (100 − %CH4 của PD < ranh giới T1/T2)"],
+      [v.t1_c2h4, v.t2_c2h4, "Ranh giới T1/T2 phải nhỏ hơn T2/T3 (%C2H4)"],
+      [v.t_c2h2, v.d_c2h2, "%C2H2 của T1, T2 phải nhỏ hơn %C2H2 của D1, D2"],
+      [v.t_c2h2, v.t3_c2h2, "%C2H2 của T1, T2 phải nhỏ hơn %C2H2 của T3"],
+      [v.d_c2h2, v.d2_c2h2, "%C2H2 của D1, D2 phải nhỏ hơn ranh giới D2 / D+T (%C2H2)"],
+      [v.t3_c2h2, v.d2_c2h2, "%C2H2 của T3 phải nhỏ hơn ranh giới D2 / D+T (%C2H2)"],
+      [v.d1_c2h4, v.d2_c2h4, "Ranh giới D1/D2 phải nhỏ hơn D2 / D+T (%C2H4)"],
+      [v.d2_c2h4, v.t2_c2h4, "Ranh giới D2 / D+T (%C2H4) không được lớn hơn T2/T3", false],
+      [v.d_c2h2 + v.d1_c2h4, 100, "%C2H2 của D1 + ranh giới D1/D2 phải nhỏ hơn 100%"],
+      [v.d2_c2h2 + v.d2_c2h4, 100, "%C2H2 + %C2H4 của ranh giới D2 / D+T phải nhỏ hơn 100%"],
+    ]);
+    return p;
+  },
+};
+
+/** Lỗi thứ tự của 1 bảng (values = object đầy đủ của bảng, VD lấy từ form). [] nếu không có luật riêng. */
+function validateRegulationConfigValues(key, values) {
+  const fn = REGULATION_CONFIG_VALIDATORS[key];
+  if (!fn || !values) return [];
+  try {
+    return fn(values);
+  } catch (e) {
+    return ["Thiếu giá trị — vui lòng điền đủ các ô của bảng"];
+  }
+}
 
 function getRegulationConfigRegistry() {
   return REGULATION_CONFIG_REGISTRY;

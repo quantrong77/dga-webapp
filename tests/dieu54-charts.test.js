@@ -14,27 +14,59 @@ function pointInPoly([x, y], poly) {
   return inside;
 }
 
+/** Duyệt lưới %C2H2/%C2H4, so vùng VẼ với classifyDuval1() (bỏ điểm sát ranh giới hiện hành). */
+function checkDuvalGrid() {
+  const L = DGA.QD1901_BANG67_DUVAL;
+  const nearBoundary = (v, marks) => marks.some((b) => Math.abs(v - b) < 0.3);
+  const zonesDrawn = C.d54DuvalZones();
+  let checked = 0;
+  for (let a = 0.25; a < 100; a += 0.5) {
+    for (let e = 0.25; a + e < 100; e += 0.5) {
+      const m = 100 - a - e;
+      if (nearBoundary(a, [L.t_c2h2, L.d_c2h2, L.t3_c2h2, L.d2_c2h2]) || nearBoundary(e, [L.t1_c2h4, L.d1_c2h4, L.d2_c2h4, L.t2_c2h4]) || Math.abs(m - L.pd_ch4) < 0.3) continue;
+      const zones = zonesDrawn.filter((z) => pointInPoly([a, e], z.poly));
+      expect([a, e, zones.length]).toEqual([a, e, 1]);
+      expect([a, e, zones[0].code]).toEqual([a, e, DGA.classifyDuval1({ pctCH4: m, pctC2H4: e, pctC2H2: a }).zone]);
+      checked++;
+    }
+  }
+  return checked;
+}
+
+afterEach(() => DGA.getRegulationConfigRegistry().forEach((it) => DGA.resetRegulationConfigItem(it.key)));
+
+describe("Hình vẽ theo ngưỡng Admin cấu hình (Cấu hình > Quy định)", () => {
+  test("đổi Bảng 67: tam giác Duval vẽ lại vẫn khớp classifyDuval1()", () => {
+    DGA.applyRegulationConfigOverride("BANG67_DUVAL", { values: { d1_c2h4: 30, d2_c2h4: 45, t1_c2h4: 25, t3_c2h2: 18, d_c2h2: 15 } });
+    expect(checkDuvalGrid()).toBeGreaterThan(15000);
+  });
+  test("đổi Bảng 66: khối Biểu đồ 2 dời theo, tâm khối vẫn đúng mã", () => {
+    DGA.applyRegulationConfigOverride("BANG66_TABLE1", { values: { T2: { i_max: 3 }, T3: { i_min: 3 } } });
+    const t3 = C.d54Chart2Zones().find((z) => z.code === "T3");
+    expect(t3.x[0]).toBe(3);
+    const lo = C.D54_CHART2.range[0], hi = C.D54_CHART2.range[1];
+    const mid = ([a, b]) => Math.sqrt((a === 0 ? lo : a) * (b === Infinity ? hi : b));
+    expect(DGA.diagnoseRatios({ c2h4_c2h6: mid(t3.x), ch4_h2: mid(t3.y), c2h2_c2h4: mid(t3.z) })).toMatch(/^T3/);
+  });
+  test("Biểu đồ 1: D1, D2 và phần chồng lấn D1/D2 không đè nhau, phủ đúng hợp của D1 và D2", () => {
+    ["left", "right"].forEach((side) => {
+      const z = C.d54Chart1Zones(side).filter((q) => ["D1", "D2", "D1/D2"].includes(q.code));
+      for (let i = 0; i < z.length; i++) for (let j = i + 1; j < z.length; j++) {
+        const a = z[i].r, b = z[j].r;
+        const overlap = Math.max(a[0], b[0]) < Math.min(a[1], b[1]) && Math.max(a[2], b[2]) < Math.min(a[3], b[3]);
+        expect([side, z[i].code, z[j].code, overlap]).toEqual([side, z[i].code, z[j].code, false]);
+      }
+    });
+  });
+});
+
 describe("Tam giác Duval vẽ khớp classifyDuval1() (Bảng 67)", () => {
   test("lưới điểm %C2H2/%C2H4 bước 0,5% (bỏ sát ranh giới)", () => {
-    const nearBoundary = (v, marks) => marks.some((b) => Math.abs(v - b) < 0.3);
-    let checked = 0;
-    for (let a = 0.25; a < 100; a += 0.5) {
-      for (let e = 0.25; a + e < 100; e += 0.5) {
-        const m = 100 - a - e;
-        if (nearBoundary(a, [4, 13, 15, 29]) || nearBoundary(e, [20, 23, 40, 50]) || Math.abs(m - 98) < 0.3) continue;
-        const zones = C.D54_DUVAL_ZONES.filter((z) => pointInPoly([a, e], z.poly));
-        expect(zones).toHaveLength(1); // các vùng phủ kín tam giác, không chồng nhau
-        const want = DGA.classifyDuval1({ pctCH4: m, pctC2H4: e, pctC2H2: a }).zone;
-        expect([a, e, zones[0].code]).toEqual([a, e, want]);
-        checked++;
-      }
-    }
-    expect(checked).toBeGreaterThan(15000);
+    expect(checkDuvalGrid()).toBeGreaterThan(15000);
   });
-
   test("ví dụ Điều 54 (C2H2 20%, C2H4 30%, CH4 50%) nằm trong vùng D2", () => {
     expect(DGA.classifyDuval1({ pctCH4: 50, pctC2H4: 30, pctC2H2: 20 }).zone).toBe("D2");
-    expect(C.D54_DUVAL_ZONES.find((z) => pointInPoly([20, 30], z.poly)).code).toBe("D2");
+    expect(C.d54DuvalZones().find((z) => pointInPoly([20, 30], z.poly)).code).toBe("D2");
   });
 
   test("đỉnh tam giác: CH4 ở trên (xa), C2H2 bên trái, C2H4 bên phải", () => {
@@ -51,7 +83,7 @@ describe("Biểu đồ 2 (3 trục) vẽ khớp diagnoseRatios() (Bảng 66)", (
   const mid = ([a, b]) => Math.sqrt((a === 0 ? lo : a) * (b === Infinity ? hi : b));
   // Khối D1 và D2 chồng nhau một phần (vùng "D1/D2") nên tâm khối có thể rơi vào phần chồng lấn.
   const expectCode = { PD: /^PD -/, D1: /^D1(\/D2)? -/, D2: /^(D1\/)?D2 -/, T1: /^T1 -/, T2: /^T2 -/, T3: /^T3 -/ };
-  test.each(C.D54_CHART2.zones.map((z) => [z.code, z]))("tâm khối %s", (code, z) => {
+  test.each(C.d54Chart2Zones().map((z) => [z.code, z]))("tâm khối %s", (code, z) => {
     const out = DGA.diagnoseRatios({ c2h4_c2h6: mid(z.x), ch4_h2: mid(z.y), c2h2_c2h4: mid(z.z) });
     expect(out).toMatch(expectCode[code]);
   });

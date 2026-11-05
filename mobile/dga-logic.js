@@ -234,6 +234,13 @@ const REGULATION_CITATIONS = {
   BANG55_TGD90: "Bảng 55, Điều 47 QĐ1901",
   BANG58_WATER: "Bảng 58, Điều 50 QĐ1901",
   BANG49_OLTC: "Bảng 49, Điều 37 QĐ1901",
+  BANG64_MBA_LOW: "QĐ1901 Bảng 64, Điều 54 (cận dưới khoảng điển hình)",
+  BANG66_TABLE1: "QĐ1901 Bảng 66, Điều 54 = IEC 60599:2022 Table 1 (mục 5.4)",
+  BANG66_PDT: "QĐ1901 Điều 54 — bảng đơn giản PD/D/T dưới Bảng 66 (= IEC 60599:2022 Table 2)",
+  IEC_A10_BUSHING: "IEC 60599:2022 Annex A.5.3 Table A.10 (sứ xuyên)",
+  BANG67_DUVAL: "QĐ1901 Bảng 67, Điều 54 = IEC 60599:2022 Annex B, Figure B.3",
+  DIEU54_OLTC: "QĐ1901 Điều 54 mục 3 — kiểm tra nhiễm khí từ OLTC",
+  DIEU54_ADDITIONAL: "QĐ1901 Điều 54 — Đánh giá các tỷ lệ bổ sung (= IEC 60599:2022 mục 5.5, 5.6)",
 };
 
 
@@ -244,6 +251,54 @@ const REGULATION_CITATIONS = {
 // sửa chữa không thay dầu có lọc dầu — QĐ1901 KHÔNG nêu ngưỡng nào cho dầu đang vận
 // hành định kỳ thông thường (xem evaluateBang63()).
 const QD1901_BANG63_TDGC = { "110-220": 1.0, "500": 0.5 };
+
+// ---------------------------------------------------------------------------
+// Ngưỡng TỶ SỐ KHÍ / RANH GIỚI VÙNG dùng trong logic chẩn đoán — tách thành tham số (object
+// literal, sửa được property) để Admin cấu hình qua tab "Cấu hình" > "Quy định" khi QĐ1901 /
+// IEC 60599 thay đổi (xem dga-logic-regulation-config.js). Giá trị mặc định = đúng văn bản gốc.
+// Chỉ CON SỐ là cấu hình được; dấu so sánh (<, ≤, >, ≥) và cấu trúc rẽ nhánh giữ đúng văn bản.
+// ---------------------------------------------------------------------------
+
+// Bảng 66 = Table 1 IEC 60599 (mục 5.4). Ngưỡng CH4/H2 của PD lấy theo loại thiết bị ở
+// PD_THRESHOLD_BY_TYPE (cấu hình riêng); ở đây là các ngưỡng còn lại. Quy ước so sánh:
+//   PD: C2H4/C2H6 < i_max
+//   D1: C2H2/C2H4 > g_min; h_min ≤ CH4/H2 ≤ h_max; C2H4/C2H6 > i_min
+//   D2: g_min ≤ C2H2/C2H4 ≤ g_max; h_min ≤ CH4/H2 ≤ h_max; C2H4/C2H6 > i_min
+//   T1: CH4/H2 > h_min; C2H4/C2H6 < i_max
+//   T2: C2H2/C2H4 < g_max; CH4/H2 > h_min; i_min ≤ C2H4/C2H6 ≤ i_max
+//   T3: C2H2/C2H4 < g_max; CH4/H2 > h_min; C2H4/C2H6 > i_min
+const QD1901_BANG66_TABLE1 = {
+  PD: { i_max: 0.2 },
+  D1: { g_min: 1, h_min: 0.1, h_max: 0.5, i_min: 1 },
+  D2: { g_min: 0.6, g_max: 2.5, h_min: 0.1, h_max: 1, i_min: 2 },
+  T1: { h_min: 1, i_max: 1 },
+  T2: { g_max: 0.1, h_min: 1, i_min: 1, i_max: 4 },
+  T3: { g_max: 0.2, h_min: 1, i_min: 4 },
+};
+
+// Bảng đơn giản PD / D / T (dưới Bảng 66): PD: CH4/H2 < pd_h_max; D: C2H2/C2H4 > dt_g; T: C2H2/C2H4 < dt_g
+const QD1901_BANG66_PDT = { pd_h_max: 0.2, dt_g: 0.2 };
+
+// Table A.10 sứ xuyên: PD: CH4/H2 < pd_h_max; D: C2H2/C2H4 > d_g_min; T: C2H4/C2H6 > t_i_min;
+// TP: CO2/CO < tp_low hoặc > tp_high
+const IEC_A10_BUSHING_RATIOS = { pd_h_max: 0.07, d_g_min: 1, t_i_min: 1, tp_low: 1, tp_high: 20 };
+
+// Bảng 67 — giới hạn các vùng Tam giác Duval 1 (%):
+//   PD: %CH4 ≥ pd_ch4
+//   T1: %C2H2 ≤ t_c2h2 và %C2H4 ≤ t1_c2h4;  T2: %C2H2 ≤ t_c2h2 và t1_c2h4 < %C2H4 ≤ t2_c2h4
+//   D1: %C2H2 ≥ d_c2h2 và %C2H4 ≤ d1_c2h4
+//   D2: %C2H2 ≥ d_c2h2 và %C2H4 > d1_c2h4, trừ phần (%C2H4 > d2_c2h4 và %C2H2 < d2_c2h2)
+//   T3: %C2H4 > t2_c2h4 và %C2H2 ≤ t3_c2h2;  còn lại: D+T
+const QD1901_BANG67_DUVAL = { pd_ch4: 98, t_c2h2: 4, t1_c2h4: 20, t2_c2h4: 50, d_c2h2: 13, d1_c2h4: 23, d2_c2h4: 40, d2_c2h2: 29, t3_c2h2: 15 };
+
+// Điều 54 — nghi nhiễm khí từ OLTC khi C2H2/H2 > possible (có thể) / > likely (nghi ngờ rõ) — văn bản: "> 2 - 3"
+const DIEU54_OLTC_C2H2_H2 = { possible: 2, likely: 3 };
+
+// Điều 54 — Đánh giá các tỷ lệ bổ sung
+//   CO2/CO < co2co_low và CO > co_min -> giấy cách điện carbon hóa
+//   CO2/CO > co2co_high và CO2 > co2_min -> quá nhiệt nhẹ / oxy hóa dầu
+//   O2/N2 < o2n2_low -> tiêu thụ oxy quá mức; o2n2_normal: mốc tham khảo "bình thường" (~)
+const DIEU54_ADDITIONAL_RATIOS = { co2co_low: 3, co_min: 1000, co2co_high: 10, co2_min: 10000, o2n2_low: 0.3, o2n2_normal: 0.5 };
 
 // ---------------------------------------------------------------------------
 // Thí nghiệm dầu MBA: Độ ẩm (Điều 50/Bảng 58), Tổn hao điện môi tgδ ở 90°C
@@ -645,14 +700,17 @@ const NO_DIAGNOSIS = "Không xác định (ngoài Bảng 66/hỗn hợp khiếm 
 function diagnoseRatios(ratios, pdThreshold) {
   const g = ratios.c2h2_c2h4, h = ratios.ch4_h2, i = ratios.c2h4_c2h6;
   const pd = pdThreshold === undefined || pdThreshold === null ? DEFAULT_PD_THRESHOLD : pdThreshold;
-  if (h < pd && i < 0.2) return "PD - Phóng điện cục bộ";
-  // Vùng chồng lấn = khớp ĐỒNG THỜI cả D1 VÀ D2 — D2 đòi C2H4/C2H6 > 2 (không phải > 1 như D1).
-  if (g > 1 && h >= 0.1 && h <= 0.5 && i > 2 && g <= 2.5) return "D1/D2 - Phóng điện (vùng chồng lấn)";
-  if (g > 1 && h >= 0.1 && h <= 0.5 && i > 1) return "D1 - Phóng điện năng lượng thấp";
-  if (g >= 0.6 && g <= 2.5 && h >= 0.1 && h <= 1 && i > 2) return "D2 - Phóng điện năng lượng cao";
-  if (h > 1 && i < 1) return "T1 - Tăng nhiệt, t<300°C";
-  if (g < 0.1 && h > 1 && i >= 1 && i <= 4) return "T2 - Tăng nhiệt, 300-700°C";
-  if (g < 0.2 && h > 1 && i > 4) return "T3 - Tăng nhiệt, t>700°C";
+  const T = QD1901_BANG66_TABLE1; // ngưỡng cấu hình được (dga-logic-core.js)
+  const isD1 = g > T.D1.g_min && h >= T.D1.h_min && h <= T.D1.h_max && i > T.D1.i_min;
+  const isD2 = g >= T.D2.g_min && g <= T.D2.g_max && h >= T.D2.h_min && h <= T.D2.h_max && i > T.D2.i_min;
+  if (h < pd && i < T.PD.i_max) return "PD - Phóng điện cục bộ";
+  // Vùng chồng lấn = khớp ĐỒNG THỜI cả D1 VÀ D2.
+  if (isD1 && isD2) return "D1/D2 - Phóng điện (vùng chồng lấn)";
+  if (isD1) return "D1 - Phóng điện năng lượng thấp";
+  if (isD2) return "D2 - Phóng điện năng lượng cao";
+  if (h > T.T1.h_min && i < T.T1.i_max) return "T1 - Tăng nhiệt, t<300°C";
+  if (g < T.T2.g_max && h > T.T2.h_min && i >= T.T2.i_min && i <= T.T2.i_max) return "T2 - Tăng nhiệt, 300-700°C";
+  if (g < T.T3.g_max && h > T.T3.h_min && i > T.T3.i_min) return "T3 - Tăng nhiệt, t>700°C";
   return NO_DIAGNOSIS;
 }
 
@@ -668,10 +726,11 @@ function diagnoseRatios(ratios, pdThreshold) {
 function diagnoseSimplifiedPDT(ratios) {
   if (!ratios) return null;
   const g = ratios.c2h2_c2h4, h = ratios.ch4_h2;
+  const P = QD1901_BANG66_PDT;
   const codes = [];
-  if (Number.isFinite(h) && h < 0.2) codes.push("PD");
-  if (Number.isFinite(g) && g > 0.2) codes.push("D");
-  else if (Number.isFinite(g) && g < 0.2) codes.push("T");
+  if (Number.isFinite(h) && h < P.pd_h_max) codes.push("PD");
+  if (Number.isFinite(g) && g > P.dt_g) codes.push("D");
+  else if (Number.isFinite(g) && g < P.dt_g) codes.push("T");
   if (codes.length === 0) return null;
   const names = { PD: "PD — phóng điện cục bộ", D: "D — phóng điện", T: "T — lỗi tăng nhiệt" };
   const text = codes.map((c) => names[c]).join(" + ");
@@ -688,7 +747,8 @@ function oltcContaminationCheck(gases) {
   const h2 = num(gases.H2), c2h2 = num(gases.C2H2);
   if (h2 <= 0) return { ratio: null, level: "none" };
   const ratio = c2h2 / h2;
-  return { ratio: Math.round(ratio * 100) / 100, level: ratio > 3 ? "likely" : ratio > 2 ? "possible" : "none" };
+  const O = DIEU54_OLTC_C2H2_H2;
+  return { ratio: Math.round(ratio * 100) / 100, level: ratio > O.likely ? "likely" : ratio > O.possible ? "possible" : "none" };
 }
 
 /**
@@ -723,19 +783,26 @@ function gasesBelowTypicalLow(gases, equipmentType) {
 // ---------------------------------------------------------------------------
 
 function diagnoseBushingRatios(ratios) {
+  const A = IEC_A10_BUSHING_RATIOS;
   const codes = [];
-  if (ratios.ch4_h2 < 0.07) codes.push("PD");
-  if (ratios.c2h2_c2h4 > 1) codes.push("D");
-  if (ratios.c2h4_c2h6 > 1) codes.push("T");
-  if (ratios.co2_co !== null && (ratios.co2_co < 1 || ratios.co2_co > 20)) codes.push("TP");
+  if (ratios.ch4_h2 < A.pd_h_max) codes.push("PD");
+  if (ratios.c2h2_c2h4 > A.d_g_min) codes.push("D");
+  if (ratios.c2h4_c2h6 > A.t_i_min) codes.push("T");
+  if (ratios.co2_co !== null && (ratios.co2_co < A.tp_low || ratios.co2_co > A.tp_high)) codes.push("TP");
   return codes;
 }
 
+/** Số thập phân kiểu Việt Nam (0.07 -> "0,07") cho câu hiển thị có ngưỡng cấu hình được. */
+function vnNum(v) {
+  return String(v).replace(".", ",");
+}
+
+// Nhãn mã Table A.10 — getter để luôn hiện ĐÚNG ngưỡng đang cấu hình (IEC_A10_BUSHING_RATIOS).
 const BUSHING_CODE_LABELS = {
-  PD: "PD (phóng điện cục bộ — CH4/H2 < 0,07)",
-  D: "D (phóng điện — C2H2/C2H4 > 1)",
-  T: "T (tăng nhiệt — C2H4/C2H6 > 1)",
-  TP: "TP (nghi liên quan cách điện giấy — CO2/CO bất thường)",
+  get PD() { return `PD (phóng điện cục bộ — CH4/H2 < ${vnNum(IEC_A10_BUSHING_RATIOS.pd_h_max)})`; },
+  get D() { return `D (phóng điện — C2H2/C2H4 > ${vnNum(IEC_A10_BUSHING_RATIOS.d_g_min)})`; },
+  get T() { return `T (tăng nhiệt — C2H4/C2H6 > ${vnNum(IEC_A10_BUSHING_RATIOS.t_i_min)})`; },
+  get TP() { return "TP (nghi liên quan cách điện giấy — CO2/CO bất thường)"; },
 };
 
 /**
@@ -839,23 +906,24 @@ function normalizeDuval(gases) {
  */
 function classifyDuval1(pct) {
   const { pctCH4: m, pctC2H4: e, pctC2H2: a } = pct;
+  const L = QD1901_BANG67_DUVAL; // ranh giới vùng cấu hình được (dga-logic-core.js)
 
-  if (m >= 98) return { zone: "PD", label: "PD - Phóng điện cục bộ (Tam giác Duval)" };
+  if (m >= L.pd_ch4) return { zone: "PD", label: "PD - Phóng điện cục bộ (Tam giác Duval)" };
 
-  if (a <= 4) {
-    if (e <= 20) return { zone: "T1", label: "T1 - Tăng nhiệt, t<300°C (Tam giác Duval)" };
-    if (e <= 50) return { zone: "T2", label: "T2 - Tăng nhiệt, 300-700°C (Tam giác Duval)" };
+  if (a <= L.t_c2h2) {
+    if (e <= L.t1_c2h4) return { zone: "T1", label: "T1 - Tăng nhiệt, t<300°C (Tam giác Duval)" };
+    if (e <= L.t2_c2h4) return { zone: "T2", label: "T2 - Tăng nhiệt, 300-700°C (Tam giác Duval)" };
     return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval)" };
   }
 
-  if (a >= 13 && e > 23 && (e <= 40 || a >= 29)) {
+  if (a >= L.d_c2h2 && e > L.d1_c2h4 && (e <= L.d2_c2h4 || a >= L.d2_c2h2)) {
     return { zone: "D2", label: "D2 - Phóng điện năng lượng cao (Tam giác Duval)" };
   }
-  if (a >= 13 && e <= 23) {
+  if (a >= L.d_c2h2 && e <= L.d1_c2h4) {
     return { zone: "D1", label: "D1 - Phóng điện năng lượng thấp (Tam giác Duval)" };
   }
 
-  if (a <= 15 && e > 50) {
+  if (a <= L.t3_c2h2 && e > L.t2_c2h4) {
     return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval, vùng %C2H4 cao)" };
   }
 
@@ -1017,15 +1085,17 @@ function evaluateBang63(totalPercent, voltageClass, applicable) {
 function diagnoseAdditionalRatios(gases, n2, o2) {
   const co = num(gases.CO), co2 = num(gases.CO2);
   const co2_co = co === 0 ? (co2 === 0 ? null : 999) : co2 / co;
+  const R = DIEU54_ADDITIONAL_RATIOS; // ngưỡng cấu hình được (dga-logic-core.js)
+  const vn = (v) => Number(v).toLocaleString("vi-VN");
   let co2coNote;
   if (co2_co === null) {
     co2coNote = "Không đủ dữ liệu để tính (CO và CO2 đều bằng 0).";
-  } else if (co2_co < 3 && co > 1000) {
-    co2coNote = "CO2/CO < 3 và CO > 1000 ppm — có khả năng liên quan đến giấy cách điện bị carbon hóa, cần xác nhận bằng phân tích furanic hoặc đo độ trùng hợp giấy.";
-  } else if (co2_co > 10 && co2 > 10000) {
-    co2coNote = "CO2/CO > 10 và CO2 > 10.000 ppm — có thể do quá nhiệt nhẹ (<160°C) hoặc oxy hóa dầu, đặc biệt ở máy biến áp hở.";
+  } else if (co2_co < R.co2co_low && co > R.co_min) {
+    co2coNote = `CO2/CO < ${vn(R.co2co_low)} và CO > ${vnNum(R.co_min)} ppm — có khả năng liên quan đến giấy cách điện bị carbon hóa, cần xác nhận bằng phân tích furanic hoặc đo độ trùng hợp giấy.`;
+  } else if (co2_co > R.co2co_high && co2 > R.co2_min) {
+    co2coNote = `CO2/CO > ${vn(R.co2co_high)} và CO2 > ${vn(R.co2_min)} ppm — có thể do quá nhiệt nhẹ (<160°C) hoặc oxy hóa dầu, đặc biệt ở máy biến áp hở.`;
   } else {
-    co2coNote = "Không rơi vào 2 điều kiện cảnh báo bổ sung của Điều 54 (CO2/CO<3 và CO>1000 ppm; hoặc CO2/CO>10 và CO2>10.000 ppm).";
+    co2coNote = `Không rơi vào 2 điều kiện cảnh báo bổ sung của Điều 54 (CO2/CO<${vn(R.co2co_low)} và CO>${vnNum(R.co_min)} ppm; hoặc CO2/CO>${vn(R.co2co_high)} và CO2>${vn(R.co2_min)} ppm).`;
   }
 
   const hasN2O2 = n2 !== null && n2 !== undefined && o2 !== null && o2 !== undefined && num(n2) > 0;
@@ -1033,10 +1103,10 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
   let o2n2Note = "Chưa nhập đủ N2/O2 — bỏ qua tỷ lệ O2/N2.";
   if (hasN2O2) {
     o2_n2 = num(o2) / num(n2);
-    if (o2_n2 < 0.3) {
-      o2n2Note = "O2/N2 < 0,3 — tiêu thụ oxy quá mức do oxy hóa dầu hoặc lão hóa giấy cách điện.";
+    if (o2_n2 < R.o2n2_low) {
+      o2n2Note = `O2/N2 < ${vn(R.o2n2_low)} — tiêu thụ oxy quá mức do oxy hóa dầu hoặc lão hóa giấy cách điện.`;
     } else {
-      o2n2Note = "QĐ1901 chỉ nêu mốc tham khảo O2/N2 ~ 0,5 là bình thường ở thiết bị có tiếp xúc với không khí; văn bản không có thang đầy đủ để phân loại chính xác các giá trị khác — cần đối chiếu thêm kết cấu bình dầu phụ (có màng ngăn hay không) và thực tế vận hành trước khi kết luận.";
+      o2n2Note = `QĐ1901 chỉ nêu mốc tham khảo O2/N2 ~ ${vn(R.o2n2_normal)} là bình thường ở thiết bị có tiếp xúc với không khí; văn bản không có thang đầy đủ để phân loại chính xác các giá trị khác — cần đối chiếu thêm kết cấu bình dầu phụ (có màng ngăn hay không) và thực tế vận hành trước khi kết luận.`;
     }
   }
 
@@ -1068,7 +1138,7 @@ function dieu54AdvisoryMessages({ additionalRatios, bang63 }) {
     if (additionalRatios.co2_co !== null && additionalRatios.co2coNote && additionalRatios.co2coNote.startsWith("CO2/CO")) {
       msgs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
     }
-    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
+    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < DIEU54_ADDITIONAL_RATIOS.o2n2_low) {
       msgs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
     }
   }
@@ -1107,9 +1177,9 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
     // chung bên dưới (dành cho Table 1/Bảng 66, cấu trúc 6 mã loại trừ nhau khác hẳn).
     if (bushingCodes && bushingCodes.length > 0) {
       const bushingMsgs = {
-        PD: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): PD — phóng điện cục bộ (CH4/H2 < 0,07) — khuyến cáo đo phóng điện cục bộ bổ sung nếu điều kiện cho phép.",
-        D: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): D — phóng điện (C2H2/C2H4 > 1) — khuyến cáo kiểm tra cách điện, siết lại kết nối, xem xét thí nghiệm điện môi bổ sung.",
-        T: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): T — tăng nhiệt (C2H4/C2H6 > 1) — khuyến cáo kiểm tra mối nối/tiếp xúc, tải vận hành, và nhiệt độ điểm nóng nếu có điều kiện đo.",
+        PD: `Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): PD — phóng điện cục bộ (CH4/H2 < ${vnNum(IEC_A10_BUSHING_RATIOS.pd_h_max)}) — khuyến cáo đo phóng điện cục bộ bổ sung nếu điều kiện cho phép.`,
+        D: `Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): D — phóng điện (C2H2/C2H4 > ${vnNum(IEC_A10_BUSHING_RATIOS.d_g_min)}) — khuyến cáo kiểm tra cách điện, siết lại kết nối, xem xét thí nghiệm điện môi bổ sung.`,
+        T: `Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): T — tăng nhiệt (C2H4/C2H6 > ${vnNum(IEC_A10_BUSHING_RATIOS.t_i_min)}) — khuyến cáo kiểm tra mối nối/tiếp xúc, tải vận hành, và nhiệt độ điểm nóng nếu có điều kiện đo.`,
         TP: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): TP — CO2/CO bất thường (nghi liên quan cách điện giấy) — đối chiếu thêm mục 5.5 IEC60599:2022 (CO2/CO<3 thường nghi carbon hóa giấy, CO2/CO>10 có thể là quá nhiệt nhẹ giấy/oxy hóa dầu) và cân nhắc thử nghiệm furan nếu cần xác nhận thêm.",
       };
       bushingCodes.forEach((c) => { if (bushingMsgs[c]) recs.push(bushingMsgs[c]); });
@@ -1152,7 +1222,7 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
     const oltc = oltcContaminationCheck(gases);
     if (oltc.level !== "none") {
       recs.push(
-        `C2H2/H2 = ${oltc.ratio} ${oltc.level === "likely" ? "> 3" : "trong khoảng 2–3"} — ${oltc.level === "likely" ? "nghi ngờ rõ" : "có thể"} nhiễm khí từ khoang OLTC (Điều 54): lấy mẫu dầu khoang OLTC, phân tích khí hòa tan so sánh với khoang dầu chính, trừ khí nền từ OLTC để tính lại hàm lượng khí trong khoang dầu chính trước khi tra tỷ số khí; kiểm tra tiếp điểm chuyển nấc và độ kín giữa 2 khoang.`
+        `C2H2/H2 = ${vnNum(oltc.ratio)} ${oltc.level === "likely" ? `> ${vnNum(DIEU54_OLTC_C2H2_H2.likely)}` : `trong khoảng ${vnNum(DIEU54_OLTC_C2H2_H2.possible)}–${vnNum(DIEU54_OLTC_C2H2_H2.likely)}`} — ${oltc.level === "likely" ? "nghi ngờ rõ" : "có thể"} nhiễm khí từ khoang OLTC (Điều 54): lấy mẫu dầu khoang OLTC, phân tích khí hòa tan so sánh với khoang dầu chính, trừ khí nền từ OLTC để tính lại hàm lượng khí trong khoang dầu chính trước khi tra tỷ số khí; kiểm tra tiếp điểm chuyển nấc và độ kín giữa 2 khoang.`
       );
     }
   }
@@ -1972,11 +2042,11 @@ function forecastGasTrend(history, forecastYears, limit) {
 //    có logic rẽ nhánh phức tạp) có thể XEM/SỬA qua giao diện (mục "Quy định" trong tab
 //    "Cấu hình", xem ui/ui-regulation-config.js), để khi QĐ1901/IEC 60599 có bản cập nhật trong
 //    tương lai, người dùng KHÔNG cần sửa code — chỉ cần sửa số + tham chiếu nguồn qua
-//    giao diện. CỐ Ý KHÔNG đưa vào đây (theo đúng phạm vi người dùng đã xác nhận): Bảng
-//    66/Table 1 (diagnoseRatios() — logic rẽ nhánh 6 mã loại trừ nhau), Table A.10 sứ
-//    xuyên (diagnoseBushingRatios()), ranh giới Tam giác Duval (classifyDuval1()), và
-//    các enum thuần key/nhãn (EQUIPMENT_TYPES/MBA_SUBTYPES/INSTRUMENT_SUBTYPES — không
-//    phải ngưỡng số).
+//    giao diện. Từ 11/2026 gồm cả NGƯỠNG SỐ của các logic rẽ nhánh: Bảng 66/Table 1
+//    (diagnoseRatios()), bảng PD/D/T, Table A.10 sứ xuyên (diagnoseBushingRatios()), ranh giới
+//    Tam giác Duval (classifyDuval1() — Bảng 67), C2H2/H2 nhiễm khí OLTC, tỷ lệ bổ sung CO2/CO,
+//    O2/N2 — chỉ CON SỐ sửa được, cấu trúc rẽ nhánh/dấu so sánh giữ đúng văn bản gốc. Không
+//    đưa vào: các enum thuần key/nhãn (EQUIPMENT_TYPES/MBA_SUBTYPES/INSTRUMENT_SUBTYPES).
 //
 // CƠ CHẾ: mỗi bảng hằng số ở các mục 2/2bis/7bis/8 phía trên VẪN LÀ nguồn "mặc định"
 // (khai báo bằng const, nhưng object literal nên PROPERTY của nó vẫn sửa được —
@@ -2121,6 +2191,96 @@ function buildRegulationConfigRegistry() {
       fields: Object.values(EQUIPMENT_TYPES).map((t) => ({ path: [t], label: t, unit: "", kind: "number" })),
     },
     {
+      key: "BANG64_MBA_LOW", category: "MBA/Kháng dầu — Khí hòa tan (khoảng điển hình, lưu đồ Điều 54)",
+      title: "QĐ1901 Bảng 64 — Cận DƯỚI khoảng giá trị điển hình (MBA): tất cả khí thấp hơn -> kiểm tra lỗi lấy mẫu/đo lường/xử lý dầu",
+      citationKey: "BANG64_MBA_LOW", target: QD1901_BANG64_MBA_LOW, fields: gasMapFields("ppm"),
+    },
+    {
+      key: "BANG66_TABLE1", category: "Chẩn đoán tỷ số khí — Bảng 66 (= Table 1 IEC 60599)",
+      title: "QĐ1901 Bảng 66 / IEC 60599 Table 1 — Ngưỡng 3 tỷ số khí xác định mã PD, D1, D2, T1, T2, T3 (ngưỡng CH4/H2 của PD: xem bảng \"Ngưỡng CH4/H2 ... PD\")",
+      citationKey: "BANG66_TABLE1", target: QD1901_BANG66_TABLE1,
+      fields: [
+        { path: ["PD", "i_max"], label: "PD — C2H4/C2H6 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["D1", "g_min"], label: "D1 — C2H2/C2H4 lớn hơn", unit: "", kind: "number" },
+        { path: ["D1", "h_min"], label: "D1 — CH4/H2 từ", unit: "", kind: "number" },
+        { path: ["D1", "h_max"], label: "D1 — CH4/H2 đến", unit: "", kind: "number" },
+        { path: ["D1", "i_min"], label: "D1 — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+        { path: ["D2", "g_min"], label: "D2 — C2H2/C2H4 từ", unit: "", kind: "number" },
+        { path: ["D2", "g_max"], label: "D2 — C2H2/C2H4 đến", unit: "", kind: "number" },
+        { path: ["D2", "h_min"], label: "D2 — CH4/H2 từ", unit: "", kind: "number" },
+        { path: ["D2", "h_max"], label: "D2 — CH4/H2 đến", unit: "", kind: "number" },
+        { path: ["D2", "i_min"], label: "D2 — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+        { path: ["T1", "h_min"], label: "T1 — CH4/H2 lớn hơn", unit: "", kind: "number" },
+        { path: ["T1", "i_max"], label: "T1 — C2H4/C2H6 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["T2", "g_max"], label: "T2 — C2H2/C2H4 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["T2", "h_min"], label: "T2 — CH4/H2 lớn hơn", unit: "", kind: "number" },
+        { path: ["T2", "i_min"], label: "T2 — C2H4/C2H6 từ", unit: "", kind: "number" },
+        { path: ["T2", "i_max"], label: "T2 — C2H4/C2H6 đến", unit: "", kind: "number" },
+        { path: ["T3", "g_max"], label: "T3 — C2H2/C2H4 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["T3", "h_min"], label: "T3 — CH4/H2 lớn hơn", unit: "", kind: "number" },
+        { path: ["T3", "i_min"], label: "T3 — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "BANG66_PDT", category: "Chẩn đoán tỷ số khí — Bảng 66 (= Table 1 IEC 60599)",
+      title: "QĐ1901 Điều 54 — Bảng đơn giản PD / D / T (khi tỷ số không nằm trong giới hạn Bảng 66)",
+      citationKey: "BANG66_PDT", target: QD1901_BANG66_PDT,
+      fields: [
+        { path: ["pd_h_max"], label: "PD — CH4/H2 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["dt_g"], label: "Ranh giới D / T — C2H2/C2H4 (lớn hơn: D, nhỏ hơn: T)", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "IEC_A10_BUSHING", category: "Sứ xuyên (Bushing) — Chẩn đoán tỷ số khí",
+      title: "IEC 60599:2022 Annex A.5.3 Table A.10 — Ngưỡng tỷ số khí chẩn đoán sứ xuyên",
+      citationKey: "IEC_A10_BUSHING", target: IEC_A10_BUSHING_RATIOS,
+      fields: [
+        { path: ["pd_h_max"], label: "PD — CH4/H2 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["d_g_min"], label: "D — C2H2/C2H4 lớn hơn", unit: "", kind: "number" },
+        { path: ["t_i_min"], label: "T — C2H4/C2H6 lớn hơn", unit: "", kind: "number" },
+        { path: ["tp_low"], label: "TP — CO2/CO nhỏ hơn", unit: "", kind: "number" },
+        { path: ["tp_high"], label: "TP — hoặc CO2/CO lớn hơn", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "BANG67_DUVAL", category: "Chẩn đoán — Tam giác Duval 1 (Bảng 67)",
+      title: "QĐ1901 Bảng 67 — Giới hạn các vùng lỗi Tam giác Duval 1 (% trên tổng CH4 + C2H4 + C2H2)",
+      citationKey: "BANG67_DUVAL", target: QD1901_BANG67_DUVAL,
+      fields: [
+        { path: ["pd_ch4"], label: "PD — %CH4 từ", unit: "%", kind: "number" },
+        { path: ["t_c2h2"], label: "T1, T2 — %C2H2 không quá", unit: "%", kind: "number" },
+        { path: ["t1_c2h4"], label: "T1 / T2 — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["t2_c2h4"], label: "T2 / T3 — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["t3_c2h2"], label: "T3 — %C2H2 không quá", unit: "%", kind: "number" },
+        { path: ["d_c2h2"], label: "D1, D2 — %C2H2 từ", unit: "%", kind: "number" },
+        { path: ["d1_c2h4"], label: "D1 / D2 — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["d2_c2h4"], label: "D2 / D+T — ranh giới %C2H4", unit: "%", kind: "number" },
+        { path: ["d2_c2h2"], label: "D2 / D+T — ranh giới %C2H2", unit: "%", kind: "number" },
+      ],
+    },
+    {
+      key: "DIEU54_OLTC", category: "MBA/Kháng dầu — Kiểm tra nhiễm khí từ OLTC (lưu đồ Điều 54)",
+      title: "QĐ1901 Điều 54 — Tỷ lệ C2H2/H2 nghi nhiễm khí từ OLTC (văn bản: \"> 2 - 3\")",
+      citationKey: "DIEU54_OLTC", target: DIEU54_OLTC_C2H2_H2,
+      fields: [
+        { path: ["possible"], label: "C2H2/H2 lớn hơn — có thể nhiễm khí OLTC", unit: "", kind: "number" },
+        { path: ["likely"], label: "C2H2/H2 lớn hơn — nghi ngờ rõ nhiễm khí OLTC", unit: "", kind: "number" },
+      ],
+    },
+    {
+      key: "DIEU54_ADDITIONAL", category: "Đánh giá các tỷ lệ bổ sung (Điều 54) — áp dụng cho mọi dầu",
+      title: "QĐ1901 Điều 54 — Ngưỡng tỷ lệ bổ sung CO2/CO và O2/N2",
+      citationKey: "DIEU54_ADDITIONAL", target: DIEU54_ADDITIONAL_RATIOS,
+      fields: [
+        { path: ["co2co_low"], label: "Carbon hóa giấy — CO2/CO nhỏ hơn", unit: "", kind: "number" },
+        { path: ["co_min"], label: "Carbon hóa giấy — và CO lớn hơn", unit: "ppm", kind: "number" },
+        { path: ["co2co_high"], label: "Quá nhiệt nhẹ / oxy hóa dầu — CO2/CO lớn hơn", unit: "", kind: "number" },
+        { path: ["co2_min"], label: "Quá nhiệt nhẹ / oxy hóa dầu — và CO2 lớn hơn", unit: "ppm", kind: "number" },
+        { path: ["o2n2_low"], label: "Tiêu thụ oxy quá mức — O2/N2 nhỏ hơn", unit: "", kind: "number" },
+        { path: ["o2n2_normal"], label: "Mốc tham khảo bình thường — O2/N2 khoảng", unit: "", kind: "number" },
+      ],
+    },
+    {
       key: "BANG63_TDGC", category: "MBA/Kháng dầu — Tổng hàm lượng khí hòa tan (dầu mới/sau xử lý)",
       title: "QĐ1901 Bảng 63 — Ngưỡng tổng hàm lượng khí hòa tan (%)",
       citationKey: "BANG63_TDGC", target: QD1901_BANG63_TDGC,
@@ -2212,6 +2372,62 @@ REGULATION_CONFIG_REGISTRY.forEach((item) => {
     values: deepClone(item.target),
   };
 });
+
+// ---------------------------------------------------------------------------
+// Kiểm tra THỨ TỰ HỢP LÝ giữa các ngưỡng của cùng 1 bảng (ngoài kiểm tra "không âm" chung ở
+// giao diện) — tránh Admin nhập số làm logic rẽ nhánh/hình vẽ sai (VD "CH4/H2 từ 0,5 đến 0,1",
+// ranh giới Duval chồng chéo). Trả về mảng thông báo lỗi tiếng Việt, rỗng nếu hợp lệ.
+// ---------------------------------------------------------------------------
+function rcRequireOrder(problems, pairs) {
+  pairs.forEach(([a, b, msg, strict]) => {
+    if (!Number.isFinite(a) || !Number.isFinite(b)) return;
+    if (strict === false ? a > b : a >= b) problems.push(msg);
+  });
+  return problems;
+}
+
+const REGULATION_CONFIG_VALIDATORS = {
+  BANG66_TABLE1: (v) => rcRequireOrder([], [
+    [v.D1.h_min, v.D1.h_max, "D1: CH4/H2 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.D2.g_min, v.D2.g_max, "D2: C2H2/C2H4 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.D2.h_min, v.D2.h_max, "D2: CH4/H2 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.T2.i_min, v.T2.i_max, "T2: C2H4/C2H6 \"từ\" phải nhỏ hơn \"đến\""],
+    [v.T2.i_max, v.T3.i_min, "T3: C2H4/C2H6 \"lớn hơn\" không được nhỏ hơn T2 \"đến\"", false],
+    [v.T2.g_max, v.T3.g_max, "T3: C2H2/C2H4 \"nhỏ hơn\" không được nhỏ hơn của T2", false],
+  ]),
+  DIEU54_OLTC: (v) => rcRequireOrder([], [[v.possible, v.likely, "Ngưỡng \"nghi ngờ rõ\" không được nhỏ hơn ngưỡng \"có thể\"", false]]),
+  DIEU54_ADDITIONAL: (v) => rcRequireOrder([], [[v.co2co_low, v.co2co_high, "CO2/CO: ngưỡng carbon hóa giấy phải nhỏ hơn ngưỡng quá nhiệt nhẹ"]]),
+  IEC_A10_BUSHING: (v) => rcRequireOrder([], [[v.tp_low, v.tp_high, "TP: CO2/CO \"nhỏ hơn\" phải nhỏ hơn \"hoặc lớn hơn\""]]),
+  BANG67_DUVAL: (v) => {
+    const p = rcRequireOrder([], [
+      [50, v.pd_ch4, "PD: %CH4 phải lớn hơn 50%"],
+      [v.pd_ch4, 100, "PD: %CH4 phải nhỏ hơn 100%"],
+      [100 - v.pd_ch4, v.t_c2h2, "Vùng PD phải nhỏ hơn dải T1/T2 (100 − %CH4 của PD < %C2H2 của T1, T2)"],
+      [100 - v.pd_ch4, v.t1_c2h4, "Vùng PD phải nhỏ hơn T1 (100 − %CH4 của PD < ranh giới T1/T2)"],
+      [v.t1_c2h4, v.t2_c2h4, "Ranh giới T1/T2 phải nhỏ hơn T2/T3 (%C2H4)"],
+      [v.t_c2h2, v.d_c2h2, "%C2H2 của T1, T2 phải nhỏ hơn %C2H2 của D1, D2"],
+      [v.t_c2h2, v.t3_c2h2, "%C2H2 của T1, T2 phải nhỏ hơn %C2H2 của T3"],
+      [v.d_c2h2, v.d2_c2h2, "%C2H2 của D1, D2 phải nhỏ hơn ranh giới D2 / D+T (%C2H2)"],
+      [v.t3_c2h2, v.d2_c2h2, "%C2H2 của T3 phải nhỏ hơn ranh giới D2 / D+T (%C2H2)"],
+      [v.d1_c2h4, v.d2_c2h4, "Ranh giới D1/D2 phải nhỏ hơn D2 / D+T (%C2H4)"],
+      [v.d2_c2h4, v.t2_c2h4, "Ranh giới D2 / D+T (%C2H4) không được lớn hơn T2/T3", false],
+      [v.d_c2h2 + v.d1_c2h4, 100, "%C2H2 của D1 + ranh giới D1/D2 phải nhỏ hơn 100%"],
+      [v.d2_c2h2 + v.d2_c2h4, 100, "%C2H2 + %C2H4 của ranh giới D2 / D+T phải nhỏ hơn 100%"],
+    ]);
+    return p;
+  },
+};
+
+/** Lỗi thứ tự của 1 bảng (values = object đầy đủ của bảng, VD lấy từ form). [] nếu không có luật riêng. */
+function validateRegulationConfigValues(key, values) {
+  const fn = REGULATION_CONFIG_VALIDATORS[key];
+  if (!fn || !values) return [];
+  try {
+    return fn(values);
+  } catch (e) {
+    return ["Thiếu giá trị — vui lòng điền đủ các ô của bảng"];
+  }
+}
 
 function getRegulationConfigRegistry() {
   return REGULATION_CONFIG_REGISTRY;
@@ -2760,6 +2976,8 @@ if (typeof module !== "undefined" && module.exports) {
       countExceedTypical, computeRatios, diagnoseRatios, diagnoseBushingRatios, diagnoseGasFault,
       BUSHING_CODE_LABELS, NO_DIAGNOSIS, ratioApplicability, computeRateOfChange,
       diagnoseSimplifiedPDT, oltcContaminationCheck, gasesBelowTypicalLow, QD1901_BANG64_MBA_LOW,
+      QD1901_BANG66_TABLE1, QD1901_BANG66_PDT, IEC_A10_BUSHING_RATIOS, QD1901_BANG67_DUVAL,
+      DIEU54_OLTC_C2H2_H2, DIEU54_ADDITIONAL_RATIOS, PD_THRESHOLD_BY_TYPE,
       computeTcgRateOfChange,
       normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
       QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
@@ -2772,7 +2990,7 @@ if (typeof module !== "undefined" && module.exports) {
       OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
       linearRegression, theilSenSlope, consecutiveAverageSlope, FORECAST_METHOD_LABELS, forecastGasTrend,
       REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
-      resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues,
+      resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues,
       getValueAtPath, setValueAtPath,
       PEER_MIN_SAMPLES, PEER_Z_WARN, PEER_Z_ALERT, PEER_IF_WARN, PEER_IF_ALERT, evaluatePeerAnomaly,
       CASE_TOP_N, CASE_MIN_SIMILARITY, findSimilarCases,
@@ -2798,6 +3016,8 @@ if (typeof module !== "undefined" && module.exports) {
     countExceedTypical, computeRatios, diagnoseRatios, diagnoseBushingRatios, diagnoseGasFault,
     BUSHING_CODE_LABELS, NO_DIAGNOSIS, ratioApplicability, computeRateOfChange,
       diagnoseSimplifiedPDT, oltcContaminationCheck, gasesBelowTypicalLow, QD1901_BANG64_MBA_LOW,
+      QD1901_BANG66_TABLE1, QD1901_BANG66_PDT, IEC_A10_BUSHING_RATIOS, QD1901_BANG67_DUVAL,
+      DIEU54_OLTC_C2H2_H2, DIEU54_ADDITIONAL_RATIOS, PD_THRESHOLD_BY_TYPE,
     computeTcgRateOfChange,
     normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1,
     QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
@@ -2810,7 +3030,7 @@ if (typeof module !== "undefined" && module.exports) {
     OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
     linearRegression, theilSenSlope, consecutiveAverageSlope, FORECAST_METHOD_LABELS, forecastGasTrend,
     REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
-    resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues,
+    resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues,
     getValueAtPath, setValueAtPath,
     PEER_MIN_SAMPLES, PEER_Z_WARN, PEER_Z_ALERT, PEER_IF_WARN, PEER_IF_ALERT, evaluatePeerAnomaly,
     CASE_TOP_N, CASE_MIN_SIMILARITY, findSimilarCases,

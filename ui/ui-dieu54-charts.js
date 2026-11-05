@@ -155,42 +155,75 @@ function d54FormatTick(v) {
 }
 
 // ---------------------------------------------------------------------------
-// Biểu đồ 1 — mặt phẳng tỷ số khí (2 hình). Vùng = khối phẳng (slab) trên mặt sàn.
+// Ngưỡng lấy TRỰC TIẾP từ logic (Admin có thể cấu hình ở "Cấu hình" > "Quy định") — hình luôn
+// khớp với kết quả chẩn đoán: Bảng 66 (QD1901_BANG66_TABLE1), ngưỡng PD CH4/H2 của MBA
+// (PD_THRESHOLD_BY_TYPE), Bảng 67 (QD1901_BANG67_DUVAL).
 // ---------------------------------------------------------------------------
-const D54_CHART1 = {
-  left: {
-    title: "CH4/H2",
-    xRange: [0.04, 4],
-    xTicks: [0.1, 0.5, 1],
-    zones: [
-      { code: "PD", key: "PD", x: [0, 0.1], y: [0, 0.01] },
-      { code: "D1", key: "D1", x: [0.1, 0.5], y: [2.5, Infinity] },
-      { code: "D1/D2", key: "D12", x: [0.1, 0.5], y: [1, 2.5] },
-      { code: "D2", key: "D2", x: [0.1, 0.5], y: [0.6, 1], label: false },
-      { code: "D2", key: "D2", x: [0.5, 1], y: [0.6, 2.5] },
-      { code: "T1", key: "T1", x: [1, Infinity], y: [0, 0.01] },
-      { code: "T2", key: "T2", x: [1, Infinity], y: [0.01, 0.1] },
-      { code: "T3", key: "T3", x: [1, Infinity], y: [0.1, 0.2] },
-    ],
-  },
-  right: {
-    title: "C2H4/C2H6",
-    xRange: [0.05, 8],
-    xTicks: [0.1, 0.2, 1, 2, 4],
-    zones: [
-      { code: "D1", key: "D1", x: [1, 2], y: [1, Infinity] },
-      { code: "D1", key: "D1", x: [2, Infinity], y: [2.5, Infinity], label: false },
-      { code: "D1/D2", key: "D12", x: [2, Infinity], y: [1, 2.5] },
-      { code: "D2", key: "D2", x: [2, Infinity], y: [0.6, 1] },
-      { code: "PD/T1", key: "PDT1", x: [0, 0.2], y: [0, 0.01] },
-      { code: "T1", key: "T1", x: [0.2, 1], y: [0, 0.01] },
-      { code: "T2", key: "T2", x: [1, 4], y: [0, 0.1] },
-      { code: "T3", key: "T3", x: [4, Infinity], y: [0, 0.2] },
-    ],
-  },
-  yRange: [0.004, 6],
-  yTicks: [0.01, 0.1, 0.2, 0.6, 1, 2.5],
-};
+function d54Logic() {
+  if (typeof window !== "undefined" && window.DGA) return window.DGA;
+  if (typeof require === "function") return require("../dga-logic");
+  return null;
+}
+function d54Table1() {
+  const D = d54Logic();
+  return { T: D.QD1901_BANG66_TABLE1, pd: D.PD_THRESHOLD_BY_TYPE[D.EQUIPMENT_TYPES.MBA] };
+}
+
+/** Hiệu 2 hình chữ nhật [x0, x1, y0, y1] -> danh sách mảnh còn lại (tối đa 4). */
+function d54RectMinus(a, b) {
+  const ix0 = Math.max(a[0], b[0]), ix1 = Math.min(a[1], b[1]);
+  const iy0 = Math.max(a[2], b[2]), iy1 = Math.min(a[3], b[3]);
+  if (ix0 >= ix1 || iy0 >= iy1) return [a];
+  const out = [];
+  if (a[0] < ix0) out.push([a[0], ix0, a[2], a[3]]);
+  if (ix1 < a[1]) out.push([ix1, a[1], a[2], a[3]]);
+  if (a[2] < iy0) out.push([ix0, ix1, a[2], iy0]);
+  if (iy1 < a[3]) out.push([ix0, ix1, iy1, a[3]]);
+  return out;
+}
+function d54RectAnd(a, b) {
+  const r = [Math.max(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.min(a[3], b[3])];
+  return r[0] < r[1] && r[2] < r[3] ? r : null;
+}
+const d54Area = (r, X, Y) => (X(r[1]) - X(r[0])) * (Y(r[3]) - Y(r[2]));
+
+// ---------------------------------------------------------------------------
+// Biểu đồ 1 — mặt phẳng tỷ số khí (2 hình). Vùng = khối phẳng (slab) trên mặt sàn.
+// Các vùng "NS" (không có ý nghĩa) của bảng gốc vẽ thành dải sát trục như hình IEC (C2H2/C2H4 < 0,01).
+// ---------------------------------------------------------------------------
+const D54_NS_LOW = 0.01;
+const D54_CHART1 = { yRange: [0.004, 6], left: { title: "CH4/H2", xRange: [0.04, 4] }, right: { title: "C2H4/C2H6", xRange: [0.05, 8] } };
+
+/** Vùng Biểu đồ 1 theo ngưỡng hiện hành: [{code, key, r:[x0,x1,y0,y1]}] (D1/D2 tách 3 phần). */
+function d54Chart1Zones(side) {
+  const { T, pd } = d54Table1();
+  const INF = Infinity;
+  const left = side === "left";
+  // x = CH4/H2 (trái) hoặc C2H4/C2H6 (phải); y = C2H2/C2H4
+  const d1 = left ? [T.D1.h_min, T.D1.h_max, T.D1.g_min, INF] : [T.D1.i_min, INF, T.D1.g_min, INF];
+  const d2 = left ? [T.D2.h_min, T.D2.h_max, T.D2.g_min, T.D2.g_max] : [T.D2.i_min, INF, T.D2.g_min, T.D2.g_max];
+  const zones = [];
+  const both = d54RectAnd(d1, d2);
+  d54RectMinus(d1, d2).forEach((r) => zones.push({ code: "D1", key: "D1", r }));
+  d54RectMinus(d2, d1).forEach((r) => zones.push({ code: "D2", key: "D2", r }));
+  if (both) zones.push({ code: "D1/D2", key: "D12", r: both });
+  if (left) {
+    zones.push({ code: "PD", key: "PD", r: [0, pd, 0, D54_NS_LOW] });
+    zones.push({ code: "T1", key: "T1", r: [T.T1.h_min, INF, 0, D54_NS_LOW] });
+    zones.push({ code: "T2", key: "T2", r: [T.T2.h_min, INF, D54_NS_LOW, T.T2.g_max] });
+    zones.push({ code: "T3", key: "T3", r: [T.T3.h_min, INF, T.T2.g_max, T.T3.g_max] });
+  } else {
+    zones.push({ code: "PD/T1", key: "PDT1", r: [0, T.PD.i_max, 0, D54_NS_LOW] });
+    zones.push({ code: "T1", key: "T1", r: [T.PD.i_max, T.T1.i_max, 0, D54_NS_LOW] });
+    zones.push({ code: "T2", key: "T2", r: [T.T2.i_min, T.T2.i_max, 0, T.T2.g_max] });
+    zones.push({ code: "T3", key: "T3", r: [T.T3.i_min, INF, 0, T.T3.g_max] });
+  }
+  return zones;
+}
+
+function d54Ticks(values) {
+  return Array.from(new Set(values.filter((v) => Number.isFinite(v) && v > 0))).sort((a, b) => a - b);
+}
 
 function d54BuildChart1(side, th, current) {
   const cfg = D54_CHART1[side];
@@ -198,23 +231,32 @@ function d54BuildChart1(side, th, current) {
   const my = d54LogMap(D54_CHART1.yRange[0], D54_CHART1.yRange[1]);
   const X = (v) => (v === 0 ? -1 : v === Infinity ? 1 : mx(v));
   const Y = (v) => (v === 0 ? -1 : v === Infinity ? 1 : my(v));
+  const zones = d54Chart1Zones(side);
+  const xTicks = d54Ticks(zones.flatMap((z) => [z.r[0], z.r[1]]));
+  const yTicks = d54Ticks(zones.flatMap((z) => [z.r[2], z.r[3]]));
   const items = [];
   // mặt sàn + lưới
   items.push({ type: "poly", pts: [[-1, -1, -0.002], [1, -1, -0.002], [1, 1, -0.002], [-1, 1, -0.002]], fill: th.floor, opacity: 1, stroke: th.grid, bias: 10 });
-  cfg.xTicks.forEach((t) => {
+  xTicks.forEach((t) => {
     items.push({ type: "line", a: [X(t), -1, 0], b: [X(t), 1, 0], stroke: th.grid, width: 0.7, dash: "3 3", bias: 9 });
     items.push({ type: "text", p: [X(t), -1.12, 0], text: d54FormatTick(t), color: th.muted, size: 11 });
   });
-  D54_CHART1.yTicks.forEach((t) => {
+  yTicks.forEach((t) => {
     items.push({ type: "line", a: [-1, Y(t), 0], b: [1, Y(t), 0], stroke: th.grid, width: 0.7, dash: "3 3", bias: 9 });
     items.push({ type: "text", p: [-1.06, Y(t), 0], text: d54FormatTick(t), color: th.muted, size: 11, anchor: "end" });
   });
-  cfg.zones.forEach((z, idx) => {
+  // Nhãn mỗi mã chỉ ghi 1 lần, ở mảnh lớn nhất
+  const biggest = {};
+  zones.forEach((z, i) => {
+    if (biggest[z.code] === undefined || d54Area(z.r, X, Y) > d54Area(zones[biggest[z.code]].r, X, Y)) biggest[z.code] = i;
+  });
+  zones.forEach((z, i) => {
     const color = th.zone[z.key];
     const h = 0.1 + (z.key === "D12" ? 0.06 : 0);
-    items.push(...d54Box([X(z.x[0]), X(z.x[1]), Y(z.y[0]), Y(z.y[1]), 0, h], color, { opacity: 0.9 }));
-    if (z.label !== false) {
-      items.push({ type: "text", p: [(X(z.x[0]) + X(z.x[1])) / 2, (Y(z.y[0]) + Y(z.y[1])) / 2, h + 0.02], text: z.code, color: "#fff", size: 12.5, weight: 700, halo: d54Shade(color, 0.55) });
+    const r = z.r;
+    items.push(...d54Box([X(r[0]), X(r[1]), Y(r[2]), Y(r[3]), 0, h], color, { opacity: 0.9 }));
+    if (biggest[z.code] === i) {
+      items.push({ type: "text", p: [(X(r[0]) + X(r[1])) / 2, (Y(r[2]) + Y(r[3])) / 2, h + 0.02], text: z.code, color: "#fff", size: 12.5, weight: 700, halo: d54Shade(color, 0.55) });
     }
   });
   // nhãn trục
@@ -235,19 +277,21 @@ function d54BuildChart1(side, th, current) {
 // ---------------------------------------------------------------------------
 // Biểu đồ 2 — không gian 3 trục: X = C2H4/C2H6, Y = CH4/H2, Z = C2H2/C2H4 (thang log)
 // ---------------------------------------------------------------------------
-const D54_CHART2 = {
-  range: [0.05, 10],
-  ticks: [0.1, 1, 10],
-  zones: [
-    { code: "PD", key: "PD", x: [0, 0.2], y: [0, 0.1], z: [0, 0.1] },
-    { code: "D1", key: "D1", x: [1, Infinity], y: [0.1, 0.5], z: [1, Infinity] },
-    { code: "D2", key: "D2", x: [2, Infinity], y: [0.1, 1], z: [0.6, 2.5] },
-    { code: "T1", key: "T1", x: [0, 1], y: [1, Infinity], z: [0, 0.1] },
-    { code: "T2", key: "T2", x: [1, 4], y: [1, Infinity], z: [0, 0.1] },
-    { code: "T3", key: "T3", x: [4, Infinity], y: [1, Infinity], z: [0, 0.2] },
-  ],
-};
+const D54_CHART2 = { range: [0.05, 10], ticks: [0.1, 1, 10] };
 
+/** Khối Biểu đồ 2 theo ngưỡng hiện hành (Bảng 66). Trục "NS" vẽ thành khối thấp sát sàn. */
+function d54Chart2Zones() {
+  const { T, pd } = d54Table1();
+  const INF = Infinity, ns = 0.1;
+  return [
+    { code: "PD", key: "PD", x: [0, T.PD.i_max], y: [0, pd], z: [0, ns] },
+    { code: "D1", key: "D1", x: [T.D1.i_min, INF], y: [T.D1.h_min, T.D1.h_max], z: [T.D1.g_min, INF] },
+    { code: "D2", key: "D2", x: [T.D2.i_min, INF], y: [T.D2.h_min, T.D2.h_max], z: [T.D2.g_min, T.D2.g_max] },
+    { code: "T1", key: "T1", x: [0, T.T1.i_max], y: [T.T1.h_min, INF], z: [0, ns] },
+    { code: "T2", key: "T2", x: [T.T2.i_min, T.T2.i_max], y: [T.T2.h_min, INF], z: [0, T.T2.g_max] },
+    { code: "T3", key: "T3", x: [T.T3.i_min, INF], y: [T.T3.h_min, INF], z: [0, T.T3.g_max] },
+  ];
+}
 function d54BuildChart2(th, current) {
   const m = d54LogMap(D54_CHART2.range[0], D54_CHART2.range[1]);
   const A = (v) => (v === 0 ? -1 : v === Infinity ? 1 : m(v));
@@ -269,7 +313,7 @@ function d54BuildChart2(th, current) {
     items.push({ type: "text", p: [1.1, A(t), 0], text: d54FormatTick(t), color: th.muted, size: 11, anchor: "start" });
     items.push({ type: "text", p: [-1.08, -1, Z(t)], text: d54FormatTick(t), color: th.muted, size: 11, anchor: "end" });
   });
-  D54_CHART2.zones.forEach((z) => {
+  d54Chart2Zones().forEach((z) => {
     const color = th.zone[z.key];
     const b = [A(z.x[0]), A(z.x[1]), A(z.y[0]), A(z.y[1]), Z(z.z[0]), Z(z.z[1])];
     items.push(...d54Box(b, color, { opacity: 0.62 }));
@@ -287,18 +331,22 @@ function d54BuildChart2(th, current) {
 }
 
 // ---------------------------------------------------------------------------
-// Biểu đồ 3 — Tam giác Duval 1. Vùng theo Bảng 67 (a = %C2H2, e = %C2H4, %CH4 = 100 − a − e)
+// Biểu đồ 3 — Tam giác Duval 1. Vùng dựng từ Bảng 67 hiện hành (a = %C2H2, e = %C2H4, %CH4 = 100 − a − e)
 // ---------------------------------------------------------------------------
-const D54_DUVAL_ZONES = [
-  { code: "PD", key: "PD", poly: [[0, 0], [0, 2], [2, 0]] },
-  { code: "T1", key: "T1", poly: [[0, 2], [0, 20], [4, 20], [4, 0], [2, 0]] },
-  { code: "T2", key: "T2", poly: [[0, 20], [0, 50], [4, 50], [4, 20]] },
-  { code: "T3", key: "T3", poly: [[0, 50], [0, 100], [15, 85], [15, 50]] },
-  { code: "D1", key: "D1", poly: [[13, 0], [100, 0], [77, 23], [13, 23]] },
-  { code: "D2", key: "D2", poly: [[13, 23], [77, 23], [29, 71], [29, 40], [13, 40]] },
-  { code: "D+T", key: "DT", poly: [[4, 0], [13, 0], [13, 40], [29, 40], [29, 71], [15, 85], [15, 50], [4, 50]] },
-];
-const D54_DUVAL_LABEL_AT = { T1: [1.4, 9], T2: [1.6, 35], T3: [6, 66], D1: [45, 8], D2: [42, 36], DT: [9, 32] };
+function d54DuvalZones() {
+  const L = d54Logic().QD1901_BANG67_DUVAL;
+  const pdA = 100 - L.pd_ch4, t = L.t_c2h2, t1 = L.t1_c2h4, t2 = L.t2_c2h4, t3 = L.t3_c2h2;
+  const d = L.d_c2h2, d1 = L.d1_c2h4, d2e = L.d2_c2h4, d2a = L.d2_c2h2;
+  return [
+    { code: "PD", key: "PD", poly: [[0, 0], [0, pdA], [pdA, 0]] },
+    { code: "T1", key: "T1", poly: [[0, pdA], [0, t1], [t, t1], [t, 0], [pdA, 0]], label: [t * 0.35, (pdA + t1) / 2] },
+    { code: "T2", key: "T2", poly: [[0, t1], [0, t2], [t, t2], [t, t1]], label: [t * 0.4, (t1 + t2) / 2] },
+    { code: "T3", key: "T3", poly: [[0, t2], [0, 100], [t3, 100 - t3], [t3, t2]], label: [t3 * 0.4, (t2 + 100 - t3 * 0.4) / 2] },
+    { code: "D1", key: "D1", poly: [[d, 0], [100, 0], [100 - d1, d1], [d, d1]], label: [(d + 100 - d1) / 2, d1 / 3] },
+    { code: "D2", key: "D2", poly: [[d, d1], [100 - d1, d1], [d2a, 100 - d2a], [d2a, d2e], [d, d2e]], label: [(d + 100 - d1) / 2 - 3, (d1 + d2e) / 2 + 4.5] },
+    { code: "D+T", key: "DT", poly: [[t, 0], [d, 0], [d, d2e], [d2a, d2e], [d2a, 100 - d2a], [t3, 100 - t3], [t3, t2], [t, t2]], label: [(t + d) / 2, (d1 + d2e) / 2] },
+  ];
+}
 
 const D54_TRI_H = 50 * Math.sqrt(3);
 /** (a = %C2H2, e = %C2H4) -> tọa độ thế giới trên mặt sàn. Đỉnh CH4 ở xa (trên), C2H2 trái, C2H4 phải. */
@@ -313,13 +361,13 @@ function d54BuildDuval(th, opts) {
   const o = opts || {};
   const items = [];
   const corner = { CH4: d54DuvalXY(0, 0), C2H4: d54DuvalXY(0, 100), C2H2: d54DuvalXY(100, 0) };
-  D54_DUVAL_ZONES.forEach((z) => {
+  d54DuvalZones().forEach((z) => {
     const color = th.zone[z.key];
     const h = z.key === "PD" ? 0.12 : 0.08;
     const poly = z.poly.map(([a, e]) => d54DuvalXY(a, e));
     items.push(...d54Prism(poly, h, color, { opacity: o.example ? 0.75 : 0.92 }));
-    if (!D54_DUVAL_LABEL_AT[z.key]) return; // PD: vùng rất nhỏ ở đỉnh — ghi nhãn ngay tại đỉnh tam giác
-    const [la, le] = D54_DUVAL_LABEL_AT[z.key];
+    if (!z.label) return; // PD: vùng rất nhỏ ở đỉnh — ghi nhãn ngay tại đỉnh tam giác
+    const [la, le] = z.label;
     const [lx, ly] = d54DuvalXY(la, le);
     items.push({ type: "text", p: [lx, ly, h + 0.02], text: z.code, color: "#fff", size: z.key.startsWith("T") ? 11 : 13, weight: 700, halo: d54Shade(color, 0.5) });
   });
@@ -476,6 +524,7 @@ function renderDieu54Charts() {
     d54Attach(fig);
     d54Draw(fig);
   });
+  renderDieu54Bang67Table();
   const note = document.getElementById("d54CurrentNote");
   if (note) {
     const cur = d54CurrentReading();
@@ -484,10 +533,31 @@ function renderDieu54Charts() {
   }
 }
 
+/** Bảng 67 hiển thị cạnh Biểu đồ 3 — dựng từ ngưỡng HIỆN HÀNH (Admin có thể đã cấu hình). */
+function renderDieu54Bang67Table() {
+  const body = document.getElementById("d54Bang67Body");
+  const D = d54Logic();
+  if (!body || !D) return;
+  const L = D.QD1901_BANG67_DUVAL;
+  const f = (v, gas) => `${String(v).replace(".", ",")}% ${gas.replace(/(\d)/g, "<sub>$1</sub>")}`;
+  const rows = [
+    ["PD", [f(L.pd_ch4, "CH4")]],
+    ["D1", [f(L.d1_c2h4, "C2H4"), f(L.d_c2h2, "C2H2")]],
+    ["D2", [f(L.d1_c2h4, "C2H4"), f(L.d_c2h2, "C2H2"), f(L.d2_c2h4, "C2H4"), f(L.d2_c2h2, "C2H2")]],
+    ["T1", [f(L.t_c2h2, "C2H2"), f(L.t1_c2h4, "C2H4")]],
+    ["T2", [f(L.t_c2h2, "C2H2"), f(L.t1_c2h4, "C2H4"), f(L.t2_c2h4, "C2H4")]],
+    ["T3", [f(L.t3_c2h2, "C2H2"), f(L.t2_c2h4, "C2H4")]],
+  ];
+  body.innerHTML = rows
+    .map(([code, cells]) => `<tr><th>${code}</th>${[0, 1, 2, 3].map((i) => `<td>${cells[i] || ""}</td>`).join("")}</tr>`)
+    .join("");
+}
+
 function setupDieu54Charts() {
   if (typeof document === "undefined") return;
   renderDieu54Charts();
   document.addEventListener("dga:themechange", renderDieu54Charts);
+  document.addEventListener("dga:regulationchange", renderDieu54Charts);
   const tabBtn = document.querySelector('button.tab-btn[data-tab="quytrinh"]');
   if (tabBtn) tabBtn.addEventListener("click", () => setTimeout(renderDieu54Charts, 0));
   // Biểu đồ nằm trong mục con "Đánh giá DGA" của tab Quy trình
@@ -501,5 +571,5 @@ if (typeof document !== "undefined") {
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { D54_CHART1, D54_CHART2, D54_DUVAL_ZONES, d54DuvalXY, d54BuildChart1, d54BuildChart2, d54BuildDuval, d54Project };
+  module.exports = { D54_CHART1, D54_CHART2, d54Chart1Zones, d54Chart2Zones, d54DuvalZones, d54RectMinus, d54DuvalXY, d54BuildChart1, d54BuildChart2, d54BuildDuval, d54Project };
 }

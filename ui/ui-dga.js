@@ -817,27 +817,22 @@ function drawDuvalTriangleBase() {
   // Đường phân vùng chính theo bảng "Limits of zones" gốc (Annex B, Figure B.3,
   // đối chiếu trực tiếp với IEC 60599-2022.pdf trang 37 do người dùng cung cấp):
   const P = (m, e, a) => duvalEdgePoint({ pctCH4: m, pctC2H4: e, pctC2H2: a });
+  // Ranh giới lấy từ Bảng 67 HIỆN HÀNH (DGA.QD1901_BANG67_DUVAL — Admin cấu hình được ở "Cấu hình" >
+  // "Quy định"), cùng nguồn với classifyDuval1() nên hình luôn khớp kết quả chẩn đoán.
+  const L = DGA.QD1901_BANG67_DUVAL;
+  const t = L.t_c2h2, t1 = L.t1_c2h4, t2 = L.t2_c2h4, t3 = L.t3_c2h2;
+  const d = L.d_c2h2, d1 = L.d1_c2h4, d2e = L.d2_c2h4, d2a = L.d2_c2h2, pd = L.pd_ch4;
   const zoneLines = [
-    // PD: %CH4 = 98 (đường song song đáy gần đỉnh)
-    [P(98, 2, 0), P(98, 0, 2)],
-    // Dải T1/T2/T3 — biên ngoài %C2H2 = 4, từ %C2H4=0 đến %C2H4=50
-    [P(96, 0, 4), P(46, 50, 4)],
-    // T1/T2 biên %C2H4 = 20 (trong dải %C2H2<=4)
-    [P(80, 20, 0), P(76, 20, 4)],
-    // T2/T3 biên %C2H4 = 50 (trong dải %C2H2<=4)
-    [P(50, 50, 0), P(46, 50, 4)],
-    // D1/D2 biên %C2H2 = 13 (phần %C2H4 0-23), từ cạnh CH4-C2H2 tới góc (23,13)
-    [P(87, 0, 13), P(64, 23, 13)],
-    // D1/D2 biên %C2H4 = 23, từ góc (23,13) tới cạnh đáy (%CH4 = 0, %C2H2 = 77)
-    [P(64, 23, 13), P(0, 23, 77)],
-    // D2/D+T biên %C2H2 = 13 (phần %C2H4 23-40), từ góc (23,13) tới góc (40,13)
-    [P(64, 23, 13), P(47, 40, 13)],
-    // D2/D+T biên %C2H4 = 40 (phần %C2H2 13-29), từ góc (40,13) tới góc (40,29)
-    [P(47, 40, 13), P(31, 40, 29)],
-    // D2/D+T biên %C2H2 = 29, từ góc (40,29) tới cạnh đáy (%CH4 = 0, %C2H4 = 71)
-    [P(31, 40, 29), P(0, 71, 29)],
-    // T3(mở rộng)/D+T biên %C2H2 = 15 (từ %C2H4=50 tới cạnh đáy)
-    [P(35, 50, 15), P(0, 85, 15)],
+    [P(pd, 100 - pd, 0), P(pd, 0, 100 - pd)], // PD: %CH4 = pd
+    [P(100 - t, 0, t), P(100 - t - t2, t2, t)], // T1, T2: %C2H2 = t (từ %C2H4 = 0 tới t2)
+    [P(100 - t1, t1, 0), P(100 - t1 - t, t1, t)], // T1/T2: %C2H4 = t1
+    [P(100 - t2, t2, 0), P(100 - t2 - t3, t2, t3)], // T2/T3 và T3/D+T: %C2H4 = t2 (từ %C2H2 = 0 tới t3)
+    [P(100 - t3 - t2, t2, t3), P(0, 100 - t3, t3)], // T3/D+T: %C2H2 = t3 (từ %C2H4 = t2 tới cạnh đáy)
+    [P(100 - d, 0, d), P(100 - d - d1, d1, d)], // D1/D+T: %C2H2 = d (phần %C2H4 ≤ d1)
+    [P(100 - d - d1, d1, d), P(0, d1, 100 - d1)], // D1/D2: %C2H4 = d1 (tới cạnh đáy)
+    [P(100 - d - d1, d1, d), P(100 - d - d2e, d2e, d)], // D2/D+T: %C2H2 = d (phần d1..d2e)
+    [P(100 - d - d2e, d2e, d), P(100 - d2a - d2e, d2e, d2a)], // D2/D+T: %C2H4 = d2e
+    [P(100 - d2a - d2e, d2e, d2a), P(0, 100 - d2a, d2a)], // D2/D+T: %C2H2 = d2a (tới cạnh đáy)
   ];
   zoneLines.forEach(([a, b]) => {
     s += `<line class="duval-zone-line" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}" />`;
@@ -855,6 +850,16 @@ function drawDuvalTriangleBase() {
   s += `<text class="duval-label" x="15" y="${h * 0.97}" text-anchor="middle">T1</text>`;
 
   svg.innerHTML = s;
+}
+
+// Ngưỡng Bảng 67 vừa đổi (cấu hình quy định) -> vẽ lại khung Duval (+ điểm lần đo đang xem nếu có).
+if (typeof document !== "undefined") {
+  document.addEventListener("dga:regulationchange", () => {
+    if (!document.getElementById("duvalSvg")) return;
+    drawDuvalTriangleBase();
+    const d = typeof _lastAnalysis !== "undefined" && _lastAnalysis && _lastAnalysis.duval;
+    if (d && d.xy) drawDuvalPoint(d.xy);
+  });
 }
 
 function drawDuvalPoint(xyMath) {

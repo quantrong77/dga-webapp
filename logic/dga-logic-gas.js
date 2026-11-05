@@ -266,14 +266,17 @@ const NO_DIAGNOSIS = "Không xác định (ngoài Bảng 66/hỗn hợp khiếm 
 function diagnoseRatios(ratios, pdThreshold) {
   const g = ratios.c2h2_c2h4, h = ratios.ch4_h2, i = ratios.c2h4_c2h6;
   const pd = pdThreshold === undefined || pdThreshold === null ? DEFAULT_PD_THRESHOLD : pdThreshold;
-  if (h < pd && i < 0.2) return "PD - Phóng điện cục bộ";
-  // Vùng chồng lấn = khớp ĐỒNG THỜI cả D1 VÀ D2 — D2 đòi C2H4/C2H6 > 2 (không phải > 1 như D1).
-  if (g > 1 && h >= 0.1 && h <= 0.5 && i > 2 && g <= 2.5) return "D1/D2 - Phóng điện (vùng chồng lấn)";
-  if (g > 1 && h >= 0.1 && h <= 0.5 && i > 1) return "D1 - Phóng điện năng lượng thấp";
-  if (g >= 0.6 && g <= 2.5 && h >= 0.1 && h <= 1 && i > 2) return "D2 - Phóng điện năng lượng cao";
-  if (h > 1 && i < 1) return "T1 - Tăng nhiệt, t<300°C";
-  if (g < 0.1 && h > 1 && i >= 1 && i <= 4) return "T2 - Tăng nhiệt, 300-700°C";
-  if (g < 0.2 && h > 1 && i > 4) return "T3 - Tăng nhiệt, t>700°C";
+  const T = QD1901_BANG66_TABLE1; // ngưỡng cấu hình được (dga-logic-core.js)
+  const isD1 = g > T.D1.g_min && h >= T.D1.h_min && h <= T.D1.h_max && i > T.D1.i_min;
+  const isD2 = g >= T.D2.g_min && g <= T.D2.g_max && h >= T.D2.h_min && h <= T.D2.h_max && i > T.D2.i_min;
+  if (h < pd && i < T.PD.i_max) return "PD - Phóng điện cục bộ";
+  // Vùng chồng lấn = khớp ĐỒNG THỜI cả D1 VÀ D2.
+  if (isD1 && isD2) return "D1/D2 - Phóng điện (vùng chồng lấn)";
+  if (isD1) return "D1 - Phóng điện năng lượng thấp";
+  if (isD2) return "D2 - Phóng điện năng lượng cao";
+  if (h > T.T1.h_min && i < T.T1.i_max) return "T1 - Tăng nhiệt, t<300°C";
+  if (g < T.T2.g_max && h > T.T2.h_min && i >= T.T2.i_min && i <= T.T2.i_max) return "T2 - Tăng nhiệt, 300-700°C";
+  if (g < T.T3.g_max && h > T.T3.h_min && i > T.T3.i_min) return "T3 - Tăng nhiệt, t>700°C";
   return NO_DIAGNOSIS;
 }
 
@@ -289,10 +292,11 @@ function diagnoseRatios(ratios, pdThreshold) {
 function diagnoseSimplifiedPDT(ratios) {
   if (!ratios) return null;
   const g = ratios.c2h2_c2h4, h = ratios.ch4_h2;
+  const P = QD1901_BANG66_PDT;
   const codes = [];
-  if (Number.isFinite(h) && h < 0.2) codes.push("PD");
-  if (Number.isFinite(g) && g > 0.2) codes.push("D");
-  else if (Number.isFinite(g) && g < 0.2) codes.push("T");
+  if (Number.isFinite(h) && h < P.pd_h_max) codes.push("PD");
+  if (Number.isFinite(g) && g > P.dt_g) codes.push("D");
+  else if (Number.isFinite(g) && g < P.dt_g) codes.push("T");
   if (codes.length === 0) return null;
   const names = { PD: "PD — phóng điện cục bộ", D: "D — phóng điện", T: "T — lỗi tăng nhiệt" };
   const text = codes.map((c) => names[c]).join(" + ");
@@ -309,7 +313,8 @@ function oltcContaminationCheck(gases) {
   const h2 = num(gases.H2), c2h2 = num(gases.C2H2);
   if (h2 <= 0) return { ratio: null, level: "none" };
   const ratio = c2h2 / h2;
-  return { ratio: Math.round(ratio * 100) / 100, level: ratio > 3 ? "likely" : ratio > 2 ? "possible" : "none" };
+  const O = DIEU54_OLTC_C2H2_H2;
+  return { ratio: Math.round(ratio * 100) / 100, level: ratio > O.likely ? "likely" : ratio > O.possible ? "possible" : "none" };
 }
 
 /**
@@ -344,19 +349,26 @@ function gasesBelowTypicalLow(gases, equipmentType) {
 // ---------------------------------------------------------------------------
 
 function diagnoseBushingRatios(ratios) {
+  const A = IEC_A10_BUSHING_RATIOS;
   const codes = [];
-  if (ratios.ch4_h2 < 0.07) codes.push("PD");
-  if (ratios.c2h2_c2h4 > 1) codes.push("D");
-  if (ratios.c2h4_c2h6 > 1) codes.push("T");
-  if (ratios.co2_co !== null && (ratios.co2_co < 1 || ratios.co2_co > 20)) codes.push("TP");
+  if (ratios.ch4_h2 < A.pd_h_max) codes.push("PD");
+  if (ratios.c2h2_c2h4 > A.d_g_min) codes.push("D");
+  if (ratios.c2h4_c2h6 > A.t_i_min) codes.push("T");
+  if (ratios.co2_co !== null && (ratios.co2_co < A.tp_low || ratios.co2_co > A.tp_high)) codes.push("TP");
   return codes;
 }
 
+/** Số thập phân kiểu Việt Nam (0.07 -> "0,07") cho câu hiển thị có ngưỡng cấu hình được. */
+function vnNum(v) {
+  return String(v).replace(".", ",");
+}
+
+// Nhãn mã Table A.10 — getter để luôn hiện ĐÚNG ngưỡng đang cấu hình (IEC_A10_BUSHING_RATIOS).
 const BUSHING_CODE_LABELS = {
-  PD: "PD (phóng điện cục bộ — CH4/H2 < 0,07)",
-  D: "D (phóng điện — C2H2/C2H4 > 1)",
-  T: "T (tăng nhiệt — C2H4/C2H6 > 1)",
-  TP: "TP (nghi liên quan cách điện giấy — CO2/CO bất thường)",
+  get PD() { return `PD (phóng điện cục bộ — CH4/H2 < ${vnNum(IEC_A10_BUSHING_RATIOS.pd_h_max)})`; },
+  get D() { return `D (phóng điện — C2H2/C2H4 > ${vnNum(IEC_A10_BUSHING_RATIOS.d_g_min)})`; },
+  get T() { return `T (tăng nhiệt — C2H4/C2H6 > ${vnNum(IEC_A10_BUSHING_RATIOS.t_i_min)})`; },
+  get TP() { return "TP (nghi liên quan cách điện giấy — CO2/CO bất thường)"; },
 };
 
 /**
@@ -460,23 +472,24 @@ function normalizeDuval(gases) {
  */
 function classifyDuval1(pct) {
   const { pctCH4: m, pctC2H4: e, pctC2H2: a } = pct;
+  const L = QD1901_BANG67_DUVAL; // ranh giới vùng cấu hình được (dga-logic-core.js)
 
-  if (m >= 98) return { zone: "PD", label: "PD - Phóng điện cục bộ (Tam giác Duval)" };
+  if (m >= L.pd_ch4) return { zone: "PD", label: "PD - Phóng điện cục bộ (Tam giác Duval)" };
 
-  if (a <= 4) {
-    if (e <= 20) return { zone: "T1", label: "T1 - Tăng nhiệt, t<300°C (Tam giác Duval)" };
-    if (e <= 50) return { zone: "T2", label: "T2 - Tăng nhiệt, 300-700°C (Tam giác Duval)" };
+  if (a <= L.t_c2h2) {
+    if (e <= L.t1_c2h4) return { zone: "T1", label: "T1 - Tăng nhiệt, t<300°C (Tam giác Duval)" };
+    if (e <= L.t2_c2h4) return { zone: "T2", label: "T2 - Tăng nhiệt, 300-700°C (Tam giác Duval)" };
     return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval)" };
   }
 
-  if (a >= 13 && e > 23 && (e <= 40 || a >= 29)) {
+  if (a >= L.d_c2h2 && e > L.d1_c2h4 && (e <= L.d2_c2h4 || a >= L.d2_c2h2)) {
     return { zone: "D2", label: "D2 - Phóng điện năng lượng cao (Tam giác Duval)" };
   }
-  if (a >= 13 && e <= 23) {
+  if (a >= L.d_c2h2 && e <= L.d1_c2h4) {
     return { zone: "D1", label: "D1 - Phóng điện năng lượng thấp (Tam giác Duval)" };
   }
 
-  if (a <= 15 && e > 50) {
+  if (a <= L.t3_c2h2 && e > L.t2_c2h4) {
     return { zone: "T3", label: "T3 - Tăng nhiệt, t>700°C (Tam giác Duval, vùng %C2H4 cao)" };
   }
 
@@ -638,15 +651,17 @@ function evaluateBang63(totalPercent, voltageClass, applicable) {
 function diagnoseAdditionalRatios(gases, n2, o2) {
   const co = num(gases.CO), co2 = num(gases.CO2);
   const co2_co = co === 0 ? (co2 === 0 ? null : 999) : co2 / co;
+  const R = DIEU54_ADDITIONAL_RATIOS; // ngưỡng cấu hình được (dga-logic-core.js)
+  const vn = (v) => Number(v).toLocaleString("vi-VN");
   let co2coNote;
   if (co2_co === null) {
     co2coNote = "Không đủ dữ liệu để tính (CO và CO2 đều bằng 0).";
-  } else if (co2_co < 3 && co > 1000) {
-    co2coNote = "CO2/CO < 3 và CO > 1000 ppm — có khả năng liên quan đến giấy cách điện bị carbon hóa, cần xác nhận bằng phân tích furanic hoặc đo độ trùng hợp giấy.";
-  } else if (co2_co > 10 && co2 > 10000) {
-    co2coNote = "CO2/CO > 10 và CO2 > 10.000 ppm — có thể do quá nhiệt nhẹ (<160°C) hoặc oxy hóa dầu, đặc biệt ở máy biến áp hở.";
+  } else if (co2_co < R.co2co_low && co > R.co_min) {
+    co2coNote = `CO2/CO < ${vn(R.co2co_low)} và CO > ${vnNum(R.co_min)} ppm — có khả năng liên quan đến giấy cách điện bị carbon hóa, cần xác nhận bằng phân tích furanic hoặc đo độ trùng hợp giấy.`;
+  } else if (co2_co > R.co2co_high && co2 > R.co2_min) {
+    co2coNote = `CO2/CO > ${vn(R.co2co_high)} và CO2 > ${vn(R.co2_min)} ppm — có thể do quá nhiệt nhẹ (<160°C) hoặc oxy hóa dầu, đặc biệt ở máy biến áp hở.`;
   } else {
-    co2coNote = "Không rơi vào 2 điều kiện cảnh báo bổ sung của Điều 54 (CO2/CO<3 và CO>1000 ppm; hoặc CO2/CO>10 và CO2>10.000 ppm).";
+    co2coNote = `Không rơi vào 2 điều kiện cảnh báo bổ sung của Điều 54 (CO2/CO<${vn(R.co2co_low)} và CO>${vnNum(R.co_min)} ppm; hoặc CO2/CO>${vn(R.co2co_high)} và CO2>${vn(R.co2_min)} ppm).`;
   }
 
   const hasN2O2 = n2 !== null && n2 !== undefined && o2 !== null && o2 !== undefined && num(n2) > 0;
@@ -654,10 +669,10 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
   let o2n2Note = "Chưa nhập đủ N2/O2 — bỏ qua tỷ lệ O2/N2.";
   if (hasN2O2) {
     o2_n2 = num(o2) / num(n2);
-    if (o2_n2 < 0.3) {
-      o2n2Note = "O2/N2 < 0,3 — tiêu thụ oxy quá mức do oxy hóa dầu hoặc lão hóa giấy cách điện.";
+    if (o2_n2 < R.o2n2_low) {
+      o2n2Note = `O2/N2 < ${vn(R.o2n2_low)} — tiêu thụ oxy quá mức do oxy hóa dầu hoặc lão hóa giấy cách điện.`;
     } else {
-      o2n2Note = "QĐ1901 chỉ nêu mốc tham khảo O2/N2 ~ 0,5 là bình thường ở thiết bị có tiếp xúc với không khí; văn bản không có thang đầy đủ để phân loại chính xác các giá trị khác — cần đối chiếu thêm kết cấu bình dầu phụ (có màng ngăn hay không) và thực tế vận hành trước khi kết luận.";
+      o2n2Note = `QĐ1901 chỉ nêu mốc tham khảo O2/N2 ~ ${vn(R.o2n2_normal)} là bình thường ở thiết bị có tiếp xúc với không khí; văn bản không có thang đầy đủ để phân loại chính xác các giá trị khác — cần đối chiếu thêm kết cấu bình dầu phụ (có màng ngăn hay không) và thực tế vận hành trước khi kết luận.`;
     }
   }
 
@@ -689,7 +704,7 @@ function dieu54AdvisoryMessages({ additionalRatios, bang63 }) {
     if (additionalRatios.co2_co !== null && additionalRatios.co2coNote && additionalRatios.co2coNote.startsWith("CO2/CO")) {
       msgs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
     }
-    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
+    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < DIEU54_ADDITIONAL_RATIOS.o2n2_low) {
       msgs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
     }
   }
@@ -728,9 +743,9 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
     // chung bên dưới (dành cho Table 1/Bảng 66, cấu trúc 6 mã loại trừ nhau khác hẳn).
     if (bushingCodes && bushingCodes.length > 0) {
       const bushingMsgs = {
-        PD: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): PD — phóng điện cục bộ (CH4/H2 < 0,07) — khuyến cáo đo phóng điện cục bộ bổ sung nếu điều kiện cho phép.",
-        D: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): D — phóng điện (C2H2/C2H4 > 1) — khuyến cáo kiểm tra cách điện, siết lại kết nối, xem xét thí nghiệm điện môi bổ sung.",
-        T: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): T — tăng nhiệt (C2H4/C2H6 > 1) — khuyến cáo kiểm tra mối nối/tiếp xúc, tải vận hành, và nhiệt độ điểm nóng nếu có điều kiện đo.",
+        PD: `Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): PD — phóng điện cục bộ (CH4/H2 < ${vnNum(IEC_A10_BUSHING_RATIOS.pd_h_max)}) — khuyến cáo đo phóng điện cục bộ bổ sung nếu điều kiện cho phép.`,
+        D: `Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): D — phóng điện (C2H2/C2H4 > ${vnNum(IEC_A10_BUSHING_RATIOS.d_g_min)}) — khuyến cáo kiểm tra cách điện, siết lại kết nối, xem xét thí nghiệm điện môi bổ sung.`,
+        T: `Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): T — tăng nhiệt (C2H4/C2H6 > ${vnNum(IEC_A10_BUSHING_RATIOS.t_i_min)}) — khuyến cáo kiểm tra mối nối/tiếp xúc, tải vận hành, và nhiệt độ điểm nóng nếu có điều kiện đo.`,
         TP: "Mã chẩn đoán Bảng A.10 (sứ xuyên, Annex A.5.3): TP — CO2/CO bất thường (nghi liên quan cách điện giấy) — đối chiếu thêm mục 5.5 IEC60599:2022 (CO2/CO<3 thường nghi carbon hóa giấy, CO2/CO>10 có thể là quá nhiệt nhẹ giấy/oxy hóa dầu) và cân nhắc thử nghiệm furan nếu cần xác nhận thêm.",
       };
       bushingCodes.forEach((c) => { if (bushingMsgs[c]) recs.push(bushingMsgs[c]); });
@@ -773,7 +788,7 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
     const oltc = oltcContaminationCheck(gases);
     if (oltc.level !== "none") {
       recs.push(
-        `C2H2/H2 = ${oltc.ratio} ${oltc.level === "likely" ? "> 3" : "trong khoảng 2–3"} — ${oltc.level === "likely" ? "nghi ngờ rõ" : "có thể"} nhiễm khí từ khoang OLTC (Điều 54): lấy mẫu dầu khoang OLTC, phân tích khí hòa tan so sánh với khoang dầu chính, trừ khí nền từ OLTC để tính lại hàm lượng khí trong khoang dầu chính trước khi tra tỷ số khí; kiểm tra tiếp điểm chuyển nấc và độ kín giữa 2 khoang.`
+        `C2H2/H2 = ${vnNum(oltc.ratio)} ${oltc.level === "likely" ? `> ${vnNum(DIEU54_OLTC_C2H2_H2.likely)}` : `trong khoảng ${vnNum(DIEU54_OLTC_C2H2_H2.possible)}–${vnNum(DIEU54_OLTC_C2H2_H2.likely)}`} — ${oltc.level === "likely" ? "nghi ngờ rõ" : "có thể"} nhiễm khí từ khoang OLTC (Điều 54): lấy mẫu dầu khoang OLTC, phân tích khí hòa tan so sánh với khoang dầu chính, trừ khí nền từ OLTC để tính lại hàm lượng khí trong khoang dầu chính trước khi tra tỷ số khí; kiểm tra tiếp điểm chuyển nấc và độ kín giữa 2 khoang.`
       );
     }
   }
