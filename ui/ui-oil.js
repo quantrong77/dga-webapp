@@ -163,6 +163,8 @@ function clearOilForm() {
   $("oilResultsPanel").classList.add("hidden");
   $("oilIec60422Panel").classList.add("hidden");
   resetOilTestEditState();
+  hideOilPreview();
+  if (typeof syncOltcFromMain === "function") syncOltcFromMain();
 }
 
 function resetOilTestEditState() {
@@ -209,6 +211,7 @@ function onEditOilTest(rec) {
     });
   });
   updateOilGroupCounts(true);
+  if (typeof syncOltcFromMain === "function") syncOltcFromMain();
   $("editingOilTestNote").classList.remove("hidden");
   $("btnCancelEditOilTest").classList.remove("hidden");
   $("btnAnalyzeOil").textContent = "Cập nhật & Lưu";
@@ -509,6 +512,8 @@ function oilBbtnClearImport() {
   _oilBbtnImport = null;
   if ($("o_bbtn_file")) $("o_bbtn_file").value = "";
   oilRenderFileLabel();
+  // Giữ khung đối chiếu đang mở (người dùng tự ẩn khi xong); chỉ ẩn nút bật lại khi không còn file
+  if ($("oPreviewCol") && $("oPreviewCol").classList.contains("hidden")) hideOilPreview();
   if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").classList.add("hidden");
 }
 
@@ -574,7 +579,8 @@ async function onOilBbtnFileSelected() {
   const file = $("o_bbtn_file").files && $("o_bbtn_file").files[0];
   _oilBbtnImport = null;
   oilRenderFileLabel();
-  if (!file) return;
+  if (!file) { hideOilPreview(); return; }
+  showOilPreview(file, "Đang đọc BBTN...");
   const note = $("oImportNote");
   note.classList.remove("hidden");
   if (!window.MbaOilBbtn) {
@@ -606,6 +612,7 @@ async function onOilBbtnFileSelected() {
   if (typeof _oilBbtnLastHeader !== "undefined") _oilBbtnLastHeader = parsed.header || null;
   oilFillFromParsed(parsed);
   const hasOltc = oltcFillFromParsed(parsed);
+  if (typeof syncOltcFromMain === "function") syncOltcFromMain();
   const h = parsed.header;
   const lbl = (fields) => fields.map((f) => (DGA.oilParamDef(f) || {}).label || f).join(", ");
   const parts = [];
@@ -622,6 +629,7 @@ async function onOilBbtnFileSelected() {
   note.textContent = `Đã đọc biên bản ${file.name} — ${parts.join(" · ")}. ` + (warn.length ? `Lưu ý: ${warn.join("; ")}. ` : "") +
     (hasOltc ? "Đối chiếu lại rồi bấm \"Đánh giá & Lưu cả biên bản\" (hoặc lưu từng phần ở mỗi khối)." : "Đối chiếu lại với biên bản rồi bấm \"Đánh giá & Lưu\".");
   if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").classList.toggle("hidden", !hasOltc);
+  if ($("oPreviewBadge")) $("oPreviewBadge").textContent = "Đã đọc biên bản";
 }
 
 /** Lưu cả biên bản: phần thùng chính rồi phần OLTC (cùng file đính kèm, cùng bbtn_group_id). */
@@ -637,6 +645,74 @@ async function onSaveOilBbtnAll() {
   }
 }
 
+// ---------------------------------------------------------------------
+// Khung đối chiếu BBTN song song với form (giống tab Khí hòa tan): PDF hiện thẳng trong iframe; .docx
+// chuyển word/document.xml sang HTML (MbaOilBbtn.mbaOilDocxXmlToHtml) rồi hiện bằng blob URL.
+// ---------------------------------------------------------------------
+let _oilPreviewUrl = null;
+
+function oilPreviewRevoke() {
+  if (_oilPreviewUrl) {
+    try { URL.revokeObjectURL(_oilPreviewUrl); } catch (_) {}
+    _oilPreviewUrl = null;
+  }
+}
+
+async function oilPreviewBlob(file) {
+  if (!/\.docx$/i.test(file.name || "")) return file;
+  if (typeof PizZip === "undefined" || !window.MbaOilBbtn || !window.MbaOilBbtn.mbaOilDocxXmlToHtml) return null;
+  const zip = new PizZip(await file.arrayBuffer());
+  const doc = zip.file("word/document.xml");
+  if (!doc) return null;
+  const html = window.MbaOilBbtn.mbaOilDocxHtmlPage(window.MbaOilBbtn.mbaOilDocxXmlToHtml(doc.asText()), file.name);
+  return new Blob([html], { type: "text/html;charset=utf-8" });
+}
+
+async function showOilPreview(file, badgeText) {
+  const col = $("oPreviewCol");
+  const layout = $("oSplitLayout");
+  const frame = $("oPreviewFrame");
+  if (!col || !layout || !frame || !file) return;
+  let blob = null;
+  try {
+    blob = await oilPreviewBlob(file);
+  } catch (err) {
+    console.warn("Không dựng được bản xem BBTN:", err);
+  }
+  if (!blob) return;
+  oilPreviewRevoke();
+  _oilPreviewUrl = URL.createObjectURL(blob);
+  frame.src = _oilPreviewUrl;
+  $("oPreviewFileName").textContent = file.name;
+  $("oPreviewFileName").title = file.name;
+  if (badgeText) $("oPreviewBadge").textContent = badgeText;
+  layout.classList.add("has-preview");
+  col.classList.remove("hidden");
+  $("btnToggleOilPreview").classList.remove("hidden");
+  $("btnToggleOilPreviewText").textContent = "Ẩn BBTN đối chiếu";
+}
+
+function hideOilPreview() {
+  const col = $("oPreviewCol");
+  if (!col) return;
+  col.classList.add("hidden");
+  $("oSplitLayout").classList.remove("has-preview");
+  $("oPreviewFrame").src = "about:blank";
+  oilPreviewRevoke();
+  const hasFile = !!oilBbtnPendingFile();
+  $("btnToggleOilPreview").classList.toggle("hidden", !hasFile);
+  $("btnToggleOilPreviewText").textContent = "Hiện BBTN đối chiếu";
+}
+
+function toggleOilPreview() {
+  if ($("oPreviewCol").classList.contains("hidden")) {
+    const file = oilBbtnPendingFile();
+    if (file) showOilPreview(file, "Đã nạp file");
+  } else {
+    hideOilPreview();
+  }
+}
+
 const OIL_BBTN_ACCEPT_RE = /\.(pdf|docx)$/i;
 
 function setupOilBbtnImport() {
@@ -644,6 +720,14 @@ function setupOilBbtnImport() {
   const zone = $("oDropzone");
   if (!input || !zone) return;
   input.addEventListener("change", onOilBbtnFileSelected);
+  if ($("btnToggleOilPreview")) $("btnToggleOilPreview").addEventListener("click", toggleOilPreview);
+  if ($("btnCloseOilPreview")) $("btnCloseOilPreview").addEventListener("click", hideOilPreview);
+  if ($("btnOilPreviewNewTab")) {
+    $("btnOilPreviewNewTab").addEventListener("click", () => {
+      const src = $("oPreviewFrame").src;
+      if (src && src !== "about:blank") window.open(src, "_blank", "noopener");
+    });
+  }
   if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").addEventListener("click", onSaveOilBbtnAll);
   ["dragenter", "dragover"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add("dragover"); }));
   ["dragleave", "dragend"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove("dragover"); }));

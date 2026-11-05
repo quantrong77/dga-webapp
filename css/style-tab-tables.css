@@ -452,3 +452,13 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
 .oil-param-table .oil-unit { color: var(--text-tertiary); font-size: 12px; }
 tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 #oDropzone { margin-bottom: 10px; }
+
+/* Dầu OLTC: kế thừa thông tin chung của dầu MBA chính (#ot_inherit, ui-oltc.js) */
+.oltc-inherit-toggle { display: flex; align-items: flex-start; gap: 8px; margin: 4px 0 8px; font-weight: 600; cursor: pointer; }
+.oltc-inherit-toggle input { width: auto; margin-top: 3px; }
+.oltc-inherit-summary { display: none; margin: 0 0 12px; }
+#oltcFormPanel.oltc-inherit-on .oltc-inherit-summary { display: block; }
+#oltcFormPanel.oltc-inherit-on .ot-inherit-field { display: none !important; }
+/* Đang mở khung đối chiếu BBTN (form hẹp lại): thu gọn cột để vừa 3 pha A/B/C */
+#oSplitLayout.has-preview .oil-param-table td:first-child { min-width: 150px; }
+#oSplitLayout.has-preview .oil-param-table input, #oSplitLayout.has-preview .oil-param-table select { min-width: 72px; }

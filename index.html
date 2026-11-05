@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v23-oilbbtnexport") {
+          if (k !== "dga-offline-v24-oilpreview") {
             caches.delete(k);
           }
         });
@@ -2087,6 +2087,8 @@
         quả khí hòa tan (áp dụng được cho mọi loại thiết bị, kể cả Sứ xuyên/Khác).</p>
 
       <div id="dauMbaWrap">
+  <div class="dga-input-split-layout" id="oSplitLayout">
+    <div class="dga-input-main-col">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
         <p class="note">Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
@@ -2105,7 +2107,13 @@
         </div>
         <p class="note hidden" id="oImportNote" role="status"></p>
         <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
-        <div style="margin:-4px 0 10px;"><button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button></div>
+        <div style="margin:-4px 0 10px; display:flex; gap:10px; flex-wrap:wrap;">
+          <button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button>
+          <button type="button" class="btn ghost hidden" id="btnToggleOilPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+            <span id="btnToggleOilPreviewText">Hiện BBTN đối chiếu</span>
+          </button>
+        </div>
 
         <div class="loading-hint combo-loading-hint hidden" id="oilComboLoadingHint">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
@@ -2268,7 +2276,7 @@
       <!-- ============== DẦU KHOANG ĐIỀU ÁP DƯỚI TẢI (OLTC) — Điều 37/Bảng 49 ============== -->
       <!-- Gộp chung 1 khối với "Dầu MBA chính" ở trên (#dauMbaWrap) — OLTC là 1 khoang
            dầu phụ CỦA chính MBA/Kháng dầu đó, không phải loại thiết bị độc lập. -->
-      <div class="panel">
+      <div class="panel" id="oltcFormPanel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
         <p class="note">Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
           (đánh giá Độ ẩm + Điện áp chọc thủng; QĐ1901 không quy định ngưỡng tgδ cho dầu OLTC lúc vận hành, chỉ
@@ -2283,15 +2291,22 @@
         <div class="loading-hint combo-loading-hint hidden" id="oltcComboLoadingHint">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
+        <!-- Kế thừa thông tin chung từ form dầu thùng chính phía trên — ẩn các ô bên dưới (lớp .ot-inherit-field),
+             đồng bộ giá trị khi form thùng chính thay đổi và ngay trước khi đánh giá (syncOltcFromMain(), ui-oltc.js). -->
+        <label class="oltc-inherit-toggle">
+          <input id="ot_inherit" type="checkbox" checked />
+          <span>Kế thừa thông tin chung của dầu MBA chính (trạm, thiết bị, cấp điện áp, trạng thái dầu, nhà sản xuất, ngày lấy mẫu, ghi chú)</span>
+        </label>
+        <p class="note oltc-inherit-summary" id="ot_inheritSummary"></p>
         <div class="grid">
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
             <div class="combo-wrap">
               <input id="ot_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
               <button type="button" id="ot_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="ot_tram_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
             <div class="combo-wrap">
               <input id="ot_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
               <button type="button" id="ot_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
@@ -2316,28 +2331,28 @@
               <option value="C">Pha C</option>
             </select>
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
             <select id="ot_voltage_class"></select>
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Trạng thái dầu
             <select id="ot_oilstate">
               <option value="new">Dầu mới (sau lắp đặt/sau sửa chữa)</option>
               <option value="inservice">Dầu vận hành</option>
             </select>
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn — chỉ áp dụng khi Dầu mới)
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn — chỉ áp dụng khi Dầu mới)
             <select id="ot_nsx">
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
           </label>
-          <label class="field hidden" id="ot_membrane_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
+          <label class="field ot-inherit-field hidden" id="ot_membrane_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
             <input id="ot_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV, khi Dầu mới)</span>
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
             <input id="ot_ngay" type="date" />
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
+          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="ot_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
         </div>
@@ -2380,6 +2395,37 @@
         </table></div>
         <p class="note" id="oltcOilHistoryEmpty">Chưa có thí nghiệm dầu OLTC nào được lưu.</p>
       </div>
+    </div><!-- /.dga-input-main-col -->
+
+    <!-- Khung đối chiếu BBTN dầu MBA (PDF hiển thị trực tiếp; .docx chuyển sang HTML để xem —
+         MbaOilBbtn.mbaOilDocxXmlToHtml()) — showOilPreview()/hideOilPreview() ở ui/ui-oil.js. -->
+    <aside class="bbtn-preview-col hidden" id="oPreviewCol" aria-label="Khung đối chiếu Biên bản thí nghiệm dầu MBA">
+      <div class="bbtn-preview-panel">
+        <div class="bbtn-preview-header">
+          <span class="bbtn-preview-title">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+            Biên bản đối chiếu
+          </span>
+          <span class="badge" id="oPreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
+          <span class="bbtn-preview-filename" id="oPreviewFileName" title=""></span>
+          <div class="bbtn-preview-actions">
+            <button type="button" class="btn ghost" id="btnOilPreviewNewTab" title="Mở file ở tab mới" style="padding:3px 8px; font-size:11.5px;">
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-external-link"></use></svg> Mở tab mới
+            </button>
+            <button type="button" class="btn ghost" id="btnCloseOilPreview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu" style="padding:3px 8px; font-size:11.5px;">
+              ✕ Ẩn
+            </button>
+          </div>
+        </div>
+        <div class="bbtn-preview-body">
+          <iframe id="oPreviewFrame" src="about:blank" title="Xem trước Biên bản thí nghiệm dầu MBA" class="bbtn-preview-frame"></iframe>
+        </div>
+        <div class="bbtn-preview-footer">
+          <span>💡 <strong>Đối chiếu:</strong> So sánh số liệu thùng chính và OLTC trong biên bản với các ô nhập liệu bên cạnh trước khi bấm "Đánh giá &amp; Lưu".</span>
+        </div>
+      </div>
+    </aside>
+  </div><!-- /#oSplitLayout -->
       </div><!-- /#dauMbaWrap -->
 
       <!-- ============== DẦU CÁCH ĐIỆN TI/TU — Điều 10/11 QĐ1901 (theo NSX) ============== -->

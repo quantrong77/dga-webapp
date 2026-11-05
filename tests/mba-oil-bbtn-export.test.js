@@ -3,6 +3,18 @@ const path = require("path");
 const DGA = require("../dga-logic.js");
 const X = require("../bbtn/mba-oil-bbtn-export.js");
 
+// Bản đóng gói PizZip gán vào window (như trình duyệt) — nạp 1 lần, dùng chung cho các test
+let _PizZip = null;
+function loadPizZip() {
+  if (!_PizZip) {
+    global.window = {};
+    require("../vendor/docxtemplater/pizzip.min.js");
+    _PizZip = global.window.PizZip;
+    delete global.window;
+  }
+  return _PizZip;
+}
+
 const mainRec = {
   tram: "Trạm 220kV Hàm Tân", thiet_bi: "AT2", sample_date: "2026-10-18", voltage_class: "220", oil_state: "inservice",
   oil_sample_point: "chung", phase: "", bdv_kv: 95.9, tgd_90c_percent: 0.092, moisture_ppm: 8, acid_mgkoh: 0.02,
@@ -84,10 +96,7 @@ describe("Dữ liệu xuất BBTN lý-hóa dầu MBA", () => {
 });
 
 describe("Template BBTN lý-hóa dầu", () => {
-  global.window = {};
-  require("../vendor/docxtemplater/pizzip.min.js");
-  const { PizZip } = global.window;
-  delete global.window;
+  const PizZip = loadPizZip();
   const buf = fs.readFileSync(path.join(__dirname, "..", "template", "template-bbtn-ly-hoa-dau.docx"));
   const text = new PizZip(buf.toString("binary")).file("word/document.xml").asText().replace(/<[^>]+>/g, "");
 
@@ -103,5 +112,40 @@ describe("Template BBTN lý-hóa dầu", () => {
     ["hang_muc", "co_chinh", "chinh", "co_tieu_de", "rows", "co_oltc", "oltc"].forEach((k) => {
       expect((text.match(new RegExp("\\{#" + k + "\\}", "g")) || []).length).toBe((text.match(new RegExp("\\{/" + k + "\\}", "g")) || []).length);
     });
+  });
+});
+
+describe("Xem nhanh file .docx (docx → HTML)", () => {
+  const P = require("../bbtn/mba-oil-bbtn.js");
+  const W = (body) => `<w:document><w:body>${body}</w:body></w:document>`;
+
+  test("đoạn văn: đậm/nghiêng, căn giữa, thoát ký tự HTML", () => {
+    const html = P.mbaOilDocxXmlToHtml(W(
+      '<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/></w:rPr><w:t>KẾT QUẢ</w:t></w:r>' +
+      '<w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve"> (a &lt;b&gt;)</w:t></w:r></w:p>'));
+    expect(html).toBe('<p style="text-align:center"><b>KẾT QUẢ</b><i> (a &lt;b&gt;)</i></p>');
+  });
+
+  test("bảng: gộp ô ngang (gridSpan) và dọc (vMerge); bỏ qua text box", () => {
+    const tc = (txt, pr = "") => `<w:tc><w:tcPr>${pr}</w:tcPr><w:p><w:r><w:t>${txt}</w:t></w:r></w:p></w:tc>`;
+    const html = P.mbaOilDocxXmlToHtml(W(
+      "<w:tbl>" +
+      `<w:tr>${tc("4", '<w:vMerge w:val="restart"/>')}${tc("Tạp chất", '<w:gridSpan w:val="2"/>')}</w:tr>` +
+      `<w:tr>${tc("", "<w:vMerge/>")}${tc("6μm")}${tc("12")}</w:tr>` +
+      "</w:tbl>" +
+      '<w:p><w:r><w:txbxContent><w:p><w:r><w:t>LOGO</w:t></w:r></w:p></w:txbxContent></w:r></w:p>'));
+    expect(html).toContain('<td rowspan="2"><p>4</p></td><td colspan="2"><p>Tạp chất</p></td>');
+    expect(html).toContain("<tr><td><p>6μm</p></td><td><p>12</p></td></tr>");
+    expect(html).not.toContain("LOGO");
+  });
+
+  test("mẫu BBTN thật chuyển được và giữ nội dung bảng", () => {
+    const PizZip = loadPizZip();
+    const buf = fs.readFileSync(path.join(__dirname, "..", "template", "template-bbtn-ly-hoa-dau.docx"));
+    const xml = new PizZip(buf.toString("binary")).file("word/document.xml").asText();
+    const page = P.mbaOilDocxHtmlPage(P.mbaOilDocxXmlToHtml(xml), "x.docx");
+    expect(page).toMatch(/^<!DOCTYPE html>/);
+    expect(page).toContain("KẾT QUẢ THÍ NGHIỆM");
+    expect((page.match(/<table>/g) || []).length).toBeGreaterThanOrEqual(3);
   });
 });

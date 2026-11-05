@@ -36,6 +36,58 @@ function oltcSamplePointLabel(sp) {
   return found ? found.label : sp || "—";
 }
 
+// ---------------------------------------------------------------------
+// Kế thừa thông tin chung từ form dầu MBA chính (#ot_inherit) — khi bật, ẩn các ô .ot-inherit-field và
+// chép giá trị từ form thùng chính (cập nhật mỗi khi form đó đổi và ngay trước khi đánh giá).
+// ---------------------------------------------------------------------
+const OLTC_INHERIT_MAP = [
+  ["o_tram", "ot_tram"], ["o_thietbi", "ot_thietbi"], ["o_oilstate", "ot_oilstate"],
+  ["o_nsx", "ot_nsx"], ["o_ngay", "ot_ngay"], ["o_ghichu", "ot_ghichu"],
+];
+
+function oltcInheritOn() {
+  return !!($("ot_inherit") && $("ot_inherit").checked);
+}
+
+function syncOltcFromMain() {
+  if (!oltcInheritOn()) return;
+  OLTC_INHERIT_MAP.forEach(([from, to]) => { if ($(from) && $(to)) $(to).value = $(from).value; });
+  const vc = $("o_voltage_class").value;
+  ensureOilVoltageOption("ot_voltage_class", vc);
+  $("ot_voltage_class").value = vc;
+  toggleOltcMembraneField();
+  if (!$("ot_membrane_wrap").classList.contains("hidden")) $("ot_membrane").checked = $("o_membrane").checked;
+  const parts = [
+    $("o_tram").value.trim(),
+    $("o_thietbi").value.trim() || "chưa nhập thiết bị",
+    DGA.oilVoltageClassName(vc),
+    $("o_oilstate").value === "new" ? "Dầu mới" : "Dầu vận hành",
+    $("o_ngay").value ? "lấy mẫu " + DGA.formatSampleDate($("o_ngay").value).split("-").reverse().join("/") : "chưa nhập ngày lấy mẫu",
+  ].filter(Boolean);
+  $("ot_inheritSummary").textContent = "Dùng theo dầu MBA chính: " + parts.join(" · ") + ".";
+}
+
+function applyOltcInheritUI() {
+  const on = oltcInheritOn();
+  $("oltcFormPanel").classList.toggle("oltc-inherit-on", on);
+  if (on) syncOltcFromMain();
+}
+
+function setOltcInherit(on) {
+  if (!$("ot_inherit")) return;
+  $("ot_inherit").checked = !!on;
+  applyOltcInheritUI();
+}
+
+function setupOltcInherit() {
+  if (!$("ot_inherit")) return;
+  $("ot_inherit").addEventListener("change", applyOltcInheritUI);
+  OLTC_INHERIT_MAP.map(([from]) => from).concat("o_voltage_class", "o_membrane").forEach((id) => {
+    ["input", "change"].forEach((evt) => $(id).addEventListener(evt, syncOltcFromMain));
+  });
+  applyOltcInheritUI();
+}
+
 // _editingOltcRecords: { col: bản ghi } đang SỬA (rỗng = nhập MỚI).
 let _editingOltcRecords = {};
 
@@ -69,6 +121,7 @@ function oltcSameReportRecords(rec) {
 function onEditOltcOilTest(rec) {
   if (!canEditRecord(rec)) return;
   const group = oltcSameReportRecords(rec).filter((r) => canEditRecord(r));
+  setOltcInherit(false);
   $("ot_tram").value = rec.tram || "";
   $("ot_thietbi").value = rec.thiet_bi || "";
   $("ot_samplepoint").value = rec.oltc_sample_point || "trungtinh";
@@ -110,6 +163,7 @@ function oltcFindExisting(rec) {
 }
 
 async function onAnalyzeOltcOil() {
+  syncOltcFromMain();
   const oltcSamplePoint = $("ot_samplepoint").value || "trungtinh";
   const header = {
     tram: $("ot_tram").value.trim(),

@@ -300,6 +300,109 @@ function mbaOilDocxXmlToLines(xml) {
   return lines;
 }
 
-const MbaOilBbtn = { parseMbaOilBbtnLines, mbaOilDocxXmlToLines, mbaOilFold, mbaOilNumbers, mbaOilVoltageClass, LABELS: MBA_OIL_BBTN_LABELS };
+/** word/document.xml → HTML đơn giản (đoạn văn, bảng có gộp ô, đậm/nghiêng, căn giữa) để XEM ĐỐI CHIẾU file
+ *  .docx ở khung bên cạnh form (trình duyệt không tự hiển thị được .docx trong iframe). Bỏ qua ảnh và
+ *  khung chữ (text box). Chỉ dùng để xem, không dùng để đọc số liệu (đọc số liệu: mbaOilDocxXmlToLines). */
+function mbaOilDocxXmlToHtml(xml) {
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const decode = (s) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&");
+  const val = (attrs) => { const m = /w:val="([^"]*)"/.exec(attrs || ""); return m ? m[1] : null; };
+  const re = /<(\/?)w:(tbl|tr|tc|p|r|t|tab|br|b|i|jc|gridSpan|vMerge|txbxContent)(?=[\s>/])([^>]*?)(\/?)>|([^<]+)/g;
+  const out = [];
+  const tables = []; // { rows: [[cell]], row: [cell] | null, cell: { span, vmerge, html: [] } | null }
+  let para = null; // { align, html }
+  let run = null; // { b, i }
+  let inText = false;
+  let txbx = 0;
+  const renderTable = (t) => {
+    // Gộp ô dọc (vMerge): ô "restart" nhận rowspan = số ô "continue" ngay dưới cùng cột lưới
+    const grid = t.rows.map((cells) => { let col = 0; return cells.map((c) => { const at = col; col += c.span; return { ...c, col: at }; }); });
+    grid.forEach((cells, ri) => cells.forEach((c) => {
+      if (c.vmerge !== "restart") return;
+      let n = 1;
+      for (let k = ri + 1; k < grid.length; k++) {
+        const below = grid[k].find((x) => x.col === c.col);
+        if (!below || below.vmerge !== "continue") break;
+        n++;
+      }
+      c.rowspan = n;
+    }));
+    return "<table>" + grid.map((cells) => "<tr>" + cells.filter((c) => c.vmerge !== "continue").map((c) =>
+      `<td${c.span > 1 ? ` colspan="${c.span}"` : ""}${c.rowspan > 1 ? ` rowspan="${c.rowspan}"` : ""}>${c.html.join("") || "&nbsp;"}</td>`).join("") + "</tr>").join("") + "</table>";
+  };
+  const emit = (html) => {
+    const t = tables[tables.length - 1];
+    if (t && t.cell) t.cell.html.push(html); else out.push(html);
+  };
+  let m;
+  while ((m = re.exec(String(xml || ""))) !== null) {
+    if (m[5] !== undefined) {
+      if (!txbx && inText && para) {
+        let s = esc(decode(m[5]));
+        if (run && run.i) s = `<i>${s}</i>`;
+        if (run && run.b) s = `<b>${s}</b>`;
+        para.html += s;
+      }
+      continue;
+    }
+    const closing = m[1] === "/";
+    const tag = m[2];
+    const selfClose = m[4] === "/";
+    if (tag === "txbxContent") { if (!selfClose) txbx += closing ? -1 : 1; continue; }
+    if (txbx) continue;
+    const top = tables[tables.length - 1];
+    switch (tag) {
+      case "t": inText = !closing && !selfClose; break;
+      case "tab": if (para && !closing) para.html += "&emsp;"; break;
+      case "br": if (para && !closing) para.html += "<br>"; break;
+      case "r": run = closing || selfClose ? null : { b: false, i: false }; break;
+      case "b": case "i": if (run && !closing) run[tag] = val(m[3]) !== "0" && val(m[3]) !== "false"; break;
+      case "jc": if (para && !closing) para.align = val(m[3]); break;
+      case "p":
+        if (!closing && !selfClose) para = { align: null, html: "" };
+        else {
+          const p = para || { align: null, html: "" };
+          const align = p.align === "center" ? "center" : p.align === "right" || p.align === "end" ? "right" : p.align === "both" ? "justify" : "";
+          emit(`<p${align ? ` style="text-align:${align}"` : ""}>${p.html || "&nbsp;"}</p>`);
+          para = null;
+        }
+        break;
+      case "tbl":
+        if (!closing) tables.push({ rows: [], row: null, cell: null });
+        else { const t = tables.pop(); if (t) emit(renderTable(t)); }
+        break;
+      case "tr":
+        if (!top) break;
+        if (!closing) top.row = [];
+        else { if (top.row) top.rows.push(top.row); top.row = null; }
+        break;
+      case "tc":
+        if (!top) break;
+        if (!closing) top.cell = { span: 1, vmerge: null, html: [] };
+        else { if (top.row && top.cell) top.row.push(top.cell); top.cell = null; }
+        break;
+      case "gridSpan": if (top && top.cell) top.cell.span = Math.max(1, parseInt(val(m[3]), 10) || 1); break;
+      case "vMerge": if (top && top.cell) top.cell.vmerge = val(m[3]) === "restart" ? "restart" : "continue"; break;
+      default: break;
+    }
+  }
+  return out.join("\n");
+}
+
+/** Bọc HTML thân thành trang hoàn chỉnh (kiểu dáng giống trang in BBTN) để hiện trong iframe. */
+function mbaOilDocxHtmlPage(bodyHtml, title) {
+  const t = String(title || "BBTN").replace(/[<>&"]/g, "");
+  return `<!DOCTYPE html><html lang="vi"><head><meta charset="utf-8"><title>${t}</title><style>
+body{font-family:"Times New Roman",Times,serif;font-size:13.5px;color:#111;margin:0;padding:18px 22px;background:#fff;}
+p{margin:2px 0;line-height:1.35;}
+table{border-collapse:collapse;width:100%;margin:6px 0 10px;}
+td{border:1px solid #9ca3af;padding:3px 6px;vertical-align:top;}
+td p{margin:0;}
+.note{font-family:system-ui,sans-serif;font-size:11.5px;color:#64748b;border-bottom:1px dashed #cbd5e1;padding-bottom:6px;margin-bottom:10px;}
+</style></head><body><p class="note">Bản xem nhanh nội dung file Word (bỏ qua hình ảnh, định dạng có thể khác bản gốc) — mở file gốc bằng Word nếu cần.</p>
+${bodyHtml}</body></html>`;
+}
+
+const MbaOilBbtn = { parseMbaOilBbtnLines, mbaOilDocxXmlToLines, mbaOilDocxXmlToHtml, mbaOilDocxHtmlPage, mbaOilFold, mbaOilNumbers, mbaOilVoltageClass, LABELS: MBA_OIL_BBTN_LABELS };
 if (typeof window !== "undefined") window.MbaOilBbtn = MbaOilBbtn;
 if (typeof module !== "undefined" && module.exports) module.exports = MbaOilBbtn;
