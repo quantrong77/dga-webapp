@@ -679,8 +679,9 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
   return {
     co2_co: co2_co === null ? null : round1(co2_co),
     co2coNote,
-    // O2/N2 hiển thị 2 chữ số (ngưỡng 0,3 / 0,5 — làm tròn 1 chữ số làm 0,27 thành "0,3" gây hiểu nhầm)
-    o2_n2: o2_n2 === null ? null : Math.round(o2_n2 * 100) / 100,
+    // O2/N2 hiển thị: CẮT (không làm tròn) ở 3 chữ số — làm tròn có thể đẩy 0,2998 thành "0,3" trong khi
+    // số thực vẫn < 0,3 (có cảnh báo), gây mâu thuẫn. Cắt bớt thì số < 0,3 luôn hiện ra < 0,3.
+    o2_n2: o2_n2 === null ? null : Math.floor(o2_n2 * 1000 + 1e-9) / 1000, // +1e-9: bù sai số dấu phẩy động (4,35*1000 = 4349,999…)
     // Giá trị CHƯA làm tròn — dùng để so ngưỡng (dieu54AdditionalFlags), tránh bỏ sót VD O2/N2 = 0,27
     o2_n2_raw: o2_n2,
     co2_co_raw: co2_co,
@@ -707,8 +708,8 @@ function dieu54AdditionalFlags(additionalRatios) {
   const a = additionalRatios;
   return {
     co2co: !!(a && a.co2_co !== null && a.co2coNote && a.co2coNote.startsWith("CO2/CO")),
-    // So bằng giá trị CHƯA làm tròn (o2_n2_raw) — o2_n2 đã làm tròn để hiển thị
-    o2n2: !!(a && a.o2_n2 !== null && (a.o2_n2_raw ?? a.o2_n2) < DIEU54_ADDITIONAL_RATIOS.o2n2_low),
+    // So bằng SỐ THỰC chưa làm tròn (o2_n2_raw) với ngưỡng — o2_n2 chỉ làm tròn để HIỂN THỊ
+    o2n2: !!(a && Number.isFinite(a.o2_n2_raw) && a.o2_n2_raw < DIEU54_ADDITIONAL_RATIOS.o2n2_low),
   };
 }
 

@@ -426,3 +426,12 @@ test("O2/N2 = 0,27 (làm tròn 1 chữ số thành 0,3) vẫn phải cảnh báo
   expect(DGA.dieu54AdvisoryMessages({ additionalRatios: r, bang63: null, equipmentType: "MBA/Kháng dầu" })).toHaveLength(1);
   expect(DGA.dieu54AdvisoryMessages({ additionalRatios: r, bang63: null, equipmentType: "TI (biến dòng điện)" })).toHaveLength(0);
 });
+
+test("O2/N2: so ngưỡng bằng số thực; hiển thị cắt bớt 3 chữ số nên số < 0,3 không bao giờ hiện thành 0,3", () => {
+  const DGA = require("../dga-logic");
+  const at = (ratio) => DGA.diagnoseAdditionalRatios({ CO: 200, CO2: 1500 }, 10000, ratio * 10000);
+  [[0.2998, 0.299, true], [0.29999, 0.299, true], [0.3, 0.3, false], [0.30002, 0.3, false], [4.35, 4.35, false]].forEach(([v, shown, warn]) => {
+    const r = at(v);
+    expect([v, r.o2_n2, DGA.dieu54AdditionalFlags(r).o2n2]).toEqual([v, shown, warn]);
+  });
+});
