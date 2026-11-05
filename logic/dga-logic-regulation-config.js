@@ -435,6 +435,102 @@ function buildRegulationConfigRegistry() {
         { path: [cat, "tgd90", "poor"], label: `Category ${cat} — tgδ 90°C, biên "Kém" (>)`, unit: "%", kind: "number" },
       ]),
     },
+    // ---- Chỉ tiêu lý-hóa dầu MBA bổ sung (dga-logic-oil-extended.js) ----
+    {
+      key: "BANG59_ACID", category: "Dầu MBA — Trị số axit",
+      title: "QĐ1901 Bảng 59 — Trị số axit của dầu MBA (mgKOH/g), không lớn hơn",
+      citationKey: "BANG59_ACID", target: BANG59_ACID,
+      fields: [
+        { path: ["new"], label: "Dầu mới — mọi cấp điện áp", unit: "mgKOH/g", kind: "number" },
+        ...OIL_VOLTAGE_CLASSES.map((vc) => ({ path: ["inservice", vc.value], label: `${vc.label} — Đang vận hành`, unit: "mgKOH/g", kind: "number" })),
+      ],
+    },
+    {
+      key: "DIEU51_FLASH", category: "Dầu MBA — Nhiệt độ chớp cháy",
+      title: "QĐ1901 Điều 51 — Nhiệt độ chớp cháy cốc kín (°C)",
+      citationKey: "DIEU51_FLASH", target: DIEU51_FLASH,
+      fields: [
+        { path: ["new_min"], label: "Dầu mới — không thấp hơn", unit: "°C", kind: "number" },
+        { path: ["max_drop"], label: "Dầu vận hành — mức giảm tối đa so với lần thí nghiệm trước", unit: "°C", kind: "number" },
+      ],
+    },
+    {
+      key: "BANG56_MECH", category: "Dầu MBA — Tạp chất cơ học",
+      title: "QĐ1901 Bảng 56 — Hàm lượng tạp chất cơ học (%), không lớn hơn (đến 110 kV: quan sát bằng mắt)",
+      citationKey: "BANG56_MECH", target: BANG56_MECH,
+      fields: ["220", "500"].flatMap((vc) => ["new", "inservice"].map((st) => ({ path: [vc, st], label: `${vc} kV — ${OIL_STATE_LABELS[st]}`, unit: "%", kind: "number" }))),
+    },
+    {
+      key: "BANG57_PARTICLES", category: "Dầu MBA — Đếm hạt tạp chất",
+      title: "QĐ1901 Bảng 57 — Số lượng hạt tạp chất trong 1 ml dầu, không lớn hơn",
+      citationKey: "BANG57_PARTICLES", target: BANG57_PARTICLES,
+      fields: ["220", "500"].flatMap((vc) => [["p6", "> 6 μm"], ["p14", "> 14 μm"]].flatMap(([k, lb]) =>
+        ["new", "inservice"].map((st) => ({ path: [vc, k, st], label: `${vc} kV — hạt ${lb} — ${OIL_STATE_LABELS[st]}`, unit: "hạt/ml", kind: "number" })))),
+    },
+    {
+      key: "BANG70_RESISTIVITY", category: "Dầu MBA — Điện trở suất",
+      title: "QĐ1901 Bảng 70 — Điện trở suất khối ở 90°C (×10¹² Ω·cm), không nhỏ hơn (để trống = không có số liệu)",
+      citationKey: "BANG70_RESISTIVITY", target: BANG70_RESISTIVITY,
+      fields: ["new", "inservice"].flatMap((st) => ["110", "220", "500"].map((vc) => ({ path: [st, vc], label: `${vc} kV — ${OIL_STATE_LABELS[st]}`, unit: "×10¹² Ω·cm", kind: "number" }))),
+    },
+    {
+      key: "DIEU55_FURFURAL", category: "Dầu MBA — 2-furfural",
+      title: "QĐ1901 Điều 55 — Hàm lượng 2-furfural (MBA ≥110 kV), không quá",
+      citationKey: "DIEU55_FURFURAL", target: DIEU55_FURFURAL,
+      fields: [{ path: ["max_ppm"], label: "Giá trị cho phép", unit: "ppm", kind: "number" }],
+    },
+    {
+      key: "BANG60_62_OXIDATION", category: "Dầu MBA — Độ ổn định ôxi hóa (khi pha trộn dầu)",
+      title: "QĐ1901 Bảng 60–62 — Cặn và trị số axit sau ôxi hóa, tgδ sau ôxi hóa — không lớn hơn",
+      citationKey: "BANG60_62_OXIDATION", target: BANG60_62_OXIDATION,
+      fields: Object.keys(BANG60_62_OXIDATION).flatMap((m) => [
+        { path: [m, "sludge"], label: `${BANG60_62_OXIDATION[m].label} — Khối lượng cặn`, unit: "%", kind: "number" },
+        { path: [m, "acid"], label: `${BANG60_62_OXIDATION[m].label} — Trị số axit`, unit: "mgKOH/g", kind: "number" },
+        { path: [m, "tgd"], label: `${BANG60_62_OXIDATION[m].label} — tgδ 90°C (để trống = không quy định)`, unit: "", kind: "number" },
+      ]),
+    },
+    {
+      key: "IEC60422_2024_TABLE3_NEW", category: "Dầu MBA/Kháng — IEC 60422:2024 (tham khảo, song song QĐ1901)",
+      title: "IEC 60422:2024 Bảng 3 — Dầu mới sau khi nạp vào thiết bị, trước khi đóng điện",
+      citationKey: "IEC60422_2024_TABLE3_NEW", target: IEC60422_2024_TABLE3_NEW,
+      fields: [
+        ...["A", "B", "C"].flatMap((cat) => [
+          { path: [cat, "bdv"], label: `Category ${cat} — Điện áp chọc thủng, tối thiểu`, unit: "kV", kind: "number" },
+          { path: [cat, "moisture"], label: `Category ${cat} — Độ ẩm, tối đa`, unit: "mg/kg", kind: "number" },
+          { path: [cat, "tgd90"], label: `Category ${cat} — tgδ 90°C, tối đa`, unit: "%", kind: "number" },
+        ]),
+        { path: ["common", "color"], label: "Màu sắc ISO 2049, tối đa", unit: "", kind: "number" },
+        { path: ["common", "acid"], label: "Trị số axit, tối đa", unit: "mgKOH/g", kind: "number" },
+        { path: ["common", "ift"], label: "Sức căng bề mặt, tối thiểu", unit: "mN/m", kind: "number" },
+        { path: ["common", "pcb"], label: "PCB — ngưỡng phát hiện", unit: "mg/kg", kind: "number" },
+      ],
+    },
+    {
+      key: "IEC60422_2024_TABLE5_EXTRA", category: "Dầu MBA/Kháng — IEC 60422:2024 (tham khảo, song song QĐ1901)",
+      title: "IEC 60422:2024 Bảng 5 — Chỉ tiêu bổ sung dầu vận hành (biên Tốt/Kém)",
+      citationKey: "IEC60422_2024_TABLE5_MBA", target: IEC60422_2024_TABLE5_EXTRA,
+      fields: [
+        { path: ["color", "good"], label: "Màu sắc — biên Tốt (<)", unit: "", kind: "number" },
+        { path: ["color", "poor"], label: "Màu sắc — biên Kém (>)", unit: "", kind: "number" },
+        ...["A", "B", "C"].flatMap((cat) => [
+          { path: ["acid", cat, "good"], label: `Category ${cat} — Trị số axit, biên Tốt (<)`, unit: "mgKOH/g", kind: "number" },
+          { path: ["acid", cat, "poor"], label: `Category ${cat} — Trị số axit, biên Kém (>)`, unit: "mgKOH/g", kind: "number" },
+          { path: ["resistivity", cat, "good"], label: `Category ${cat} — Điện trở suất 90°C, biên Tốt (>)`, unit: "GΩ·m", kind: "number" },
+          { path: ["resistivity", cat, "poor"], label: `Category ${cat} — Điện trở suất 90°C, biên Kém (<)`, unit: "GΩ·m", kind: "number" },
+        ]),
+        { path: ["ift", "inhibited", "good"], label: "IFT dầu có ức chế — biên Tốt (>)", unit: "mN/m", kind: "number" },
+        { path: ["ift", "inhibited", "poor"], label: "IFT dầu có ức chế — biên Kém (<)", unit: "mN/m", kind: "number" },
+        { path: ["ift", "uninhibited", "good"], label: "IFT dầu không ức chế — biên Tốt (>)", unit: "mN/m", kind: "number" },
+        { path: ["ift", "uninhibited", "poor"], label: "IFT dầu không ức chế — biên Kém (<)", unit: "mN/m", kind: "number" },
+        { path: ["inhibitor", "good"], label: "Chất ức chế — biên Tốt (> % ban đầu)", unit: "%", kind: "number" },
+        { path: ["inhibitor", "poor"], label: "Chất ức chế — biên Kém (< % ban đầu)", unit: "%", kind: "number" },
+        { path: ["passivator", "good"], label: "Chất thụ động — biên Tốt (>)", unit: "mg/kg", kind: "number" },
+        { path: ["passivator", "poor"], label: "Chất thụ động — biên Kém (<)", unit: "mg/kg", kind: "number" },
+        { path: ["sediment_max"], label: "Cặn — bỏ qua nếu nhỏ hơn", unit: "%", kind: "number" },
+        { path: ["sludge_max"], label: "Bùn — bỏ qua nếu nhỏ hơn", unit: "%", kind: "number" },
+        { path: ["flash_drop_pct"], label: "Nhiệt độ chớp cháy — mức giảm tối đa", unit: "%", kind: "number" },
+      ],
+    },
     {
       key: "TERMS_DOCS", category: "Tên văn bản, điều khoản, bảng, phụ lục (hiển thị)",
       title: "Tên văn bản quy định / tiêu chuẩn và phiên bản — đổi ở đây, mọi nơi hiển thị cập nhật theo",

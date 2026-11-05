@@ -10,10 +10,10 @@ afterEach(() => {
 });
 
 describe("Registry", () => {
-  test("có đủ 25 bảng cấu hình được, mỗi bảng có key duy nhất", () => {
+  test("có đủ 34 bảng cấu hình được, mỗi bảng có key duy nhất", () => {
     const keys = DGA.getRegulationConfigRegistry().map((i) => i.key);
-    expect(keys).toHaveLength(25);
-    expect(new Set(keys).size).toBe(25);
+    expect(keys).toHaveLength(34);
+    expect(new Set(keys).size).toBe(34);
     expect(keys).toEqual(expect.arrayContaining(["BANG64_MBA", "BANG12_TI", "BANG65_RATE", "BANG54_BDV", "BANG58_WATER", "BANG49_OLTC"]));
   });
   test("bảng lấy citation mặc định đúng", () => {

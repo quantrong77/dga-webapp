@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v19-alertfilters";
+const CACHE_NAME = "dga-offline-v20-oilparams";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -40,6 +40,7 @@ const PRECACHE_ASSETS = [
   "./logic/dga-logic-oil.js",
   "./logic/dga-logic-instrument-oil.js",
   "./logic/dga-logic-iec60422-2024.js",
+  "./logic/dga-logic-oil-extended.js",
   "./logic/dga-logic-forecast.js",
   "./logic/dga-logic-regulation-config.js",
   "./logic/dga-logic-peer.js",
@@ -69,6 +70,7 @@ const PRECACHE_ASSETS = [
   "./ui/ui-alerts.js",
   "./ui/ui-feedback.js",
   "./bbtn/bbtn-export.js",
+  "./bbtn/mba-oil-bbtn.js",
   "./bbtn/oil-bbtn.js",
   "./bbtn/tech-report-export.js",
   "./ui/ui-batch-import.js",

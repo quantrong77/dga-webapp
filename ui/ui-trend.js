@@ -32,6 +32,11 @@ document.addEventListener("dga:themechange", () => {
 // vd người dùng gõ tự do pha khác) xếp sau theo alphabet.
 const TREND_PHASE_ORDER = { A: 0, B: 1, C: 2 };
 
+/** Chỉ tiêu dầu bổ sung dạng SỐ (bỏ ô chọn và nhóm ôxi hóa — chỉ thử khi pha trộn dầu). */
+function TREND_OIL_EXT_DEFS() {
+  return (DGA.OIL_PARAM_DEFS || []).filter((d) => (d.group === "qd1901" || d.group === "iec") && d.type !== "select");
+}
+
 const TREND_PARAM_DEFS = Object.assign(
   {},
   ...DGA.GASES.map((g) => ({ ["gas:" + g]: { label: g, unit: "ppm", axis: "yGas", field: g } })),
@@ -52,7 +57,10 @@ const TREND_PARAM_DEFS = Object.assign(
     "oltc:moisture": { label: "Độ ẩm dầu OLTC", unit: "ppm", axis: "yMoisture", field: "moisture_ppm" },
     "oltc:tgd90": { label: "tgδ 90°C dầu OLTC", unit: "%", axis: "yTgd", field: "tgd_90c_percent" },
     "oltc:bdv": { label: "Điện áp chọc thủng dầu OLTC", unit: "kV", axis: "yBdv", field: "bdv_kv" },
-  }
+  },
+  // Chỉ tiêu lý-hóa BỔ SUNG của dầu chính (số) — DGA.OIL_PARAM_DEFS nhóm qd1901/iec, mỗi chỉ tiêu 1 trục riêng
+  // (đơn vị khác hẳn nhau). Trục chỉ hiện khi chỉ tiêu đó đang được chọn (xem usedAxes ở renderTrendChart()).
+  ...TREND_OIL_EXT_DEFS().map((d) => ({ ["oil:" + d.key]: { label: d.label, unit: d.unit, axis: "yOil_" + d.key, field: d.field } }))
 );
 
 // Được giữ nguyên khi đổi thiết bị, để người dùng không phải chọn lại các thông số
@@ -281,7 +289,10 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
   };
 
   if (hasGas) buildChecks("trParamsGas", [...DGA.GASES.map((g) => "gas:" + g), "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"]);
-  if (hasOil) buildChecks("trParamsOil", ["oil:moisture", "oil:tgd90", "oil:bdv"]);
+  // Chỉ liệt kê chỉ tiêu bổ sung mà thiết bị này THỰC SỰ có số liệu (tránh danh sách dài toàn ô trống)
+  const oilExtKeys = TREND_OIL_EXT_DEFS().filter((d) => oilRecords.some((r) => r[d.field] !== null && r[d.field] !== undefined && r[d.field] !== ""))
+    .map((d) => "oil:" + d.key);
+  if (hasOil) buildChecks("trParamsOil", ["oil:moisture", "oil:tgd90", "oil:bdv", ...oilExtKeys]);
   if (hasOltc) buildChecks("trParamsOltc", ["oltc:moisture", "oltc:tgd90", "oltc:bdv"]);
 }
 
@@ -323,13 +334,13 @@ function destroyTrendChart() {
   }
 }
 
-const TREND_AXIS_DEFS = {
+const TREND_AXIS_DEFS = Object.assign({
   yGas: { title: "Nồng độ khí (ppm)", position: "left" },
   yTgd: { title: "tgδ 90°C (%)", position: "left" },
   yMoisture: { title: "Độ ẩm dầu (ppm)", position: "right" },
   yBdv: { title: "Điện áp chọc thủng (kV)", position: "right" },
   yBang63: { title: "Tổng hàm lượng khí hòa tan (%)", position: "right" },
-};
+}, ...TREND_OIL_EXT_DEFS().map((d) => ({ ["yOil_" + d.key]: { title: d.label + (d.unit ? ` (${d.unit})` : ""), position: "right" } })));
 
 /** Đọc giá trị 1 điểm dữ liệu cho nhóm "gas:..." ở biểu đồ Xu hướng — 7 khí chính đọc
  *  qua recordGases() (chấp nhận cả 2 kiểu hoa/thường) như cũ; N2/O2 là trường riêng

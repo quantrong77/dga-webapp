@@ -85,9 +85,17 @@ function mapOilVoltageClassToIec60422Category(voltageClass) {
 /** Đánh giá THAM KHẢO dầu MBA/Kháng theo IEC 60422:2024 Bảng 5 — hàm ĐỘC LẬP với
  *  evaluateOilTest() (QĐ1901), gọi thêm ở UI để hiển thị khối riêng, KHÔNG ảnh hưởng
  *  "Kết luận chung" theo QĐ1901 hiện có. */
-function evaluateIec60422MbaOilTest({ voltageClass, moisture, tgd90, bdv }) {
+function evaluateIec60422MbaOilTest({ voltageClass, moisture, tgd90, bdv, oilState, extra, prevFlashPoint, inhibited }) {
   const category = mapOilVoltageClassToIec60422Category(voltageClass);
   const limits = IEC60422_2024_TABLE5_MBA[category];
+  // Dầu MỚI (sau khi nạp, trước đóng điện) -> Bảng 3; dầu vận hành -> Bảng 5 (như trước). Chỉ tiêu bổ sung:
+  // evaluateIec60422ExtendedMba() (dga-logic-oil-extended.js).
+  if (oilState === "new") {
+    const rowsNew = [...evaluateIec60422NewOilBase({ voltageClass, moisture, tgd90, bdv }),
+      ...(extra ? evaluateIec60422ExtendedMba({ voltageClass, oilState, extra, prevFlashPoint, inhibited }) : [])];
+    return { rows: rowsNew, overall: oilOverallFromRows(rowsNew), category,
+      categoryLabel: IEC60422_2024_CATEGORY_LABEL_MBA[category] + " — Bảng 3 (dầu mới)" };
+  }
   const refBase = REGULATION_CITATIONS.IEC60422_2024_TABLE5_MBA + " — " + IEC60422_2024_CATEGORY_LABEL_MBA[category];
 
   function limitText(good, poor, direction) {
@@ -119,6 +127,7 @@ function evaluateIec60422MbaOilTest({ voltageClass, moisture, tgd90, bdv }) {
       verdict: verdictTwoTierOil(v, limits.bdv.good, limits.bdv.poor, "ge"), ref: refBase,
     });
   }
+  if (extra) rows.push(...evaluateIec60422ExtendedMba({ voltageClass, oilState, extra, prevFlashPoint, inhibited }));
 
   let overall;
   if (rows.length === 0) overall = "Chưa đủ dữ liệu";

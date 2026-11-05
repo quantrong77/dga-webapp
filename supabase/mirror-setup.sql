@@ -172,6 +172,34 @@ alter table instrument_oil_tests
   add column if not exists bbtn_group_id text, add column if not exists bbtn_info text,
   add column if not exists bbtn_file_id text, add column if not exists bbtn_url text,
   add column if not exists bbtn_name text;
+-- Thí nghiệm dầu MBA: chỉ tiêu lý-hóa BỔ SUNG (QĐ1901 Điều 48–56, IEC 60422:2024) + BBTN đính kèm.
+alter table oil_tests
+  add column if not exists acid_mgkoh numeric,
+  add column if not exists flash_point_c numeric,
+  add column if not exists mech_visual text,
+  add column if not exists mech_impurity_percent numeric,
+  add column if not exists particles_6um numeric,
+  add column if not exists particles_14um numeric,
+  add column if not exists resistivity_90c_e12 numeric,
+  add column if not exists furfural_ppm numeric,
+  add column if not exists color_iso2049 numeric,
+  add column if not exists appearance text,
+  add column if not exists ift_mnm numeric,
+  add column if not exists corrosive_sulfur text,
+  add column if not exists pcb_mgkg numeric,
+  add column if not exists sediment_percent numeric,
+  add column if not exists sludge_percent numeric,
+  add column if not exists inhibitor_pct_original numeric,
+  add column if not exists passivator_mgkg numeric,
+  add column if not exists oil_inhibited text,
+  add column if not exists ox_method text,
+  add column if not exists ox_sludge_percent numeric,
+  add column if not exists ox_acid_mgkoh numeric,
+  add column if not exists ox_tgd numeric,
+  add column if not exists bbtn_group_id text,
+  add column if not exists bbtn_file_id text,
+  add column if not exists bbtn_url text,
+  add column if not exists bbtn_name text;
 alter table feedback
   add column if not exists image_file_id text, add column if not exists created_by text,
   add column if not exists updated_by text, add column if not exists updated_at timestamptz;

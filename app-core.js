@@ -486,6 +486,7 @@ async function initApp() {
   $("btnCancelEditOilTest").addEventListener("click", clearOilForm);
   $("o_voltage_class").addEventListener("change", toggleOilMembraneField);
   $("o_samplepoint").addEventListener("change", toggleOilPhaseField);
+  setupOilBbtnImport();
   $("btnAnalyzeOltcOil").addEventListener("click", onAnalyzeOltcOil);
   $("btnClearOltcOilForm").addEventListener("click", clearOltcOilForm);
   $("btnCancelEditOltcOilTest").addEventListener("click", clearOltcOilForm);

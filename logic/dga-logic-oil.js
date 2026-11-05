@@ -99,7 +99,7 @@ function resolveOilLimits({ voltageClass, oilState, hasMembraneN2, manufacturer 
  * oilState: "new" (dầu mới, sau lắp đặt/sau sửa chữa) hoặc "inservice" (dầu vận hành).
  * manufacturer/manufacturerOilStandards: tùy chọn — bỏ qua thì luôn dùng QĐ1901.
  */
-function evaluateOilTest({ voltageClass, oilState, hasMembraneN2, moisture, tgd90, bdv, manufacturer, manufacturerOilStandards }) {
+function evaluateOilTest({ voltageClass, oilState, hasMembraneN2, moisture, tgd90, bdv, manufacturer, manufacturerOilStandards, extra, prevFlashPoint, oxMethod }) {
   const state = oilState === "new" ? "new" : "inservice";
   const resolved = resolveOilLimits({ voltageClass, oilState: state, hasMembraneN2, manufacturer }, manufacturerOilStandards);
 
@@ -130,7 +130,13 @@ function evaluateOilTest({ voltageClass, oilState, hasMembraneN2, moisture, tgd9
     });
   }
 
-  const overall = rows.length === 0 ? "Chưa đủ dữ liệu" : rows.every((r) => r.verdict === "Đạt") ? "Đạt" : "Không đạt";
+  // Chỉ tiêu lý-hóa BỔ SUNG (axit, chớp cháy, tạp chất, điện trở suất, 2-FAL...) — dga-logic-oil-extended.js.
+  // Không truyền "extra" (bản ghi/caller cũ) thì giữ nguyên 3 chỉ tiêu như trước.
+  if (extra) rows.push(...evaluateOilExtendedQd1901({ voltageClass, oilState: state, extra, prevFlashPoint, oxMethod }));
+  rows.forEach((r) => { if (r.limitText === undefined) r.limitText = oilLimitText(r.limit, r.direction); });
+
+  // Dòng "Không có ngưỡng" (chỉ ghi nhận) không làm thay đổi kết luận — xem oilOverallFromRows().
+  const overall = oilOverallFromRows(rows);
   return { rows, overall };
 }
 

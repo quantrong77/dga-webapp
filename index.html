@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v19-alertfilters") {
+          if (k !== "dga-offline-v20-oilparams") {
             caches.delete(k);
           }
         });
@@ -893,7 +893,7 @@
           <div class="table-scroll"><table>
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
             </tr></thead>
             <tbody id="lichsuOilHistoryTable"></tbody>
           </table></div>
@@ -2089,11 +2089,21 @@
       <div id="dauMbaWrap">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
-        <p class="note">Đánh giá 3 hạng mục: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp chọc
-          thủng dầu (kV) — theo Bảng 58/55/54, Điều 50/47/46 QĐ1901, phân theo cấp điện áp MBA. Chỉ áp dụng cho
-          MBA/Kháng dầu — QĐ1901 không có bảng riêng cho dầu TI/TU (theo quy định nhà sản xuất). IEC 60599:2022
-          không tự quy định giới hạn cho 3 hạng mục này (thuộc phạm vi IEC 60422) nên công cụ chỉ đối chiếu theo
-          đúng bảng số liệu của QĐ1901.</p>
+        <p class="note">Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
+          theo dõi xu hướng. Dầu <strong>thùng chung 3 pha</strong> nhập 1 cột "Kết quả"; dầu <strong>thùng riêng từng
+          pha</strong> nhập 3 cột Pha A/B/C (cột để trống = pha đó không thí nghiệm). Đánh giá theo QĐ1901: chỉ tiêu cơ
+          bản (Bảng 54, 55, 58) và chỉ tiêu lý-hóa bổ sung (Điều 48–56: trị số axit, chớp cháy, tạp chất cơ học, đếm hạt,
+          điện trở suất, 2-furfural, màu sắc, độ ổn định ôxi hóa khi pha trộn dầu); song song tham khảo IEC 60422:2024
+          (Bảng 3 dầu mới / Bảng 5 dầu vận hành, gồm cả các chỉ tiêu QĐ1901 không quy định: sức căng bề mặt, PCB, lưu
+          huỳnh ăn mòn, cặn/bùn, chất ức chế...). Chỉ nhập những chỉ tiêu có trong biên bản.</p>
+
+        <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem bbtn/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
+        <div class="file-dropzone" id="oDropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file PDF BBTN dầu MBA (mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
+          <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf" />
+        </div>
+        <p class="note hidden" id="oImportNote" role="status"></p>
 
         <div class="loading-hint combo-loading-hint hidden" id="oilComboLoadingHint">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
@@ -2155,14 +2165,22 @@
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="o_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-droplet"></use></svg>Loại dầu (chất ức chế ôxi hóa) — tùy chọn
+            <select id="o_inhibited" title="Dùng cho ngưỡng sức căng bề mặt (IFT) theo IEC 60422:2024">
+              <option value="">— Chưa rõ —</option>
+              <option value="inhibited">Dầu có chất ức chế</option>
+              <option value="uninhibited">Dầu không ức chế</option>
+            </select>
+          </label>
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Phương pháp thử ôxi hóa (khi pha trộn dầu) — tùy chọn
+            <select id="o_oxmethod"><option value="">— Không thử —</option></select>
+          </label>
         </div>
 
         <div class="section-title">Kết quả thí nghiệm</div>
-        <div class="grid gases">
-          <label class="field">Độ ẩm dầu (ppm) <input id="o_moisture" type="number" min="0" step="0.1" /></label>
-          <label class="field">Tổn hao điện môi tgδ ở 90°C (%) <input id="o_tgd90" type="number" min="0" step="0.01" /></label>
-          <label class="field">Điện áp chọc thủng (kV) <input id="o_bdv" type="number" min="0" step="0.1" /></label>
-        </div>
+        <!-- Bảng chỉ tiêu theo nhóm, sinh từ DGA.OIL_PARAM_DEFS — renderOilParamTable() (ui-oil.js):
+             1 cột "Kết quả" (thùng dầu chung) hoặc 3 cột Pha A/B/C (thùng dầu riêng từng pha). -->
+        <div id="o_paramTableWrap"></div>
 
         <p class="note hidden" id="editingOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
         <div style="margin-top:18px; display:flex; gap:10px;">
@@ -2201,7 +2219,7 @@
         <div class="table-scroll"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
           </tr></thead>
           <tbody id="oilHistoryTable"></tbody>
         </table></div>
@@ -3722,6 +3740,7 @@
   <script src="logic/dga-logic-oil.js"></script>
   <script src="logic/dga-logic-instrument-oil.js"></script>
   <script src="logic/dga-logic-iec60422-2024.js"></script>
+  <script src="logic/dga-logic-oil-extended.js"></script>
   <script src="logic/dga-logic-forecast.js"></script>
   <script src="logic/dga-logic-regulation-config.js"></script>
   <script src="logic/dga-logic-peer.js"></script>
@@ -3753,6 +3772,7 @@
   <script src="ui/ui-dga-workflow.js"></script>
   <script src="ui/ui-dga.js"></script>
   <script src="bbtn/bbtn-export.js"></script>
+  <script src="bbtn/mba-oil-bbtn.js"></script>
   <script src="bbtn/oil-bbtn.js"></script>
   <script src="bbtn/tech-report-export.js"></script>
   <script src="ui/ui-batch-import.js"></script>

@@ -6,6 +6,8 @@ on:
       - main
       # TAM THOI: deploy thu nhanh sua dang nhap Google truoc khi merge — xoa dong nay sau khi merge
       - fix/khoi-phuc-dang-nhap-google
+      # TAM THOI: thu tab Ly-Hoa dau mo rong — xoa dong nay truoc khi merge
+      - feat/ly-hoa-dau-mo-rong
   workflow_dispatch:
 
 permissions:

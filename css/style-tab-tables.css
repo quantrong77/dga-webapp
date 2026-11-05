@@ -440,3 +440,15 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
 #alertsTable tr.alert-row-stale > td { opacity: 0.72; background: color-mix(in srgb, var(--warn) 7%, transparent); }
 #alertsTable tr.alert-row-stale:hover > td { opacity: 1; }
 #alertsStaleNote { color: var(--warn); font-weight: 600; }
+
+/* Tab "Lý-Hóa dầu": bảng nhập chỉ tiêu dầu MBA theo nhóm (renderOilParamTable(), ui-oil.js) */
+.oil-param-group { margin: 10px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.oil-param-group > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; list-style-position: inside; }
+.oil-param-group[open] > summary { border-bottom: 1px solid var(--border); }
+.oil-param-group .oil-group-count { font-weight: 500; color: var(--btn-primary); font-size: 12.5px; }
+.oil-param-group .table-scroll { margin: 0; }
+.oil-param-table td:first-child { min-width: 260px; }
+.oil-param-table input, .oil-param-table select { width: 100%; min-width: 110px; }
+.oil-param-table .oil-unit { color: var(--text-tertiary); font-size: 12px; }
+tr.oil-result-phase-head > td { background: var(--surface-sunken); }
+#oDropzone { margin-bottom: 10px; }

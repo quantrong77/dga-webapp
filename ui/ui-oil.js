@@ -1,14 +1,9 @@
-/* ui-oil.js — Tab "Dầu cách điện": thí nghiệm dầu chính MBA/Kháng dầu (độ ẩm, tgδ
-   90°C, điện áp chọc thủng — Bảng 58/55/54 QĐ1901). Tách từ app.js — xem ui-auth.js
-   đầu file đó để biết quy ước chia sẻ scope giữa các file ui-*.js. */
+/* ui-oil.js — Tab "Lý-Hóa dầu": thí nghiệm dầu chính MBA/Kháng dầu — 3 chỉ tiêu cơ bản (độ ẩm, tgδ 90°C,
+   điện áp chọc thủng — Bảng 58/55/54 QĐ1901) + các chỉ tiêu lý-hóa BỔ SUNG (Điều 48–56 QĐ1901, IEC 60422:2024
+   — xem logic/dga-logic-oil-extended.js). Nhập mới hoặc nhập lại BBTN lịch sử (đọc PDF — bbtn/mba-oil-bbtn.js);
+   thùng dầu chung (1 cột) hoặc riêng từng pha (3 cột A/B/C, lưu thành 3 bản ghi cùng bbtn_group_id).
+   Tách từ app.js — xem ui-auth.js đầu file đó để biết quy ước chia sẻ scope giữa các file ui-*.js. */
 
-// ---------------------------------------------------------------------
-// Tab "Dầu cách điện" — Độ ẩm dầu (ppm), tgδ ở 90°C (%), Điện áp chọc thủng
-// dầu (kV), theo Bảng 58/55/54 QĐ1901 (Điều 50/47/46), phân theo cấp điện áp
-// MBA. Chỉ áp dụng MBA/Kháng dầu. IEC 60599:2022 không tự quy định 3 hạng mục
-// này (thuộc phạm vi IEC 60422) nên chỉ đối chiếu theo đúng bảng của QĐ1901 —
-// xem DGA.evaluateOilTest() trong dga-logic.js.
-// ---------------------------------------------------------------------
 function populateOilVoltageClasses() {
   const optionsHtml = DGA.OIL_VOLTAGE_CLASSES.map(
     (c) => `<option value="${c.value}">${escapeHtml(c.label)}</option>`
@@ -18,13 +13,102 @@ function populateOilVoltageClasses() {
   $("o_samplepoint").innerHTML = DGA.OIL_SAMPLE_POINTS.map(
     (p) => `<option value="${p.value}">${escapeHtml(p.label)}</option>`
   ).join("");
+  if ($("o_oxmethod")) {
+    $("o_oxmethod").innerHTML = '<option value="">— Không thử —</option>' + Object.entries(DGA.BANG60_62_OXIDATION)
+      .map(([k, v]) => `<option value="${k}">${escapeHtml(v.label)}</option>`).join("");
+  }
+  renderOilParamTable(false);
 }
 
-// Pha (A/B/C) chỉ có ý nghĩa khi MBA/Kháng lấy mẫu kiểu "pharieng" (3 pha rời, mỗi
-// pha 1 thùng dầu/1 mẫu riêng, thường gặp ở 500kV) — "chung" là 1 mẫu đại diện cho
-// cả 3 pha nên ẩn hẳn ô chọn Pha, giống hệt toggleOltcPhaseField() ở dầu OLTC.
+// ---------------------------------------------------------------------
+// Bảng nhập chỉ tiêu (1 cột "Kết quả" hoặc 3 cột Pha A/B/C)
+// ---------------------------------------------------------------------
+function oilFormCols() {
+  return $("o_samplepoint").value === "pharieng" ? ["A", "B", "C"] : ["X"];
+}
+function oilColLabel(col) {
+  return col === "X" ? "Kết quả" : "Pha " + col;
+}
+function oilInputId(field, col) {
+  return `o_p_${field}_${col}`;
+}
+
+/** Đọc toàn bộ ô nhập hiện có: { col: { field: value } } (chỉ ô có giá trị). */
+function readOilParamValues() {
+  const out = {};
+  ["X", "A", "B", "C"].forEach((col) => {
+    DGA.OIL_PARAM_DEFS.forEach((d) => {
+      const el = $(oilInputId(d.field, col));
+      if (!el || el.value === "") return;
+      out[col] = out[col] || {};
+      out[col][d.field] = d.type === "select" ? el.value : Number(el.value);
+    });
+  });
+  return out;
+}
+
+/** Vẽ lại bảng nhập theo điểm lấy mẫu; preserve: giữ số đã gõ (chuyển chung <-> pha riêng: cột "Kết quả"
+ *  <-> "Pha A"). */
+function renderOilParamTable(preserve = true) {
+  const wrap = $("o_paramTableWrap");
+  if (!wrap) return;
+  const cols = oilFormCols();
+  const old = preserve ? readOilParamValues() : {};
+  if (cols.length === 3 && old.X && !old.A) old.A = old.X;
+  if (cols.length === 1 && !old.X && old.A) old.X = old.A;
+
+  wrap.innerHTML = ["base", "qd1901", "iec", "oxidation"].map((g) => {
+    const defs = DGA.OIL_PARAM_DEFS.filter((d) => d.group === g);
+    const rows = defs.map((d) => {
+      const cells = cols.map((col) => {
+        const id = oilInputId(d.field, col);
+        const aria = `${d.label}${col === "X" ? "" : " pha " + col}`;
+        if (d.type === "select") {
+          return `<td><select id="${id}" aria-label="${escapeHtml(aria)}"><option value="">—</option>${d.options
+            .map((o) => `<option value="${o.value}">${escapeHtml(o.label)}</option>`).join("")}</select></td>`;
+        }
+        return `<td><input id="${id}" type="number" step="${d.step || "any"}" aria-label="${escapeHtml(aria)}" /></td>`;
+      }).join("");
+      return `<tr><td>${escapeHtml(d.label)}${d.unit ? ` <span class="oil-unit">(${escapeHtml(d.unit)})</span>` : ""}</td>${cells}</tr>`;
+    }).join("");
+    return `<details class="oil-param-group" data-group="${g}"${g === "base" ? " open" : ""}>
+      <summary>${escapeHtml(DGA.OIL_GROUP_LABELS[g])}<span class="oil-group-count" data-count-for="${g}"></span></summary>
+      <div class="table-scroll"><table class="oil-param-table"><thead><tr><th>Chỉ tiêu</th>${cols
+        .map((c) => `<th>${c === "X" ? "" : `<span class="phase-dot ${c.toLowerCase()}"></span>`}${oilColLabel(c)}</th>`).join("")}</tr></thead>
+      <tbody>${rows}</tbody></table></div></details>`;
+  }).join("");
+
+  Object.entries(old).forEach(([col, vals]) => {
+    if (!cols.includes(col)) return;
+    Object.entries(vals).forEach(([field, v]) => { const el = $(oilInputId(field, col)); if (el) el.value = v; });
+  });
+  wrap.querySelectorAll("input, select").forEach((el) => el.addEventListener("input", updateOilGroupCounts));
+  wrap.querySelectorAll("select").forEach((el) => el.addEventListener("change", updateOilGroupCounts));
+  updateOilGroupCounts(true);
+}
+
+/** Số chỉ tiêu đã nhập của từng nhóm (hiện cạnh tiêu đề nhóm); openFilled: mở sẵn nhóm có số liệu. */
+function updateOilGroupCounts(openFilled) {
+  const vals = readOilParamValues();
+  ["base", "qd1901", "iec", "oxidation"].forEach((g) => {
+    const fields = new Set();
+    Object.values(vals).forEach((v) => Object.keys(v).forEach((f) => {
+      const d = DGA.oilParamDef(f);
+      if (d && d.group === g) fields.add(f);
+    }));
+    const badge = document.querySelector(`[data-count-for="${g}"]`);
+    if (badge) badge.textContent = fields.size ? ` — đã nhập ${fields.size} chỉ tiêu` : "";
+    if (openFilled === true && fields.size) {
+      const det = document.querySelector(`.oil-param-group[data-group="${g}"]`);
+      if (det) det.open = true;
+    }
+  });
+}
+
+// Pha giờ chọn bằng CỘT trong bảng nhập (#o_phase_wrap luôn ẩn, giữ trong DOM cho tương thích).
 function toggleOilPhaseField() {
-  $("o_phase_wrap").classList.toggle("hidden", $("o_samplepoint").value !== "pharieng");
+  $("o_phase_wrap").classList.add("hidden");
+  renderOilParamTable(true);
 }
 
 function oilSamplePointLabel(sp) {
@@ -32,9 +116,7 @@ function oilSamplePointLabel(sp) {
   return found ? found.label : sp || "—";
 }
 
-// "Có bảo vệ màng/nitơ" chỉ có ý nghĩa với các cấp điện áp mà Bảng 58 phân biệt
-// 2 mức (có/không màng) — suy ra trực tiếp từ DGA.bang58WaterLimits() thay vì
-// lặp lại danh sách cấp điện áp ở đây, để luôn khớp với dga-logic.js.
+// "Có bảo vệ màng/nitơ" chỉ có ý nghĩa với các cấp điện áp mà Bảng 58 phân biệt 2 mức (có/không màng).
 function toggleOilMembraneField() {
   const vc = $("o_voltage_class").value;
   const withMembrane = DGA.bang58WaterLimits(vc, true);
@@ -44,172 +126,264 @@ function toggleOilMembraneField() {
   if (!applicable) $("o_membrane").checked = false;
 }
 
-// _editingOilTestId: id của thí nghiệm dầu MBA đang SỬA (null = đang nhập MỚI).
-let _editingOilTestId = null;
+// _editingOilRecords: { col: bản ghi } đang SỬA (rỗng = nhập MỚI) — mở 1 bản ghi pha riêng sẽ nạp cả các
+// pha cùng biên bản (cùng bbtn_group_id, hoặc cùng thiết bị + ngày lấy mẫu).
+let _editingOilRecords = {};
+let _oilBbtnFileInfo = null; // tên file BBTN vừa đọc (để hiện ghi chú)
 
 function clearOilForm() {
-  ["o_tram", "o_thietbi", "o_ghichu", "o_moisture", "o_tgd90", "o_bdv"].forEach((id) => ($(id).value = ""));
+  ["o_tram", "o_thietbi", "o_ghichu"].forEach((id) => ($(id).value = ""));
   $("o_membrane").checked = false;
   $("o_nsx").value = "";
+  $("o_inhibited").value = "";
+  $("o_oxmethod").value = "";
   $("o_samplepoint").value = "chung";
-  toggleOilPhaseField();
+  if ($("o_bbtn_file")) $("o_bbtn_file").value = "";
+  oilRenderFileLabel();
+  $("oImportNote").classList.add("hidden");
+  $("o_phase_wrap").classList.add("hidden");
+  renderOilParamTable(false);
   $("oilResultsPanel").classList.add("hidden");
   $("oilIec60422Panel").classList.add("hidden");
   resetOilTestEditState();
 }
 
 function resetOilTestEditState() {
-  _editingOilTestId = null;
+  _editingOilRecords = {};
   $("editingOilTestNote").classList.add("hidden");
   $("btnCancelEditOilTest").classList.add("hidden");
   $("btnAnalyzeOil").textContent = "Đánh giá & Lưu";
 }
 
-/** Nạp 1 thí nghiệm dầu MBA đã lưu lên form để sửa — xem onEditMeasurement() ở trên. */
+/** Các bản ghi CÙNG biên bản với rec (pha riêng): cùng bbtn_group_id, hoặc cùng Trạm+Thiết bị+ngày. */
+function oilSameReportRecords(rec) {
+  if (rec.oil_sample_point !== "pharieng") return [rec];
+  const day = (r) => DGA.formatSampleDate(r.sample_date);
+  return _allOilTests.filter((r) => r.oil_sample_point === "pharieng" && (rec.bbtn_group_id
+    ? r.bbtn_group_id === rec.bbtn_group_id
+    : !r.bbtn_group_id && r.tram === rec.tram && r.thiet_bi === rec.thiet_bi && day(r) === day(rec)));
+}
+
+/** Nạp thí nghiệm dầu MBA đã lưu lên form để sửa (kèm các pha cùng biên bản). */
 function onEditOilTest(rec) {
   if (!canEditRecord(rec)) return;
-  _editingOilTestId = rec.id;
+  const group = oilSameReportRecords(rec).filter((r) => canEditRecord(r));
   $("o_tram").value = rec.tram || "";
   $("o_thietbi").value = rec.thiet_bi || "";
   $("o_samplepoint").value = rec.oil_sample_point || "chung";
-  toggleOilPhaseField();
-  if (rec.oil_sample_point === "pharieng") $("o_phase").value = rec.phase || "A";
   $("o_voltage_class").value = rec.voltage_class || "";
   toggleOilMembraneField();
   $("o_oilstate").value = rec.oil_state || "inservice";
   $("o_nsx").value = rec.manufacturer || "";
   $("o_membrane").checked = !!rec.has_membrane_n2;
+  $("o_inhibited").value = rec.oil_inhibited || "";
+  $("o_oxmethod").value = rec.ox_method || "";
   $("o_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
-  $("o_moisture").value = rec.moisture_ppm ?? "";
-  $("o_tgd90").value = rec.tgd_90c_percent ?? "";
-  $("o_bdv").value = rec.bdv_kv ?? "";
   $("o_ghichu").value = rec.ghi_chu || "";
+  renderOilParamTable(false);
+  _editingOilRecords = {};
+  group.forEach((r) => {
+    const col = rec.oil_sample_point === "pharieng" ? (r.phase || "A") : "X";
+    _editingOilRecords[col] = r;
+    DGA.OIL_PARAM_DEFS.forEach((d) => {
+      const el = $(oilInputId(d.field, col));
+      if (el && r[d.field] !== null && r[d.field] !== undefined && r[d.field] !== "") el.value = r[d.field];
+    });
+  });
+  updateOilGroupCounts(true);
   $("editingOilTestNote").classList.remove("hidden");
   $("btnCancelEditOilTest").classList.remove("hidden");
   $("btnAnalyzeOil").textContent = "Cập nhật & Lưu";
-  // Đảm bảo khối "Dầu MBA chính" đang HIỆN (không bị #dau_equipmenttype ẩn đi vì đang
-  // để ở loại khác) trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
+  // Đảm bảo khối "Dầu MBA chính" đang HIỆN trước khi cuộn tới — xem toggleDauEquipmentType(), app-core.js.
   $("dau_equipmenttype").value = DGA.EQUIPMENT_TYPES.MBA;
   toggleDauEquipmentType();
   document.querySelector('button.tab-btn[data-tab="dau"]').click();
   $("o_tram").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+/** Bản ghi đã lưu cùng thiết bị + ngày + pha (để không tạo dòng trùng khi nhập lại cùng 1 biên bản). */
+function oilFindExisting(rec) {
+  const day = DGA.formatSampleDate(rec.sample_date);
+  const key = DGA.oilSeriesKey(rec);
+  return _allOilTests.find((r) => DGA.oilSeriesKey(r) === key && DGA.formatSampleDate(r.sample_date) === day &&
+    (r.oil_sample_point || "chung") === (rec.oil_sample_point || "chung")) || null;
+}
+
 async function onAnalyzeOil() {
   const oilSamplePoint = $("o_samplepoint").value || "chung";
-  const phase = oilSamplePoint === "pharieng" ? $("o_phase").value : "";
   const voltageClass = $("o_voltage_class").value;
   const oilState = $("o_oilstate").value;
   const hasMembraneN2 = !$("o_membrane_wrap").classList.contains("hidden") && $("o_membrane").checked;
   const manufacturer = $("o_nsx").value || null;
-
-  const oilTest = {
-    id: _editingOilTestId || undefined,
+  const header = {
     tram: $("o_tram").value.trim(),
     thiet_bi: $("o_thietbi").value.trim(),
     oil_sample_point: oilSamplePoint,
-    phase,
     voltage_class: voltageClass,
     oil_state: oilState,
     has_membrane_n2: hasMembraneN2,
     manufacturer,
     sample_date: $("o_ngay").value,
-    moisture_ppm: $("o_moisture").value === "" ? null : Number($("o_moisture").value),
-    tgd_90c_percent: $("o_tgd90").value === "" ? null : Number($("o_tgd90").value),
-    bdv_kv: $("o_bdv").value === "" ? null : Number($("o_bdv").value),
     ghi_chu: $("o_ghichu").value.trim(),
+    oil_inhibited: $("o_inhibited").value || "",
+    ox_method: $("o_oxmethod").value || "",
   };
-
-  if (!oilTest.thiet_bi || !oilTest.sample_date) {
+  if (!header.thiet_bi || !header.sample_date) {
     notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
     return;
   }
-  if (oilTest.moisture_ppm === null && oilTest.tgd_90c_percent === null && oilTest.bdv_kv === null) {
-    notifyError("Vui lòng nhập ít nhất 1 trong 3 giá trị: Độ ẩm dầu, tgδ ở 90°C, hoặc Điện áp chọc thủng dầu.");
+  const vals = readOilParamValues();
+  const cols = oilFormCols().filter((c) => vals[c] && Object.keys(vals[c]).length > 0);
+  if (cols.length === 0) {
+    notifyError(oilSamplePoint === "pharieng"
+      ? "Vui lòng nhập kết quả cho ít nhất 1 pha (A, B hoặc C)."
+      : "Vui lòng nhập ít nhất 1 chỉ tiêu thí nghiệm.");
     return;
   }
-  if (alertIfNegative([
-    { label: "Độ ẩm dầu", value: oilTest.moisture_ppm },
-    { label: "tgδ ở 90°C", value: oilTest.tgd_90c_percent },
-    { label: "Điện áp chọc thủng", value: oilTest.bdv_kv },
-  ])) return;
+  const negatives = [];
+  cols.forEach((c) => Object.entries(vals[c]).forEach(([f, v]) => {
+    const d = DGA.oilParamDef(f);
+    if (d && d.type !== "select") negatives.push({ label: d.label + (c === "X" ? "" : ` (pha ${c})`), value: v });
+  }));
+  if (alertIfNegative(negatives)) return;
 
-  const evalResult = DGA.evaluateOilTest({
-    voltageClass, oilState, hasMembraneN2, manufacturer,
-    manufacturerOilStandards: toOilStandardsForLogic(_allStandards),
-    moisture: oilTest.moisture_ppm, tgd90: oilTest.tgd_90c_percent, bdv: oilTest.bdv_kv,
+  const records = cols.map((col) => {
+    const rec = { ...header, phase: col === "X" ? "" : col };
+    DGA.OIL_PARAM_DEFS.forEach((d) => { rec[d.field] = vals[col][d.field] ?? null; });
+    const editing = _editingOilRecords[col] || null;
+    const existing = editing || oilFindExisting(rec);
+    if (existing) {
+      rec.id = existing.id;
+      rec.created_at = existing.created_at;
+      rec.bbtn_group_id = existing.bbtn_group_id || "";
+      rec.bbtn_file_id = existing.bbtn_file_id;
+      rec.bbtn_url = existing.bbtn_url;
+      rec.bbtn_name = existing.bbtn_name;
+      rec._overwrite = !editing;
+    }
+    return rec;
   });
-  renderOilResults(evalResult);
+  const overwrite = records.filter((r) => r._overwrite);
+  records.forEach((r) => delete r._overwrite);
 
-  // Tham khảo SONG SONG — IEC 60422:2024 Bảng 5 (Category A/B/C) — xem dga-logic-
-  // iec60422-2024.js. KHÔNG ảnh hưởng evalResult/việc lưu ở trên, chỉ hiển thị thêm.
-  const iecResult = DGA.evaluateIec60422MbaOilTest({
-    voltageClass, moisture: oilTest.moisture_ppm, tgd90: oilTest.tgd_90c_percent, bdv: oilTest.bdv_kv,
-  });
-  renderOilIec60422Results(iecResult);
+  // Hiện kết quả đánh giá TRƯỚC (kể cả khi người dùng chọn không ghi đè bản ghi cũ)
+  const stds = toOilStandardsForLogic(_allStandards);
+  const all = _allOilTests || [];
+  const results = records.map((rec) => ({
+    col: rec.phase || "X", rec,
+    qd: DGA.evaluateOilRecord(rec, stds, all),
+    iec: DGA.evaluateIec60422OilRecord(rec, all),
+  }));
+  renderOilResults(results);
+  renderOilIec60422Results(results);
 
-  // Lưu vào lịch sử — mọi user đã đăng nhập đều lưu được, y hệt onAnalyze().
   if (!canSaveEntry()) return;
-  const wasEditing = !!_editingOilTestId;
+  if (overwrite.length) {
+    const what = overwrite.some((r) => r.phase) ? `của ${overwrite.map((r) => "pha " + r.phase).join(", ")} ` : "";
+    if (!confirm(`Đã có thí nghiệm dầu ${what}của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
+  }
+  const wasEditing = Object.keys(_editingOilRecords).length > 0;
+  const file = $("o_bbtn_file") && $("o_bbtn_file").files && $("o_bbtn_file").files[0];
+  const groupId = records.find((r) => r.bbtn_group_id)?.bbtn_group_id ||
+    (records.length > 1 || file ? Storage.newId() : "");
+  records.forEach((r) => { if (groupId) r.bbtn_group_id = groupId; });
 
+  const btn = $("btnAnalyzeOil");
+  btn.disabled = true;
   try {
-    await Storage.addOilTest(oilTest);
-    await registerStationIfNew(oilTest.tram);
+    if (file) {
+      try {
+        const attachment = await Storage.uploadAttachment(groupId, file);
+        records.forEach((rec) => Object.assign(rec, attachment));
+      } catch (err) {
+        notifyError("Đã hiển thị kết quả, nhưng CHƯA LƯU vì không tải được file BBTN lên: " + storageErrorMessage(err));
+        return;
+      }
+    }
+    const saved = [];
+    try {
+      for (const rec of records) {
+        await Storage.addOilTest(rec);
+        saved.push(rec.phase ? "pha " + rec.phase : "mẫu chung");
+      }
+    } catch (err) {
+      notifyError(`Đã hiển thị kết quả đánh giá; đã lưu ${saved.length ? saved.join(", ") : "0 bản ghi"}, phần còn lại LƯU THẤT BẠI: ${storageErrorMessage(err)}`);
+      await refreshOilTestsUI();
+      return;
+    }
+    await registerStationIfNew(header.tram);
     resetOilTestEditState();
+    if ($("o_bbtn_file")) $("o_bbtn_file").value = "";
+    oilRenderFileLabel();
     await refreshOilTestsUI();
-    if (wasEditing) showToast("Đã cập nhật thí nghiệm dầu.");
-  } catch (err) {
-    notifyError("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
+    showToast(`${wasEditing ? "Đã cập nhật" : "Đã lưu"} thí nghiệm dầu: ${saved.join(", ")}.`);
+  } finally {
+    btn.disabled = false;
   }
 }
 
-function renderOilResults(evalResult) {
-  $("oilResultsPanel").classList.remove("hidden");
-  $("o_overall").innerHTML =
-    evalResult.overall === "Đạt" ? `<span class="pill ok">Đạt</span>`
-    : evalResult.overall === "Chưa đủ dữ liệu" ? `<span class="pill muted">Chưa đủ dữ liệu</span>`
+function oilOverallPill(overall) {
+  return overall === "Đạt" ? `<span class="pill ok">Đạt</span>`
+    : overall === "Chưa đủ dữ liệu" ? `<span class="pill muted">Chưa đủ dữ liệu</span>`
+    : overall === "Cảnh báo" ? `<span class="pill warn">Cảnh báo</span>`
     : `<span class="pill bad">Không đạt</span>`;
-  $("o_resultTable").innerHTML = evalResult.rows.map((r) => `
+}
+
+function oilRowValue(r) {
+  return escapeHtml(typeof r.value === "number" ? String(r.value) : r.value ?? "—");
+}
+
+/** Kết quả QĐ1901 — 1 hoặc nhiều cột (pha); results: [{ col, qd, iec }]. */
+function renderOilResults(results) {
+  $("oilResultsPanel").classList.remove("hidden");
+  const multi = results.length > 1 || results[0].col !== "X";
+  $("o_overall").innerHTML = results.map((x) => (multi ? `<span style="margin-right:6px; font-size:14px; font-weight:600;">${oilColLabel(x.col)}:</span>` : "") +
+    oilOverallPill(x.qd.overall)).join('<span style="margin:0 10px; color:var(--text-tertiary);">|</span>');
+  $("o_resultTable").innerHTML = results.map((x) => {
+    const head = multi ? `<tr class="oil-result-phase-head"><td colspan="6"><span class="phase-dot ${x.col.toLowerCase()}"></span><strong>${oilColLabel(x.col)}</strong> — ${oilOverallPill(x.qd.overall)}</td></tr>` : "";
+    return head + x.qd.rows.map((r) => `
     <tr>
-      <td>${r.label}</td><td>${r.value}</td>
-      <td>${r.direction === "ge" ? "≥ " : "≤ "}${r.limit}</td>
-      <td>${r.unit}</td><td>${verdictPill(r.verdict)}</td>
-      <td style="font-size:12px;">${r.ref}</td>
-    </tr>
-  `).join("");
+      <td>${escapeHtml(r.label)}</td><td>${oilRowValue(r)}</td>
+      <td>${escapeHtml(r.limitText ?? "—")}</td>
+      <td>${escapeHtml(r.unit || "")}</td><td>${verdictPill(r.verdict)}</td>
+      <td style="font-size:12px;">${escapeHtml(r.ref || "")}</td>
+    </tr>`).join("");
+  }).join("");
   if (typeof $("oilResultsPanel").scrollIntoView === "function") {
     $("oilResultsPanel").scrollIntoView({ behavior: "smooth", block: "start" });
   }
 }
 
-/** Hiển thị khối "Tham khảo — IEC 60422:2024" cho dầu MBA — xem
- *  DGA.evaluateIec60422MbaOilTest() (dga-logic-iec60422-2024.js). Panel RIÊNG,
- *  KHÔNG dùng chung #oilResultsPanel/#o_overall với QĐ1901 để tránh nhầm lẫn 2 hệ
- *  đánh giá độc lập. */
-function renderOilIec60422Results(iecResult) {
-  // Dùng tioVerdictPill() (ui-ti-oil.js, cùng scope global) thay vì verdictPill() ở
-  // trên — verdictPill() KHÔNG có nhánh riêng cho "Cảnh báo" (mọi giá trị khác "Đạt"/
-  // "Không có ngưỡng" đều vẽ đỏ "Không đạt"), trong khi hệ 3 mức Tốt/Cần theo
-  // dõi/Kém của IEC 60422:2024 LUÔN có thể ra "Cảnh báo" (= "Cần theo dõi").
+/** Khối "Tham khảo — IEC 60422:2024" (Bảng 3 dầu mới / Bảng 5 dầu vận hành) — panel RIÊNG với QĐ1901. */
+function renderOilIec60422Results(results) {
   $("oilIec60422Panel").classList.remove("hidden");
-  $("o_iec_overall").innerHTML = tioVerdictPill(iecResult.overall);
-  $("o_iec_resultTable").innerHTML = iecResult.rows.map((r) => `
+  const multi = results.length > 1 || results[0].col !== "X";
+  $("o_iec_overall").innerHTML = results.map((x) => (multi ? `<span style="margin-right:6px; font-size:14px; font-weight:600;">${oilColLabel(x.col)}:</span>` : "") +
+    tioVerdictPill(x.iec.overall)).join('<span style="margin:0 10px; color:var(--text-tertiary);">|</span>');
+  $("o_iec_resultTable").innerHTML = results.map((x) => {
+    const head = multi ? `<tr class="oil-result-phase-head"><td colspan="6"><span class="phase-dot ${x.col.toLowerCase()}"></span><strong>${oilColLabel(x.col)}</strong> — ${tioVerdictPill(x.iec.overall)}</td></tr>` : "";
+    return head + x.iec.rows.map((r) => `
     <tr>
-      <td>${r.label}</td><td>${r.value}</td>
-      <td>${r.limit}</td>
-      <td>${r.unit}</td><td>${tioVerdictPill(r.verdict)}</td>
-      <td style="font-size:12px;">${r.ref}</td>
-    </tr>
-  `).join("");
+      <td>${escapeHtml(r.label)}</td><td>${oilRowValue(r)}</td>
+      <td>${escapeHtml(r.limit ?? "—")}</td>
+      <td>${escapeHtml(r.unit || "")}</td><td>${tioVerdictPill(r.verdict)}</td>
+      <td style="font-size:12px;">${escapeHtml(r.ref || "")}</td>
+    </tr>`).join("");
+  }).join("");
 }
 
-/** Vẽ danh sách dòng thí nghiệm dầu MBA chính vào 1 bảng bất kỳ (tbody/emptyId truyền
- *  vào) — tách riêng khỏi refreshOilTestsUI() để DÙNG CHUNG cho cả bảng "gốc" ở tab
- *  "Dầu cách điện" (#oilHistoryTable) LẪN bảng mirror chỉ-để-xem ở tab "Lịch sử đo"
- *  (#lichsuOilHistoryTable, xem refreshLichSuOilTable() ở ui-history.js) — tránh lặp
- *  lại y hệt logic tính evalResult/dựng HTML ở 2 nơi rồi dễ lệch nhau về sau. Nút "Sửa"
- *  LUÔN nhảy sang tab "Dầu cách điện" (onEditOilTest() đã tự làm việc này) — bảng mirror
- *  không có form nhập liệu riêng nên không thể sửa tại chỗ. */
+/** Ô "Chỉ tiêu bổ sung" ở bảng lịch sử: số chỉ tiêu đã nhập + các chỉ tiêu Không đạt. */
+function oilExtraSummaryHtml(rec, evalResult) {
+  const n = Object.keys(DGA.oilExtraFromRecord(rec)).length;
+  if (!n) return "—";
+  const baseKeys = new Set(["moisture", "tgd90", "bdv"]);
+  const bad = evalResult.rows.filter((r) => !baseKeys.has(r.key) && r.verdict === "Không đạt").map((r) => r.label);
+  return `<span title="${escapeHtml(Object.keys(DGA.oilExtraFromRecord(rec)).map((f) => (DGA.oilParamDef(f) || {}).label || f).join(", "))}">${n} chỉ tiêu</span>` +
+    (bad.length ? `<div style="font-size:11px; color:var(--bad);">Không đạt: ${escapeHtml(bad.join(", "))}</div>` : "");
+}
+
+/** Vẽ danh sách dòng thí nghiệm dầu MBA chính vào 1 bảng bất kỳ — dùng CHUNG cho bảng ở tab "Lý-Hóa dầu"
+ *  (#oilHistoryTable) và bảng chỉ-để-xem ở tab "Lịch sử đo" (#lichsuOilHistoryTable). */
 function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
   const tbody = $(tbodyId);
   if (!tbody) return;
@@ -219,16 +393,7 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
 
   const oilStandardsForLogic = toOilStandardsForLogic(_allStandards);
   sortedRecords.forEach((rec) => {
-    const evalResult = DGA.evaluateOilTest({
-      voltageClass: rec.voltage_class, oilState: rec.oil_state, hasMembraneN2: rec.has_membrane_n2,
-      manufacturer: rec.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
-      moisture: rec.moisture_ppm, tgd90: rec.tgd_90c_percent, bdv: rec.bdv_kv,
-    });
-    const overallPill =
-      evalResult.overall === "Đạt" ? verdictPill("Đạt")
-      : evalResult.overall === "Chưa đủ dữ liệu" ? `<span class="pill muted">Chưa đủ dữ liệu</span>`
-      : verdictPill("Không đạt");
-
+    const evalResult = DGA.evaluateOilRecord(rec, oilStandardsForLogic, _allOilTests);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
@@ -241,7 +406,8 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
       <td>${escapeHtml(rec.moisture_ppm ?? "—")}</td>
       <td>${escapeHtml(rec.tgd_90c_percent ?? "—")}</td>
       <td>${escapeHtml(rec.bdv_kv ?? "—")}</td>
-      <td>${overallPill}</td>
+      <td style="font-size:12px;">${oilExtraSummaryHtml(rec, evalResult)}</td>
+      <td>${oilOverallPill(evalResult.overall)}</td>
       <td>${ownerCellHtml(rec)}</td>
       <td class="actions-cell">${rowActionsHtml([
         rowActionBtn("view", "eye",
@@ -285,13 +451,109 @@ async function refreshOilTestsUI() {
   _allOilTests = all;
   const sorted = all.slice().sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
   renderOilTestRows("oilHistoryTable", "oilHistoryEmpty", sorted);
-  // Mirror ở tab "Lịch sử đo" (xem ui-history.js) — có thể chưa tải xong lúc hàm này
-  // chạy lần đầu (thứ tự <script> tag), nhưng vì initApp() chỉ GỌI hàm này (không
-  // định nghĩa) sau khi mọi script đã tải xong nên luôn tồn tại tới lúc chạy thật.
   if (typeof refreshLichSuOilTable === "function") refreshLichSuOilTable();
 
   refreshTrendDeviceOptions();
   refreshAlertsUI();
+}
+
+// ---------------------------------------------------------------------
+// Đọc BBTN dầu MBA (PDF) — nhập biên bản mới hoặc lịch sử
+// ---------------------------------------------------------------------
+function oilRenderFileLabel() {
+  const input = $("o_bbtn_file");
+  const label = $("oDropzoneText");
+  if (!input || !label) return;
+  const file = input.files && input.files[0];
+  $("oDropzone").classList.toggle("has-file", !!file);
+  label.innerHTML = file
+    ? `Đã chọn: <strong>${escapeHtml(file.name)}</strong> — file sẽ được đính kèm khi lưu. <span class="file-dropzone-link">Chọn file khác</span>`
+    : 'Kéo thả file PDF BBTN dầu MBA (mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span>';
+}
+
+/** Điền form từ kết quả MbaOilBbtn.parseMbaOilBbtnLines() — chỉ ghi đè ô ĐỌC ĐƯỢC. */
+function oilFillFromParsed(parsed) {
+  const h = parsed.header || {};
+  if (h.tram && !$("o_tram").value.trim()) $("o_tram").value = h.tram;
+  if (h.thietBi && !$("o_thietbi").value.trim()) $("o_thietbi").value = h.thietBi;
+  if (h.ngay) $("o_ngay").value = h.ngay;
+  if (h.voltageClass) { $("o_voltage_class").value = h.voltageClass; toggleOilMembraneField(); }
+  if (h.oilState) $("o_oilstate").value = h.oilState;
+  $("o_samplepoint").value = parsed.threePhase ? "pharieng" : ($("o_samplepoint").value === "pharieng" ? "pharieng" : "chung");
+  renderOilParamTable(false);
+  const cols = oilFormCols();
+  Object.entries(parsed.values || {}).forEach(([col, vals]) => {
+    const target = cols.length === 3 && col === "X" ? "A" : col;
+    Object.entries(vals).forEach(([field, v]) => { const el = $(oilInputId(field, target)); if (el) el.value = v; });
+  });
+  updateOilGroupCounts(true);
+}
+
+async function onOilBbtnFileSelected() {
+  oilRenderFileLabel();
+  const file = $("o_bbtn_file").files && $("o_bbtn_file").files[0];
+  if (!file) return;
+  const note = $("oImportNote");
+  note.classList.remove("hidden");
+  if (!window.BbtnImport || !window.BbtnImport.readLines || !window.MbaOilBbtn) {
+    note.textContent = "Bộ đọc PDF chưa tải xong hoặc tải lỗi — vui lòng thử lại sau vài giây, hoặc nhập tay.";
+    return;
+  }
+  note.textContent = "Đang đọc biên bản...";
+  let parsed;
+  let viaOCR = false;
+  try {
+    const read = await window.BbtnImport.readLines(file, (m) => {
+      if (m && m.status === "recognizing text") {
+        note.textContent = "File là ảnh scan — đang nhận diện chữ (OCR)" + (typeof m.progress === "number" ? ` (${Math.round(m.progress * 100)}%)` : "") + "...";
+      }
+    });
+    viaOCR = read.viaOCR;
+    parsed = window.MbaOilBbtn.parseMbaOilBbtnLines(read.lines);
+  } catch (err) {
+    note.textContent = "Không đọc được file này — vui lòng nhập tay. (" + ((err && err.message) || err) + ")";
+    return;
+  }
+  if (!parsed.matched.length) {
+    note.textContent = "Không nhận ra chỉ tiêu dầu nào trong file này — vui lòng nhập tay (file vẫn được đính kèm khi lưu).";
+    return;
+  }
+  // Biên bản mới = nhập mới (bỏ liên kết với bản ghi đang sửa nếu có)
+  resetOilTestEditState();
+  oilFillFromParsed(parsed);
+  const labels = parsed.matched.map((f) => (DGA.oilParamDef(f) || {}).label || f);
+  const warn = [];
+  if (viaOCR) warn.push("file là ảnh scan, số liệu đọc bằng OCR nên cần so kỹ từng ô");
+  if (!parsed.header.ngay) warn.push("chưa đọc được Ngày lấy mẫu");
+  if (!parsed.header.thietBi) warn.push("chưa đọc được tên Thiết bị");
+  note.textContent = `Đã đọc ${labels.length} chỉ tiêu${parsed.threePhase ? " cho 3 pha A/B/C" : ""}: ${labels.join(", ")}. ` +
+    (warn.length ? `Lưu ý: ${warn.join("; ")}. ` : "") +
+    "Đối chiếu lại với biên bản (Cấp điện áp, Trạng thái dầu, các ô số) rồi bấm \"Đánh giá & Lưu\".";
+}
+
+function setupOilBbtnImport() {
+  const input = $("o_bbtn_file");
+  const zone = $("oDropzone");
+  if (!input || !zone) return;
+  input.addEventListener("change", onOilBbtnFileSelected);
+  ["dragenter", "dragover"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.add("dragover"); }));
+  ["dragleave", "dragend"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); zone.classList.remove("dragover"); }));
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    zone.classList.remove("dragover");
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!file) return;
+    if (file.type !== "application/pdf" && !/\.pdf$/i.test(file.name)) {
+      const note = $("oImportNote");
+      note.textContent = `Chỉ nhận file PDF — "${file.name}" không phải PDF.`;
+      note.classList.remove("hidden");
+      return;
+    }
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
 }
 
 // ---------------------------------------------------------------------

@@ -185,6 +185,14 @@ const OILTEST_HEADERS = [
   // trước khi có 2 cột này để trống — web app mặc định coi là "chung" (xem
   // oilPhaseIdentity()/oilSamplePointLabel() ở ui-oil.js/ui-alerts.js — || "chung").
   "oil_sample_point", "phase",
+  // Chỉ tiêu lý-hóa BỔ SUNG (QĐ1901 Điều 48–56, IEC 60422:2024 — logic/dga-logic-oil-extended.js) + BBTN
+  // đính kèm (1 file dùng chung cho các pha cùng biên bản, nối bằng bbtn_group_id). Thêm ở CUỐI (xem lưu ý
+  // ở STANDARD_HEADERS) — bản ghi cũ để trống các cột này, getOrCreateSheet() tự nâng cấp hàng tiêu đề.
+  "acid_mgkoh", "flash_point_c", "mech_visual", "mech_impurity_percent", "particles_6um", "particles_14um",
+  "resistivity_90c_e12", "furfural_ppm", "color_iso2049", "appearance", "ift_mnm", "corrosive_sulfur",
+  "pcb_mgkg", "sediment_percent", "sludge_percent", "inhibitor_pct_original", "passivator_mgkg", "oil_inhibited",
+  "ox_method", "ox_sludge_percent", "ox_acid_mgkoh", "ox_tgd", "bbtn_group_id", "bbtn_file_id",
+  "bbtn_url", "bbtn_name",
 ];
 
 // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49. Sheet TÁCH RIÊNG

@@ -922,7 +922,11 @@ async function onAnalyzeOil() {
   const oilState = $("o_oilstate").value;
   const hasMembraneN2 = !$("o_membrane_wrap").classList.contains("hidden") && $("o_membrane").checked;
   const manufacturer = $("o_nsx").value || null;
+  // Sửa bản ghi cũ: GIỮ các trường bản mobile không có ô nhập (điểm lấy mẫu/pha, chỉ tiêu lý-hóa bổ sung,
+  // BBTN đính kèm... do bản web nhập) — nếu không, lưu lại sẽ ghi đè trống các cột đó.
+  const existingOil = _editingOilTestId ? (_allOilTests || []).find((r) => r.id === _editingOilTestId) : null;
   const oilTest = {
+    ...(existingOil || {}),
     id: _editingOilTestId || undefined,
     tram: $("o_tram").value.trim(),
     thiet_bi: $("o_thietbi").value.trim(),

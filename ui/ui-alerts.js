@@ -187,7 +187,7 @@ function collectAllAlerts() {
 function alertLanDoHtml(a) {
   const parts = [];
   if (a.lanDo !== undefined && a.lanDo !== null && a.lanDo !== "—" && a.lanDo !== "") parts.push(`<div><b>Lần ${escapeHtml(a.lanDo)}</b></div>`);
-  if (a.ordinal) parts.push(`<div style="font-size:11px; color:var(--muted);">thứ ${a.ordinal}/${a.total} lần đo</div>`);
+  if (a.ordinal) parts.push(`<div style="font-size:11px; color:var(--text-tertiary);">thứ ${a.ordinal}/${a.total} lần đo</div>`);
   if (a.isLatest === false && a.newerRecord) {
     const nr = a.newerRecord;
     const nrLan = nr.lan_do !== undefined && nr.lan_do !== null && nr.lan_do !== "" ? `, Lần ${nr.lan_do}` : "";
@@ -454,11 +454,8 @@ function computeOilAlerts() {
   groups.forEach((records) => {
     const sorted = alertSortRecordsDescending(records);
     const latest = sorted[0];
-    const evalResult = DGA.evaluateOilTest({
-      voltageClass: latest.voltage_class, oilState: latest.oil_state, hasMembraneN2: latest.has_membrane_n2,
-      manufacturer: latest.manufacturer || null, manufacturerOilStandards: oilStandardsForLogic,
-      moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent, bdv: latest.bdv_kv,
-    });
+    // Gồm cả chỉ tiêu lý-hóa bổ sung (axit, chớp cháy, tạp chất...) — DGA.evaluateOilRecord() (dga-logic-oil-extended.js)
+    const evalResult = DGA.evaluateOilRecord(latest, oilStandardsForLogic, _allOilTests);
     if (evalResult.overall !== "Không đạt") return; // bỏ qua "Đạt"/"Chưa đủ dữ liệu"
 
     const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
@@ -486,7 +483,7 @@ function computeOilAlerts() {
       // Pha ĐỊNH DANH THIẾT BỊ đã chuẩn hóa (xem oilPhaseIdentity() phía trên file).
       identityPhase: oilPhaseIdentity(latest.oil_sample_point, latest.phase),
       reasons: failing.map((r) =>
-        `${r.label}: ${r.value} ${r.unit} (giới hạn ${r.direction === "ge" ? "≥" : "≤"} ${r.limit} ${r.unit}, ${r.ref}).`
+        `${r.label}: ${r.value}${r.unit ? " " + r.unit : ""} (giới hạn ${r.limitText ?? `${r.direction === "ge" ? "≥" : "≤"} ${r.limit}`}${r.unit && r.limit !== null && r.limit !== undefined ? " " + r.unit : ""}, ${r.ref}).`
       ),
       action: "Lấy mẫu dầu bổ sung xác nhận; xem xét lọc/sấy chân không hoặc thay dầu theo hướng dẫn nhà sản xuất; " +
         "đối chiếu thêm kết quả phân tích khí hòa tan (DGA) cùng thời điểm nếu có; báo cáo cấp có thẩm quyền theo " +
