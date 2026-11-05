@@ -679,7 +679,11 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
   return {
     co2_co: co2_co === null ? null : round1(co2_co),
     co2coNote,
-    o2_n2: o2_n2 === null ? null : round1(o2_n2),
+    // O2/N2 hiển thị 2 chữ số (ngưỡng 0,3 / 0,5 — làm tròn 1 chữ số làm 0,27 thành "0,3" gây hiểu nhầm)
+    o2_n2: o2_n2 === null ? null : Math.round(o2_n2 * 100) / 100,
+    // Giá trị CHƯA làm tròn — dùng để so ngưỡng (dieu54AdditionalFlags), tránh bỏ sót VD O2/N2 = 0,27
+    o2_n2_raw: o2_n2,
+    co2_co_raw: co2_co,
     o2n2Note,
   };
 }
@@ -698,16 +702,28 @@ function diagnoseAdditionalRatios(gases, n2, o2) {
  *  lặp lại ghi chú "bình thường"/"chưa đủ dữ liệu" — những ghi chú đó đã hiển thị đầy đủ
  *  trong bảng kết quả riêng ở tab "DGA"). Trả về mảng chuỗi, rỗng nếu không có gì đáng
  *  cảnh báo. */
-function dieu54AdvisoryMessages({ additionalRatios, bang63 }) {
+/** Cờ cảnh báo tỷ lệ bổ sung Điều 54: { co2co, o2n2 } — true khi rơi vào điều kiện cảnh báo. */
+function dieu54AdditionalFlags(additionalRatios) {
+  const a = additionalRatios;
+  return {
+    co2co: !!(a && a.co2_co !== null && a.co2coNote && a.co2coNote.startsWith("CO2/CO")),
+    // So bằng giá trị CHƯA làm tròn (o2_n2_raw) — o2_n2 đã làm tròn để hiển thị
+    o2n2: !!(a && a.o2_n2 !== null && (a.o2_n2_raw ?? a.o2_n2) < DIEU54_ADDITIONAL_RATIOS.o2n2_low),
+  };
+}
+
+/** Điều 54 chỉ quy định cho MBA/Kháng dầu ("Phân tích khí hòa tan trong dầu MBA") — TI/TU, sứ xuyên,
+ *  loại khác KHÔNG áp tỷ lệ bổ sung/Bảng 63. equipmentType không truyền -> coi như áp dụng (tương thích cũ). */
+function dieu54Applies(equipmentType) {
+  return equipmentType === undefined || equipmentType === null || equipmentType === "" || equipmentType === EQUIPMENT_TYPES.MBA;
+}
+
+function dieu54AdvisoryMessages({ additionalRatios, bang63, equipmentType }) {
   const msgs = [];
-  if (additionalRatios) {
-    if (additionalRatios.co2_co !== null && additionalRatios.co2coNote && additionalRatios.co2coNote.startsWith("CO2/CO")) {
-      msgs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
-    }
-    if (additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < DIEU54_ADDITIONAL_RATIOS.o2n2_low) {
-      msgs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
-    }
-  }
+  if (!dieu54Applies(equipmentType)) return msgs;
+  const flags = dieu54AdditionalFlags(additionalRatios);
+  if (flags.co2co) msgs.push(`Tỷ lệ bổ sung CO2/CO (Điều 54): ${additionalRatios.co2coNote}`);
+  if (flags.o2n2) msgs.push(`Tỷ lệ bổ sung O2/N2 (Điều 54): ${additionalRatios.o2n2Note}`);
   if (bang63 && bang63.verdict === "Không đạt") {
     msgs.push(
       `⚠ Tổng hàm lượng khí hòa tan vượt ngưỡng ${REGULATION_CITATIONS.BANG63_TDGC} (cấp điện áp áp dụng: <${bang63.limit}%) — áp dụng cho dầu mới/sau ` +
@@ -803,7 +819,7 @@ function buildRecommendations({ overallOk, exceedCount, diagnosis, duval, rateRo
     recs.push("Chưa đủ điều kiện áp dụng chính thức tỷ lệ khí (chưa có khí vượt giá trị điển hình) — mã chẩn đoán Bảng 66/Bảng A.10/Tam giác Duval ở trên chỉ mang tính tham khảo.");
   }
   // Tỷ lệ bổ sung + Tổng hàm lượng khí hòa tan (Điều 54) — xem dieu54AdvisoryMessages().
-  recs.push(...dieu54AdvisoryMessages({ additionalRatios, bang63 }));
+  recs.push(...dieu54AdvisoryMessages({ additionalRatios, bang63, equipmentType }));
   return recs;
 }
 

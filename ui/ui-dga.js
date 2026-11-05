@@ -1288,10 +1288,14 @@ function renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standa
   // "Đánh giá các tỷ lệ bổ sung" (Điều 54 QĐ1901) — chỉ mang tính tham khảo, không tra
   // mã PD/D1/D2/T1/T2/T3 (khác Ba tỷ số khí cơ bản ở trên) — xem diagnoseAdditionalRatios().
   if (additionalRatios) {
+    // Điều 54 chỉ quy định cho MBA/Kháng dầu — loại khác vẫn hiện số để tham khảo, không cảnh báo.
+    const eqType = typeof _lastAnalysis !== "undefined" && _lastAnalysis && _lastAnalysis.measurement
+      ? _lastAnalysis.measurement.equipment_type : undefined;
+    const refOnly = DGA.dieu54Applies(eqType) ? "" : " (Điều 54 quy định cho MBA/Kháng dầu — với loại thiết bị này chỉ để tham khảo, không cảnh báo.)";
     $("r_co2co").textContent = additionalRatios.co2_co === null ? "—" : additionalRatios.co2_co;
-    $("r_co2conote").textContent = additionalRatios.co2coNote;
+    $("r_co2conote").textContent = additionalRatios.co2coNote + refOnly;
     $("r_o2n2").textContent = additionalRatios.o2_n2 === null ? "—" : additionalRatios.o2_n2;
-    $("r_o2n2note").textContent = additionalRatios.o2n2Note;
+    $("r_o2n2note").textContent = additionalRatios.o2n2Note + refOnly;
   }
 
   // Tổng hàm lượng khí hòa tan (Bảng 63) — xem computeTotalDissolvedGasPercent()/

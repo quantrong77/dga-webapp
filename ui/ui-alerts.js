@@ -237,7 +237,11 @@ function computeGasAlerts() {
     const additionalRatios = DGA.diagnoseAdditionalRatios(gases, n2, o2);
     const bang63Percent = DGA.computeTotalDissolvedGasPercent(gases, n2, o2);
     const bang63 = DGA.evaluateBang63(bang63Percent, latest.bang63_voltage_class || "110-220", !!latest.bang63_applicable);
-    const dieu54Msgs = DGA.dieu54AdvisoryMessages({ additionalRatios, bang63 });
+    // Điều 54 chỉ áp cho MBA/Kháng dầu (dieu54Applies()) — TI/TU, sứ xuyên không xét tỷ lệ bổ sung/Bảng 63.
+    const dieu54On = DGA.dieu54Applies(latest.equipment_type);
+    const dieu54Msgs = DGA.dieu54AdvisoryMessages({ additionalRatios, bang63, equipmentType: latest.equipment_type });
+    const addFlags = dieu54On ? DGA.dieu54AdditionalFlags(additionalRatios) : { co2co: false, o2n2: false };
+    const bang63Bad = dieu54On && bang63 && bang63.verdict === "Không đạt";
 
     // Cả 2 chỉ tiêu Điều 54 này VỐN không ảnh hưởng overallStatus ở tab "DGA" (chỉ tham
     // khảo/khuyến cáo thêm — xem dga-logic.js) — nhưng ở tab "Cảnh báo" (rà soát tự
@@ -272,18 +276,24 @@ function computeGasAlerts() {
     const failingGases = evalRows.filter((r) => r.verdict === "Không đạt").map((r) => r.gas);
     const condemnGases = condemnExceeded.map((r) => r.gas);
     const rateGases = (rateRows || []).filter((r) => r.verdict && r.verdict.startsWith("⚠")).map((r) => r.gas);
-    const exceededItems = Array.from(new Set([...failingGases, ...condemnGases, ...rateGases]));
+    // + chỉ tiêu Điều 54 (MBA/Kháng): tỷ lệ bổ sung CO2/CO, O2/N2 và Bảng 63 — trước đây cảnh báo CHỈ do
+    //   các tỷ lệ này thì cột "Chỉ tiêu vượt ngưỡng" để trống "—".
+    const dieu54Items = [
+      ...(addFlags.co2co ? ["CO2/CO"] : []),
+      ...(addFlags.o2n2 ? ["O2/N2"] : []),
+      ...(bang63Bad ? ["Tổng khí hòa tan (Bảng 63)"] : []),
+    ];
+    const exceededItems = Array.from(new Set([...failingGases, ...condemnGases, ...rateGases, ...dieu54Items]));
     // Khóa thông số dùng để TỰ TICK đúng đường khí này ở tab "Xu hướng" khi bấm "Xem xu
     // hướng" (xem TREND_PARAM_DEFS/goToTrendForDevice) — cùng định dạng "gas:<TÊN KHÍ>"
     // (vd "gas:H2") mà ui-trend.js đang dùng cho checkbox thông số khí. Điều 54: tự tick
     // thêm đúng đường N2/O2/Bảng 63 tương ứng với ĐÚNG lý do đã kích hoạt cảnh báo này.
-    const exceededKeys = exceededItems.map((g) => "gas:" + g);
-    if (additionalRatios && additionalRatios.o2_n2 !== null && additionalRatios.o2_n2 < 0.3) {
-      exceededKeys.push("gas:N2", "gas:O2");
-    }
-    if (bang63 && bang63.verdict === "Không đạt") {
-      exceededKeys.push("gas:BANG63");
-    }
+    const exceededKeys = Array.from(new Set([
+      ...[...failingGases, ...condemnGases, ...rateGases].map((g) => "gas:" + g),
+      ...(addFlags.co2co ? ["gas:CO", "gas:CO2"] : []),
+      ...(addFlags.o2n2 ? ["gas:N2", "gas:O2"] : []),
+      ...(bang63Bad ? ["gas:BANG63"] : []),
+    ]));
 
     const statusText = (overall === "Đạt" ? "Đạt" : "Không đạt") + (condemnBad ? " (Vượt ngưỡng loại bỏ)" : "");
 
@@ -623,7 +633,7 @@ function refreshAlertsUI() {
     const exceededHtml = (a.exceededItems || []).length === 0
       ? "—"
       : a.exceededItems.map((g) =>
-          `<span class="pill bad" style="margin:0 3px 3px 0;">${a.source === "gas" ? gasLabelIcon(g) : ""}${escapeHtml(g)}</span>`
+          `<span class="pill bad" style="margin:0 3px 3px 0;">${a.source === "gas" && DGA.GASES.includes(g) ? gasLabelIcon(g) : ""}${escapeHtml(g)}</span>`
         ).join("");
     const editBadge = (typeof editLogBadgeHtml === "function" && a.record) ? editLogBadgeHtml(a.record) : "";
     const editedPill = a.isEdited ? `<span class="pill muted" style="margin-left:4px; font-size:10px;" title="${escapeHtml(a.editLog ? 'Log chỉnh sửa:\n' + a.editLog : 'Đã hiệu chỉnh số liệu')}">✎ Đã hiệu chỉnh</span>` : "";

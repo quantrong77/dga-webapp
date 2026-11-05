@@ -361,3 +361,68 @@ describe("Tab Cảnh báo: lọc theo Thiết bị thuộc Trạm", () => {
     expect(ctx2.totalTrackedDeviceCount("TBA A", "T2")).toBe(1);
   });
 });
+
+describe("Tab Cảnh báo: tỷ lệ bổ sung Điều 54 (O2/N2, CO2/CO) cho MBA/Kháng dầu", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const vm = require("vm");
+  let c;
+  beforeAll(() => {
+    c = {
+      console, Date, Math, Number, String, Array, Set, Map,
+      document: { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] },
+      escapeHtml: (s) => String(s || ""), verdictPill: (v) => v, tioVerdictPill: (v) => v, DGA: require("../dga-logic"),
+    };
+    c.window = c; c.global = c;
+    vm.createContext(c);
+    ["storage/storage-core.js", "storage/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+      .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), c));
+  });
+  const run = (recs) => {
+    c.__m = recs;
+    vm.runInContext("_allMeasurements = __m; _allOilTests = []; _allOltcOilTests = []; _allTioOilTests = []; _allStandards = [];", c);
+    return c.computeGasAlerts();
+  };
+  const ok = { tram: "A", pha: "chung3pha", sample_date: "2026-10-01", lan_do: 1, h2: 20, ch4: 10, c2h6: 10, c2h4: 20, c2h2: 0.5 };
+  const MBA = "MBA/Kháng dầu";
+
+  test("chỉ lệch O2/N2 -> Cảnh báo, cột chỉ tiêu ghi O2/N2, tick N2/O2 ở xu hướng", () => {
+    const [a] = run([{ ...ok, id: "1", thiet_bi: "T1", equipment_type: MBA, co: 200, co2: 1500, n2: 50000, o2: 10000 }]);
+    expect(a.level).toBe("alert");
+    expect(a.exceededItems).toEqual(["O2/N2"]);
+    expect(a.exceededKeys).toEqual(["gas:N2", "gas:O2"]);
+  });
+
+  test("CO2/CO > 10 và CO2 > 10.000 ppm -> Cảnh báo, chỉ tiêu CO2/CO, tick CO/CO2", () => {
+    const [a] = run([{ ...ok, id: "2", thiet_bi: "T3", equipment_type: MBA, co: 500, co2: 11000 }]);
+    expect(a.exceededItems).toEqual(["CO2/CO"]);
+    expect(a.exceededKeys).toEqual(["gas:CO", "gas:CO2"]);
+  });
+
+  test("ngưỡng O2/N2 theo cấu hình Admin (không viết cứng 0,3)", () => {
+    const rec = { ...ok, id: "3", thiet_bi: "T4", equipment_type: MBA, co: 200, co2: 1500, n2: 50000, o2: 17500 }; // O2/N2 = 0,35
+    expect(run([rec])).toHaveLength(0);
+    c.DGA.applyRegulationConfigOverride("DIEU54_ADDITIONAL", { values: { o2n2_low: 0.4 } });
+    expect(run([rec])[0].exceededItems).toEqual(["O2/N2"]);
+    c.DGA.resetRegulationConfigItem("DIEU54_ADDITIONAL");
+  });
+
+  test("TI/TU, sứ xuyên KHÔNG bị gắn tỷ lệ bổ sung Điều 54 (chỉ quy định cho MBA)", () => {
+    const alerts = run([
+      { ...ok, id: "ti", thiet_bi: "TI1", equipment_type: "TI (biến dòng điện)", h2: 20, ch4: 5, c2h6: 5, c2h4: 2, co: 100, co2: 500, n2: 50000, o2: 10000 },
+    ]);
+    alerts.forEach((a) => {
+      expect(a.exceededItems).not.toContain("O2/N2");
+      expect(a.reasons.join(" ")).not.toMatch(/Tỷ lệ bổ sung/);
+    });
+  });
+});
+
+test("O2/N2 = 0,27 (làm tròn 1 chữ số thành 0,3) vẫn phải cảnh báo — so ngưỡng bằng giá trị chưa làm tròn", () => {
+  const DGA = require("../dga-logic");
+  const r = DGA.diagnoseAdditionalRatios({ CO: 200, CO2: 1500 }, 50000, 13500);
+  expect(r.o2_n2).toBe(0.27);
+  expect(DGA.dieu54AdditionalFlags(r).o2n2).toBe(true);
+  expect(DGA.dieu54AdvisoryMessages({ additionalRatios: r, bang63: null, equipmentType: "MBA/Kháng dầu" })).toHaveLength(1);
+  expect(DGA.dieu54AdvisoryMessages({ additionalRatios: r, bang63: null, equipmentType: "TI (biến dòng điện)" })).toHaveLength(0);
+});
