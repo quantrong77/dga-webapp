@@ -48,3 +48,32 @@ test("index.html có khung lưu đồ và nạp script/CSS", () => {
   expect(html).toContain('<script src="ui/ui-dga-workflow.js"></script>');
   expect(html).toContain('href="css/style-dga-workflow.css"');
 });
+
+test("các khối không chồng lên nhau (VD ô Bình thường không đè ô Xác định tiêu chuẩn)", () => {
+  const box = (n) => [n.x - n.w / 2, n.y - n.h / 2, n.x + n.w / 2, n.y + n.h / 2];
+  const overlap = (a, b) => a[0] < b[2] - 1 && b[0] < a[2] - 1 && a[1] < b[3] - 1 && b[1] < a[3] - 1;
+  for (let i = 0; i < W.WF_NODES.length; i++) {
+    for (let j = i + 1; j < W.WF_NODES.length; j++) {
+      const a = W.WF_NODES[i], b = W.WF_NODES[j];
+      expect([a.id, b.id, overlap(box(a), box(b))]).toEqual([a.id, b.id, false]);
+    }
+  }
+});
+
+test("nhãn rẽ nhánh nằm ngay trên/cạnh đường mũi tên, không đè lên khối", () => {
+  const approxW = (t) => t.length * 6.6; // ~12px chữ
+  W.WF_EDGES.filter((e) => e.label).forEach((e) => {
+    const { x, y, anchor } = e.labelPos;
+    const [a, b] = e.pts;
+    if (a[1] === b[1]) expect(a[1] - y).toBeGreaterThan(4); // nằm TRÊN đường ngang
+    const w = approxW(e.label);
+    const x0 = anchor === "middle" ? x - w / 2 : anchor === "end" ? x - w : x;
+    const lbl = [x0, y - 7, x0 + w, y + 7];
+    W.WF_NODES.forEach((n) => {
+      if (n.type === "decision") return; // nhãn có thể chạm mép chéo của hình thoi
+      const nb = [n.x - n.w / 2, n.y - n.h / 2, n.x + n.w / 2, n.y + n.h / 2];
+      const hit = lbl[0] < nb[2] && nb[0] < lbl[2] && lbl[1] < nb[3] && nb[1] < lbl[3];
+      expect([e.label, n.id, hit]).toEqual([e.label, n.id, false]);
+    });
+  });
+});

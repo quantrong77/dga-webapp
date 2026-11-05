@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v12-workflow") {
+          if (k !== "dga-offline-v13-workflow") {
             caches.delete(k);
           }
         });
@@ -1484,17 +1484,20 @@
           QĐ1901). Trước khi quyết định có cho MBA vận hành tiếp hay không, Điều 54 yêu cầu xem xét thêm: khả năng sinh
           khí do nguyên nhân khác ngoài khiếm khuyết trong MBA (hư hỏng làm mát, hỏng hệ thống bảo vệ dầu…), đặc thù vận
           hành của MBA và khuyến cáo của nhà sản xuất.</p>
-        <div class="wf-wrap">
-          <svg id="dgaWorkflowSvg" class="wf-svg" viewBox="0 0 1100 1550" role="img"
-            aria-label="Lưu đồ quy trình nghiệp vụ đánh giá DGA theo Điều 54 QĐ1901 và IEC 60599"></svg>
+        <div class="wf-legend" role="list" aria-label="Chú thích lưu đồ">
+          <div class="wf-legend-title">Chú thích</div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-start"></span><b>Bắt đầu / kết thúc</b><small>Đầu vào số liệu, lưu &amp; lần đo kế tiếp</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-process"></span><b>Bước xử lý</b><small>Công cụ tự tính / tra bảng</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-decision"></span><b>Điều kiện rẽ nhánh</b><small>Đọc nhãn "Có / Không" trên mũi tên</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-note"></span><b>Kiểm tra / xử lý phụ</b><small>Việc cần làm thêm theo Điều 54</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-normal"></span><b>Bình thường</b><small>Theo dõi định kỳ</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-alert"></span><b>Cảnh báo (ALERT)</b><small>Tăng tần suất, theo dõi xu hướng</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-alarm"></span><b>Báo động (ALARM)</b><small>Hành động ngay</small></div>
+          <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-dash"></span><b>Mũi tên nét đứt</b><small>Luồng tham khảo / quay về luồng chính</small></div>
         </div>
-        <div class="wf-legend" aria-hidden="true">
-          <span class="lg-process">Bước xử lý</span>
-          <span class="lg-decision">Điều kiện rẽ nhánh</span>
-          <span class="lg-note">Kiểm tra / xử lý phụ (Điều 54)</span>
-          <span class="lg-normal">Bình thường</span>
-          <span class="lg-alert">Cảnh báo (ALERT)</span>
-          <span class="lg-alarm">Báo động (ALARM)</span>
+        <div class="wf-wrap">
+          <svg id="dgaWorkflowSvg" class="wf-svg" viewBox="0 0 1100 1570" role="img"
+            aria-label="Lưu đồ quy trình nghiệp vụ đánh giá DGA theo Điều 54 QĐ1901 và IEC 60599"></svg>
         </div>
       </div>
 
