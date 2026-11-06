@@ -137,3 +137,14 @@ chờ sửa lỗi #5), `mbaOilDocxXmlToHtml` (64), `onAnalyze` (54), `buildRecom
 - Ảnh `screenshots/after-step5/` so với `before/`: 12/40 giống hệt; khác biệt còn lại đều thuộc các thay đổi có chủ
   đích (sọc bảng tối #6, `--gray-700` #7, cỡ nút nhỏ làm trang Nhập/Dầu ngắn 2–3px), hoặc là nhiễu khử răng cưa
   (0 px vượt ngưỡng) và dấu thời gian trong dữ liệu.
+
+## 7. Sau Bước 6 (UX & khả năng truy cập)
+
+| Cổng | Sau Bước 5 | Sau Bước 6 |
+|---|---|---|
+| Jest / ESLint / Stylelint | 671 · 0/0 · 0/0 | 671 · 0/0 · 0/0 |
+| axe-core WCAG 2.1 A/AA (10 tab + tab con × desktop/mobile × sáng/tối) | 6 quy tắc · 242 phần tử vi phạm | **0** |
+| Tràn ngang 375 / 768 / 1440px (tab ngang + sidebar) | 0 tab | 0 tab |
+
+Chi tiết từng thay đổi: `UX_CHANGES.md`. Ảnh `screenshots/after-step6/` so với `after-step5/`: 12/40 giống hệt, phần
+khác là màu chữ cấp ba mới (đơn vị đo, chữ gợi ý, ghi chú) và cột Ngày được ghim ở các bảng lịch sử.
