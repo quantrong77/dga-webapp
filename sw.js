@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v37-storage-repo";
+const CACHE_NAME = "dga-offline-v38-app-core";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -20,6 +20,8 @@ const PRECACHE_ASSETS = [
   "./src/data/drivers/storage-repo.js",
   "./src/data/storage.js",
   "./src/domain/dga-logic.js",
+  "./src/presentation/app-status.js",
+  "./src/presentation/app-views.js",
   "./src/presentation/app-core.js",
   "./src/presentation/styles/style-base.css",
   "./src/presentation/styles/style-auth.css",

@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v37-storage-repo") {
+          if (k !== "dga-offline-v38-app-core") {
             caches.delete(k);
           }
         });
@@ -4164,6 +4164,8 @@
   <script src="src/presentation/tabs/ui-trend.js"></script>
   <script src="src/presentation/tabs/ui-alerts.js"></script>
   <script src="src/presentation/tabs/ui-feedback.js"></script>
+  <script src="src/presentation/app-status.js"></script>
+  <script src="src/presentation/app-views.js"></script>
   <script src="src/presentation/app-core.js"></script>
 </body>
 </html>

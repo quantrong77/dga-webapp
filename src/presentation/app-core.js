@@ -1,3 +1,10 @@
+/* app-core.js — Lõi khởi động app (initApp: nạp dữ liệu, gắn toàn bộ event
+   listener của mọi tab) + tiện ích dùng chung (combo box tự viết, chuyển tab,
+   escapeHtml). NẠP FILE NÀY SAU CÙNG (sau mọi ui-*.js) trong index.html — dòng cuối
+   file này (document.addEventListener("DOMContentLoaded", init)) cần init() đã
+   được khai báo từ ui-auth.js. Xem ui-auth.js đầu file đó để biết đầy đủ quy ước
+   chia sẻ scope giữa các file ui-*.js + app-core.js. */
+
 function syncDienApDmToBang63Voltage() {
   const el = $("f_dienapdm");
   const b63 = $("f_bang63_voltage");
@@ -12,46 +19,30 @@ function syncDienApDmToBang63Voltage() {
   }
 }
 
-/* app-core.js — Lõi khởi động app (initApp: nạp dữ liệu, gắn toàn bộ event
-   listener của mọi tab) + tiện ích dùng chung (combo box tự viết, chuyển tab,
-   escapeHtml). NẠP FILE NÀY SAU CÙNG (sau mọi ui-*.js) trong index.html — dòng cuối
-   file này (document.addEventListener("DOMContentLoaded", init)) cần init() đã
-   được khai báo từ ui-auth.js. Xem ui-auth.js đầu file đó để biết đầy đủ quy ước
-   chia sẻ scope giữa các file ui-*.js + app-core.js. */
-
-/** Gắn sự kiện bấm cho badge #storageBadge — mở Google Sheet/Supabase Dashboard (link
- *  lấy từ data-db-link, xem applyDatabaseBadgeLink() ngay dưới) ở tab mới, tiện cho
- *  Admin thao tác trực tiếp lên dữ liệu. Gắn DUY NHẤT 1 LẦN (initApp() có thể chạy lại
- *  nhiều lần trong 1 phiên trình duyệt — sau khi đăng nhập, sau khi đổi trạng thái badge
- *  do mất kết nối... — nhưng listener chỉ cần gắn 1 lần, luôn đọc link MỚI NHẤT từ
- *  dataset ngay lúc bấm chứ không cần gắn lại) — dùng dataset.linkBound làm cờ đánh dấu
- *  đã gắn, y hệt cách setSidebarCollapse/setupTabLayoutToggle tự đồng bộ trạng thái. */
-function setupStorageBadgeLink() {
-  const badge = $("storageBadge");
-  if (!badge || badge.dataset.linkBound) return;
-  badge.dataset.linkBound = "1";
-  badge.addEventListener("click", () => {
-    const url = badge.dataset.dbLink;
-    if (url) window.open(url, "_blank", "noopener");
-  });
+/** Gợi ý ô "Trạm" (mọi tab dùng chung): danh mục Trạm, sắp xếp theo tên (tiếng Việt). */
+function stationComboOptions() {
+  return _allStations
+    .slice()
+    .sort((a, b) => (a.ten_tram || "").localeCompare(b.ten_tram || "", "vi"))
+    .map((s) => ({ value: s.ten_tram, label: (s.ma_tram ? s.ma_tram + " — " : "") + s.ten_tram }));
 }
 
-/** Cập nhật link quản lý database gắn trên badge #storageBadge (data-db-link + class
- *  "has-link", xem CSS) theo cấu hình hiện tại (databaseManagementUrl() ở storage.js).
- *  PHẢI gọi lại mỗi khi initApp() gán lại badge.className (className bị GHI ĐÈ toàn bộ
- *  ở đó, xóa mất class "has-link" nếu gọi hàm này trước đó) — xem 3 nơi gọi hàm này
- *  trong initApp(). Không đổi textContent (vẫn luôn là "Database"/"Chế độ thử
- *  nghiệm..." như initApp() đã đặt), chỉ nối thêm gợi ý bấm vào title nếu có link. */
-function applyDatabaseBadgeLink(badge) {
-  const url = databaseManagementUrl();
-  badge.classList.toggle("has-link", !!url);
-  if (!url) {
-    delete badge.dataset.dbLink;
-    return;
-  }
-  badge.dataset.dbLink = url;
-  const hint = Storage.mode === "local-server" ? "Bấm để kiểm tra trạng thái Máy chủ nội bộ On-Premise" : Storage.mode === "gsheet" ? "Bấm để mở Google Sheet quản lý dữ liệu" : "Bấm để mở Supabase Dashboard";
-  badge.title = badge.title ? `${badge.title} — ${hint}` : hint;
+/** Gợi ý ô "Thiết bị": gom tên thiết bị (lần xuất hiện ĐẦU TIÊN theo thứ tự các nguồn) từ các danh sách bản ghi đã
+ *  lưu, bỏ tên rỗng/trùng, `accept(r)` (tùy chọn) lọc thêm; sắp xếp theo tên. Truyền mảng lúc GỌI (không giữ tham chiếu)
+ *  vì _allMeasurements/_allOilTests… được gán lại mỗi lần nạp dữ liệu. */
+function deviceComboOptions(sources, accept) {
+  const byName = new Map();
+  sources.forEach((list) => {
+    list.forEach((r) => {
+      if (accept && !accept(r)) return;
+      const name = (r.thiet_bi || "").trim();
+      if (!name || byName.has(name)) return;
+      byName.set(name, r.tram || "");
+    });
+  });
+  return Array.from(byName.entries())
+    .sort((a, b) => a[0].localeCompare(b[0], "vi"))
+    .map(([name, tram]) => ({ value: name, label: tram ? `${name} — ${tram}` : name }));
 }
 
 // ---------------------------------------------------------------------
@@ -60,6 +51,38 @@ function applyDatabaseBadgeLink(badge) {
 // danh sách tiêu chuẩn & lịch sử, khóa các nút Lưu/Sửa/Xóa nếu không phải Admin.
 // ---------------------------------------------------------------------
 async function initApp() {
+  renderUserHeader();
+
+  // Badge "Database" chỉ hiện với Admin (hoặc khi tắt Auth) — xem renderStorageBadge() (app-status.js)
+  const isAdminOrNoAuth = !Auth.enabled || (Auth.current && Auth.current.role === "admin");
+  renderStorageBadge(isAdminOrNoAuth);
+  setupStorageBadgeLink();
+  setupAutoSyncUI();
+  registerServiceWorker();
+
+  setupStaticUI();
+  await loadInitialData(isAdminOrNoAuth);
+
+  // Khóa nút Lưu tiêu chuẩn với user không có quyền ghi (User thường khi đã bật
+  // đăng nhập). Nút Xóa ở bảng Lịch sử/Tiêu chuẩn được ẩn ngay khi render dòng
+  // (xem refreshHistoryUI/refreshStandardsUI) nên không cần xử lý thêm ở đây.
+  $("btnSaveStandard").disabled = !canWrite();
+  $("btnSaveStandard").title = canWrite() ? "" : "Chỉ Admin mới lưu được tiêu chuẩn.";
+
+  setupStationDeviceCombos();
+  bindInputFormEvents();
+  bindHistoryTrendAlertEvents();
+  toggleMbaSubtypeField();
+  toggleStandardTypeFields();
+  drawDuvalTriangleBase();
+  const bbtnZone = $("bbtnDropzone");
+  if (bbtnZone && $("tab-dga") && !$("tab-dga").classList.contains("hidden")) {
+    bbtnZone.focus();
+  }
+}
+
+/** Tên/vai trò người dùng ở thanh trên + hiện tab "Quản trị" cho Admin (hoặc khi tắt Auth). */
+function renderUserHeader() {
   if (Auth.enabled && Auth.current) {
     const roleLabel = Auth.current.role === "admin" ? "Admin" : Auth.current.role === "viewer" ? "Viewer" : "User";
     $("userBadge").textContent = `${Auth.current.email} — ${roleLabel}`;
@@ -69,38 +92,10 @@ async function initApp() {
   } else if (!Auth.enabled) {
     $("navQuanTri").classList.remove("hidden");
   }
+}
 
-  // Badge "Đã kết nối database" chỉ hiện với Admin (chi tiết vận hành/hạ tầng, không
-  // cần thiết cho User thường) — khi tắt Auth (Auth.enabled=false, không phân quyền)
-  // vẫn hiện bình thường, coi như tương đương Admin. Cảnh báo "Chế độ thử nghiệm"
-  // (localStorage) vẫn hiện cho MỌI người vì ai cũng cần biết dữ liệu không dùng chung.
-  const badge = $("storageBadge");
-  const footerInfo = $("footerStorageInfo");
-  const isAdminOrNoAuth = !Auth.enabled || (Auth.current && Auth.current.role === "admin");
-  if (Storage.mode === "local-server" || Storage.mode === "gsheet" || Storage.mode === "supabase") {
-    footerInfo.textContent = Storage.mode === "local-server" ? "lưu trên Máy chủ nội bộ On-Premise (Localhost / LAN)" : "lưu trên database dùng chung (nhiều máy cùng truy cập)";
-    badge.classList.toggle("hidden", !isAdminOrNoAuth);
-    if (isAdminOrNoAuth) {
-      // Màu xanh (.badge.supabase) là trạng thái LẠC QUAN ban đầu — đã có cấu hình
-      // (config.js) nên coi như sẽ kết nối được; nếu bước tải Tiêu chuẩn/Lịch sử đo
-      // ngay bên dưới (nơi thật sự gọi API đầu tiên) thất bại, badge sẽ bị chuyển
-      // sang đỏ (.badge.error) ở khối try/catch tương ứng, xem thêm ghi chú ở đó.
-      badge.textContent = Storage.mode === "local-server" ? "Máy chủ nội bộ" : "Database";
-      badge.className = "badge supabase";
-      badge.title = Storage.mode === "local-server" ? "Đã kết nối Máy chủ nội bộ (On-Premise Localhost)" : "Đã kết nối database";
-      applyDatabaseBadgeLink(badge);
-    }
-  } else {
-    badge.textContent = "Chế độ thử nghiệm (chỉ lưu trên trình duyệt này)";
-    badge.className = "badge local";
-    badge.classList.remove("hidden");
-    $("localModeBanner").classList.remove("hidden");
-    footerInfo.textContent = "lưu trong localStorage của trình duyệt này — điền config.js để dùng database dùng chung";
-  }
-  setupStorageBadgeLink();
-  setupAutoSyncUI();
-  registerServiceWorker();
-
+/** Khởi tạo giao diện KHÔNG phụ thuộc dữ liệu: tab, bố cục, tab con, khối nội dung tĩnh, ngày mặc định, các ô phụ thuộc. */
+function setupStaticUI() {
   setupTabs();
   setupStickyHeaderObserver();
   setupTabLayoutToggle();
@@ -134,7 +129,11 @@ async function initApp() {
   populateOltcOptions();
   toggleOltcPhaseField();
   toggleOltcMembraneField();
+}
 
+/** Nạp dữ liệu lần đầu (Trạm → Cấu hình quy định → Tiêu chuẩn/Lịch sử → dầu MBA/OLTC/TI-TU → góp ý → user) — mỗi nguồn
+ *  cô lập try/catch riêng để 1 bảng backend chưa có không chặn các tab khác. */
+async function loadInitialData(isAdminOrNoAuth) {
   // Trong lúc nạp Trạm/Thiết bị/Lịch sử đo lần đầu (chuỗi try/catch tuần tự bên dưới —
   // có thể mất vài giây, đặc biệt ở chế độ gsheet do Apps Script có độ trễ khởi động),
   // hiện thông báo "đang tải" ở khung Trạm/Thiết bị (DGA, Dầu cách điện MBA lẫn OLTC —
@@ -178,19 +177,7 @@ async function initApp() {
     await refreshHistoryUI();
   } catch (err) {
     notifyError(storageErrorMessage(err));
-    // Đây là lần gọi API đầu tiên thật sự chạm tới database (Tiêu chuẩn/Lịch sử đo) —
-    // nếu lỗi ngay tại đây, coi như MẤT KẾT NỐI database, chuyển badge #storageBadge
-    // (đang lạc quan để xanh từ đầu initApp(), xem phía trên) sang đỏ để phản ánh
-    // đúng tình trạng thay vì vẫn hiện xanh gây hiểu lầm là app đang hoạt động bình
-    // thường. Không đổi badge khi ở chế độ local (không có khái niệm "mất kết nối").
-    if ((Storage.mode === "local-server" || Storage.mode === "gsheet" || Storage.mode === "supabase") && isAdminOrNoAuth) {
-      badge.textContent = "Database";
-      badge.className = "badge error";
-      badge.title = "Mất kết nối database: " + storageErrorMessage(err);
-      // Vẫn giữ link Sheet/Dashboard (nếu có) ngay cả khi mất kết nối — admin thường sẽ
-      // CẦN mở thẳng Sheet/Dashboard lúc này để xem trực tiếp chuyện gì đang xảy ra.
-      applyDatabaseBadgeLink(badge);
-    }
+    markStorageBadgeDisconnected(err, isAdminOrNoAuth);
   } finally {
     // Tắt thông báo "đang tải" của bảng Lịch sử đo ngay khi refreshHistoryUI() ở trên
     // xong (dù thành công hay lỗi) — sớm hơn setComboLoading(false) vì Trạm/Thiết bị
@@ -261,22 +248,15 @@ async function initApp() {
       console.warn("Không tải được danh sách user:", err);
     }
   }
+}
 
-  // Khóa nút Lưu tiêu chuẩn với user không có quyền ghi (User thường khi đã bật
-  // đăng nhập). Nút Xóa ở bảng Lịch sử/Tiêu chuẩn được ẩn ngay khi render dòng
-  // (xem refreshHistoryUI/refreshStandardsUI) nên không cần xử lý thêm ở đây.
-  $("btnSaveStandard").disabled = !canWrite();
-  $("btnSaveStandard").title = canWrite() ? "" : "Chỉ Admin mới lưu được tiêu chuẩn.";
-
+/** Ô combo Trạm/Thiết bị/Nhà sản xuất ở các tab nhập liệu (DGA, Dầu MBA, OLTC, TI/TU, Tiêu chuẩn). */
+function setupStationDeviceCombos() {
   setupCombo({
     input: $("o_tram"),
     toggleBtn: $("o_tram_toggle"),
     listEl: $("o_tram_list"),
-    getOptions: () =>
-      _allStations
-        .slice()
-        .sort((a, b) => (a.ten_tram || "").localeCompare(b.ten_tram || "", "vi"))
-        .map((s) => ({ value: s.ten_tram, label: (s.ma_tram ? s.ma_tram + " — " : "") + s.ten_tram })),
+    getOptions: () => stationComboOptions(),
   });
   // Ô "Thiết bị" ở tab Dầu cách điện gợi ý từ cả lần đo DGA lẫn thí nghiệm dầu đã
   // lưu trước đó (cùng 1 MBA có thể vừa có lịch sử đo khí, vừa có lịch sử dầu).
@@ -284,33 +264,14 @@ async function initApp() {
     input: $("o_thietbi"),
     toggleBtn: $("o_thietbi_toggle"),
     listEl: $("o_thietbi_list"),
-    getOptions: () => {
-      const byName = new Map();
-      _allMeasurements.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      _allOilTests.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      return Array.from(byName.entries())
-        .sort((a, b) => a[0].localeCompare(b[0], "vi"))
-        .map(([name, tram]) => ({ value: name, label: tram ? `${name} — ${tram}` : name }));
-    },
+    getOptions: () => deviceComboOptions([_allMeasurements, _allOilTests]),
   });
 
   setupCombo({
     input: $("f_tram"),
     toggleBtn: $("f_tram_toggle"),
     listEl: $("f_tram_list"),
-    getOptions: () =>
-      _allStations
-        .slice()
-        .sort((a, b) => (a.ten_tram || "").localeCompare(b.ten_tram || "", "vi"))
-        .map((s) => ({ value: s.ten_tram, label: (s.ma_tram ? s.ma_tram + " — " : "") + s.ten_tram })),
+    getOptions: () => stationComboOptions(),
   });
   setupCombo({
     input: $("s_manufacturer"),
@@ -334,16 +295,7 @@ async function initApp() {
     listEl: $("f_thietbi_list"),
     getOptions: () => {
       const tram = $("f_tram").value.trim();
-      const byName = new Map();
-      _allMeasurements.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        if (tram && (r.tram || "").trim() !== tram) return;
-        byName.set(name, r.tram || "");
-      });
-      return Array.from(byName.entries())
-        .sort((a, b) => a[0].localeCompare(b[0], "vi"))
-        .map(([name, tram]) => ({ value: name, label: tram ? `${name} — ${tram}` : name }));
+      return deviceComboOptions([_allMeasurements], (r) => !tram || (r.tram || "").trim() === tram);
     },
   });
 
@@ -351,11 +303,7 @@ async function initApp() {
     input: $("ot_tram"),
     toggleBtn: $("ot_tram_toggle"),
     listEl: $("ot_tram_list"),
-    getOptions: () =>
-      _allStations
-        .slice()
-        .sort((a, b) => (a.ten_tram || "").localeCompare(b.ten_tram || "", "vi"))
-        .map((s) => ({ value: s.ten_tram, label: (s.ma_tram ? s.ma_tram + " — " : "") + s.ten_tram })),
+    getOptions: () => stationComboOptions(),
   });
   // Ô "Thiết bị" ở dầu OLTC gợi ý từ cả lịch sử đo DGA, dầu chính MBA lẫn dầu OLTC
   // đã lưu trước đó (cùng 1 MBA có thể xuất hiện ở cả 3 nơi).
@@ -363,65 +311,33 @@ async function initApp() {
     input: $("ot_thietbi"),
     toggleBtn: $("ot_thietbi_toggle"),
     listEl: $("ot_thietbi_list"),
-    getOptions: () => {
-      const byName = new Map();
-      _allMeasurements.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      _allOilTests.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      _allOltcOilTests.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      return Array.from(byName.entries())
-        .sort((a, b) => a[0].localeCompare(b[0], "vi"))
-        .map(([name, tram]) => ({ value: name, label: tram ? `${name} — ${tram}` : name }));
-    },
+    getOptions: () => deviceComboOptions([_allMeasurements, _allOilTests, _allOltcOilTests]),
   });
 
   setupCombo({
     input: $("tio_tram"),
     toggleBtn: $("tio_tram_toggle"),
     listEl: $("tio_tram_list"),
-    getOptions: () =>
-      _allStations
-        .slice()
-        .sort((a, b) => (a.ten_tram || "").localeCompare(b.ten_tram || "", "vi"))
-        .map((s) => ({ value: s.ten_tram, label: (s.ma_tram ? s.ma_tram + " — " : "") + s.ten_tram })),
+    getOptions: () => stationComboOptions(),
   });
   // Ô "Thiết bị" ở dầu TI/TU gợi ý từ cả lịch sử đo DGA lẫn dầu TI/TU đã lưu trước đó
   // (cùng 1 TI/TU có thể vừa có lịch sử đo khí, vừa có lịch sử dầu) — không gộp
   // _allOilTests/_allOltcOilTests vì đó là thiết bị MBA/OLTC, khác nhóm thiết bị.
+  const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
   setupCombo({
     input: $("tio_thietbi"),
     toggleBtn: $("tio_thietbi_toggle"),
     listEl: $("tio_thietbi_list"),
-    getOptions: () => {
-      const byName = new Map();
-      _allMeasurements.forEach((r) => {
-        if (![DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING].includes(r.equipment_type)) return;
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      _allTioOilTests.forEach((r) => {
-        const name = (r.thiet_bi || "").trim();
-        if (!name || byName.has(name)) return;
-        byName.set(name, r.tram || "");
-      });
-      return Array.from(byName.entries())
-        .sort((a, b) => a[0].localeCompare(b[0], "vi"))
-        .map(([name, tram]) => ({ value: name, label: tram ? `${name} — ${tram}` : name }));
-    },
+    getOptions: () => deviceComboOptions([
+      _allMeasurements.filter((r) => instrumentTypes.includes(r.equipment_type)),
+      _allTioOilTests,
+    ]),
   });
+}
 
+/** Sự kiện của các form nhập liệu: DGA (phân tích, BBTN, nhãn thiết bị, nhập hàng loạt), Dầu MBA/OLTC/TI-TU,
+ *  góp ý, Tiêu chuẩn NSX. */
+function bindInputFormEvents() {
   $("btnAnalyze").addEventListener("click", onAnalyze);
   $("btnClearForm").addEventListener("click", clearForm);
   $("btnCancelEditMeasurement").addEventListener("click", clearForm);
@@ -521,6 +437,10 @@ async function initApp() {
       $("s_manufacturer").focus();
     });
   }
+}
+
+/** Sự kiện của các tab xem/tra cứu: Lịch sử đo, So sánh tốc độ tăng, Cảnh báo, Xu hướng. */
+function bindHistoryTrendAlertEvents() {
   // Bộ lọc "Trạm biến áp"/"Thiết bị" ở tab "Lịch sử đo" — 2 ô combo tự gõ-tìm
   // (#lichsu_station/#lichsu_device, THAY THẾ ô tìm kiếm tự do #historyFilter cũ) giống
   // hệt kiểu #tr_station/#tr_device ở tab "Xu hướng" (xem lichsuStationOptions()/
@@ -654,352 +574,6 @@ async function initApp() {
   }));
   ["input", "change"].forEach((evt) => $("al_deviceFilter").addEventListener(evt, refreshAlertsUI));
   ["al_typeFilter", "al_dataFilter"].forEach((id) => { if ($(id)) $(id).addEventListener("change", refreshAlertsUI); });
-  toggleMbaSubtypeField();
-  toggleStandardTypeFields();
-  drawDuvalTriangleBase();
-  const bbtnZone = $("bbtnDropzone");
-  if (bbtnZone && $("tab-dga") && !$("tab-dga").classList.contains("hidden")) {
-    bbtnZone.focus();
-  }
-}
-
-// ---------------------------------------------------------------------
-/* Combo box và popover thông tin đã được tách sang src/presentation/components/ui-combobox.js */
-
-
-
-/** Khóa localStorage lưu lựa chọn bố cục thanh tab (xem setupTabLayoutToggle() ngay
- *  dưới) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng, không phải dữ liệu
- *  nghiệp vụ, nên KHÔNG lưu qua Storage (gsheet/Supabase) như measurements. */
-/* Bố cục tab và sidebar collapse đã được tách sang src/presentation/components/ui-layout.js */
-
-
-
-/** Gắn sự kiện cho nút #btnCollapseSidebar trong <nav class="tabs"> — thu gọn sidebar
- *  (chỉ còn 1 cột icon hẹp) để "mở rộng màn hình" cho nội dung chính, hoặc mở lại như
- *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem src/presentation/styles/style-nav-layout.css) nên ở
- *  đây chỉ cần lo phần bật/tắt + lưu lựa chọn, không cần kiểm tra thêm điều kiện. */
-/** Khóa localStorage lưu trạng thái tick "Hiện dự báo xu hướng tương lai" ở tab "Xu
- *  hướng" (#tr_forecastEnabled) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng
- *  (giống TAB_LAYOUT_STORAGE_KEY ở trên), không phải dữ liệu nghiệp vụ nên KHÔNG lưu
- *  qua Storage (gsheet/Supabase) — mỗi trình duyệt/máy tự nhớ lựa chọn riêng. */
-const TREND_FORECAST_ENABLED_STORAGE_KEY = "dga_trend_forecast_enabled";
-
-/** Đọc lựa chọn đã lưu (nếu có) và đồng bộ lại checkbox #tr_forecastEnabled cho khớp —
- *  gọi 1 lần lúc khởi động app (initApp()), TRƯỚC khi tab "Xu hướng" render lần đầu, để
- *  khỏi phải vẽ lại ngay sau khi đọc xong. Mặc định BẬT (checked="checked" ở index.html)
- *  nếu người dùng CHƯA từng đổi lựa chọn này bao giờ. */
-function setupTrendForecastToggle() {
-  const checkbox = $("tr_forecastEnabled");
-  if (!checkbox) return;
-  let saved = null;
-  try { saved = localStorage.getItem(TREND_FORECAST_ENABLED_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  if (saved !== null) checkbox.checked = saved === "1";
-}
-
-/** Khóa localStorage lưu trạng thái tick "Ẩn phần này" ở khối "Thông số kỹ thuật thiết
- *  bị" (tab "DGA", #f_hideNameplateFields) — SỞ THÍCH GIAO DIỆN riêng trình duyệt (giống
- *  TAB_LAYOUT_STORAGE_KEY/TREND_FORECAST_ENABLED_STORAGE_KEY ở trên), KHÔNG lưu qua
- *  Storage (gsheet/Supabase) — mỗi trình duyệt/máy tự nhớ lựa chọn riêng. */
-const NAMEPLATE_FIELDS_HIDDEN_STORAGE_KEY = "dga_nameplate_fields_hidden";
-
-/** Ẩn/hiện #nameplateFieldsWrap (dropzone nameplate + 8 trường "Thông số kỹ thuật thiết
- *  bị", index.html) theo nút icon con mắt #btnToggleNameplateFields — CHỈ ẩn giao diện,
- *  KHÔNG xóa giá trị đã nhập trong các ô (vẫn được lưu/gửi bình thường khi "Phân tích &
- *  Lưu", xem onAnalyze() ở ui-dga.js) — bấm lại để hiện thì dữ liệu vẫn còn nguyên. Mặc
- *  định HIỆN (icon-eye, aria-pressed="false") nếu người dùng CHƯA từng đổi lựa chọn này
- *  bao giờ, giữ hành vi cũ — kiểu ẩn/hiện giống nút ẩn/hiện mật khẩu. */
-function setupNameplateFieldsToggle() {
-  const btn = $("btnToggleNameplateFields");
-  const wrap = $("nameplateFieldsWrap");
-  if (!btn || !wrap) return;
-  const iconUse = btn.querySelector("use");
-  const applyState = (hidden) => {
-    wrap.classList.toggle("hidden", hidden);
-    btn.setAttribute("aria-pressed", hidden ? "true" : "false");
-    btn.title = hidden ? "Hiện phần này" : "Ẩn phần này";
-    if (iconUse) iconUse.setAttribute("href", hidden ? "#icon-eye-off" : "#icon-eye");
-  };
-  let saved = null;
-  try { saved = localStorage.getItem(NAMEPLATE_FIELDS_HIDDEN_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  applyState(saved === "1");
-  btn.addEventListener("click", () => {
-    const nowHidden = btn.getAttribute("aria-pressed") !== "true";
-    applyState(nowHidden);
-    try { localStorage.setItem(NAMEPLATE_FIELDS_HIDDEN_STORAGE_KEY, nowHidden ? "1" : "0"); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  });
-}
-
-/** Bộ chọn xem lịch sử ở tab "Lịch sử đo" (#lichsuTypeToggle: "gas"/"oil" — xem
- *  #lichsuGasWrap/#lichsuOilWrap, ui-history.js) — SỞ THÍCH GIAO DIỆN riêng trình duyệt
- *  (giống TAB_LAYOUT_STORAGE_KEY/TREND_FORECAST_ENABLED_STORAGE_KEY ở trên), không phải
- *  dữ liệu nghiệp vụ nên KHÔNG lưu qua Storage. Đổi class .primary/.ghost trên chính nút
- *  bấm để hiện rõ đang chọn loại nào (không thêm class CSS mới, tái dùng luôn 2 biến thể
- *  nút đã có ở toàn app). View "oil" gộp CHUNG "Dầu MBA chính" + "Dầu OLTC" + "Dầu TI/TU/
- *  Sứ xuyên" (trước đây Dầu MBA chính/Dầu OLTC là 2 nút riêng, còn dầu TI/TU chưa từng
- *  hiện ở tab này) — phân biệt tiếp bằng #historyEquipmentFilter (xem
- *  populateHistoryEquipmentFilterOptions()/toggleLichSuOilSourceWraps() bên dưới), CÙNG 1
- *  ô lọc dùng lại được cho cả 2 view — ở view "gas" lọc theo LOẠI THIẾT BỊ (bảng đó gộp
- *  chung mọi loại), ở view "oil" lọc theo NGUỒN dầu (Dầu MBA chính/Dầu OLTC/Dầu TI/TU/Sứ
- *  xuyên — 3 bảng con cột dữ liệu khác hẳn nhau nên vẫn hiện tách riêng, không gộp chung
- *  1 bảng). */
-const LICHSU_VIEW_STORAGE_KEY = "dga_lichsu_view";
-
-const LICHSU_GAS_EQUIPMENT_OPTIONS = [
-  { value: "", label: "Tất cả loại thiết bị" },
-  { value: "TI (biến dòng điện)", label: "TI (biến dòng điện)" },
-  { value: "TU (biến điện áp)", label: "TU (biến điện áp)" },
-  { value: "Sứ xuyên (Bushing)", label: "Sứ xuyên (Bushing)" },
-  { value: "MBA/Kháng dầu", label: "MBA/Kháng dầu" },
-  { value: "Khác", label: "Khác" },
-];
-const LICHSU_OIL_SOURCE_OPTIONS = [
-  { value: "", label: "Tất cả (MBA chính + OLTC + TI/TU/Sứ xuyên)" },
-  { value: "main", label: "Dầu MBA chính" },
-  { value: "oltc", label: "Dầu OLTC" },
-  { value: DGA.EQUIPMENT_TYPES.TI, label: "Dầu TI (biến dòng điện)" },
-  { value: DGA.EQUIPMENT_TYPES.TU, label: "Dầu TU (biến điện áp)" },
-  { value: DGA.EQUIPMENT_TYPES.BUSHING, label: "Dầu Sứ xuyên (Bushing)" },
-];
-
-/** Nạp lại nội dung <option> của #historyEquipmentFilter theo đúng view đang xem — 2 bộ
- *  lựa chọn Ý NGHĨA KHÁC NHAU hoàn toàn (loại thiết bị vs nguồn dầu) nên không thể dùng
- *  chung 1 danh sách <option> tĩnh, phải nạp lại bằng JS mỗi lần đổi view. Luôn reset về
- *  "" (Tất cả) khi đổi view — đơn giản hơn nhớ riêng từng view, và tránh lẫn giá trị của
- *  view cũ (VD "oltc" không có nghĩa gì ở view "gas"). */
-function populateHistoryEquipmentFilterOptions(view) {
-  const select = $("historyEquipmentFilter");
-  if (!select) return;
-  const options = view === "oil" ? LICHSU_OIL_SOURCE_OPTIONS : LICHSU_GAS_EQUIPMENT_OPTIONS;
-  select.innerHTML = options.map((o) => `<option value="${o.value}">${o.label}</option>`).join("");
-}
-
-/** Ở view "Dầu": hiện 1 trong 3 (hoặc cả 3, khi #historyEquipmentFilter = "" = "Tất cả")
- *  bảng con #lichsuOilMainSubWrap/#lichsuOltcSubWrap/#lichsuInstrumentOilSubWrap theo
- *  đúng lựa chọn. 2 bảng dầu MBA/OLTC luôn được TÍNH SẴN cả 2 (xem
- *  refreshLichSuOilTable()/refreshLichSuOltcTable(), ui-history.js) nên chỉ cần ẩn/hiện
- *  DOM — nhưng bảng TI/TU/Sứ xuyên thì NGƯỢC LẠI, gộp CHUNG 1 bảng dữ liệu
- *  (_allTioOilTests) cho cả 3 loại thiết bị nên phải LỌC LẠI theo đúng loại đang chọn mỗi
- *  khi đổi lựa chọn (xem refreshLichSuInstrumentOilTable(), ui-history.js) — không thể
- *  chỉ ẩn/hiện DOM như 2 bảng kia. Gọi được trực tiếp từ sự kiện "change". */
-function toggleLichSuOilSourceWraps() {
-  const value = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
-  const isInstrumentType = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING].includes(value);
-  $("lichsuOilMainSubWrap").classList.toggle("hidden", value !== "" && value !== "main");
-  $("lichsuOltcSubWrap").classList.toggle("hidden", value !== "" && value !== "oltc");
-  $("lichsuInstrumentOilSubWrap").classList.toggle("hidden", value !== "" && !isInstrumentType);
-  refreshLichSuInstrumentOilTable();
-}
-
-function currentLichSuView() {
-  return $("lichsuGasWrap") && !$("lichsuGasWrap").classList.contains("hidden") ? "gas" : "oil";
-}
-
-function setLichSuView(view) {
-  const toggle = $("lichsuTypeToggle");
-  if (!toggle) return;
-  toggle.querySelectorAll("[data-lichsu-type]").forEach((btn) => {
-    const active = btn.dataset.lichsuType === view;
-    btn.classList.toggle("primary", active);
-    btn.classList.toggle("ghost", !active);
-  });
-  const wraps = { gas: $("lichsuGasWrap"), oil: $("lichsuOilWrap") };
-  Object.entries(wraps).forEach(([key, el]) => { if (el) el.classList.toggle("hidden", key !== view); });
-  populateHistoryEquipmentFilterOptions(view);
-  try { localStorage.setItem(LICHSU_VIEW_STORAGE_KEY, view); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  // Đổi bảng đang xem thì nạp lại đúng bảng đó theo bộ lọc #lichsu_station/#lichsu_device hiện tại — cả 3
-  // bảng dầu chỉ tính lại từ dữ liệu ĐÃ CÓ SẴN trong bộ nhớ (_allOilTests/
-  // _allOltcOilTests/_allTioOilTests), không gọi lại Storage nên rất nhẹ.
-  // (toggleLichSuOilSourceWraps() ở cuối tự gọi refreshLichSuInstrumentOilTable().)
-  if (view === "gas") {
-    refreshHistoryUI();
-  } else if (view === "oil") {
-    refreshLichSuOilTable();
-    refreshLichSuOltcTable();
-    toggleLichSuOilSourceWraps();
-  }
-}
-
-/** Bộ chọn "Loại thiết bị" ở tab "Dầu cách điện" (#dau_equipmenttype, giống #f_loai ở
- *  tab "DGA") — CHỈ ẩn/hiện (các) khối nhập liệu liên quan để đỡ cuộn qua cả 3 khối
- *  MBA/OLTC/TI-TU cùng lúc, không phải 1 trường dữ liệu của bản ghi nên KHÔNG lưu qua
- *  Storage — chỉ SỞ THÍCH GIAO DIỆN riêng trình duyệt, cùng quy ước với
- *  LICHSU_VIEW_STORAGE_KEY ở trên. MBA/Kháng dầu gộp chung với OLTC (#dauMbaWrap, OLTC
- *  là 1 khoang dầu phụ CỦA chính MBA đó — xem ghi chú ở index.html); TI và TU đều dùng
- *  chung 1 khối "Dầu cách điện TI/TU" (#dauInstrumentWrap) — chọn TI/TU ở đây thì tự
- *  đồng bộ luôn #tio_equipmenttype BÊN TRONG khối đó theo đúng lựa chọn, khỏi phải chọn
- *  lại lần 2 (xem onTioEquipmentTypeChange(), ui-ti-oil.js, lọc lại danh sách Nhà sản
- *  xuất theo đúng loại). Sứ xuyên/Khác chưa có tính năng nhập dầu ở tab này (QĐ1901
- *  không có bảng dầu cho sứ xuyên, "Khác" không xác định được tiêu chuẩn nào) nên ẩn cả
- *  3 khối, chỉ hiện ghi chú #dauNoOilSupportNote. */
-const DAU_EQUIPMENTTYPE_STORAGE_KEY = "dga_dau_equipmenttype";
-
-function toggleDauEquipmentType() {
-  const select = $("dau_equipmenttype");
-  if (!select) return;
-  const value = select.value;
-  const isMba = value === DGA.EQUIPMENT_TYPES.MBA;
-  // Sứ xuyên dùng chung khối dầu TI/TU: cùng kiểu đánh giá theo tiêu chuẩn nhà sản xuất (2 mức Bình thường/Loại bỏ)
-  const isInstrument = value === DGA.EQUIPMENT_TYPES.TI || value === DGA.EQUIPMENT_TYPES.TU || value === DGA.EQUIPMENT_TYPES.BUSHING;
-
-  $("dauMbaWrap").classList.toggle("hidden", !isMba);
-  $("dauInstrumentWrap").classList.toggle("hidden", !isInstrument);
-  $("dauNoOilSupportNote").classList.toggle("hidden", isMba || isInstrument);
-
-  if (isInstrument && $("tio_equipmenttype").value !== value) {
-    $("tio_equipmenttype").value = value;
-    onTioEquipmentTypeChange();
-  }
-
-  try { localStorage.setItem(DAU_EQUIPMENTTYPE_STORAGE_KEY, value); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-}
-
-function setupDauEquipmentTypeToggle() {
-  const select = $("dau_equipmenttype");
-  if (!select) return;
-  select.addEventListener("change", toggleDauEquipmentType);
-  let saved = null;
-  try { saved = localStorage.getItem(DAU_EQUIPMENTTYPE_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  if (saved && Array.from(select.options).some((o) => o.value === saved)) select.value = saved;
-  toggleDauEquipmentType();
-}
-
-/** Đọc lựa chọn đã lưu (nếu có, mặc định "gas") và gắn sự kiện click cho 2 nút — gọi
- *  1 lần lúc khởi động app (initApp()), sau khi refreshHistoryUI()/refreshOilTestsUI()/
- *  refreshOltcOilTestsUI() đã nạp xong dữ liệu lần đầu, để bảng hiện đúng ngay từ đầu
- *  thay vì luôn mặc định "gas" rồi mới nhảy sang bảng đã lưu. "oltc" là giá trị CŨ (trước
- *  khi gộp 2 nút Dầu MBA chính/Dầu OLTC thành 1 nút "Dầu") có thể còn sót lại trong
- *  localStorage của người dùng cũ — coi như "oil" để không bị kẹt ở view không còn tồn
- *  tại. */
-function setupLichSuViewToggle() {
-  const toggle = $("lichsuTypeToggle");
-  if (!toggle) return;
-  toggle.querySelectorAll("[data-lichsu-type]").forEach((btn) => {
-    btn.addEventListener("click", () => setLichSuView(btn.dataset.lichsuType));
-  });
-  let saved = null;
-  try { saved = localStorage.getItem(LICHSU_VIEW_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  setLichSuView(saved === "oil" || saved === "oltc" ? "oil" : "gas");
-}
-
-
-
-/* Các bộ điều khiển kéo-thả dropzone đã được tách sang src/presentation/components/ui-dropzone.js */
-
-
-
-function toggleMbaSubtypeField() {
-  const isMba = $("f_loai").value === DGA.EQUIPMENT_TYPES.MBA;
-  $("f_mbasubtype_wrap").classList.toggle("hidden", !isMba);
-}
-
-/* Sticky header, tab navigation và subtabs đã được tách sang src/presentation/components/ui-layout.js */
-
-
-
-
-/* Tiện ích DOM, format và diff trường đã được tách sang src/presentation/components/ui-utils.js */
-
-
-
-
-function registerServiceWorker() {
-  if (typeof window !== "undefined" && "serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch((err) => {
-        console.warn("Không đăng ký được Service Worker:", err);
-      });
-    });
-  }
-}
-
-function setupAutoSyncUI() {
-  const badge = $("syncStatusBadge");
-  const text = $("syncStatusText");
-  if (!badge || !text) return;
-
-  function renderStatus(st) {
-    if (Storage.mode === "local") {
-      badge.classList.add("hidden");
-      return;
-    }
-    badge.classList.remove("hidden");
-    badge.className = "badge sync-badge";
-
-    if (st.syncing) {
-      badge.classList.add("syncing");
-      text.textContent = "Đang đồng bộ";
-      badge.title = st.pendingCount > 0 ? `Đang đồng bộ ${st.pendingCount} mục lên máy chủ...` : "Đang đồng bộ";
-    } else if (!st.online) {
-      badge.classList.add("offline");
-      text.textContent = st.pendingCount > 0
-        ? `Chạy offline, tự đồng bộ khi có mạng (${st.pendingCount})`
-        : "Chạy offline, tự đồng bộ khi có mạng";
-      badge.title = "Chạy offline, tự đồng bộ khi có mạng";
-    } else if (st.pendingCount > 0) {
-      badge.classList.add("syncing");
-      text.textContent = "Đang đồng bộ";
-      badge.title = `Có ${st.pendingCount} mục chờ đồng bộ lên máy chủ. Bấm để đồng bộ ngay.`;
-    } else {
-      badge.classList.add("online");
-      text.textContent = "Đã đồng bộ";
-      badge.title = "Đã kết nối máy chủ và đồng bộ toàn bộ dữ liệu mới nhất.";
-    }
-  }
-
-  Storage.onSyncStatusChange(renderStatus);
-
-  if (typeof navigator !== "undefined" && !navigator.onLine && Storage.mode !== "local") {
-    showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
-  }
-
-  badge.addEventListener("click", async () => {
-    const st = Storage.getSyncStatus();
-    if (!st.online) {
-      showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
-      return;
-    }
-    if (st.pendingCount > 0) {
-      showToast("Đang đồng bộ", "info");
-      const res = await Storage.processSyncQueue();
-      if (res && res.processed > 0) {
-        showToast(`Đã đồng bộ thành công ${res.processed} mục lên máy chủ!`, "success");
-        try {
-          await refreshStandardsUI();
-          await refreshHistoryUI();
-        } catch (e) {}
-      }
-    } else {
-      showToast("Toàn bộ dữ liệu đã được đồng bộ với máy chủ.", "success");
-    }
-  });
-
-  window.addEventListener("online", async () => {
-    showToast("Đang đồng bộ", "info");
-    const res = await Storage.processSyncQueue();
-    if (res && res.processed > 0) {
-      showToast(`Đã tự động đồng bộ xong ${res.processed} mục lên máy chủ!`, "success");
-      try {
-        await refreshStandardsUI();
-        await refreshHistoryUI();
-      } catch (e) {}
-    }
-  });
-
-  window.addEventListener("offline", () => {
-    showToast("Chạy offline, tự đồng bộ khi có mạng", "warning");
-  });
-
-  // Tự động kiểm tra đồng bộ ngầm định kỳ mỗi 45 giây nếu online và có queue tồn đọng
-  setInterval(() => {
-    if (typeof navigator !== "undefined" && navigator.onLine && Storage.getSyncStatus().pendingCount > 0) {
-      Storage.processSyncQueue().then((res) => {
-        if (res && res.processed > 0) {
-          try { refreshHistoryUI(); } catch (e) {}
-        }
-      }).catch(() => {});
-    }
-  }, 45000);
 }
 
 document.addEventListener("DOMContentLoaded", init);
