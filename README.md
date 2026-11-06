@@ -46,7 +46,10 @@ Tính năng:
   chọn), lưu lại và hiển thị cho cả nhóm cùng xem, tránh đề xuất trùng nhau.
 - **Khung hiển thị Biên bản đối chiếu song song (Split View)**: Kéo-thả hoặc chọn file PDF BBTN tự động mở khung xem tài liệu gốc bên cạnh form nhập liệu để so sánh, xác nhận số liệu trước khi lưu.
 - **BBTN dầu 3 pha TI/TU (PTC3/BM.14)**: Nhập PDF hoặc nhập tay chung 1 biên bản cho 3 pha A, B, C; tự tách 3 bản ghi độc lập; đánh giá theo 2 tầng ngưỡng NSX; đối chiếu cột "Trên BBTN" và xuất lại Word.
-- **Kiến trúc 3 tầng (Three-Tier Architecture)** & **Offline-First PWA (Service Worker v4)**: Hoạt động bền bỉ khi mất mạng, tự động đồng bộ khi có kết nối trở lại.
+- **Kiến trúc 3 lớp** (giao diện → dữ liệu → nghiệp vụ, xem mục 4) và **hàng đợi offline**: thao tác lưu lúc mất
+  kết nối được giữ trong trình duyệt và tự gửi lên máy chủ khi có mạng lại (cả chế độ máy chủ nội bộ lẫn Google
+  Sheets). Lưu ý: Service Worker hiện chưa được đăng ký nên **tải lại trang lúc mất mạng chưa chạy được**
+  (`docs/refactor/BUGS_FOUND.md` lỗi #2).
 - *Xem tài liệu chi tiết toàn bộ tính năng và tiện ích tại [docs/huong-dan/Features-web-app.md](./docs/huong-dan/Features-web-app.md).*
 
 > **Lưu ý về nguồn dữ liệu IEC**: các bảng Annex A (A.2, A.6, A.9) và bảng ranh
@@ -56,18 +59,44 @@ Tính năng:
 > (nhãn "D+T" xuất hiện ngay trên hình vẽ gốc) — không phải do công cụ suy
 > diễn thêm.
 
-## 1. Chạy thử ngay (không cần cấu hình gì)
+## 1. Ba chế độ lưu trữ
 
-Không cần server, không cần tài khoản: mở trực tiếp `index.html` bằng trình
-duyệt (double-click, hoặc `python3 -m http.server` rồi mở `http://localhost:8000`).
-Ở chế độ này, dữ liệu được lưu bằng `localStorage` — **chỉ máy/trình duyệt hiện
-tại nhìn thấy**, mất dữ liệu nếu xóa lịch sử duyệt web. Phù hợp để dùng thử hoặc
-dùng cá nhân trên 1 máy.
+`config.js` **tự chọn** chế độ theo nơi mở app, không cần sửa tay khi đổi môi trường:
 
-## 2. Có database dùng chung (nhiều máy / nhiều người cùng nhập, cùng xem)
+| Chế độ | Khi nào | Dữ liệu nằm ở |
+|---|---|---|
+| **Máy chủ nội bộ (on-premise)** | mở qua `http://localhost`, `127.0.0.1`, IP mạng LAN, hoặc `file:///…/index.html` (gọi `http://localhost:8080/api`) | `data/database.json` + `data/uploads/` trên máy chạy máy chủ. Không gửi request nào ra Internet (Google Sheets / Google Sign-In tắt hẳn) |
+| **Google Sheets (online)** | mở qua GitHub Pages hoặc domain công khai | Google Sheet + Google Drive, qua Apps Script `backend/gsheet/Code.gs` (mục 2a) |
+| **localStorage + hàng đợi offline** | luôn chạy kèm 2 chế độ trên | bản sao cục bộ trong trình duyệt; thao tác lưu lúc mất kết nối nằm trong hàng đợi và tự gửi lại khi có mạng |
 
-Chọn 1 trong 2 cách bên dưới — điền đúng 1 mục trong `config.js`, để trống các
-mục còn lại. Nếu điền cả 2, Google Sheets được ưu tiên dùng trước.
+Supabase giữ nguyên code nhưng **không dùng** (chưa có đăng nhập/phân quyền — mục 2b, 2c).
+
+### 1a. Chạy máy chủ nội bộ (on-premise)
+
+Cần [Node.js](https://nodejs.org) (không cần `npm install` để chạy app):
+
+```bash
+npm start                  # = node backend/onpremise/serve.js, mặc định cổng 8080 (PORT=xxxx để đổi)
+```
+
+Trên Windows: double-click `chay_dga_offline.bat` (tự mở trình duyệt tới `http://localhost:8080`).
+
+- Lần đầu chạy, `backend/onpremise/db.js` tự tạo `data/database.json` rỗng (cấu trúc bảng xem
+  `data/database.example.json`). File này chứa tài khoản/`password_hash`/phiên đăng nhập — **không commit, không
+  đưa lên Pages** (đã có trong `data/.gitignore`).
+- Đặt biến môi trường `DGA_DATA_DIR` để dùng thư mục dữ liệu khác (bộ test dùng cách này).
+- Máy chủ **chỉ phục vụ file web theo danh sách cho phép** (`backend/onpremise/static-allowlist.js`, dùng chung
+  với bản GitHub Pages); `data/`, `.git/`, `backend/`, `docs/`, `*.md`… trả 404. File đính kèm chỉ tải qua
+  `/api/files/…` (có kiểm tra phiên đăng nhập).
+- Tệp đính kèm lưu theo mã băm SHA-256 (`data/uploads/<yyyy>/<mm>/<sha8>_<tên>`), cùng nội dung không lưu trùng.
+  Gom tệp trùng cũ: `node scripts/dedupe-uploads.js --dry-run` (xem trước) rồi bỏ `--dry-run`.
+- Thêm/đổi file web ở gốc dự án → bổ sung `ROOT_FILES` / `ROOT_DIRS` trong `static-allowlist.js`.
+- Mở `index.html` bằng `file://` thì 2 chức năng đọc BBTN PDF / tấm nhãn chưa chạy (lỗi #8) — nên mở qua
+  `http://localhost:8080`.
+
+## 2. Database dùng chung trên Internet (nhiều máy / nhiều người cùng nhập, cùng xem)
+
+Chế độ online dùng Google Sheets (mục 2a). Mục 2b, 2c về Supabase giữ lại để tham khảo.
 
 ### 2a. Google Sheets (đơn giản nhất — chỉ cần tài khoản Google, không cần đăng ký gì thêm)
 
@@ -77,7 +106,7 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
    ví dụ "DGA Database").
 2. Trong Sheet đó: **Tiện ích mở rộng (Extensions) → Apps Script**.
 3. Xóa hết nội dung mẫu trong `Code.gs`, dán toàn bộ nội dung file
-   [`backend/gsheet/Code.gs`](./gsheet/Code.gs) (trong repo này) vào, rồi **Lưu** (biểu
+   [`backend/gsheet/Code.gs`](./backend/gsheet/Code.gs) (trong repo này) vào, rồi **Lưu** (biểu
    tượng đĩa mềm).
 4. Bấm **Deploy (Triển khai) → New deployment (Triển khai mới)**:
    - Select type: **Web app**
@@ -125,7 +154,7 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 > ⚠ **Bảo mật:** chế độ Supabase của app hiện **chưa có đăng nhập/phân quyền**, và
 > `supabase-schema.sql` mở policy `using (true)` — ai có anon key (công khai trong
 > `config.js`) đều đọc/sửa/xóa được toàn bộ dữ liệu. Chỉ dùng cho thử nghiệm nội bộ.
-> Không dùng Supabase thì chạy [`backend/supabase/lockdown-anon.sql`](./supabase/lockdown-anon.sql)
+> Không dùng Supabase thì chạy [`backend/supabase/lockdown-anon.sql`](./backend/supabase/lockdown-anon.sql)
 > và vô hiệu hóa anon key cũ (Project Settings > API Keys > tab Legacy API Keys > Disable JWT-based API keys). Muốn có Supabase chạy song song an toàn, dùng cách
 > ở **mục 2c** (Code.gs ghi theo phía máy chủ, không cần anon key).
 
@@ -178,7 +207,7 @@ Supabase và Supabase khóa được hoàn toàn quyền của anon key.
 
 1. Tạo project Supabase (bước 1 mục 2b). Vào **SQL Editor**, chạy lần lượt:
    - [`supabase-schema.sql`](./backend/supabase/supabase-schema.sql) (nếu chưa từng chạy, để tạo bảng);
-   - [`backend/supabase/mirror-setup.sql`](./supabase/mirror-setup.sql) (bổ sung cột còn thiếu và cột lưu
+   - [`backend/supabase/mirror-setup.sql`](./backend/supabase/mirror-setup.sql) (bổ sung cột còn thiếu và cột lưu
      vết người nhập/người sửa, bỏ ràng buộc mà Sheets không có, **khóa quyền anon key**).
      Chạy lại nhiều lần vẫn an toàn, không xóa dữ liệu.
 2. Supabase Dashboard > **Project Settings > API Keys** > tab **API Keys** > mục **Secret keys** > tạo
@@ -208,19 +237,15 @@ Lưu ý:
 
 ## 3. Đưa lên GitHub + GitHub Pages (miễn phí)
 
-```bash
-cd dga-webapp
-git init
-git add .
-git commit -m "Khởi tạo công cụ đánh giá DGA"
-git branch -M main
-git remote add origin https://github.com/<tai-khoan-cua-ban>/<ten-repo>.git
-git push -u origin main
-```
+Trang được deploy bằng GitHub Actions (`.github/workflows/deploy-pages.yml`) mỗi khi push lên `main`:
 
-Sau đó vào repo trên GitHub → **Settings → Pages** → Source chọn nhánh `main`,
-thư mục `/ (root)` → Save. Sau ít phút, trang sẽ có tại
-`https://<tai-khoan-cua-ban>.github.io/<ten-repo>/`.
+1. Repo trên GitHub → **Settings → Pages** → Source chọn **GitHub Actions** (không chọn "Deploy from a branch" —
+   cách đó đưa cả repo lên Pages).
+2. Workflow chạy `node scripts/build-pages-site.js _site`: **chỉ chép file web theo danh sách cho phép**
+   (`index.html`, `manifest.webmanifest`, `sw.js`, `config.js`, `src/`, `vendor/`, `assets/image/`, `mobile/`,
+   `assets/template/template-*.docx`; trừ `*.md`). **Không** đưa `data/`, `backend/`, `tests/`, `scripts/`,
+   `docs/`, `node_modules/` lên. Thiếu file app cần thì script dừng, không deploy.
+3. Sau ít phút, trang có tại `https://<tai-khoan-cua-ban>.github.io/<ten-repo>/`.
 
 Vì đây là trang tĩnh (HTML/CSS/JS thuần, không có phần "server"), GitHub Pages
 hoàn toàn phù hợp để host — mọi tính toán chạy trong trình duyệt, chỉ có phần
@@ -238,21 +263,54 @@ policy "cho phép tất cả" trong `supabase-schema.sql`).
 `scripts/`, `tsconfig.json`, `types.d.ts` chỉ phục vụ phát triển/kiểm thử (xem mục 6), không được
 trình duyệt nạp và không bắt buộc phải có để chạy app.
 
+```text
+dga-webapp/
+├─ index.html, manifest.webmanifest, sw.js, config.js   # bắt buộc ở gốc (GitHub Pages + phạm vi Service Worker)
+├─ src/
+│  ├─ domain/          # LỚP NGHIỆP VỤ — thuần JS: không DOM, không lưu trữ, không fetch
+│  ├─ data/            # LỚP DỮ LIỆU — storage.js (facade window.Storage/Auth), drivers/, io/ (đọc/xuất BBTN)
+│  └─ presentation/    # LỚP GIAO DIỆN — app-*.js, tabs/ (1 file/1 tab), components/, styles/ (tokens.css trước)
+├─ backend/
+│  ├─ onpremise/       # máy chủ nội bộ: serve.js, api.js, auth.js, db.js, uploads.js, static-allowlist.js
+│  ├─ gsheet/          # Code.gs (Google Apps Script)
+│  └─ supabase/        # *.sql (giữ lại, không dùng)
+├─ assets/             # image/, template/ (mẫu BBTN template-*.docx)
+├─ vendor/             # thư viện bên thứ ba
+├─ mobile/             # bản điện thoại — mobile/dga-logic.js SINH TỰ ĐỘNG (npm run sync-mobile)
+├─ data/               # dữ liệu on-premise (KHÔNG commit, KHÔNG deploy)
+├─ scripts/  tests/  docs/
+```
+
+**Quy tắc phụ thuộc giữa các lớp:** `presentation → data → domain` (giao diện được gọi thẳng `DGA` để tính toán).
+`domain` không gọi 2 lớp kia; `data` không chạm DOM, không gọi `showToast` (báo lỗi bằng `throw`/sự kiện).
+`tests/architecture.test.js` và ESLint (`no-restricted-globals` theo thư mục) chặn vi phạm. Chi tiết:
+[`docs/refactor/ARCHITECTURE.md`](./docs/refactor/ARCHITECTURE.md).
+
+**Không có bước build và không dùng ES module cho script thường** (trừ 2 module đọc BBTN/tấm nhãn): ~60 file dùng
+chung phạm vi toàn cục, **thứ tự `<script>` trong `index.html` là thứ tự phụ thuộc** (`tests/load-order.test.js`
+kiểm tra). Đổi đường dẫn file nào thì cập nhật đồng thời `index.html`, danh sách precache và **tên cache** trong
+`sw.js` (tên cache còn xuất hiện trong 1 script inline của `index.html`), `scripts/sync-mobile.js`,
+`static-allowlist.js` nếu là thư mục gốc mới.
+
 | File / thư mục | Vai trò |
 |---|---|
 | `index.html` | Giao diện (form nhập liệu, lịch sử, cấu hình tiêu chuẩn NSX, tab Hướng dẫn) |
-| `src/presentation/styles/*.css` | Giao diện/màu sắc (tách theo tab/khu vực) |
-| `config.js` | Nơi dán URL Apps Script (Google Sheets) hoặc URL/anon key Supabase (để trống hết = chạy chế độ thử nghiệm) |
-| `src/domain/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
-| `src/domain/dga-logic.js` | File **lắp ráp**: gom 8 file `src/domain/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
-| `src/data/storage.js`, `src/data/drivers/` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
-| `src/presentation/components/ui-errors.js` | Xử lý lỗi tập trung (toast lỗi + handler `error`/`unhandledrejection` toàn cục) — nạp sớm, ngay sau `config.js` |
-| `src/presentation/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
-| `app-core.js` | Lõi khởi động app (nạp dữ liệu, gắn sự kiện dùng chung, bố cục tab) |
-| `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `src/data/io/oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `assets/template/template-bbtn-dau-3pha.docx`, giao diện ở `src/presentation/tabs/ui-ti-oil-3pha.js`) |
-| `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
+| `config.js` | Tự chọn chế độ lưu trữ theo nơi mở app (mục 1) |
+| `src/domain/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`oil-extended`/`iec60422-2024`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
+| `src/domain/dga-logic.js` | File **lắp ráp**: gom các file `src/domain/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
+| `src/data/storage.js` | Facade `window.Storage` / `window.Auth` — API giữ nguyên cho giao diện |
+| `src/data/drivers/` | `storage-core` (chọn chế độ), `storage-repo` (khuôn CRUD chung theo thực thể), `storage-remote` (máy chủ nội bộ / Google Sheets), `storage-local` (localStorage), `storage-offline` (hàng đợi đồng bộ), `storage-auth` (đăng nhập/phiên) |
+| `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF/DOCX)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `assets/template/template-bbtn-dau-3pha.docx`, giao diện ở `src/presentation/tabs/ui-ti-oil-3pha.js`) |
+| `src/presentation/app-core.js`, `app-views.js`, `app-status.js`, `early-layout.js` | Khởi động app / chuyển chế độ xem / badge trạng thái kết nối / bố cục sớm (tránh nháy giao diện) |
+| `src/presentation/tabs/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
+| `src/presentation/components/` | Thành phần dùng chung: `ui-errors.js` (xử lý lỗi tập trung, nạp sớm ngay sau `config.js`), combobox, ô kéo-thả file, chỉ báo đang xử lý, giao diện sáng/tối, ARIA tab/hộp thoại… |
+| `src/presentation/styles/` | CSS: `tokens.css` (design tokens: màu theo vai trò, khoảng cách, cỡ chữ, bo góc, đổ bóng, z-index; giao diện tối) nạp đầu tiên, rồi base → components → từng tab |
+| `backend/onpremise/` | Máy chủ nội bộ không phụ thuộc thư viện ngoài (mục 1a) |
 | `backend/gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
+| `backend/supabase/*.sql` | Script Supabase (giữ lại, đang không dùng) |
+| `scripts/build-pages-site.js` | Dựng thư mục `_site/` cho GitHub Pages theo danh sách cho phép (mục 3) |
 | `mobile/` | Bản giao diện tối ưu cho điện thoại — dùng chung logic với bản web (xem mục 6 và `mobile/README.md`) |
+| `docs/refactor/` | Hồ sơ tái cấu trúc: kiến trúc, mốc chuẩn, lỗi phát hiện, thay đổi UX, báo cáo kiểm thử, ảnh trước/sau |
 | `docs/huong-dan/user_manual.md` | Hướng dẫn sử dụng cho người dùng cuối — cũng là nguồn của tab "Hướng dẫn" trong app (xem mục 6) |
 | `docs/huong-dan/Features-web-app.md` | Danh sách đầy đủ tính năng theo từng tab |
 | `docs/huong-dan/KNOWLEDGE.md` | Kiến thức nền & kiến trúc chi tiết cho người phát triển |
@@ -308,22 +366,33 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 ## 6. Công cụ phát triển (kiểm thử, kiểm tra kiểu, đồng bộ bản di động, dựng tab Hướng dẫn)
 
 **Chỉ người phát triển/bảo trì cần mục này.** Người dùng cuối mở `index.html` (hoặc
-`mobile/index.html`) chạy thẳng, không cần Node/npm/pandoc gì cả — các công cụ dưới đây không
-đổi cách app chạy, chỉ giúp phát hiện lỗi sớm và giữ 2 nguồn (web/di động, code/tài liệu) khớp
-nhau khi sửa mã.
+`mobile/index.html`) chạy thẳng (chế độ máy chủ nội bộ chỉ cần Node.js, mục 1a) — các công cụ dưới
+đây không đổi cách app chạy, chỉ giúp phát hiện lỗi sớm và giữ 2 nguồn (web/di động, code/tài liệu)
+khớp nhau khi sửa mã.
 
 ```bash
-npm install          # lần đầu (cài Jest/TypeScript vào node_modules/, đã có trong .gitignore)
-npm test              # chạy toàn bộ kiểm thử tự động
-npm run typecheck     # kiểm tra kiểu (TypeScript checkJs) cho lớp logic/
-npm run sync-mobile   # đồng bộ mobile/dga-logic.js từ src/domain/ của bản web
-npm run build-guide   # dựng lại tab "Hướng dẫn" trong index.html từ docs/huong-dan/user_manual.md (cần cài pandoc)
+npm install               # lần đầu (Jest, TypeScript, ESLint, Stylelint, Prettier, axe-core vào node_modules/)
+npm start                 # chạy máy chủ nội bộ (mục 1a)
+npm test                  # chạy toàn bộ kiểm thử tự động (Jest)
+npm run typecheck         # kiểm tra kiểu (TypeScript checkJs) cho src/domain/ và một phần src/data/
+npm run lint              # ESLint (kể cả quy tắc ranh giới 3 lớp); npm run lint:fix để tự sửa
+npm run lint:css          # Stylelint cho src/presentation/styles/; npm run lint:css:fix để tự sửa
+npm run format -- <file>  # Prettier cho file vừa sửa
+npm run sync-mobile       # đồng bộ mobile/dga-logic.js từ src/domain/ của bản web
+npm run build-guide       # dựng lại tab "Hướng dẫn" trong index.html từ docs/huong-dan/user_manual.md
+```
+
+**Cổng kiểm thử trước mỗi commit** — tất cả phải đạt (ESLint/Stylelint hiện 0 lỗi, 0 cảnh báo; không được tăng):
+
+```bash
+npm test && npm run typecheck && npm run lint && npm run lint:css \
+  && npm run sync-mobile:check && npm run build-guide:check
 ```
 
 ### 6.1. Kiểm thử tự động (Jest)
 
 Logic DGA (`src/domain/*.js`) không phụ thuộc DOM và nạp được trong Node, nên có bộ
-kiểm thử tự động ở thư mục `tests/` (~250 test, chạy dưới 3 giây). Bao phủ:
+kiểm thử tự động ở thư mục `tests/` (~740 test). Bao phủ:
 
 - Đánh giá tuyệt đối từng khí và chọn tiêu chuẩn theo loại thiết bị/nhà sản xuất/ngưỡng loại bỏ.
 - Bảng 66 (IEC Table 1), Table A.10 (sứ xuyên), Tam giác Duval 1.
@@ -336,7 +405,11 @@ kiểm thử tự động ở thư mục `tests/` (~250 test, chạy dưới 3 g
   (`tests/load-order.test.js`) — bắt sớm việc 2 file khai báo trùng 1 tên hoặc thiếu file tham chiếu.
 - **Bản di động khớp bản web** (mục 6.3) và **tên cột khớp giữa Supabase/Google Sheets**
   (`tests/schema-consistency.test.js`) — 2 backend lệch tên cột thì dữ liệu mất/rỗng khi đổi backend.
-- **Tab "Hướng dẫn" khớp `docs/huong-dan/user_manual.md`** (mục 6.4, cần pandoc — tự bỏ qua nếu máy chưa cài).
+- **Tab "Hướng dẫn" khớp `docs/huong-dan/user_manual.md`** (mục 6.4).
+- **Ranh giới 3 lớp** (`tests/architecture.test.js`), **lớp lưu trữ** `window.Storage` ở các chế độ, **hàng đợi
+  đồng bộ** gửi đúng lên Google Sheets / máy chủ nội bộ (`tests/sync-queue-modes.test.js`), **máy chủ nội bộ chỉ
+  phục vụ file trong danh sách cho phép** (`tests/onpremise-static.test.js`, gọi HTTP thật), artifact GitHub Pages
+  (`tests/pages-site.test.js`), lưu tệp đính kèm không trùng (`tests/uploads-dedupe.test.js`).
 
 Số liệu chuẩn (golden) lấy từ văn bản gốc QĐ1901/IEC 60599:2022, không sao chép kết quả từ chính
 code. Các trường hợp đã biết là lệch văn bản gốc được ghi bằng `test.failing` trong
@@ -363,5 +436,5 @@ giữa 2 bản trên nhiều bộ số liệu để bảo đảm **cùng số li
 `docs/huong-dan/user_manual.md` là **nguồn duy nhất** của hướng dẫn người dùng. Nội dung tab "Hướng dẫn" trong
 `index.html` (giữa 2 dấu `<!-- USER-GUIDE:BEGIN -->` / `<!-- USER-GUIDE:END -->`) được **sinh tự
 động** từ file đó — không sửa tay khối HTML này. Sau khi sửa `docs/huong-dan/user_manual.md`, chạy
-`npm run build-guide` rồi commit cả 2 thay đổi. Cần cài [pandoc](https://pandoc.org) trên máy
-đang cập nhật hướng dẫn (người dùng mở app không cần).
+`npm run build-guide` rồi commit cả 2 thay đổi. Dùng bộ chuyển Markdown → HTML viết sẵn bằng JavaScript
+(`scripts/md-to-html.js`), **không cần pandoc**, nên kết quả giống hệt nhau trên mọi máy.
