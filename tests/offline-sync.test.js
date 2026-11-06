@@ -2,12 +2,9 @@
 const {
   Storage,
   LS_KEYS,
-  LS_SYNC_QUEUE_KEY,
   lsSyncQueueGet,
-  lsSyncQueueSet,
   enqueueSyncOp,
   isNetworkError,
-  executeRemoteSyncItem,
 } = require("../src/data/storage");
 
 // Mock đơn giản cho localStorage trong môi trường Node.js

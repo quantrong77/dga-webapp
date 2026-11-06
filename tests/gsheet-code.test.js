@@ -341,7 +341,7 @@ describe("Admin đặt lại mật khẩu cho người khác (actionAdminResetPa
   test("mật khẩu tạm đăng nhập được; mật khẩu CŨ hết tác dụng", () => {
     const { ctx } = createSandbox();
     const admin = registerUser(ctx, "quantrong77@gmail.com");
-    const u = registerUser(ctx, "a@vidu.com", "matkhaucu1");
+    registerUser(ctx, "a@vidu.com", "matkhaucu1");
     const reset = callPost(ctx, "adminResetPassword", { token: admin.token, email: "a@vidu.com" });
     expect(reset.tempPassword).toMatch(/^[0-9a-f]{12}$/);
     expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhaucu1" }).error).toBeTruthy();

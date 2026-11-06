@@ -11,7 +11,7 @@ async function gsheetGet(action, params) {
     res = await fetch(baseUrl + sep + qs.toString(), { method: "GET" });
   } catch (err) {
     if (typeof hasLocalServerConfig === "function" && hasLocalServerConfig()) {
-      throw new Error("Không thể kết nối đến Máy chủ nội bộ tại " + baseUrl + ". Vui lòng kiểm tra file chay_dga_offline.bat đang được bật.");
+      throw new Error("Không thể kết nối đến Máy chủ nội bộ tại " + baseUrl + ". Vui lòng kiểm tra file chay_dga_offline.bat đang được bật.", { cause: err });
     }
     throw err;
   }
@@ -36,7 +36,7 @@ async function gsheetPost(action, payload) {
     });
   } catch (err) {
     if (typeof hasLocalServerConfig === "function" && hasLocalServerConfig()) {
-      throw new Error("Không thể kết nối đến Máy chủ nội bộ tại " + baseUrl + ". Vui lòng kiểm tra file chay_dga_offline.bat đang được bật.");
+      throw new Error("Không thể kết nối đến Máy chủ nội bộ tại " + baseUrl + ". Vui lòng kiểm tra file chay_dga_offline.bat đang được bật.", { cause: err });
     }
     throw err;
   }

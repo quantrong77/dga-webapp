@@ -292,7 +292,7 @@ function buildOilBbtnRecords(form, groupId, attachment) {
 /** Ngược lại với buildOilBbtnRecords(): gom các pha đã lưu về dữ liệu form để xuất lại. */
 function oilBbtnFormFromRecords(records) {
   const first = records[0];
-  let info = {};
+  let info;
   try { info = JSON.parse(first.bbtn_info || "{}"); } catch (e) { info = {}; }
   const phases = { A: {}, B: {}, C: {} };
   records.forEach((r) => {

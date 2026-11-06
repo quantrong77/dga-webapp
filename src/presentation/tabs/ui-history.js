@@ -57,7 +57,6 @@ function renderMeasurementRows(tbody, records) {
     const standard = DGA.resolveStandard({ equipmentType: rec.equipment_type, manufacturer: rec.manufacturer, mbaSubtype }, toManufacturerStandardsForLogic(_allStandards));
     const evalRows = DGA.evaluateAbsolute(gases, standard.limits);
     const overall = DGA.overallVerdict(evalRows);
-    const ratios = DGA.computeRatios(gases);
     // DGA.diagnoseGasFault() tự chọn đúng bảng theo loại thiết bị (Table A.10 cho sứ
     // xuyên, Table 1/Bảng 66 cho các loại còn lại) — xem chú thích đầy đủ ở onAnalyze()
     // (ui-dga.js).

@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const { db, DATA_DIR, UPLOADS_DIR } = require("../backend/onpremise/db");
 const auth = require("../backend/onpremise/auth");
-const { handleApiRequest, handleFileDownload } = require("../backend/onpremise/api");
+const { handleApiRequest } = require("../backend/onpremise/api");
 
 describe("1. Embedded Database (backend/onpremise/db.js)", () => {
   beforeAll(() => {

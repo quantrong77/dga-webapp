@@ -382,7 +382,7 @@ async function onTio3FileSelected() {
   }
   note.textContent = "Đang đọc biên bản...";
   let parsed;
-  let viaOCR = false;
+  let viaOCR; // chỉ đọc sau khi đọc file thành công (nhánh lỗi đã return)
   try {
     const read = await window.BbtnImport.readLines(file, (m) => {
       if (m && m.status === "recognizing text") {

@@ -15,11 +15,11 @@
  * bản sao do backend/gsheet/Code.gs ghi ở máy chủ (README mục 2c), không cần điền gì ở đây.
  */
 (function () {
-  var loc = typeof window !== "undefined" ? window.location : null;
-  var host = loc ? String(loc.hostname || "") : "";
-  var isFile = !!loc && loc.protocol === "file:";
+  const loc = typeof window !== "undefined" ? window.location : null;
+  const host = loc ? String(loc.hostname || "") : "";
+  const isFile = !!loc && loc.protocol === "file:";
   // localhost, 127.x, ::1, *.local và dải IP nội bộ (10.x, 172.16-31.x, 192.168.x) = máy chủ nội bộ
-  var isPrivateHost =
+  const isPrivateHost =
     host === "" ||
     host === "localhost" ||
     host === "::1" ||
@@ -29,7 +29,7 @@
     /^10\./.test(host) ||
     /^192\.168\./.test(host) ||
     /^172\.(1[6-9]|2\d|3[01])\./.test(host);
-  var onPremise = isFile || isPrivateHost;
+  const onPremise = isFile || isPrivateHost;
 
   window.DGA_CONFIG = onPremise
     ? {

@@ -286,7 +286,6 @@ function computeGasAlerts() {
     const evalRows = DGA.evaluateAbsolute(gases, standard.limits, kphGases);
     const overall = DGA.overallVerdict(evalRows);
     const exceedCount = DGA.countExceedTypical(gases, latest.equipment_type, logicMeasurement);
-    const ratios = DGA.computeRatios(gases);
     // DGA.diagnoseGasFault() tự chọn đúng bảng theo loại thiết bị (Table A.10 cho sứ
     // xuyên, Table 1/Bảng 66 cho các loại còn lại) — xem chú thích đầy đủ ở onAnalyze()
     // (ui-dga.js), phải dùng giống hệt ở đây để tab "Cảnh báo" ra kết quả nhất quán.

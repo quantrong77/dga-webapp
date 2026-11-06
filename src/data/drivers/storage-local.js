@@ -19,7 +19,7 @@ function lsBbtnSetAll(map) {
   } catch (e) {
     // Thường gặp nhất: QuotaExceededError khi tổng dữ liệu vượt hạn mức trình duyệt —
     // ném lại lỗi rõ ràng để app.js hiển thị cho người dùng thay vì âm thầm mất file.
-    throw new Error("Không lưu được file vào bộ nhớ trình duyệt (có thể đã đầy dung lượng cho phép): " + ((e && e.message) || e));
+    throw new Error("Không lưu được file vào bộ nhớ trình duyệt (có thể đã đầy dung lượng cho phép): " + ((e && e.message) || e), { cause: e });
   }
 }
 

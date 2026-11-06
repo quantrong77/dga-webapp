@@ -39,7 +39,7 @@ export default [
     },
     rules: {
       "no-undef": "off", // biến toàn cục định nghĩa ở file khác
-      "no-unused-vars": ["warn", { vars: "local", args: "none", caughtErrors: "none" }],
+      "no-unused-vars": ["warn", { vars: "local", args: "none", caughtErrors: "none", ignoreRestSiblings: true }],
       "no-redeclare": "off", // cùng lý do no-undef: hàm toàn cục khai báo ở nhiều nhánh
       "no-empty": ["warn", { allowEmptyCatch: true }],
       "no-prototype-builtins": "off",

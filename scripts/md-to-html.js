@@ -1,5 +1,3 @@
-const fs = require("fs");
-const path = require("path");
 
 function mdToHtml(md) {
   const lines = md.split("\n");
@@ -19,7 +17,7 @@ function mdToHtml(md) {
   }
 
   while (i < lines.length) {
-    let line = lines[i];
+    const line = lines[i];
 
     // Blank line
     if (!line.trim()) {
