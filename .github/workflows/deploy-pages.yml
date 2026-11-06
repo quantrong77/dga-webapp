@@ -34,10 +34,18 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
+      # CHỈ đưa file web lên Pages (danh sách cho phép trong scripts/build-pages-site.js): index.html, manifest,
+      # sw.js, config.js, *.js ở gốc, css/ logic/ storage/ ui/ bbtn/ vendor/ image/ mobile/ (trừ *.md) và
+      # template/template-*.docx. KHÔNG đưa: data/ (database.json: users/password_hash, sessions), server/,
+      # tests/, scripts/, docs/, gsheet/, supabase/, pdf/, node_modules/, *.md nội bộ.
+      # Script tự kiểm tra đủ file app cần (index.html, mobile/, sw.js precache, mẫu BBTN) — thiếu thì dừng.
+      - name: Build site (allowlist)
+        run: node scripts/build-pages-site.js _site
+
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to Pages
         id: deployment

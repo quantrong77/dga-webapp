@@ -16,3 +16,6 @@ coverage/
 # Temporary Office & lock files
 ~$*
 ~*.tmp
+
+# Thư mục build cho GitHub Pages (scripts/build-pages-site.js)
+_site/
