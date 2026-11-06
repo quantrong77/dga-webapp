@@ -70,6 +70,12 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   `manifest.webmanifest`, `sw.js`, `config.js`, `src/`, `vendor/`, `assets/image/`, `assets/template/template-*.docx`
   và `mobile/`. Mọi đường dẫn khác (`data/`, `.git/`, `backend/`, `node_modules/`, `docs/`, `tests/`, `scripts/`,
   `*.md`) trả về 404. Thêm test gọi thử các đường dẫn này.
+- **ĐÃ SỬA** (`299aedf`, sau Bước 7): `backend/onpremise/static-allowlist.js` — danh sách cho phép dùng chung với
+  `scripts/build-pages-site.js`; mọi đường dẫn khác trả 404. Test `tests/onpremise-static.test.js` (60 test, có gọi
+  HTTP thật vào `serve.js`). Kiểm lại: `/data/database.json`, `/data/uploads/…`, `/.git/config`, `/backend/…`,
+  `/node_modules/…`, `/docs/…`, `/README.md`, `/package.json`, `/src/%2e%2e/data/database.json`, BBTN thật trong
+  `assets/template/` → 404; app 10 tab không lỗi / không 404. **Máy chủ đang chạy phải khởi động lại** mới có hiệu lực.
+  Lịch sử git trên GitHub vẫn còn các bản `database.json` cũ (xem `SECURITY_NOTE.md`).
 
 ## #5. Chế độ on-premise: thao tác lưu lúc mất mạng bị "đồng bộ" mà không gửi lên máy chủ
 
@@ -88,6 +94,10 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   hoặc báo lỗi).
 - **Ghi chú:** chưa refactor `executeRemoteSyncItem` (độ phức tạp 72) ở Bước 4, vì refactor thuần sẽ phải giữ nguyên
   lỗi này. Nên sửa lỗi trước, rồi gom về `STORAGE_ENTITIES` (storage-repo.js) như các hàm CRUD.
+- **ĐÃ SỬA** (`030d246`, sau Bước 7): nhánh `"local-server"` dùng chung với `"gsheet"`; chế độ/action không hỗ trợ
+  thì ném lỗi (giữ lại trong hàng đợi, báo lỗi) thay vì âm thầm coi là đã đồng bộ. Test `tests/sync-queue-modes.test.js`
+  (10 test, cả 2 chế độ, 16 action). Kiểm lại trên trình duyệt (bản sao database): lưu lúc mất mạng → có mạng lại →
+  bản ghi CÓ trong `database.json`.
 
 ## #6. Giao diện tối: hàng chẵn của mọi bảng có nền xám sáng, chữ trắng gần như không đọc được
 
