@@ -90,6 +90,7 @@
   --gray-200: var(--border);
   --gray-300: var(--border-strong);
   --gray-600: var(--text-secondary);
+  --gray-700: #334155; /* chữ phụ đậm hơn --text-secondary (ghi chú quy trình, chú thích ảnh, chữ ô kéo thả) */
   --gray-900: var(--text-primary);
 
   /* Trạng thái phân tích & chỉ thị kỹ thuật */
@@ -193,6 +194,7 @@
   --gray-200: var(--border);
   --gray-300: var(--border-strong);
   --gray-600: var(--text-secondary);
+  --gray-700: #cbd5e1; /* chữ phụ đậm hơn --text-secondary (ghi chú quy trình, chú thích ảnh, chữ ô kéo thả) */
   --gray-900: var(--text-primary);
 
   --ok: #4ade80;
