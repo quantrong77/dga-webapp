@@ -232,7 +232,7 @@ mục 5 vào **danh sách ngoại lệ có ghi chú**, gỡ ở Bước 4.
 Không đổi tên file, chỉ đổi thư mục. File chưa được git theo dõi trong `template/` (5 BBTN thật, không commit) chuyển bằng
 `mv` thường cùng commit 6.
 
-#### Commit 1 — domain (11 file)
+### Commit 1 — domain (11 file)
 
 | Cũ | Mới |
 |---|---|
@@ -248,7 +248,7 @@ Không đổi tên file, chỉ đổi thư mục. File chưa được git theo d
 | `logic/dga-logic-peer.js` | `src/domain/dga-logic-peer.js` |
 | `logic/dga-logic-regulation-config.js` | `src/domain/dga-logic-regulation-config.js` |
 
-#### Commit 2 — data (14 file)
+### Commit 2 — data (14 file)
 
 | Cũ | Mới |
 |---|---|
@@ -267,7 +267,7 @@ Không đổi tên file, chỉ đổi thư mục. File chưa được git theo d
 | `storage/storage-offline.js` | `src/data/drivers/storage-offline.js` |
 | `storage/storage-remote.js` | `src/data/drivers/storage-remote.js` |
 
-#### Commit 3 — presentation (31 file)
+### Commit 3 — presentation (31 file)
 
 | Cũ | Mới |
 |---|---|
@@ -303,7 +303,7 @@ Không đổi tên file, chỉ đổi thư mục. File chưa được git theo d
 | `ui/ui-trend.js` | `src/presentation/tabs/ui-trend.js` |
 | `ui/ui-utils.js` | `src/presentation/components/ui-utils.js` |
 
-#### Commit 4 — styles (10 file)
+### Commit 4 — styles (10 file)
 
 | Cũ | Mới |
 |---|---|
@@ -318,7 +318,7 @@ Không đổi tên file, chỉ đổi thư mục. File chưa được git theo d
 | `css/style-tab-tables.css` | `src/presentation/styles/style-tab-tables.css` |
 | `css/style-tabs-secondary.css` | `src/presentation/styles/style-tabs-secondary.css` |
 
-#### Commit 5 — backend (10 file)
+### Commit 5 — backend (10 file)
 
 | Cũ | Mới |
 |---|---|
@@ -333,7 +333,7 @@ Không đổi tên file, chỉ đổi thư mục. File chưa được git theo d
 | `supabase/mirror-setup.sql` | `backend/supabase/mirror-setup.sql` |
 | `supabase/supabase-schema.sql` | (xóa — bản cũ, thiếu cột so với supabase-schema.sql ở gốc) |
 
-#### Commit 6 — assets (41 file)
+### Commit 6 — assets (41 file)
 
 | Cũ | Mới |
 |---|---|
