@@ -2,3 +2,7 @@
 uploads/*
 !uploads/.gitkeep
 *.tmp
+# Database thật (users/password_hash, sessions, số liệu đo) — KHÔNG commit, KHÔNG deploy.
+# Mẫu cấu trúc: database.example.json (server/db.js tự tạo database.json rỗng nếu chưa có).
+database.json
+database.json.bak*

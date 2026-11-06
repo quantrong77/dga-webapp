@@ -39,12 +39,13 @@ class LocalDatabase {
       fs.mkdirSync(UPLOADS_DIR, { recursive: true });
     }
 
-    // Tạo .gitignore trong data để tránh vô tình commit file rác hoặc biên bản nội bộ dung lượng lớn
+    // Tạo .gitignore trong data để tránh vô tình commit file rác, biên bản nội bộ dung lượng lớn và database thật.
+    // Cấu trúc bảng mặc định: INITIAL_TABLES ở trên (bản mẫu cho người đọc: data/database.example.json).
     const gitignorePath = path.join(DATA_DIR, ".gitignore");
     if (!fs.existsSync(gitignorePath)) {
       fs.writeFileSync(
         gitignorePath,
-        "# Bỏ qua file nhị phân đính kèm và file tạm\nuploads/*\n!uploads/.gitkeep\n*.tmp\n",
+        "# Bỏ qua file nhị phân đính kèm và file tạm\nuploads/*\n!uploads/.gitkeep\n*.tmp\n# Database thật (users/password_hash, sessions) — KHÔNG commit\ndatabase.json\ndatabase.json.bak*\n",
         "utf8"
       );
     }
