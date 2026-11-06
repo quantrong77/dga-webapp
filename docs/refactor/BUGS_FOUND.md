@@ -106,3 +106,16 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   màu phần tử cha**, không phải màu chữ phụ như ý định.
 - **Đã sửa ở Bước 5** (commit riêng `style(css): khai bao --gray-700…`): `--gray-700` = `#334155` (sáng) /
   `#cbd5e1` (tối), đậm hơn `--text-secondary` một bậc.
+
+## #8. Mở bằng `file://`: không nạp được 2 module đọc BBTN PDF / tấm nhãn
+
+- **Hiện tượng:** mở `index.html` trực tiếp từ ổ đĩa (`file:///…/index.html`, máy chủ API chạy ở `localhost:8080`):
+  đăng nhập, xem lịch sử, phân tích, lưu đều chạy, nhưng console báo `Access to script at 'file:///…/bbtn-import.js'
+  from origin 'null' has been blocked by CORS policy`. Tương tự với `nameplate-import.js`. Hệ quả: chức năng **nhập
+  BBTN PDF** và **đọc ảnh tấm nhãn** không dùng được ở chế độ này.
+- **Nguyên nhân:** 2 file này nạp bằng `<script type="module">`, mà trình duyệt chặn ES module từ `file://`.
+- **Có từ trước refactor:** bản `a14f59a` (`bbtn/bbtn-import.js`) cho đúng lỗi này (đã kiểm ở Bước 7). Mở qua máy chủ
+  (`npm start` / `chay_dga_offline.bat`, `http://localhost:…`) thì không bị.
+- **Hướng sửa đề xuất:** README ghi rõ dùng `chay_dga_offline.bat` thay vì mở file trực tiếp; hoặc đổi 2 module này
+  sang script cổ điển (IIFE, gắn `window.BbtnImport`) như các file khác — cần thận trọng vì `pdf.js` đang nạp bằng
+  `import`.
