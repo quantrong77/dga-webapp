@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v36-assets") {
+          if (k !== "dga-offline-v37-storage-repo") {
             caches.delete(k);
           }
         });
@@ -4122,6 +4122,7 @@
   <script src="src/data/drivers/storage-local.js"></script>
   <script src="src/data/drivers/storage-offline.js"></script>
   <script src="src/data/drivers/storage-auth.js"></script>
+  <script src="src/data/drivers/storage-repo.js"></script>
   <script src="src/data/storage.js"></script>
   <!-- app.js cũ (2548 dòng, mọi tab gộp 1 file) đã được tách theo tab/tính năng
        thành các file ui-*.js + app-core.js bên dưới, để dễ tìm code hơn khi sửa. Các
