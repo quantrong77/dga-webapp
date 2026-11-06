@@ -346,6 +346,8 @@ function renderStandardsList() {
     if (editBtn) editBtn.addEventListener("click", () => onEditStandard(rec));
     if (delBtn) {
       delBtn.addEventListener("click", async () => {
+        // Xác nhận trước khi xóa như mọi nút Xóa khác (lần đo, thí nghiệm dầu, góp ý, tài khoản) — trước đây xóa ngay.
+        if (!confirm(`Xóa tiêu chuẩn của ${rec.manufacturer || "nhà sản xuất này"}? Không thể hoàn tác.`)) return;
         if (_editingStandardId === rec.id) resetStandardForm();
         try {
           await Storage.deleteStandard(rec.id);
