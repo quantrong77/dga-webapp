@@ -51,14 +51,17 @@ function resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOil
 }
 
 /**
- * @param {"TI (biến dòng điện)"|"TU (biến điện áp)"} equipmentType EQUIPMENT_TYPES.TI/TU
- * @param {object} manufacturerOilStandards xem toOilStandardsForLogic() — cần thêm equipmentType/*Reject
- * @param {number} [tgd20] tgδ đo ở 20°C (%, tùy chọn) — khác hẳn tgd90, một số NSX (VD Arteche)
- *   đưa ra ngưỡng riêng ở nhiệt độ phòng thay vì 90°C như QĐ1901/Bảng 55 dùng cho dầu MBA.
- * @param {number} [umKv] Cấp điện áp Um (kV) của chính TI/TU (tùy chọn) — dùng để xác định có
- *   áp ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V hay không, xem tgd20RejectUhv/
- *   tgd20UhvUmKv ở toOilStandardsForLogic() (VD Arteche: loại bỏ chung >3%, nhưng U.H.V
- *   (Um≥500kV theo xác nhận người dùng) dùng ngưỡng chặt hơn 1,5%).
+ * Tham số là 1 object:
+ *   equipmentType — EQUIPMENT_TYPES.TI / TU / BUSHING (sứ xuyên dùng chung cách đánh giá theo NSX);
+ *   manufacturerOilStandards — xem toOilStandardsForLogic() — cần thêm equipmentType/*Reject;
+ *   tgd20 — tgδ đo ở 20°C (%, tùy chọn) — khác hẳn tgd90, một số NSX (VD Arteche) đưa ra ngưỡng riêng ở
+ *     nhiệt độ phòng thay vì 90°C như QĐ1901/Bảng 55 dùng cho dầu MBA;
+ *   umKv — Cấp điện áp Um (kV) của chính thiết bị (tùy chọn) — dùng để xác định có áp ngưỡng loại bỏ tgδ20°C
+ *     RIÊNG cho thiết bị U.H.V hay không, xem tgd20RejectUhv/tgd20UhvUmKv ở toOilStandardsForLogic() (VD Arteche:
+ *     loại bỏ chung >3%, nhưng U.H.V (Um≥500kV theo xác nhận người dùng) dùng ngưỡng chặt hơn 1,5%).
+ * @param {{equipmentType: string, manufacturer: (string|null|undefined), manufacturerOilStandards: Array<object>,
+ *   moisture?: (number|string|null), tgd90?: (number|string|null), tgd20?: (number|string|null),
+ *   bdv?: (number|string|null), umKv?: (number|string|null)}} params
  */
 function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOilStandards, moisture, tgd90, tgd20, bdv, umKv }) {
   const match = resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOilStandards);

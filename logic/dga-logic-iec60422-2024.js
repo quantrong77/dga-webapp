@@ -164,8 +164,10 @@ function resolveIec60422TituCategory(umKv) {
 /** Đánh giá THAM KHẢO dầu TI/TU theo IEC 60422:2024 Bảng 7 (+ Bảng 5 suy diễn cho
  *  BDV) — hàm ĐỘC LẬP với evaluateInstrumentOilTest() (tiêu chuẩn nhà sản xuất), gọi
  *  thêm ở UI để hiển thị khối riêng, KHÔNG ảnh hưởng "Kết luận chung" theo NSX hiện có.
- *  @param {number|string|null} umKv cấp điện áp Um (kV) của TI/TU — BẮT BUỘC để xác
- *    định Category D/E; thiếu thì trả overall "Chưa có cấp điện áp Um".
+ *  Tham số là 1 object; umKv: cấp điện áp Um (kV) của TI/TU — BẮT BUỘC để xác định Category D/E,
+ *  thiếu thì trả overall "Chưa có cấp điện áp Um".
+ *  @param {{umKv: (number|string|null|undefined), moisture?: (number|string|null), tgd90?: (number|string|null),
+ *    bdv?: (number|string|null)}} params
  */
 function evaluateIec60422TituOilTest({ umKv, moisture, tgd90, bdv }) {
   const category = resolveIec60422TituCategory(umKv);

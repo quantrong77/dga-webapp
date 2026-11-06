@@ -1,0 +1,19 @@
+# Thư viện bên thứ ba, bản mobile sinh tự động (npm run sync-mobile), dữ liệu và tài liệu
+node_modules/
+vendor/
+mobile/
+.dist/
+coverage/
+data/
+template/
+image/
+pdf/
+docs/
+dga_webapp_spec_docs/
+.agent/
+.claude/
+.playwright/
+.playwright-cli/
+package-lock.json
+style.css
+*.md

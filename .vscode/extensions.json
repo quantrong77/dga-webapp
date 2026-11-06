@@ -1,0 +1,17 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "stylelint.vscode-stylelint",
+    "SonarSource.sonarlint-vscode",
+    "usernamehw.errorlens",
+    "Orta.vscode-jest",
+    "eamodio.gitlens",
+    "ms-vscode.live-preview",
+    "pranaygp.vscode-css-peek",
+    "deque-systems.vscode-axe-linter",
+    "naumovs.color-highlight",
+    "ms-playwright.playwright",
+    "EditorConfig.EditorConfig"
+  ]
+}

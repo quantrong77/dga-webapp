@@ -1,0 +1,46 @@
+{
+  // Prettier định dạng khi lưu — CHỈ các dòng vừa sửa (code cũ chưa từng format,
+  // format cả file sẽ đổi ~20.000 dòng). Muốn format cả 1 file: Shift+Alt+F.
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "modificationsIfAvailable",
+  "prettier.requireConfig": true,
+
+  // ESLint/Stylelint chỉ báo lỗi, KHÔNG tự sửa khi lưu (sửa có chủ đích: npm run lint:fix).
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "never",
+    "source.fixAll.stylelint": "never"
+  },
+  "eslint.validate": ["javascript"],
+  "stylelint.validate": ["css"],
+  "css.validate": false,
+
+  // Code.gs (Apps Script) đọc như JavaScript để có tô màu/gợi ý.
+  "files.associations": { "*.gs": "javascript" },
+  "files.encoding": "utf8",
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+
+  // Không tìm kiếm/theo dõi trong thư viện, bản mobile sinh tự động và dữ liệu biên bản.
+  "search.exclude": {
+    "**/node_modules": true,
+    "vendor/**": true,
+    "mobile/**": true,
+    ".dist/**": true,
+    "data/**": true,
+    "coverage/**": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "data/uploads/**": true
+  },
+
+  // Jest: chỉ chạy khi bấm (không tự chạy 31 file test mỗi lần lưu).
+  "jest.runMode": "on-demand",
+
+  "livePreview.defaultPreviewPath": "/index.html",
+
+  "[markdown]": { "editor.formatOnSave": false },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" }
+}

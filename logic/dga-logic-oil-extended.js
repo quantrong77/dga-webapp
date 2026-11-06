@@ -371,7 +371,7 @@ function evaluateIec60422ExtendedMba({ voltageClass, oilState, extra, prevFlashP
       const v = oilExtNum(extra, f);
       if (v === null) return;
       rows.push({ key: k, label, value: v, unit: "%", direction: "le", limit: `< ${max}% (bỏ qua)`,
-        verdict: v < max ? "Đạt" : "Không đạt", ref: ref5 + " — không phải thí nghiệm định kỳ" });
+        verdict: v < Number(max) ? "Đạt" : "Không đạt", ref: ref5 + " — không phải thí nghiệm định kỳ" });
     });
     const inh = oilExtNum(extra, "inhibitor_pct_original");
     if (inh !== null) tier("Hàm lượng chất ức chế (so với ban đầu)", "inhibitor", inh, T5.inhibitor.good, T5.inhibitor.poor, "ge", "%", " — chỉ áp dụng dầu có ức chế");

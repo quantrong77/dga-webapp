@@ -1610,14 +1610,17 @@ function resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOil
 }
 
 /**
- * @param {"TI (biến dòng điện)"|"TU (biến điện áp)"} equipmentType EQUIPMENT_TYPES.TI/TU
- * @param {object} manufacturerOilStandards xem toOilStandardsForLogic() — cần thêm equipmentType/*Reject
- * @param {number} [tgd20] tgδ đo ở 20°C (%, tùy chọn) — khác hẳn tgd90, một số NSX (VD Arteche)
- *   đưa ra ngưỡng riêng ở nhiệt độ phòng thay vì 90°C như QĐ1901/Bảng 55 dùng cho dầu MBA.
- * @param {number} [umKv] Cấp điện áp Um (kV) của chính TI/TU (tùy chọn) — dùng để xác định có
- *   áp ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V hay không, xem tgd20RejectUhv/
- *   tgd20UhvUmKv ở toOilStandardsForLogic() (VD Arteche: loại bỏ chung >3%, nhưng U.H.V
- *   (Um≥500kV theo xác nhận người dùng) dùng ngưỡng chặt hơn 1,5%).
+ * Tham số là 1 object:
+ *   equipmentType — EQUIPMENT_TYPES.TI / TU / BUSHING (sứ xuyên dùng chung cách đánh giá theo NSX);
+ *   manufacturerOilStandards — xem toOilStandardsForLogic() — cần thêm equipmentType/*Reject;
+ *   tgd20 — tgδ đo ở 20°C (%, tùy chọn) — khác hẳn tgd90, một số NSX (VD Arteche) đưa ra ngưỡng riêng ở
+ *     nhiệt độ phòng thay vì 90°C như QĐ1901/Bảng 55 dùng cho dầu MBA;
+ *   umKv — Cấp điện áp Um (kV) của chính thiết bị (tùy chọn) — dùng để xác định có áp ngưỡng loại bỏ tgδ20°C
+ *     RIÊNG cho thiết bị U.H.V hay không, xem tgd20RejectUhv/tgd20UhvUmKv ở toOilStandardsForLogic() (VD Arteche:
+ *     loại bỏ chung >3%, nhưng U.H.V (Um≥500kV theo xác nhận người dùng) dùng ngưỡng chặt hơn 1,5%).
+ * @param {{equipmentType: string, manufacturer: (string|null|undefined), manufacturerOilStandards: Array<object>,
+ *   moisture?: (number|string|null), tgd90?: (number|string|null), tgd20?: (number|string|null),
+ *   bdv?: (number|string|null), umKv?: (number|string|null)}} params
  */
 function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOilStandards, moisture, tgd90, tgd20, bdv, umKv }) {
   const match = resolveInstrumentOilLimits(equipmentType, manufacturer, manufacturerOilStandards);
@@ -1860,8 +1863,10 @@ function resolveIec60422TituCategory(umKv) {
 /** Đánh giá THAM KHẢO dầu TI/TU theo IEC 60422:2024 Bảng 7 (+ Bảng 5 suy diễn cho
  *  BDV) — hàm ĐỘC LẬP với evaluateInstrumentOilTest() (tiêu chuẩn nhà sản xuất), gọi
  *  thêm ở UI để hiển thị khối riêng, KHÔNG ảnh hưởng "Kết luận chung" theo NSX hiện có.
- *  @param {number|string|null} umKv cấp điện áp Um (kV) của TI/TU — BẮT BUỘC để xác
- *    định Category D/E; thiếu thì trả overall "Chưa có cấp điện áp Um".
+ *  Tham số là 1 object; umKv: cấp điện áp Um (kV) của TI/TU — BẮT BUỘC để xác định Category D/E,
+ *  thiếu thì trả overall "Chưa có cấp điện áp Um".
+ *  @param {{umKv: (number|string|null|undefined), moisture?: (number|string|null), tgd90?: (number|string|null),
+ *    bdv?: (number|string|null)}} params
  */
 function evaluateIec60422TituOilTest({ umKv, moisture, tgd90, bdv }) {
   const category = resolveIec60422TituCategory(umKv);
@@ -2288,7 +2293,7 @@ function evaluateIec60422ExtendedMba({ voltageClass, oilState, extra, prevFlashP
       const v = oilExtNum(extra, f);
       if (v === null) return;
       rows.push({ key: k, label, value: v, unit: "%", direction: "le", limit: `< ${max}% (bỏ qua)`,
-        verdict: v < max ? "Đạt" : "Không đạt", ref: ref5 + " — không phải thí nghiệm định kỳ" });
+        verdict: v < Number(max) ? "Đạt" : "Không đạt", ref: ref5 + " — không phải thí nghiệm định kỳ" });
     });
     const inh = oilExtNum(extra, "inhibitor_pct_original");
     if (inh !== null) tier("Hàm lượng chất ức chế (so với ban đầu)", "inhibitor", inh, T5.inhibitor.good, T5.inhibitor.poor, "ge", "%", " — chỉ áp dụng dầu có ức chế");
