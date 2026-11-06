@@ -171,7 +171,7 @@ flowchart TD
     end
 
     subgraph Backend_Providers["Các Nhà Cung Cấp Dữ Liệu"]
-        GSheet["Google Sheets Backend (gsheet/Code.gs Web App)"]
+        GSheet["Google Sheets Backend (backend/gsheet/Code.gs Web App)"]
         Supabase["Supabase DB (PostgreSQL + RLS)"]
         LS["Trình duyệt LocalStorage"]
     end
@@ -296,15 +296,15 @@ dga-webapp/
 
 ### 4.1. Cơ chế 3 Chế độ Lưu trữ (Storage Abstraction)
 Lớp `Storage` trong `storage.js` tự động phát hiện cấu hình từ `config.js` theo thứ tự ưu tiên:
-1. **Google Sheets (`mode = "gsheet"`):** Nếu có `GSHEET_WEBAPP_URL`. Toàn bộ dữ liệu đọc/ghi qua Web App Google Apps Script (`gsheet/Code.gs`). Hỗ trợ đầy đủ phân quyền Admin/User, mã hóa mật khẩu, quản lý phiên đăng nhập và lưu file đính kèm lên Google Drive.
+1. **Google Sheets (`mode = "gsheet"`):** Nếu có `GSHEET_WEBAPP_URL`. Toàn bộ dữ liệu đọc/ghi qua Web App Google Apps Script (`backend/gsheet/Code.gs`). Hỗ trợ đầy đủ phân quyền Admin/User, mã hóa mật khẩu, quản lý phiên đăng nhập và lưu file đính kèm lên Google Drive.
 2. **Supabase (`mode = "supabase"`):** Nếu có `SUPABASE_URL` và `SUPABASE_ANON_KEY`. Dữ liệu truy vấn trực tiếp vào PostgreSQL qua PostgREST API client.
 3. **LocalStorage (`mode = "local"`):** Mặc định khi để trống cấu hình. Dữ liệu lưu trong `window.localStorage` của trình duyệt. Ảnh và file PDF đính kèm được chuyển sang chuỗi Base64.
 
 ### 4.2. Chế độ Sao chép Song song (Server-side Mirroring)
 Trong mô hình sản xuất nội bộ:
 - Google Sheets đóng vai trò Database chính (xử lý đăng nhập, nghiệp vụ, file drive).
-- Mỗi khi có thao tác thêm/sửa/xóa trên Google Sheets, `gsheet/Code.gs` sử dụng `SUPABASE_SERVICE_ROLE_KEY` (cất an toàn trong Google Script Properties) để **tự động sao chép tức thì (mirror)** bản ghi tương ứng sang Supabase.
-- Khóa `anon key` của Supabase bị vô hiệu hóa hoàn toàn bằng script `supabase/lockdown-anon.sql` để chống lộ lọt từ frontend.
+- Mỗi khi có thao tác thêm/sửa/xóa trên Google Sheets, `backend/gsheet/Code.gs` sử dụng `SUPABASE_SERVICE_ROLE_KEY` (cất an toàn trong Google Script Properties) để **tự động sao chép tức thì (mirror)** bản ghi tương ứng sang Supabase.
+- Khóa `anon key` của Supabase bị vô hiệu hóa hoàn toàn bằng script `backend/supabase/lockdown-anon.sql` để chống lộ lọt từ frontend.
 - Nếu việc đồng bộ sang Supabase gặp sự cố (mất mạng, nghẽn API), giao dịch chính trên Google Sheets vẫn hoàn tất bình thường; lỗi được ghi vào sheet `supabase_sync_log` và Admin có thể bấm nút "Đồng bộ toàn bộ sang Supabase" tại tab Quản trị để bù đắp dữ liệu.
 
 ```
@@ -312,7 +312,7 @@ Trong mô hình sản xuất nội bộ:
          │
          │ (HTTP GET/POST + Session Token)
          ▼
-[ Google Apps Script (gsheet/Code.gs) ] ── (Lưu trữ chính) ──► [ Google Sheet Database ]
+[ Google Apps Script (backend/gsheet/Code.gs) ] ── (Lưu trữ chính) ──► [ Google Sheet Database ]
          │
          │ (Đồng bộ ngầm phía Server bằng Service-Role Key)
          ▼
@@ -480,7 +480,7 @@ Codebase đã trải qua đợt rà soát và gia cố bảo mật chuyên sâu 
   - Chỉ cho phép nạp script từ chính origin và các CDN uy tín có trong whitelist (`cdn.jsdelivr.net`, `cdnjs.cloudflare.com`, `accounts.google.com`).
 - Toàn bộ thư viện nạp từ bên ngoài (Chart.js, docxtemplater, pdf.js, tesseract.js) bắt buộc phải có hash kiểm tra toàn vẹn dữ liệu **SRI (Subresource Integrity)** thuật toán `sha512`.
 
-### 7.2. Kiểm soát An toàn Phía Google Apps Script (`gsheet/Code.gs`)
+### 7.2. Kiểm soát An toàn Phía Google Apps Script (`backend/gsheet/Code.gs`)
 - **Khóa Đồng Thời (Concurrency Lock):** Mọi thao tác ghi dữ liệu đều được bao bọc bởi `LockService.getScriptLock()`, ngăn chặn race condition làm hỏng cấu trúc dòng của Google Sheet khi nhiều người cùng lưu dữ liệu.
 - **Mã Hóa Mật Khẩu Chuẩn:** Mật khẩu người dùng được băm bằng thuật toán `PBKDF2` với muối ngẫu nhiên (salt) 16 bytes và 10.000 vòng lặp HMAC-SHA256, không lưu mật khẩu thô dưới bất kỳ hình thức nào.
 - **Chống Tấn Công Dò Quét (Brute-Force Protection):** Khóa tạm thời tài khoản 15 phút nếu đăng nhập sai quá 5 lần liên tiếp (`locked_until`).
@@ -488,7 +488,7 @@ Codebase đã trải qua đợt rà soát và gia cố bảo mật chuyên sâu 
 - **Xác Thực Phân Quyền Phía Máy Chủ:** Quyền Admin/User được kiểm tra lại trực tiếp ở backend Apps Script trước khi thực hiện ghi/xóa, không tin tưởng trạng thái ở client.
 
 ### 7.3. Khóa An Toàn Supabase
-- Triển khai script `supabase/lockdown-anon.sql` để vô hiệu hóa hoàn toàn quyền đọc/ghi tự do của `anon key`.
+- Triển khai script `backend/supabase/lockdown-anon.sql` để vô hiệu hóa hoàn toàn quyền đọc/ghi tự do của `anon key`.
 - Chuyển giao toàn quyền ghi sang `SUPABASE_SERVICE_ROLE_KEY` chỉ lưu ở biến môi trường kín phía Apps Script.
 
 ---
@@ -511,7 +511,7 @@ Bộ test nằm tại thư mục `tests/` với hơn 300 test cases thực hiệ
 - `tests/diagnosis.test.js`: Kiểm thử độ chính xác số học của Bảng 66, Table A.10 và Tam giác Duval 1.
 - `tests/gas-absolute.test.js`: Kiểm thử logic chọn tiêu chuẩn (NSX vs min(QĐ1901, IEC)).
 - `tests/oil.test.js`: Kiểm thử đánh giá dầu MBA, OLTC và TI/TU (bao gồm các ca thử nghiệm Arteche tgδ20).
-- `tests/schema-consistency.test.js`: **Cực kỳ quan trọng** — Kiểm tra tự động tên cột của `supabase-schema.sql` và mảng header trong `gsheet/Code.gs` để bảo đảm 2 backend không bao giờ lệch trường dữ liệu.
+- `tests/schema-consistency.test.js`: **Cực kỳ quan trọng** — Kiểm tra tự động tên cột của `supabase-schema.sql` và mảng header trong `backend/gsheet/Code.gs` để bảo đảm 2 backend không bao giờ lệch trường dữ liệu.
 - `tests/load-order.test.js`: Phân tích file `index.html` và `mobile/index.html` để kiểm tra thứ tự nạp `<script>`, bảo đảm không có biến toàn cục bị khai báo trùng hoặc bị gọi trước khi định nghĩa.
 - `tests/invariants.test.js`: Kiểm thử các đặc tính bất biến trên tập số liệu ngẫu nhiên (fuzz testing với seed cố định).
 

@@ -1,4 +1,4 @@
-// Kiểm thử gsheet/Code.gs (Google Apps Script) bằng cách chạy TOÀN BỘ file trong 1 sandbox
+// Kiểm thử backend/gsheet/Code.gs (Google Apps Script) bằng cách chạy TOÀN BỘ file trong 1 sandbox
 // "vm" giả lập vừa đủ API Apps Script (SpreadsheetApp/CacheService/ContentService/Utilities/
 // Session) bằng bộ nhớ trong tiến trình Node — không gọi Google thật, không cần mạng.
 //
@@ -12,7 +12,7 @@ const path = require("path");
 const vm = require("vm");
 const crypto = require("crypto");
 
-const SOURCE_PATH = path.join(__dirname, "..", "gsheet", "Code.gs");
+const SOURCE_PATH = path.join(__dirname, "..", "backend", "gsheet", "Code.gs");
 const SOURCE = fs.readFileSync(SOURCE_PATH, "utf8");
 
 /** Dựng 1 "Google Sheet" giả trong bộ nhớ — rows[0] là hàng tiêu đề, rows[i>=1] là dữ liệu.

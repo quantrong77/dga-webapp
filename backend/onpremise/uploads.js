@@ -1,4 +1,4 @@
-/* server/uploads.js — Lưu tệp đính kèm (BBTN PDF/Word, ảnh góp ý) của máy chủ on-premise theo MÃ BĂM NỘI DUNG.
+/* backend/onpremise/uploads.js — Lưu tệp đính kèm (BBTN PDF/Word, ảnh góp ý) của máy chủ on-premise theo MÃ BĂM NỘI DUNG.
  *
  * Cấu trúc:  data/uploads/<yyyy>/<mm>/<sha8>_<ten-file-an-toan>
  *   - <sha8>: 8 ký tự hex đầu của SHA-256 nội dung; <yyyy>/<mm>: tháng tải lên LẦN ĐẦU.

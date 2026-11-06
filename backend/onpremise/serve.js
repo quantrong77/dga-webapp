@@ -1,13 +1,13 @@
-/* scripts/serve.js — Máy chủ web tĩnh cục bộ và API CSDL On-Premise không phụ thuộc thư viện ngoài (zero-dependency).
+/* backend/onpremise/serve.js — Máy chủ web tĩnh cục bộ và API CSDL On-Premise không phụ thuộc thư viện ngoài (zero-dependency).
  * Dùng để chạy thử nghiệm trên http://localhost:8080 (hoặc PORT do môi trường chỉ định).
  */
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
-const { handleApiRequest } = require("../server/api");
+const { handleApiRequest } = require("./api");
 
 const PORT = parseInt(process.env.PORT, 10) || 8080;
-const ROOT = path.resolve(__dirname, "..");
+const ROOT = path.resolve(__dirname, "..", "..");
 
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",

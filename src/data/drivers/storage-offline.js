@@ -101,7 +101,7 @@ async function executeRemoteSyncItem(item) {
     if (action === "addOilTest") {
       let { data, error } = await sb().from("oil_tests").insert(payload.record).select();
       if (error && payload.record && "device_info" in payload.record && /device_info/.test(String(error.message || ""))) {
-        // Bảng chưa có cột device_info (chưa chạy supabase/mirror-setup.sql) — vẫn đồng bộ được số liệu thí nghiệm
+        // Bảng chưa có cột device_info (chưa chạy backend/supabase/mirror-setup.sql) — vẫn đồng bộ được số liệu thí nghiệm
         const { device_info, ...rest } = payload.record;
         ({ data, error } = await sb().from("oil_tests").insert(rest).select());
       }

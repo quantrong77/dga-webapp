@@ -1,4 +1,4 @@
-/* server/api.js — Bộ điều khiển API On-Premise (Localhost / LAN Server) cho DGA-Webapp.
+/* backend/onpremise/api.js — Bộ điều khiển API On-Premise (Localhost / LAN Server) cho DGA-Webapp.
  * Tương thích 100% với giao thức gọi của client (giống hệt Google Apps Script Web App).
  */
 const fs = require("fs");
@@ -162,7 +162,7 @@ async function handleApiRequest(req, res, urlObj) {
       }
 
       // Lưu vào data/uploads/<yyyy>/<mm>/<sha8>_<ten-an-toan> theo mã băm nội dung — cùng nội dung tải lên lại
-      // (VD nhập lại cùng 1 BBTN) dùng lại file đã có, không lưu trùng (server/uploads.js). name vẫn là tên gốc.
+      // (VD nhập lại cùng 1 BBTN) dùng lại file đã có, không lưu trùng (backend/onpremise/uploads.js). name vẫn là tên gốc.
       const buffer = Buffer.from(base64Data, "base64");
       const stored = uploads.storeUpload(UPLOADS_DIR, buffer, filename);
       return jsonResponse(res, {

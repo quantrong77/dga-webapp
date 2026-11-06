@@ -1,18 +1,18 @@
 /*
  * config.js — TỰ CHỌN chế độ lưu trữ theo nơi đang mở app (không cần sửa tay khi đổi môi trường):
  *
- * 1) ON-PREMISE (máy chủ nội bộ server/api.js, KHÔNG kết nối Internet) — khi mở bằng:
+ * 1) ON-PREMISE (máy chủ nội bộ backend/onpremise/api.js, KHÔNG kết nối Internet) — khi mở bằng:
  *      - file:///.../index.html                  -> gọi http://localhost:8080/api
  *      - http://localhost / 127.0.0.1 / IP LAN   -> gọi "/api" cùng máy chủ (chay_dga_offline.bat)
  *    Ở chế độ này Google Sheets/Google Sign-In bị TẮT hẳn, không gửi request nào ra ngoài.
  *
  * 2) ONLINE (GitHub Pages hoặc domain công khai khác) — dùng Google Sheets (Apps Script
- *    gsheet/Code.gs) làm database + đăng ký/đăng nhập bằng Google (Google Identity Services).
+ *    backend/gsheet/Code.gs) làm database + đăng ký/đăng nhập bằng Google (Google Identity Services).
  *    GOOGLE_CLIENT_ID phải khớp với hằng số GOOGLE_CLIENT_ID đã điền trong Apps Script đang
  *    deploy, và "Authorized JavaScript origins" của OAuth Client phải có domain GitHub Pages.
  *
  * Supabase để TRỐNG: chế độ Supabase CHƯA có đăng nhập/phân quyền; Supabase chạy SONG SONG làm
- * bản sao do gsheet/Code.gs ghi ở máy chủ (README mục 2c), không cần điền gì ở đây.
+ * bản sao do backend/gsheet/Code.gs ghi ở máy chủ (README mục 2c), không cần điền gì ở đây.
  */
 (function () {
   var loc = typeof window !== "undefined" ? window.location : null;

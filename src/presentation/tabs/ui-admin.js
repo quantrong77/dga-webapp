@@ -1,5 +1,5 @@
 /* ui-admin.js — Tab "Quản trị": danh sách user (chỉ Admin xem/thao tác được, xem
-   requireAdmin() ở gsheet/Code.gs — đây chỉ là hiển thị, quyền thật kiểm tra ở
+   requireAdmin() ở backend/gsheet/Code.gs — đây chỉ là hiển thị, quyền thật kiểm tra ở
    server). Tách từ app.js — xem ui-auth.js đầu file đó để biết quy ước chia sẻ
    scope giữa các file ui-*.js. */
 
@@ -25,7 +25,7 @@ async function refreshUsersUI() {
       const roleCell = tr.children[1];
       const sel = document.createElement("select");
       sel.className = "role-select";
-      // 3 vai trò hợp lệ — xem VALID_ROLES ở gsheet/Code.gs. "viewer" từng bị thiếu ở đây
+      // 3 vai trò hợp lệ — xem VALID_ROLES ở backend/gsheet/Code.gs. "viewer" từng bị thiếu ở đây
       // (chỉ có user/admin) dù server đã hỗ trợ đủ 3 vai trò từ trước.
       sel.innerHTML = `<option value="user">User</option><option value="viewer">Viewer</option><option value="admin">Admin</option>`;
       sel.value = u.role === "admin" ? "admin" : u.role === "viewer" ? "viewer" : "user";

@@ -67,7 +67,7 @@ export default [
     languageOptions: { globals: { ...globals.serviceworker } },
   },
   {
-    files: ["server/**/*.js", "scripts/**/*.js", "tests/**/*.js"],
+    files: ["backend/**/*.js", "scripts/**/*.js", "tests/**/*.js"],
     languageOptions: { sourceType: "commonjs", globals: { ...globals.node } },
     rules: { "no-undef": "error" },
   },

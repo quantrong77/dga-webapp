@@ -6,11 +6,11 @@
  */
 const fs = require("fs");
 const path = require("path");
-const { db, DATA_DIR, UPLOADS_DIR } = require("../server/db");
-const auth = require("../server/auth");
-const { handleApiRequest, handleFileDownload } = require("../server/api");
+const { db, DATA_DIR, UPLOADS_DIR } = require("../backend/onpremise/db");
+const auth = require("../backend/onpremise/auth");
+const { handleApiRequest, handleFileDownload } = require("../backend/onpremise/api");
 
-describe("1. Embedded Database (server/db.js)", () => {
+describe("1. Embedded Database (backend/onpremise/db.js)", () => {
   beforeAll(() => {
     db.init();
   });
@@ -64,7 +64,7 @@ describe("1. Embedded Database (server/db.js)", () => {
   });
 });
 
-describe("2. On-Premise Authentication & RBAC (server/auth.js)", () => {
+describe("2. On-Premise Authentication & RBAC (backend/onpremise/auth.js)", () => {
   let adminToken = null;
 
   beforeAll(() => {
@@ -128,7 +128,7 @@ describe("2. On-Premise Authentication & RBAC (server/auth.js)", () => {
   });
 });
 
-describe("3. API Endpoints & File Uploads (server/api.js)", () => {
+describe("3. API Endpoints & File Uploads (backend/onpremise/api.js)", () => {
   let sessionToken = null;
 
   beforeAll(() => {

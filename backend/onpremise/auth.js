@@ -1,4 +1,4 @@
-/* server/auth.js — Quản lý xác thực, phân quyền (RBAC) và bảo mật cho Máy chủ nội bộ DGA.
+/* backend/onpremise/auth.js — Quản lý xác thực, phân quyền (RBAC) và bảo mật cho Máy chủ nội bộ DGA.
  * Tương thích 100% với giao thức của Google Apps Script (Code.gs).
  */
 const crypto = require("crypto");

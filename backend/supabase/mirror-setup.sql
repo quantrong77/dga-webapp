@@ -1,7 +1,7 @@
 -- mirror-setup.sql — chuẩn bị Supabase làm BẢN SAO SONG SONG của Google Sheets.
 --
 -- Mô hình: Google Sheets vẫn là database CHÍNH (đăng nhập, phân quyền, đọc/ghi của app).
--- gsheet/Code.gs tự ghi/xóa theo sang Supabase mỗi lần có thay đổi, bằng service_role key cất
+-- backend/gsheet/Code.gs tự ghi/xóa theo sang Supabase mỗi lần có thay đổi, bằng service_role key cất
 -- trong Script Properties của Apps Script (KHÔNG nằm trong config.js / trình duyệt). Vì vậy
 -- Supabase KHÔNG cần mở quyền cho anon key — file này khóa hẳn quyền đó.
 --

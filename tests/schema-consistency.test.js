@@ -1,4 +1,4 @@
-// Nhất quán tên cột/trường giữa lớp logic, Supabase (supabase-schema.sql) và Google Sheets (gsheet/Code.gs).
+// Nhất quán tên cột/trường giữa lớp logic, Supabase (supabase-schema.sql) và Google Sheets (backend/gsheet/Code.gs).
 // Cùng 1 bản ghi được lưu ở 1 trong 3 nơi tùy cấu hình; 2 backend lệch tên cột thì dữ liệu sẽ mất/rỗng
 // khi chuyển backend. Đây là bước "đồng bộ định nghĩa với nơi lưu trữ" của khuyến cáo TypeScript/kiểu dữ liệu.
 const fs = require("fs");
@@ -7,8 +7,8 @@ const parser = require("@babel/parser");
 const { ROOT } = require("./scripts-helpers");
 const { DGA } = require("./helpers");
 
-const sql = fs.readFileSync(path.join(ROOT, "supabase-schema.sql"), "utf8").replace(/\r\n/g, "\n");
-const gsAst = parser.parse(fs.readFileSync(path.join(ROOT, "gsheet", "Code.gs"), "utf8"), { sourceType: "script" });
+const sql = fs.readFileSync(path.join(ROOT, "backend", "supabase", "supabase-schema.sql"), "utf8").replace(/\r\n/g, "\n");
+const gsAst = parser.parse(fs.readFileSync(path.join(ROOT, "backend", "gsheet", "Code.gs"), "utf8"), { sourceType: "script" });
 
 /** Tập tên cột của 1 bảng trong supabase-schema.sql. */
 function sqlColumns(table) {

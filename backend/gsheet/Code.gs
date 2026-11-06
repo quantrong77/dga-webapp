@@ -1078,7 +1078,7 @@ function deleteRow(sheetName, id) {
 // Gọi Supabase từ PHÍA MÁY CHỦ bằng service_role key cất trong Script Properties (Apps Script
 // > Project Settings > Script properties: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) — key này
 // KHÔNG bao giờ xuống trình duyệt, nên Supabase có thể khóa RLS hoàn toàn với anon key (xem
-// supabase/mirror-setup.sql). Chưa đặt 2 thuộc tính đó = tắt đồng bộ, app chạy như cũ.
+// backend/supabase/mirror-setup.sql). Chưa đặt 2 thuộc tính đó = tắt đồng bộ, app chạy như cũ.
 //
 // Lỗi phía Supabase (mất mạng, sai cột...) KHÔNG làm hỏng thao tác chính trên Google Sheets —
 // chỉ ghi lại vào sheet SHEET_SUPABASE_SYNC_LOG; chạy syncAllToSupabase() (Admin bấm ở tab

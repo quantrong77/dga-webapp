@@ -77,7 +77,7 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
    ví dụ "DGA Database").
 2. Trong Sheet đó: **Tiện ích mở rộng (Extensions) → Apps Script**.
 3. Xóa hết nội dung mẫu trong `Code.gs`, dán toàn bộ nội dung file
-   [`gsheet/Code.gs`](./gsheet/Code.gs) (trong repo này) vào, rồi **Lưu** (biểu
+   [`backend/gsheet/Code.gs`](./gsheet/Code.gs) (trong repo này) vào, rồi **Lưu** (biểu
    tượng đĩa mềm).
 4. Bấm **Deploy (Triển khai) → New deployment (Triển khai mới)**:
    - Select type: **Web app**
@@ -102,7 +102,7 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
    để xem/lọc/xuất dữ liệu thô bằng chính Google Sheets.
 
 > **Đã deploy từ trước, giờ thấy tab mới báo lỗi?** Mở lại đúng dự án Apps
-> Script, dán ĐÈ toàn bộ nội dung `gsheet/Code.gs` mới nhất vào `Code.gs`, Lưu,
+> Script, dán ĐÈ toàn bộ nội dung `backend/gsheet/Code.gs` mới nhất vào `Code.gs`, Lưu,
 > rồi **Deploy → Manage deployments → sửa (biểu tượng bút chì) deployment đang
 > dùng → Version chọn "New version" → Deploy** (chỉ Lưu trong editor KHÔNG tự
 > cập nhật bản `/exec` đang chạy).
@@ -125,13 +125,13 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 > ⚠ **Bảo mật:** chế độ Supabase của app hiện **chưa có đăng nhập/phân quyền**, và
 > `supabase-schema.sql` mở policy `using (true)` — ai có anon key (công khai trong
 > `config.js`) đều đọc/sửa/xóa được toàn bộ dữ liệu. Chỉ dùng cho thử nghiệm nội bộ.
-> Không dùng Supabase thì chạy [`supabase/lockdown-anon.sql`](./supabase/lockdown-anon.sql)
+> Không dùng Supabase thì chạy [`backend/supabase/lockdown-anon.sql`](./supabase/lockdown-anon.sql)
 > và vô hiệu hóa anon key cũ (Project Settings > API Keys > tab Legacy API Keys > Disable JWT-based API keys). Muốn có Supabase chạy song song an toàn, dùng cách
 > ở **mục 2c** (Code.gs ghi theo phía máy chủ, không cần anon key).
 
 1. Tạo tài khoản tại https://supabase.com → **New project** (chọn khu vực gần
    Việt Nam, ví dụ Singapore).
-2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase-schema.sql`](./supabase-schema.sql)
+2. Vào **SQL Editor** → dán toàn bộ nội dung file [`supabase-schema.sql`](./backend/supabase/supabase-schema.sql)
    → **Run**. Lệnh này tạo các bảng (`measurements`, `manufacturer_standards`,
    `feedback`...) và bật Row Level Security cho phép đọc/ghi bằng anon key (phù
    hợp 1 nhóm nhỏ dùng chung 1 link nội bộ). Đã chạy file này từ trước? Chạy lại
@@ -167,7 +167,7 @@ Dùng **Google Apps Script** để biến 1 Google Sheet thành API đọc/ghi c
 ### 2c. Dùng Supabase SONG SONG với Google Sheets (bản sao tự động)
 
 Google Sheets vẫn là database **chính** (đăng nhập, phân quyền, mọi thao tác của app). Mỗi lần
-lưu/xóa thành công, `gsheet/Code.gs` **tự ghi/xóa theo** bản ghi đó sang bảng cùng tên trên
+lưu/xóa thành công, `backend/gsheet/Code.gs` **tự ghi/xóa theo** bản ghi đó sang bảng cùng tên trên
 Supabase: `measurements`, `oil_tests`, `oltc_oil_tests`, `instrument_oil_tests`,
 `manufacturer_standards`, `stations`, `regulation_config`, `feedback`. Tài khoản/mật khẩu/phiên
 đăng nhập (`users`, `sessions`) **không** được sao chép.
@@ -177,8 +177,8 @@ properties. Key này không bao giờ xuống trình duyệt, nên `config.js` *
 Supabase và Supabase khóa được hoàn toàn quyền của anon key.
 
 1. Tạo project Supabase (bước 1 mục 2b). Vào **SQL Editor**, chạy lần lượt:
-   - [`supabase-schema.sql`](./supabase-schema.sql) (nếu chưa từng chạy, để tạo bảng);
-   - [`supabase/mirror-setup.sql`](./supabase/mirror-setup.sql) (bổ sung cột còn thiếu và cột lưu
+   - [`supabase-schema.sql`](./backend/supabase/supabase-schema.sql) (nếu chưa từng chạy, để tạo bảng);
+   - [`backend/supabase/mirror-setup.sql`](./supabase/mirror-setup.sql) (bổ sung cột còn thiếu và cột lưu
      vết người nhập/người sửa, bỏ ràng buộc mà Sheets không có, **khóa quyền anon key**).
      Chạy lại nhiều lần vẫn an toàn, không xóa dữ liệu.
 2. Supabase Dashboard > **Project Settings > API Keys** > tab **API Keys** > mục **Secret keys** > tạo
@@ -188,7 +188,7 @@ Supabase và Supabase khóa được hoàn toàn quyền của anon key.
    anon key cũ đã lộ trên GitHub (app không còn dùng anon key).
 3. Mở dự án Apps Script > **Project Settings** (bánh răng) > **Script properties** > thêm 2 thuộc tính:
    `SUPABASE_URL` = Project URL, `SUPABASE_SERVICE_ROLE_KEY` = khóa `sb_secret_...` (khóa service_role cũ dạng `eyJ...` cũng dùng được).
-4. Dán `gsheet/Code.gs` mới vào Apps Script > **Deploy > Manage deployments > New version**.
+4. Dán `backend/gsheet/Code.gs` mới vào Apps Script > **Deploy > Manage deployments > New version**.
 5. Vào app bằng tài khoản Admin > tab **Quản trị** > khối "Bản sao Supabase" phải báo "Đang bật" >
    bấm **Đồng bộ toàn bộ sang Supabase** để chép dữ liệu cũ. Từ đó trở đi mọi thay đổi tự ghi theo.
 
@@ -251,7 +251,7 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `app-core.js` | Lõi khởi động app (nạp dữ liệu, gắn sự kiện dùng chung, bố cục tab) |
 | `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `src/data/io/oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `template/template-bbtn-dau-3pha.docx`, giao diện ở `src/presentation/tabs/ui-ti-oil-3pha.js`) |
 | `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
-| `gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
+| `backend/gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
 | `mobile/` | Bản giao diện tối ưu cho điện thoại — dùng chung logic với bản web (xem mục 6 và `mobile/README.md`) |
 | `docs/huong-dan/user_manual.md` | Hướng dẫn sử dụng cho người dùng cuối — cũng là nguồn của tab "Hướng dẫn" trong app (xem mục 6) |
 | `docs/huong-dan/Features-web-app.md` | Danh sách đầy đủ tính năng theo từng tab |
@@ -266,7 +266,7 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
   inline, chỉ nạp script từ site + cdn.jsdelivr.net/cdnjs/Google) và các thư viện CDN được ghim
   phiên bản + `integrity` (SRI). Khi nâng phiên bản thư viện CDN phải tính lại hash
   (`openssl dgst -sha512 -binary file.js | openssl base64 -A`), khi thêm CDN/backend mới phải bổ
-  sung vào CSP. `gsheet/Code.gs` có khóa ghi (LockService), token/mật khẩu tạm sinh ngẫu nhiên an
+  sung vào CSP. `backend/gsheet/Code.gs` có khóa ghi (LockService), token/mật khẩu tạm sinh ngẫu nhiên an
   toàn, tạm khóa 15 phút sau 5 lần sai mật khẩu, và bắt đổi mật khẩu tạm ở lần đăng nhập đầu —
   sau khi sửa `Code.gs` phải **Deploy > Manage deployments > New version** mới có hiệu lực.
 

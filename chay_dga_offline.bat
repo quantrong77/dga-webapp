@@ -38,7 +38,7 @@ echo 3. De dung may chu khi lam viec xong: Dong cua so nay hoac an Ctrl+C.
 echo ===================================================================
 echo.
 
-node scripts/serve.js
+node backend/onpremise/serve.js
 if %ERRORLEVEL% NEQ 0 (
     echo.
     echo [LOI] May chu dung dot ngot voi ma loi %ERRORLEVEL%.

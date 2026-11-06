@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /* scripts/dedupe-uploads.js — Gom tệp đính kèm TRÙNG NỘI DUNG trong data/uploads/ (máy chủ on-premise) về cấu trúc
- * mới data/uploads/<yyyy>/<mm>/<sha8>_<ten> (giống server/uploads.js) và cập nhật liên kết trong database.json.
+ * mới data/uploads/<yyyy>/<mm>/<sha8>_<ten> (giống backend/onpremise/uploads.js) và cập nhật liên kết trong database.json.
  *
  *   node scripts/dedupe-uploads.js              # = --dry-run: CHỈ in kế hoạch, không đổi gì
  *   node scripts/dedupe-uploads.js --dry-run
  *   node scripts/dedupe-uploads.js --apply      # làm thật (phải DỪNG máy chủ trước)
- *   Thêm --data-dir <thư mục> để chạy trên thư mục dữ liệu khác (mặc định: như server/db.js, DGA_DATA_DIR hoặc ./data).
+ *   Thêm --data-dir <thư mục> để chạy trên thư mục dữ liệu khác (mặc định: như backend/onpremise/db.js, DGA_DATA_DIR hoặc ./data).
  *
  * Khi --apply:
  *   1. Sao lưu database.json → database.json.bak-<thời điểm> (đã nằm trong data/.gitignore);
@@ -18,9 +18,9 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const http = require("node:http");
-const uploads = require("../server/uploads");
+const uploads = require("../backend/onpremise/uploads");
 
-const LEGACY_PREFIX = /^\d{13}_/; // <Date.now()>_<ten> — cách đặt tên cũ của server/api.js
+const LEGACY_PREFIX = /^\d{13}_/; // <Date.now()>_<ten> — cách đặt tên cũ của backend/onpremise/api.js
 
 function listFiles(uploadsDir) {
   const out = [];
@@ -182,7 +182,7 @@ function serverAlive(port) {
 async function main(argv) {
   const apply = argv.includes("--apply");
   const di = argv.indexOf("--data-dir");
-  const dataDir = di >= 0 ? path.resolve(argv[di + 1]) : require("../server/db").DATA_DIR;
+  const dataDir = di >= 0 ? path.resolve(argv[di + 1]) : require("../backend/onpremise/db").DATA_DIR;
   const plan = planDedupe(dataDir);
   printPlan(plan);
   if (!apply) {

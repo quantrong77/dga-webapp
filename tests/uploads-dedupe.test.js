@@ -1,20 +1,20 @@
-// Tệp đính kèm on-premise lưu theo mã băm nội dung (server/uploads.js) + script gom tệp trùng (scripts/dedupe-uploads.js).
+// Tệp đính kèm on-premise lưu theo mã băm nội dung (backend/onpremise/uploads.js) + script gom tệp trùng (scripts/dedupe-uploads.js).
 // Bộ test dùng thư mục dữ liệu tạm riêng (tests/setup-test-env.js) — không đụng data/ thật.
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const EventEmitter = require("events");
-const uploads = require("../server/uploads");
-const { UPLOADS_DIR } = require("../server/db");
-const auth = require("../server/auth");
-const { handleApiRequest, handleFileDownload } = require("../server/api");
+const uploads = require("../backend/onpremise/uploads");
+const { UPLOADS_DIR } = require("../backend/onpremise/db");
+const auth = require("../backend/onpremise/auth");
+const { handleApiRequest, handleFileDownload } = require("../backend/onpremise/api");
 const { planDedupe, applyPlan, remapValue } = require("../scripts/dedupe-uploads");
 
 function tmpDir(tag) {
   return fs.mkdtempSync(path.join(os.tmpdir(), `dga-uploads-${tag}-`));
 }
 
-describe("server/uploads.js — lưu theo mã băm nội dung", () => {
+describe("backend/onpremise/uploads.js — lưu theo mã băm nội dung", () => {
   let dir;
   beforeEach(() => {
     dir = tmpDir("store");

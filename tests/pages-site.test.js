@@ -31,7 +31,7 @@ describe("build-pages-site", () => {
   });
 
   test("không chứa dữ liệu / mã máy chủ / tài liệu nội bộ", () => {
-    const forbiddenDirs = ["data/", "server/", "tests/", "scripts/", "docs/", "gsheet/", "supabase/", "pdf/", "node_modules/", ".git/", ".github/"];
+    const forbiddenDirs = ["data/", "backend/", "server/", "tests/", "scripts/", "docs/", "gsheet/", "supabase/", "pdf/", "node_modules/", ".git/", ".github/"];
     forbiddenDirs.forEach((d) => expect(files.filter((f) => f.startsWith(d))).toEqual([]));
     expect(files.filter((f) => /\.md$/i.test(f))).toEqual([]);
     expect(files.filter((f) => /(^|\/)~\$/.test(f))).toEqual([]);

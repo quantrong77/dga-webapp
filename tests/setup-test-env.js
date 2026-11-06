@@ -1,4 +1,4 @@
-// Chạy trước MỖI file test (jest "setupFiles", package.json): server/db.js đọc DGA_DATA_DIR lúc nạp module, nên mỗi
+// Chạy trước MỖI file test (jest "setupFiles", package.json): backend/onpremise/db.js đọc DGA_DATA_DIR lúc nạp module, nên mỗi
 // file test có 1 database tạm riêng (thư mục mới trong thư mục tạm của hệ điều hành) — không đụng tới
 // data/database.json thật, các file test chạy song song cũng không tranh nhau 1 file. Dọn thư mục khi tiến trình
 // test kết thúc.

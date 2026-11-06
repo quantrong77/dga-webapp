@@ -576,7 +576,7 @@ const Storage = {
       try {
         let { data, error } = await sb().from("oil_tests").insert(record).select();
         if (error && "device_info" in record && /device_info/.test(String(error.message || ""))) {
-          // Bảng chưa có cột device_info (chưa chạy supabase/mirror-setup.sql) — vẫn lưu được số liệu thí nghiệm
+          // Bảng chưa có cột device_info (chưa chạy backend/supabase/mirror-setup.sql) — vẫn lưu được số liệu thí nghiệm
           const { device_info, ...rest } = record;
           ({ data, error } = await sb().from("oil_tests").insert(rest).select());
         }

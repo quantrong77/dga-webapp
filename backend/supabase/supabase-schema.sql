@@ -49,6 +49,17 @@ create table if not exists manufacturer_standards (
   oil_moisture_loaibo_ppm numeric,
   oil_tgd_90c_loaibo_percent numeric,
   oil_bdv_loaibo_kv numeric,
+  -- tgδ đo ở 20°C (nhiệt độ phòng) — CHỈ TI/TU dùng, khác tgδ 90°C ở trên (một số tài
+  -- liệu nhà sản xuất, ví dụ Arteche, đưa ra ngưỡng riêng ở 20°C thay vì 90°C như
+  -- QĐ1901/Bảng 55 dùng cho dầu MBA). 2 mức bình thường/loại bỏ giống các hạng mục khác.
+  oil_tgd_20c_percent numeric,
+  oil_tgd_20c_loaibo_percent numeric,
+  -- Ngưỡng loại bỏ tgδ20°C RIÊNG cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX
+  -- ghi ngưỡng loại bỏ thấp hơn cho thiết bị U.H.V nhưng không nêu rõ mốc kV — người
+  -- dùng xác nhận áp dụng khi Um ≥ oil_tgd_20c_uhv_um_kv). Cả 2 null nếu NSX không có
+  -- biệt lệ này — xem evaluateInstrumentOilTest() ở dga-logic.js.
+  oil_tgd_20c_loaibo_uhv_percent numeric,
+  oil_tgd_20c_uhv_um_kv numeric,
   created_at timestamptz default now()
 );
 
@@ -58,7 +69,7 @@ create table if not exists measurements (
   thiet_bi text not null,
   equipment_type text not null,
   -- Phân loại CPC/OLTC (chỉ có ý nghĩa khi equipment_type = MBA/Kháng dầu) — quyết định
-  -- bảng IEC 60599:1999 Annex A.1 Table A.2 nào được dùng để tính "tiêu chuẩn chặt hơn".
+  -- bảng IEC 60599:2022 Annex A.1 Table A.2 nào được dùng để tính "tiêu chuẩn chặt hơn".
   mba_subtype text,
   manufacturer text,
   pha text,
@@ -179,6 +190,7 @@ create table if not exists oil_tests (
   bbtn_url text,
   bbtn_name text,
   acid_base_soluble text,
+  -- Thông số kỹ thuật thiết bị (JSON: hang_sx, nam_sx, dien_ap_dm, cong_suat, so_che_tao, nam_van_hanh, loai_dau)
   device_info text,
   ghi_chu text,
   created_at timestamptz default now()
@@ -251,8 +263,22 @@ create table if not exists instrument_oil_tests (
   moisture_ppm numeric,
   tgd_90c_percent numeric,
   bdv_kv numeric,
+  -- tgδ đo ở 20°C (nhiệt độ phòng, tùy chọn — một số NSX như Arteche đo thêm ngoài tgδ
+  -- 90°C) — xem oil_tgd_20c_percent ở manufacturer_standards.
+  tgd_20c_percent numeric,
+  -- Cấp điện áp Um (kV) của chính TI/TU — tùy chọn, dùng để đối chiếu THAM KHẢO với
+  -- IEC 60422:2024 Bảng 7 (Category D >170kV / E ≤170kV, xem dga-logic-iec60422-
+  -- 2024.js) — KHÔNG dùng cho đánh giá theo tiêu chuẩn nhà sản xuất ở trên.
+  um_kv numeric,
   ghi_chu text,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  -- BBTN 3 pha chung 1 biên bản (src/data/io/oil-bbtn.js): mỗi pha 1 dòng, bbtn_group_id nối các pha,
+  -- bbtn_info là chuỗi JSON thông tin chung của biên bản, bbtn_* là file PDF đính kèm dùng chung.
+  bbtn_group_id text,
+  bbtn_info text,
+  bbtn_file_id text,
+  bbtn_url text,
+  bbtn_name text
 );
 
 create index if not exists idx_instrument_oiltests_key on instrument_oil_tests (tram, thiet_bi);
@@ -370,10 +396,23 @@ create table if not exists regulation_config (
 -- alter table manufacturer_standards add column if not exists oil_tgd_90c_loaibo_percent numeric;
 -- alter table manufacturer_standards add column if not exists oil_bdv_loaibo_kv numeric;
 
+-- Nếu bạn đã tạo bảng manufacturer_standards/instrument_oil_tests từ trước (chưa có cột
+-- tgδ đo ở 20°C — một số tài liệu nhà sản xuất, ví dụ Arteche, đưa ra ngưỡng riêng ở
+-- 20°C thay vì 90°C), chạy các dòng sau để nâng cấp (an toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_percent numeric;
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_loaibo_percent numeric;
+-- alter table instrument_oil_tests add column if not exists tgd_20c_percent numeric;
+-- alter table instrument_oil_tests add column if not exists um_kv numeric;
+
+-- Nếu bạn đã tạo bảng manufacturer_standards từ trước (chưa có ngưỡng loại bỏ tgδ20°C
+-- riêng cho thiết bị U.H.V, VD Arteche), chạy các dòng sau để nâng cấp:
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_loaibo_uhv_percent numeric;
+-- alter table manufacturer_standards add column if not exists oil_tgd_20c_uhv_um_kv numeric;
+
 -- Bật Row Level Security + cho phép đọc/ghi công khai bằng anon key.
 -- ⚠ CẢNH BÁO BẢO MẬT: các policy "using (true)" dưới đây cho BẤT KỲ AI có anon key (vốn công
 -- khai trong config.js) đọc/sửa/xóa toàn bộ dữ liệu. Không dùng Supabase thì chạy
--- supabase/lockdown-anon.sql để khóa lại.
+-- backend/supabase/lockdown-anon.sql để khóa lại.
 -- Đây là cấu hình đơn giản cho công cụ nội bộ 1 nhóm nhỏ dùng chung 1 link.
 -- Nếu cần giới hạn theo tài khoản đăng nhập, thay các policy "using (true)"
 -- bằng điều kiện auth.uid() phù hợp (xem tài liệu Supabase Auth).

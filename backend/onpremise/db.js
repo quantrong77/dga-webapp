@@ -1,4 +1,4 @@
-/* server/db.js — Trình quản lý Cơ sở dữ liệu nội bộ (On-Premise Embedded Database) cho DGA-Webapp.
+/* backend/onpremise/db.js — Trình quản lý Cơ sở dữ liệu nội bộ (On-Premise Embedded Database) cho DGA-Webapp.
  * Lưu trữ dữ liệu chuẩn JSON dạng bảng có kiểm soát tính toàn vẹn (Atomic File Writes).
  * Dữ liệu đặt trong thư mục ./data/ của dự án hoặc máy chủ nội bộ.
  */
@@ -7,7 +7,7 @@ const path = require("path");
 
 // Thư mục dữ liệu: mặc định ./data của dự án; đặt biến môi trường DGA_DATA_DIR để dùng thư mục khác — bộ test
 // (tests/setup-test-env.js) dùng thư mục tạm riêng cho từng file test, KHÔNG ghi vào database thật.
-const DATA_DIR = process.env.DGA_DATA_DIR ? path.resolve(process.env.DGA_DATA_DIR) : path.resolve(__dirname, "..", "data");
+const DATA_DIR = process.env.DGA_DATA_DIR ? path.resolve(process.env.DGA_DATA_DIR) : path.resolve(__dirname, "..", "..", "data");
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const DB_FILE = path.join(DATA_DIR, "database.json");
 

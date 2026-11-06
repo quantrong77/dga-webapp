@@ -1,14 +1,22 @@
 // Bảo mật dữ liệu (REFACTOR_PLAN Bước 0): data/database.json KHÔNG còn được git theo dõi.
-// - server/db.js phải tự tạo database.json rỗng (đủ bảng) khi chưa có file;
+// - backend/onpremise/db.js phải tự tạo database.json rỗng (đủ bảng) khi chưa có file;
 // - data/database.example.json (bản mẫu trong repo) phải đúng cấu trúc bảng mặc định và không chứa dữ liệu;
 // - .gitignore của thư mục dữ liệu phải bỏ qua database.json.
 const fs = require("fs");
 const path = require("path");
-const { db, DATA_DIR, DB_FILE } = require("../server/db");
+const { db, DATA_DIR, DB_FILE } = require("../backend/onpremise/db");
 
 const ROOT = path.resolve(__dirname, "..");
 
 describe("Khởi tạo database on-premise", () => {
+  test("mặc định (không đặt DGA_DATA_DIR) thư mục dữ liệu là data/ ở GỐC dự án", () => {
+    const { execFileSync } = require("child_process");
+    const env = { ...process.env };
+    delete env.DGA_DATA_DIR;
+    const out = execFileSync(process.execPath, ["-e", 'process.stdout.write(require("./backend/onpremise/db").DATA_DIR)'], { cwd: ROOT, env, encoding: "utf8" });
+    expect(path.resolve(out)).toBe(path.join(ROOT, "data"));
+  });
+
   test("dùng thư mục dữ liệu tạm của bộ test, không phải data/ thật", () => {
     expect(path.resolve(DATA_DIR)).not.toBe(path.join(ROOT, "data"));
   });

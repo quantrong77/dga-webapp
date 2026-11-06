@@ -57,7 +57,7 @@ function phaLabelWithPrefix(value) {
  *  diện chuỗi dạng đó là ngày tháng và âm thầm đổi ô thành kiểu Date; lần đọc lại trả về
  *  chuỗi ISO đầy đủ kèm giờ/UTC (VD "2026-08-25T17:00:00.000Z") thay vì "2026-08-25"
  *  thuần — hiện nguyên ra bảng trông như dữ liệu sai/thiếu. Đã fix TẬN GỐC ở BACKEND
- *  (rowToObject(), gsheet/Code.gs — format lại đúng "yyyy-MM-dd" theo múi giờ spreadsheet
+ *  (rowToObject(), backend/gsheet/Code.gs — format lại đúng "yyyy-MM-dd" theo múi giờ spreadsheet
  *  trước khi trả JSON), nhưng cần Admin bấm redeploy Code.gs thủ công mới có hiệu lực nên
  *  giữ thêm lớp phòng hờ này ở CLIENT cho các bản ghi cũ/lúc Code.gs chưa kịp redeploy.
  *  QUAN TRỌNG: parse rồi lấy lại năm/tháng/ngày theo giờ ĐỊA PHƯƠNG của trình duyệt (an

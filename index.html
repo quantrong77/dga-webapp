@@ -3785,7 +3785,7 @@
           Vai trò <strong>Viewer</strong> chỉ xem được dữ liệu, không nhập/sửa gì (vẫn gửi góp ý được).</p>
 
         <!-- Tạo tài khoản trực tiếp — cần thiết khi đăng ký tự do đang bị đóng
-             (REGISTRATION_MODE="closed"/"domain" ở gsheet/Code.gs), nhưng để mở luôn cho mọi
+             (REGISTRATION_MODE="closed"/"domain" ở backend/gsheet/Code.gs), nhưng để mở luôn cho mọi
              chế độ vì Admin có thể muốn chủ động cấp tài khoản trước. Xem onAdminCreateUser()
              ở ui-admin.js — mật khẩu TẠM sinh ngẫu nhiên, hiện 1 lần qua #tempPasswordOverlay
              để Admin copy gửi người dùng qua kênh khác (app không tự gửi email được). -->
@@ -4002,7 +4002,7 @@
       <!-- Subpanel 3: Bản sao Supabase -->
       <div class="quantri-subpanel hidden" id="quantri-supabase" role="tabpanel">
         <!-- Bản sao song song trên Supabase — Code.gs tự ghi theo mỗi lần có thay đổi (xem
-           mirrorUpsertToSupabase()/syncAllToSupabase() ở gsheet/Code.gs, README mục 2c).
+           mirrorUpsertToSupabase()/syncAllToSupabase() ở backend/gsheet/Code.gs, README mục 2c).
            Xem refreshSupabaseSyncUI()/onSyncSupabase() ở ui-admin.js. -->
       <div class="panel">
         <h2>Bản sao Supabase</h2>
