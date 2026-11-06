@@ -338,6 +338,11 @@ async function loadLists() {
   _allStations = stations || [];
   _allMeasurements = measurements || [];
   _allStandards = standards || [];
+  // Bộ đọc BBTN (src/data/io/bbtn-import.js) nhận diện ngưỡng in ở cột "Tiêu chuẩn" theo cả tiêu chuẩn NSX đang cấu
+  // hình — đăng ký hàm cung cấp (đọc _allStandards lúc trích xuất), lớp data không tự đọc biến của giao diện.
+  if (typeof window !== "undefined" && window.BbtnImport && typeof window.BbtnImport.setManufacturerStandardsProvider === "function") {
+    window.BbtnImport.setManufacturerStandardsProvider(() => toManufacturerStandardsForLogic(_allStandards));
+  }
   _allOilTests = oilTests || [];
   _allOltcOilTests = oltcOilTests || [];
 }

@@ -84,8 +84,7 @@ const EXCEPTIONS = {
   "src/domain/dga-logic.js": { window: "V10 cho phép — facade UMD gán window.DGA = DGA" },
   "src/data/io/bbtn-import.js": {
     document: "V8 cho phép — <canvas> NGOÀI trang để render PDF cho OCR",
-    _allStandards: "V1 Bước 4 — bên gọi truyền danh sách tiêu chuẩn NSX vào",
-    toManufacturerStandardsForLogic: "V1 Bước 4 — chuyển hàm thuần sang data/domain",
+    // V1 đã gỡ ở Bước 4.3: tiêu chuẩn NSX đến qua setManufacturerStandardsProvider() do giao diện đăng ký
   },
   "src/data/io/nameplate-import.js": { document: "V9 cho phép — <canvas> NGOÀI trang để render PDF cho OCR" },
   // V2–V7 đã gỡ ở Bước 4.3: applyRegulationTermsDeep → domain; 3 hàm xuất .docx trả {blob, fileName}, tải xuống ở presentation.

@@ -544,3 +544,36 @@ describe("Form nhập tab Khí hòa tan — ô khí để TRỐNG được hiể
     expect(norm(mob)).toBe(norm(web));
   });
 });
+
+// Bước 4.3 REFACTOR_PLAN (gỡ vi phạm V1): bộ đọc BBTN không còn đọc _allStandards của giao diện — tiêu chuẩn NSX đến
+// qua setManufacturerStandardsProvider() (ui-standards.js / mobile/app.js đăng ký). Ngưỡng NSX in ở cột "Tiêu chuẩn" khi
+// ô kết quả để TRỐNG phải được nhận ra là ngưỡng (KPH), không bị đọc thành kết quả đo.
+describe("BbtnImport — ngưỡng tiêu chuẩn NSX qua hàm cung cấp", () => {
+  function load() {
+    const code = fs.readFileSync(path.join(__dirname, "..", "src", "data", "io", "bbtn-import.js"), "utf8");
+    const sub = code.slice(code.indexOf("const VN_DIACRITICS_RE ="), code.indexOf("// Các trường \"Thông số kỹ thuật"));
+    const sb = {};
+    vm.createContext(sb);
+    vm.runInContext(sub + "\nthis.extractGasValues = extractGasValues; this.setManufacturerStandardsProvider = setManufacturerStandardsProvider;", sb);
+    return sb;
+  }
+  const lines = ["1 Hydro (H2) ppm 777 Đạt", "2 Metan (CH4) ppm 10 < 130 Đạt"];
+
+  test("chưa đăng ký tiêu chuẩn NSX: 777 (không phải ngưỡng mặc định) được đọc là kết quả", () => {
+    const sb = load();
+    expect(sb.extractGasValues(lines)).toEqual({ H2: 777, CH4: 10 });
+  });
+
+  test("đã đăng ký NSX có ngưỡng H2 = 777: ô kết quả trống → KPH; đọc lúc trích xuất (danh sách mới nhất)", () => {
+    const sb = load();
+    let standards = [];
+    sb.setManufacturerStandardsProvider(() => standards);
+    expect(sb.extractGasValues(lines).H2).toBe(777);
+    standards = [{ limits: { H2: 777 } }];
+    expect(sb.extractGasValues(lines)).toEqual({ H2: "KPH", CH4: 10 });
+    standards = [{ condemning: { H2: 777 } }];
+    expect(sb.extractGasValues(lines).H2).toBe("KPH");
+    sb.setManufacturerStandardsProvider(null);
+    expect(sb.extractGasValues(lines).H2).toBe(777);
+  });
+});

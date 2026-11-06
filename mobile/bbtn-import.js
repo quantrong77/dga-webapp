@@ -316,11 +316,19 @@ const GAS_FAIL_VERDICT_RE = /\b(?:Khong\s*dat|Canh\s*bao|Bao\s*dong|Fail)\b/i;
 
 // Ngưỡng mặc định (QĐ1901/IEC 60599 Annex A) theo từng khí — dự phòng khi chạy ngoài trình
 // duyệt (test) không có DGA; trong app, knownGasLimitValues() đọc trực tiếp từ DGA + tiêu
-// chuẩn NSX đang cấu hình (_allStandards) nên luôn khớp đúng các con số in ở cột "Tiêu chuẩn".
+// chuẩn NSX đang cấu hình (qua hàm cung cấp do giao diện đăng ký — setManufacturerStandardsProvider()
+// bên dưới) nên luôn khớp đúng các con số in ở cột "Tiêu chuẩn".
 const DEFAULT_GAS_LIMIT_VALUES = {
   H2: [150, 300, 392], CH4: [30, 130, 216], C2H6: [50, 90, 121], C2H4: [10, 70, 280],
   C2H2: [2, 5, 20], CO: [300, 600, 927], CO2: [900, 11578, 14000],
 };
+
+// Tiêu chuẩn NSX đang cấu hình — lớp giao diện ĐĂNG KÝ hàm cung cấp (VD () => toManufacturerStandardsForLogic(_allStandards)),
+// module này gọi lúc trích xuất nên luôn dùng danh sách mới nhất mà không phải đọc biến toàn cục của giao diện.
+let _manufacturerStandardsProvider = null;
+function setManufacturerStandardsProvider(fn) {
+  _manufacturerStandardsProvider = typeof fn === "function" ? fn : null;
+}
 
 function knownGasLimitValues(gasId) {
   const set = new Set(DEFAULT_GAS_LIMIT_VALUES[gasId] || []);
@@ -337,8 +345,8 @@ function knownGasLimitValues(gasId) {
         });
       });
     }
-    if (typeof _allStandards !== "undefined" && typeof toManufacturerStandardsForLogic === "function") {
-      toManufacturerStandardsForLogic(_allStandards).forEach((std) => {
+    if (_manufacturerStandardsProvider) {
+      (_manufacturerStandardsProvider() || []).forEach((std) => {
         addFrom(std.limits);
         addFrom(std.condemning);
       });
@@ -517,7 +525,10 @@ async function extract(file) {
   return { tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, bang63VoltageClass, loaiDau, gases, matchedCount };
 }
 
-const BbtnImport = { extract, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class };
+const BbtnImport = {
+  extract, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class,
+  setManufacturerStandardsProvider,
+};
 window.BbtnImport = BbtnImport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));
