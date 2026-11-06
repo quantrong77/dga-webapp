@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v41-lint") {
+          if (k !== "dga-offline-v42-regex") {
             caches.delete(k);
           }
         });

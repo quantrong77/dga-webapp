@@ -120,19 +120,19 @@ function firstMatch(combined, patterns) {
 
 function guessKieuMay(combined) {
   return firstMatch(combined, [
-    /\b(?:Type|Model|Kieu(?: may)?)\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9 .\/-]{1,24})/i,
+    /\b(?:Type|Model|Kieu(?: may)?)\s*[:.-]?\s*([A-Za-z0-9][A-Za-z0-9 ./-]{1,24})/i,
   ]);
 }
 
 function guessSoCheTao(combined) {
   return firstMatch(combined, [
-    /\b(?:Serial\s*No\.?|Serial\s*Number|Ser\.?\s*No\.?|Works\s*No\.?|Fabrication\s*No\.?|So che tao|So se ri)\s*[:.\-]?\s*([A-Za-z0-9][A-Za-z0-9\/\-]{2,24})/i,
+    /\b(?:Serial\s*No\.?|Serial\s*Number|Ser\.?\s*No\.?|Works\s*No\.?|Fabrication\s*No\.?|So che tao|So se ri)\s*[:.-]?\s*([A-Za-z0-9][A-Za-z0-9/-]{2,24})/i,
   ]);
 }
 
 function guessNamSx(combined) {
   const val = firstMatch(combined, [
-    /\b(?:Year\s*of\s*Manufacture|Manufacturing\s*Year|Year\s*Mfg\.?|Mfg\.?\s*Year|Date\s*of\s*Manufacture|Nam san xuat|Ngay san xuat)\s*[:.\-]?\s*(\d{4})/i,
+    /\b(?:Year\s*of\s*Manufacture|Manufacturing\s*Year|Year\s*Mfg\.?|Mfg\.?\s*Year|Date\s*of\s*Manufacture|Nam san xuat|Ngay san xuat)\s*[:.-]?\s*(\d{4})/i,
   ]);
   if (!val) return null;
   const year = parseInt(val, 10);
@@ -142,7 +142,7 @@ function guessNamSx(combined) {
 
 function guessDienApDm(combined) {
   const labeled = firstMatch(combined, [
-    /\b(?:Rated\s*(?:primary\s*)?[Vv]oltage|Um|Un|Dien ap dinh muc)\s*[:.\-]?\s*([\d.,]+\s*kV)/i,
+    /\b(?:Rated\s*(?:primary\s*)?[Vv]oltage|Um|Un|Dien ap dinh muc)\s*[:.-]?\s*([\d.,]+\s*kV)/i,
   ]);
   if (labeled) return labeled;
   // Không thấy nhãn rõ ràng: lấy trị số đứng trước "kV" ĐẦU TIÊN xuất hiện trên toàn ảnh

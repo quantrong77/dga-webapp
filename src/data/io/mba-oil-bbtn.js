@@ -85,7 +85,7 @@ function mbaOilStripNonResults(text, field) {
 }
 
 function mbaOilParseDate(folded) {
-  const m = /ngay\s*(lay mau|thi nghiem|thu nghiem)?[^0-9]{0,24}(\d{1,2})\s*[\/.-]\s*(\d{1,2})\s*[\/.-]\s*(\d{4})/.exec(folded);
+  const m = /ngay\s*(lay mau|thi nghiem|thu nghiem)?[^0-9]{0,24}(\d{1,2})\s*[/.-]\s*(\d{1,2})\s*[/.-]\s*(\d{4})/.exec(folded);
   return m ? `${m[4]}-${m[3].padStart(2, "0")}-${m[2].padStart(2, "0")}` : "";
 }
 

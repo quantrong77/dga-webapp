@@ -204,7 +204,7 @@ function guessDeviceCode(siteText) {
   if (!siteText) return null;
   // Mã thiết bị kiểu "TI174", "TU172", "AT1", "T2"... — chữ hoa (có thể có Đ) rồi số,
   // có thể kèm "-số" (VD "DCL171-7"). Không khớp các cụm số-trước-chữ như "110kV".
-  const m = siteText.match(/\b([A-ZĐ]{1,4}\d{2,4}(?:[-\/]\d+)?)\b/);
+  const m = siteText.match(/\b([A-ZĐ]{1,4}\d{2,4}(?:[-/]\d+)?)\b/);
   return m ? m[1] : null;
 }
 
@@ -214,7 +214,7 @@ function guessPhase(foldedFullText) {
 }
 
 function guessSampleDateISO(foldedFullText) {
-  const m = foldedFullText.match(/Ngay lay mau[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
+  const m = foldedFullText.match(/Ngay lay mau[^:]*:\s*(\d{1,2})[/-](\d{1,2})[/-](\d{4})/i);
   if (!m) return null;
   const [, dd, mm, yyyy] = m;
   return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
@@ -226,7 +226,7 @@ function guessSampleDateISO(foldedFullText) {
 // Khác "Ngày lấy mẫu" (guessSampleDateISO) vì 2 mốc có thể lệch nhau nếu gửi mẫu đi
 // phân tích sau ngày lấy mẫu thực tế ngoài hiện trường.
 function guessTestDateISO(foldedFullText) {
-  const m = foldedFullText.match(/Ngay thi nghiem[^:]*:\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/i);
+  const m = foldedFullText.match(/Ngay thi nghiem[^:]*:\s*(\d{1,2})[/-](\d{1,2})[/-](\d{4})/i);
   if (!m) return null;
   const [, dd, mm, yyyy] = m;
   return `${yyyy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
@@ -258,15 +258,15 @@ function guessDoAm(foldedFullText) {
 //    đã loại bỏ các cụm "< số" (đó là cột "Tiêu chuẩn/Limits", không phải kết quả đo).
 // ---------------------------------------------------------------------------
 const GAS_LINE_PATTERNS = [
-  { id: "H2", re: /\b(?:Hydrogen|Hydro)\b(?:\s*\(?\s*H\s*2\s*\)?|\s*\/\s*H\s*2)?|(?<![A-Za-z0-9\/\\_–—-])H\s*2(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "CH4", re: /\b(?:Methane|Metan)\b(?:\s*\(?\s*CH\s*4\s*\)?|\s*\/\s*CH\s*4)?|(?<![A-Za-z0-9\/\\_–—-])CH\s*4(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "C2H6", re: /\b(?:Ethane?|Etan)\b(?:\s*\(?\s*C\s*2\s*H\s*6\s*\)?|\s*\/\s*C\s*2\s*H\s*6)?|(?<![A-Za-z0-9\/\\_–—-])C\s*2\s*H\s*6(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "C2H4", re: /\b(?:Ethylene?|Etilen)\b(?:\s*\(?\s*C\s*2\s*H\s*4\s*\)?|\s*\/\s*C\s*2\s*H\s*4)?|(?<![A-Za-z0-9\/\\_–—-])C\s*2\s*H\s*4(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "C2H2", re: /\b(?:Acetylene?|Axetilen)\b(?:\s*\(?\s*C\s*2\s*H\s*2\s*\)?|\s*\/\s*C\s*2\s*H\s*2)?|(?<![A-Za-z0-9\/\\_–—-])C\s*2\s*H\s*2(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "CO", re: /\b(?:Carbon\s*Monoxit|Carbon\s*Monoxide|Cacbon\s*Monoxit)\b(?:\s*\(?\s*CO\s*\)?|\s*\/\s*CO)?|(?<![A-Za-z0-9\/\\_–—-])CO(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "CO2", re: /\b(?:Carbon\s*Dioxit|Carbon\s*Dioxide|Cacbon\s*Dioxit)\b(?:\s*\(?\s*CO\s*2\s*\)?|\s*\/\s*CO\s*2)?|(?<![A-Za-z0-9\/\\_–—-])CO\s*2(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "N2", re: /\b(?:Nitrogen|Nit[oơ])\b(?:\s*\(?\s*N\s*2\s*\)?|\s*\/\s*N\s*2)?|(?<![A-Za-z0-9\/\\_–—-])N\s*2(?![A-Za-z0-9\/\\_–—-])/i },
-  { id: "O2", re: /\b(?:Oxygen|Oxy)\b(?:\s*\(?\s*O\s*2\s*\)?|\s*\/\s*O\s*2)?|(?<![A-Za-z0-9\/\\_–—-])O\s*2(?![A-Za-z0-9\/\\_–—-])/i },
+  { id: "H2", re: /\b(?:Hydrogen|Hydro)\b(?:\s*\(?\s*H\s*2\s*\)?|\s*\/\s*H\s*2)?|(?<![A-Za-z0-9/\\_–—-])H\s*2(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "CH4", re: /\b(?:Methane|Metan)\b(?:\s*\(?\s*CH\s*4\s*\)?|\s*\/\s*CH\s*4)?|(?<![A-Za-z0-9/\\_–—-])CH\s*4(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "C2H6", re: /\b(?:Ethane?|Etan)\b(?:\s*\(?\s*C\s*2\s*H\s*6\s*\)?|\s*\/\s*C\s*2\s*H\s*6)?|(?<![A-Za-z0-9/\\_–—-])C\s*2\s*H\s*6(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "C2H4", re: /\b(?:Ethylene?|Etilen)\b(?:\s*\(?\s*C\s*2\s*H\s*4\s*\)?|\s*\/\s*C\s*2\s*H\s*4)?|(?<![A-Za-z0-9/\\_–—-])C\s*2\s*H\s*4(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "C2H2", re: /\b(?:Acetylene?|Axetilen)\b(?:\s*\(?\s*C\s*2\s*H\s*2\s*\)?|\s*\/\s*C\s*2\s*H\s*2)?|(?<![A-Za-z0-9/\\_–—-])C\s*2\s*H\s*2(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "CO", re: /\b(?:Carbon\s*Monoxit|Carbon\s*Monoxide|Cacbon\s*Monoxit)\b(?:\s*\(?\s*CO\s*\)?|\s*\/\s*CO)?|(?<![A-Za-z0-9/\\_–—-])CO(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "CO2", re: /\b(?:Carbon\s*Dioxit|Carbon\s*Dioxide|Cacbon\s*Dioxit)\b(?:\s*\(?\s*CO\s*2\s*\)?|\s*\/\s*CO\s*2)?|(?<![A-Za-z0-9/\\_–—-])CO\s*2(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "N2", re: /\b(?:Nitrogen|Nit[oơ])\b(?:\s*\(?\s*N\s*2\s*\)?|\s*\/\s*N\s*2)?|(?<![A-Za-z0-9/\\_–—-])N\s*2(?![A-Za-z0-9/\\_–—-])/i },
+  { id: "O2", re: /\b(?:Oxygen|Oxy)\b(?:\s*\(?\s*O\s*2\s*\)?|\s*\/\s*O\s*2)?|(?<![A-Za-z0-9/\\_–—-])O\s*2(?![A-Za-z0-9/\\_–—-])/i },
 ];
 
 const KPH_PATTERN =
@@ -491,7 +491,7 @@ function extractSoCheTao(lines, foldedLines, pha) {
     combined = combined.replace(/p\s+ha\s+([ABC])/gi, "pha $1").replace(/(\d+)\s*\/\s*(\d+)/g, "$1/$2");
 
     const phaseMatch = {};
-    const re = /pha\s*([ABC])\s*[:.\-]?\s*([^\s,;]+)/gi;
+    const re = /pha\s*([ABC])\s*[:.-]?\s*([^\s,;]+)/gi;
     let pm;
     while ((pm = re.exec(combined)) !== null) {
       phaseMatch[pm[1].toUpperCase()] = pm[2].trim();
@@ -539,7 +539,7 @@ function extractLoaiDau(lines, foldedLines) {
 
   // Dự phòng: dò theo các nhãn hiệu / chủng loại dầu máy biến áp thông dụng trong văn bản
   const full = lines.join(" ");
-  const mKnown = full.match(/\b(Nynas\s+Nytro(?:\s+[\w\d]+)?|Shell\s+Diala(?:\s+[\w\d\-]+)?|Apar(?:\s+[\w\d]+)?|Ergon(?:\s+Hyvolt(?:\s+[\w\d]+)?)?|Dầu khoáng|Mineral\s+oil|Dầu Silicone|Dầu ester)\b/i);
+  const mKnown = full.match(/\b(Nynas\s+Nytro(?:\s+[\w\d]+)?|Shell\s+Diala(?:\s+[\w\d-]+)?|Apar(?:\s+[\w\d]+)?|Ergon(?:\s+Hyvolt(?:\s+[\w\d]+)?)?|Dầu khoáng|Mineral\s+oil|Dầu Silicone|Dầu ester)\b/i);
   if (mKnown) return mKnown[1].trim();
 
   return null;
