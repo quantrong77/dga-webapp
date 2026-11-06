@@ -38,18 +38,18 @@ describe("index.html (web) — thứ tự nạp", () => {
   const order = scripts.map((s) => s.rel);
   const idx = (rel) => order.indexOf(rel);
 
-  test("ui/ui-errors.js nạp SỚM (trước logic/) để bắt cả lỗi lúc khởi động", () => {
+  test("ui/ui-errors.js nạp SỚM (trước src/domain/) để bắt cả lỗi lúc khởi động", () => {
     expect(idx("ui/ui-errors.js")).toBeGreaterThanOrEqual(0);
-    expect(idx("ui/ui-errors.js")).toBeLessThan(idx("logic/dga-logic-core.js"));
+    expect(idx("ui/ui-errors.js")).toBeLessThan(idx("src/domain/dga-logic-core.js"));
   });
-  test("logic/dga-logic-core.js là file logic đầu tiên; dga-logic.js (lắp ráp) nạp SAU mọi file logic/", () => {
-    const logicFiles = order.filter((f) => f.startsWith("logic/"));
-    expect(logicFiles[0]).toBe("logic/dga-logic-core.js");
-    logicFiles.forEach((f) => expect(idx("dga-logic.js")).toBeGreaterThan(idx(f)));
+  test("src/domain/dga-logic-core.js là file logic đầu tiên; dga-logic.js (lắp ráp) nạp SAU mọi file logic", () => {
+    const logicFiles = order.filter((f) => f.startsWith("src/domain/") && f !== "src/domain/dga-logic.js");
+    expect(logicFiles[0]).toBe("src/domain/dga-logic-core.js");
+    logicFiles.forEach((f) => expect(idx("src/domain/dga-logic.js")).toBeGreaterThan(idx(f)));
   });
   test("config.js → logic → storage.js → ui/* → app-core.js (app-core.js cuối cùng)", () => {
-    expect(idx("config.js")).toBeLessThan(idx("dga-logic.js"));
-    expect(idx("dga-logic.js")).toBeLessThan(idx("storage.js"));
+    expect(idx("config.js")).toBeLessThan(idx("src/domain/dga-logic.js"));
+    expect(idx("src/domain/dga-logic.js")).toBeLessThan(idx("storage.js"));
     order.filter((f) => f.startsWith("ui/") && f !== "ui/ui-errors.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("storage.js")));
     expect(order[order.length - 1]).toBe("app-core.js");
   });
@@ -58,10 +58,10 @@ describe("index.html (web) — thứ tự nạp", () => {
       expect(idx("ui/ui-auth.js")).toBeLessThan(idx(f));
     });
   });
-  test("không bỏ sót file: mọi file trong logic/, ui/, bbtn/ đều được index.html tham chiếu", () => {
+  test("không bỏ sót file: mọi file trong src/domain/, ui/, bbtn/ đều được index.html tham chiếu", () => {
     const referenced = new Set(order);
     const missing = [];
-    ["logic", "ui", "bbtn", "storage"].forEach((dir) => {
+    ["src/domain", "ui", "bbtn", "storage"].forEach((dir) => {
       fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(".js")).forEach((f) => {
         if (!referenced.has(`${dir}/${f}`)) missing.push(`${dir}/${f}`);
       });
@@ -70,14 +70,14 @@ describe("index.html (web) — thứ tự nạp", () => {
   });
 });
 
-describe("Lớp logic thuần (logic/*.js + dga-logic.js) không phụ thuộc trình duyệt", () => {
-  const files = localScripts("index.html").map((s) => s.rel).filter((f) => f.startsWith("logic/") || f === "dga-logic.js");
+describe("Lớp logic thuần (src/domain/*.js) không phụ thuộc trình duyệt", () => {
+  const files = localScripts("index.html").map((s) => s.rel).filter((f) => f.startsWith("src/domain/"));
 
   test.each(files)("%s không dùng document/localStorage/fetch/alert", (rel) => {
     const code = stripComments(path.join(ROOT, rel));
     expect(code).not.toMatch(/\bdocument\b|\blocalStorage\b|\bsessionStorage\b|\bfetch\s*\(|\balert\s*\(|\bnavigator\b/);
   });
-  test.each(files.filter((f) => f !== "dga-logic.js"))("%s không tự gắn vào window (chỉ dga-logic.js được gắn window.DGA)", (rel) => {
+  test.each(files.filter((f) => f !== "src/domain/dga-logic.js"))("%s không tự gắn vào window (chỉ dga-logic.js được gắn window.DGA)", (rel) => {
     expect(stripComments(path.join(ROOT, rel))).not.toMatch(/\bwindow\b/);
   });
 });

@@ -316,7 +316,7 @@ Thanh Header được cố định ở mép trên màn hình (Sticky Header) v�
 | | `ui/ui-alerts.js` | Bảng điều khiển cảnh báo thiết bị bất thường, xuất Excel |
 | | `ui/ui-admin.js`, `ui-standards.js` | Quản lý người dùng, tiêu chuẩn hãng sản xuất, quy định 13 bảng ngưỡng |
 | | `ui/ui-errors.js`, `ui-busy.js` | Bắt lỗi toàn cục, hiển thị Toast thông báo và chỉ báo bận |
-| **Logic Nghiệp vụ** | `logic/dga-logic-*.js` (9 file) | Động cơ chẩn đoán DGA, ngưỡng QĐ1901/IEC, Duval 1, Isolation Forest, Bảng 54/55/58 |
+| **Logic Nghiệp vụ** | `src/domain/dga-logic-*.js` (9 file) | Động cơ chẩn đoán DGA, ngưỡng QĐ1901/IEC, Duval 1, Isolation Forest, Bảng 54/55/58 |
 | **Tầng Dữ liệu** | `storage/storage-*.js` (5 file) | Lớp trừu tượng Google Sheets API, Supabase, LocalStorage, Outbox Sync ngoại tuyến |
 | **Ngoại tuyến** | `sw.js` | Service Worker cache v4, PWA offline, bắt sự kiện fetch |
 | **Xử lý Biên bản** | `bbtn/bbtn-import.js`, `nameplate-import.js` | Đọc text PDF (PDF.js) và nhận diện ảnh scan/tấm nhãn bằng OCR (Tesseract.js) |

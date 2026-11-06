@@ -3,7 +3,7 @@
  * Số hóa lưu đồ đánh giá khí hòa tan của Điều 54 QĐ1901 (mục 3: khoảng điển hình Bảng 64 -> tốc độ
  * tăng Bảng 65 -> kiểm tra nhiễm khí OLTC -> tỷ số khí Bảng 66/Duval) kết hợp lưu đồ Hình 1 (mục 9)
  * IEC 60599:2022 (mức ALERT/ALARM, "change in fault type"). Đây đúng là thuật toán ứng dụng đang chạy
- * (computeOverallStatus()/buildRecommendations() ở logic/dga-logic-gas.js).
+ * (computeOverallStatus()/buildRecommendations() ở src/domain/dga-logic-gas.js).
  *
  * Vẽ bằng SVG với class CSS (css/style-dga-workflow.css) dùng biến màu giao diện nên tự đổi theo chế
  * độ sáng/tối, không cần vẽ lại. Tọa độ khung cố định (viewBox 1100 × 1570), co giãn theo bề ngang.

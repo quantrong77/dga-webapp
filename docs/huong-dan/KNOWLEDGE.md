@@ -148,15 +148,15 @@ flowchart TD
 
     subgraph Logic_Layer["Tầng Nghiệp Vụ Thuần Túy (Core Logic - 0% DOM)"]
         Assembler["dga-logic.js (Browser: window.DGA / Node: module.exports)"]
-        Core["logic/dga-logic-core.js (Constants, Tables, Enums)"]
-        Gas["logic/dga-logic-gas.js (Ratios, Duval, TCG, Status)"]
-        Oil["logic/dga-logic-oil.js (MBA Oil & OLTC Oil)"]
-        InstOil["logic/dga-logic-instrument-oil.js (TI/TU Oil)"]
-        IEC2024["logic/dga-logic-iec60422-2024.js (IEC 60422:2024)"]
-        Forecast["logic/dga-logic-forecast.js (OLS, Theil-Sen, Slope)"]
-        RegConfig["logic/dga-logic-regulation-config.js (Overrides)"]
-        Peer["logic/dga-logic-peer.js (Z-score Log1p, Isolation Forest)"]
-        Case["logic/dga-logic-case.js (Cosine CBR)"]
+        Core["src/domain/dga-logic-core.js (Constants, Tables, Enums)"]
+        Gas["src/domain/dga-logic-gas.js (Ratios, Duval, TCG, Status)"]
+        Oil["src/domain/dga-logic-oil.js (MBA Oil & OLTC Oil)"]
+        InstOil["src/domain/dga-logic-instrument-oil.js (TI/TU Oil)"]
+        IEC2024["src/domain/dga-logic-iec60422-2024.js (IEC 60422:2024)"]
+        Forecast["src/domain/dga-logic-forecast.js (OLS, Theil-Sen, Slope)"]
+        RegConfig["src/domain/dga-logic-regulation-config.js (Overrides)"]
+        Peer["src/domain/dga-logic-peer.js (Z-score Log1p, Isolation Forest)"]
+        Case["src/domain/dga-logic-case.js (Cosine CBR)"]
     end
 
     subgraph Doc_Engine["Tự động hóa Văn bản & OCR (bbtn/)"]
@@ -259,7 +259,7 @@ dga-webapp/
 │   └── README.md              # Tài liệu riêng cho bản di động
 │
 ├── scripts/                   # CÔNG CỤ TỰ ĐỘNG DÀNH CHO DEVELOPER
-│   ├── sync-mobile.js         # Ghép nối logic/dga-logic-*.js thành mobile/dga-logic.js
+│   ├── sync-mobile.js         # Ghép nối src/domain/dga-logic-*.js thành mobile/dga-logic.js
 │   └── build-user-guide.js    # Dựng mã HTML tab Hướng dẫn trong index.html từ docs/huong-dan/user_manual.md (Pandoc)
 │
 ├── tests/                     # 15 BỘ UNIT TEST JEST (~300 TESTS)
@@ -518,7 +518,7 @@ Bộ test nằm tại thư mục `tests/` với hơn 300 test cases thực hiệ
 ### 8.3. Quy trình Sửa Đổi Logic Nghiệp Vụ
 > [!IMPORTANT]
 > **Quy tắc Vàng:** KHÔNG BAO GIỜ sửa trực tiếp file `mobile/dga-logic.js`!
-1. Tiến hành sửa đổi mã nguồn tại các file tương ứng trong `logic/dga-logic-*.js`.
+1. Tiến hành sửa đổi mã nguồn tại các file tương ứng trong `src/domain/dga-logic-*.js`.
 2. Chạy `npm run typecheck` để bảo đảm không có lỗi kiểu dữ liệu hoặc sai tên thuộc tính.
 3. Chạy `npm run sync-mobile` để script tự động ghép code và cập nhật sang `mobile/dga-logic.js`.
 4. Chạy `npm test` để xác nhận tất cả các bài kiểm thử đều chuyển màu xanh (PASS).
@@ -534,7 +534,7 @@ Bộ test nằm tại thư mục `tests/` với hơn 300 test cases thực hiệ
 
 ### 9.1. Lệch Múi Giờ Ngày Tháng (Timezone Drift in Google Sheets)
 - **Vấn đề:** `<input type="date">` gửi chuỗi `yyyy-MM-dd`. Google Sheets tự động parse chuỗi này thành đối tượng kiểu Date nội bộ. Khi trả về JSON, Sheets có thể biến thành chuỗi ISO UTC (ví dụ: `2026-08-25T17:00:00.000Z`). Nếu client dùng `new Date().toISOString()`, ngày sẽ bị lùi về ngày hôm trước (do UTC+7 chênh 7 tiếng).
-- **Giải pháp:** Sử dụng hàm chuẩn hóa `formatSampleDate()` trong `logic/dga-logic-core.js`, bóc tách năm, tháng, ngày dựa trên giờ địa phương của trình duyệt (`getFullYear()`, `getMonth() + 1`, `getDate()`).
+- **Giải pháp:** Sử dụng hàm chuẩn hóa `formatSampleDate()` trong `src/domain/dga-logic-core.js`, bóc tách năm, tháng, ngày dựa trên giờ địa phương của trình duyệt (`getFullYear()`, `getMonth() + 1`, `getDate()`).
 
 ### 9.2. Tương Thích Ngược Dữ Liệu `MBA_SUBTYPES`
 - Chuỗi lưu trữ trong database của phân loại MBA có OLTC vẫn mang tiền tố lịch sử:

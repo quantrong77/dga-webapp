@@ -38,7 +38,7 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
       escapeHtml: (s) => String(s || ""),
       verdictPill: (v) => "<span>" + v + "</span>",
       tioVerdictPill: (v) => "<span>" + v + "</span>",
-      DGA: require("../dga-logic"),
+      DGA: require("../src/domain/dga-logic"),
     };
     ctx.window = ctx;
     ctx.global = ctx;
@@ -329,7 +329,7 @@ describe("Tab Cảnh báo: lọc theo Thiết bị thuộc Trạm", () => {
       console, Date, Math, Number, String, Array, Set, Map,
       document: { getElementById: (id) => inputs[id] || null, querySelector: () => null, querySelectorAll: () => [] },
       escapeHtml: (s) => String(s || ""), verdictPill: (v) => v, tioVerdictPill: (v) => v,
-      DGA: require("../dga-logic"),
+      DGA: require("../src/domain/dga-logic"),
     };
     ctx2.window = ctx2; ctx2.global = ctx2;
     vm.createContext(ctx2);
@@ -371,7 +371,7 @@ describe("Tab Cảnh báo: tỷ lệ bổ sung Điều 54 (O2/N2, CO2/CO) cho MB
     c = {
       console, Date, Math, Number, String, Array, Set, Map,
       document: { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] },
-      escapeHtml: (s) => String(s || ""), verdictPill: (v) => v, tioVerdictPill: (v) => v, DGA: require("../dga-logic"),
+      escapeHtml: (s) => String(s || ""), verdictPill: (v) => v, tioVerdictPill: (v) => v, DGA: require("../src/domain/dga-logic"),
     };
     c.window = c; c.global = c;
     vm.createContext(c);
@@ -440,7 +440,7 @@ describe("Tab Cảnh báo: tỷ lệ bổ sung Điều 54 (O2/N2, CO2/CO) cho MB
 });
 
 test("O2/N2 = 0,27 (làm tròn 1 chữ số thành 0,3) vẫn phải cảnh báo — so ngưỡng bằng giá trị chưa làm tròn", () => {
-  const DGA = require("../dga-logic");
+  const DGA = require("../src/domain/dga-logic");
   const r = DGA.diagnoseAdditionalRatios({ CO: 200, CO2: 1500 }, 50000, 13500);
   expect(r.o2_n2).toBe(0.27);
   expect(DGA.dieu54AdditionalFlags(r).o2n2).toBe(true);
@@ -449,7 +449,7 @@ test("O2/N2 = 0,27 (làm tròn 1 chữ số thành 0,3) vẫn phải cảnh báo
 });
 
 test("O2/N2: so ngưỡng bằng số thực; hiển thị cắt bớt 3 chữ số nên số < 0,3 không bao giờ hiện thành 0,3", () => {
-  const DGA = require("../dga-logic");
+  const DGA = require("../src/domain/dga-logic");
   const at = (ratio) => DGA.diagnoseAdditionalRatios({ CO: 200, CO2: 1500 }, 10000, ratio * 10000);
   [[0.2998, 0.299, true], [0.29999, 0.299, true], [0.3, 0.3, false], [0.30002, 0.3, false], [4.35, 4.35, false]].forEach(([v, shown, warn]) => {
     const r = at(v);
@@ -466,7 +466,7 @@ describe("Tab Cảnh báo: lọc Loại cảnh báo + nhận biết cảnh báo 
     c = {
       console, Date, Math, Number, String, Array, Set, Map,
       document: { getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] },
-      escapeHtml: (s) => String(s ?? ""), verdictPill: (v) => v, tioVerdictPill: (v) => v, DGA: require("../dga-logic"),
+      escapeHtml: (s) => String(s ?? ""), verdictPill: (v) => v, tioVerdictPill: (v) => v, DGA: require("../src/domain/dga-logic"),
     };
     c.window = c; c.global = c;
     vm.createContext(c);

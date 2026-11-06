@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v31-donrac";
+const CACHE_NAME = "dga-offline-v32-domain";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -18,7 +18,7 @@ const PRECACHE_ASSETS = [
   "./storage/storage-offline.js",
   "./storage/storage-auth.js",
   "./storage.js",
-  "./dga-logic.js",
+  "./src/domain/dga-logic.js",
   "./app-core.js",
   "./css/style-base.css",
   "./css/style-auth.css",
@@ -34,16 +34,16 @@ const PRECACHE_ASSETS = [
   "./image/favicon-32.png",
   "./image/favicon-16.png",
   "./image/apple-touch-icon.png",
-  "./logic/dga-logic-core.js",
-  "./logic/dga-logic-gas.js",
-  "./logic/dga-logic-oil.js",
-  "./logic/dga-logic-instrument-oil.js",
-  "./logic/dga-logic-iec60422-2024.js",
-  "./logic/dga-logic-oil-extended.js",
-  "./logic/dga-logic-forecast.js",
-  "./logic/dga-logic-regulation-config.js",
-  "./logic/dga-logic-peer.js",
-  "./logic/dga-logic-case.js",
+  "./src/domain/dga-logic-core.js",
+  "./src/domain/dga-logic-gas.js",
+  "./src/domain/dga-logic-oil.js",
+  "./src/domain/dga-logic-instrument-oil.js",
+  "./src/domain/dga-logic-iec60422-2024.js",
+  "./src/domain/dga-logic-oil-extended.js",
+  "./src/domain/dga-logic-forecast.js",
+  "./src/domain/dga-logic-regulation-config.js",
+  "./src/domain/dga-logic-peer.js",
+  "./src/domain/dga-logic-case.js",
   "./ui/ui-errors.js",
   "./ui/ui-auth.js",
   "./ui/ui-utils.js",

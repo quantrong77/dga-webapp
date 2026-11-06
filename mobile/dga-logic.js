@@ -1,11 +1,11 @@
 /* mobile/dga-logic.js — FILE ĐƯỢC SINH TỰ ĐỘNG bởi scripts/sync-mobile.js. KHÔNG SỬA TAY.
  *
  * Nội dung = ghép các file logic dùng chung của bản web theo đúng thứ tự nạp trong index.html:
- * logic/dga-logic-core.js, logic/dga-logic-gas.js, logic/dga-logic-oil.js, logic/dga-logic-instrument-oil.js, logic/dga-logic-iec60422-2024.js, logic/dga-logic-oil-extended.js, logic/dga-logic-forecast.js, logic/dga-logic-regulation-config.js, logic/dga-logic-peer.js, logic/dga-logic-case.js, dga-logic.js
- * Muốn đổi logic đánh giá: sửa ở logic/*.js (bản web) rồi chạy `npm run sync-mobile`.
+ * src/domain/dga-logic-core.js, src/domain/dga-logic-gas.js, src/domain/dga-logic-oil.js, src/domain/dga-logic-instrument-oil.js, src/domain/dga-logic-iec60422-2024.js, src/domain/dga-logic-oil-extended.js, src/domain/dga-logic-forecast.js, src/domain/dga-logic-regulation-config.js, src/domain/dga-logic-peer.js, src/domain/dga-logic-case.js, src/domain/dga-logic.js
+ * Muốn đổi logic đánh giá: sửa ở src/domain/*.js (bản web) rồi chạy `npm run sync-mobile`.
  * (Nhánh Node ở cuối file — dùng "vm" — chỉ chạy khi có module.exports; trình duyệt bỏ qua.) */
 
-// ===== logic/dga-logic-core.js =====
+// ===== src/domain/dga-logic-core.js =====
 /* dga-logic-core.js — Phần 1/6 của dga-logic.js sau khi tách theo miền (2026-09,
    xem dga-logic.js đầu file để biết toàn bộ sơ đồ tách + lý do). File này là "từ điển
    dữ liệu" dùng CHUNG cho mọi module logic khác: enum loại thiết bị/pha, MỌI bảng
@@ -442,7 +442,7 @@ const BANG49_OLTC = {
  *    cho nhập để theo dõi xu hướng nhưng luôn "Không có ngưỡng" ở trạng thái này.
  */
 
-// ===== logic/dga-logic-gas.js =====
+// ===== src/domain/dga-logic-gas.js =====
 /* dga-logic-gas.js — Phần 2/6 của dga-logic.js sau khi tách theo miền (xem
    dga-logic.js). Toàn bộ pipeline đánh giá 1 lần đo khí hòa tan: chọn tiêu chuẩn áp
    dụng (resolveStandard), đánh giá giá trị tuyệt đối/ngưỡng loại bỏ, chẩn đoán tỷ số
@@ -1400,7 +1400,7 @@ function computeOverallStatus({ overallOk, exceedCount, diagnosis, priorDiagnosi
   };
 }
 
-// ===== logic/dga-logic-oil.js =====
+// ===== src/domain/dga-logic-oil.js =====
 /* dga-logic-oil.js — Phần 3/6 của dga-logic.js sau khi tách theo miền (xem
    dga-logic.js). Đánh giá thí nghiệm dầu cách điện MBA/Kháng dầu (Bảng 54/55/58) và
    dầu khoang điều áp dưới tải OLTC (Điều 37/Bảng 49) — dùng các bảng hằng số từ
@@ -1556,7 +1556,7 @@ function evaluateOilTest({ voltageClass, oilState, hasMembraneN2, moisture, tgd9
   return { rows, overall };
 }
 
-// ===== logic/dga-logic-instrument-oil.js =====
+// ===== src/domain/dga-logic-instrument-oil.js =====
 /* dga-logic-instrument-oil.js — Phần 4/6 của dga-logic.js sau khi tách theo miền
    (xem dga-logic.js). Đánh giá thí nghiệm dầu cách điện TI/TU theo tiêu chuẩn nhà sản
    xuất 2 tầng (Bình thường/Loại bỏ) — QĐ1901 Điều 10/11 không có bảng mặc định cho
@@ -1696,7 +1696,7 @@ function evaluateInstrumentOilTest({ equipmentType, manufacturer, manufacturerOi
   return { rows, overall };
 }
 
-// ===== logic/dga-logic-iec60422-2024.js =====
+// ===== src/domain/dga-logic-iec60422-2024.js =====
 /* dga-logic-iec60422-2024.js — Đánh giá dầu cách điện (MBA/Kháng dầu VÀ TI/TU) theo
    IEC 60422:2024 (Edition 5) — TÁCH RIÊNG khỏi dga-logic-oil.js/dga-logic-instrument-
    oil.js vì đây là 1 HỆ THAM CHIẾU SONG SONG, độc lập với QĐ1901/tiêu chuẩn nhà sản
@@ -1919,7 +1919,7 @@ function evaluateIec60422TituOilTest({ umKv, moisture, tgd90, bdv }) {
   return { rows, overall, category, categoryLabel: IEC60422_2024_CATEGORY_LABEL_TITU[category] };
 }
 
-// ===== logic/dga-logic-oil-extended.js =====
+// ===== src/domain/dga-logic-oil-extended.js =====
 /* dga-logic-oil-extended.js — Các chỉ tiêu LÝ-HÓA dầu MBA/Kháng dầu BỔ SUNG ngoài 3 chỉ tiêu cơ bản
    (độ ẩm, tgδ 90°C, điện áp chọc thủng — dga-logic-oil.js), theo:
    - QĐ1901 Chương VI "Dầu MBA": Điều 48 (màu sắc), Điều 49 (tạp chất cơ học — Bảng 56, đếm hạt — Bảng 57),
@@ -2398,7 +2398,7 @@ function oilOverallFromRows(rows) {
   return "Đạt";
 }
 
-// ===== logic/dga-logic-forecast.js =====
+// ===== src/domain/dga-logic-forecast.js =====
 /* dga-logic-forecast.js — Phần 5/6 của dga-logic.js sau khi tách theo miền (xem
    dga-logic.js). Dự báo xu hướng khí bằng ngoại suy tuyến tính (OLS/Theil-Sen/trung
    bình liền kề). Hoàn toàn độc lập — không phụ thuộc dga-logic-core.js hay module nào
@@ -2611,7 +2611,7 @@ function forecastGasTrend(history, forecastYears, limit) {
   };
 }
 
-// ===== logic/dga-logic-regulation-config.js =====
+// ===== src/domain/dga-logic-regulation-config.js =====
 /* dga-logic-regulation-config.js — Phần 6/6 của dga-logic.js sau khi tách theo miền
    (xem dga-logic.js). Đăng ký + đọc/ghi đè các bảng ngưỡng "đơn giản" có thể cấu hình
    qua tab "Cấu hình" — mục "Quy định" (ui/ui-regulation-config.js), KHÔNG bao gồm
@@ -3302,7 +3302,7 @@ function getRegulationConfigCurrentValues(key) {
 
 // Export cho cả trình duyệt (global) lẫn Node (module.exports, dùng để test)
 
-// ===== logic/dga-logic-peer.js =====
+// ===== src/domain/dga-logic-peer.js =====
 // dga-logic-peer.js — Đề xuất người dùng #2: "Phát hiện bất thường theo nhóm thiết bị
 // tương tự" (thống kê nhẹ, KHÔNG train/lưu model, chạy 100% phía client, không cần
 // server ML riêng — đúng theo yêu cầu gốc của người dùng).
@@ -3372,7 +3372,7 @@ function peerGasVector(record) {
   // Bản ghi đọc từ Storage.listMeasurements() có thể ở dạng khóa CHỮ THƯỜNG (h2, ch4...
   // xem normalizeGasKeys() ở storage.js) trong khi "measurement"/"gases" đang nhập ở
   // form dùng khóa CHỮ HOA — đọc cả 2 dạng cho chắc, KHÔNG phụ thuộc lớp UI nào (giữ
-  // file logic độc lập, kiểm thử được qua Node như các file logic/dga-logic-*.js khác).
+  // file logic độc lập, kiểm thử được qua Node như các file src/domain/dga-logic-*.js khác).
   return GASES.map((g) => {
     const raw = record[g] ?? record[g.toLowerCase()];
     const n = Number(raw);
@@ -3611,7 +3611,7 @@ function evaluatePeerAnomaly(measurement, gases, allRecords) {
   };
 }
 
-// ===== logic/dga-logic-case.js =====
+// ===== src/domain/dga-logic-case.js =====
 // dga-logic-case.js — Đề xuất người dùng #3: "Tìm ca tương tự trong lịch sử đo"
 // (case-based reasoning nhẹ, KHÔNG train/lưu model, chạy 100% phía client) — bổ sung
 // tiếp sau đề xuất #1 (OCR BBTN), #5 (OCR nameplate) và #2 (so với đàn) đã hoàn tất.
@@ -3707,27 +3707,27 @@ function findSimilarCases(measurement, gases, allRecords) {
   return { cases, insufficient: false };
 }
 
-// ===== dga-logic.js =====
+// ===== src/domain/dga-logic.js =====
 // dga-logic.js — File LẮP RÁP (assembler) cho lớp logic nghiệp vụ DGA.
 //
 // Kể từ đợt tái cấu trúc này, toàn bộ logic đã được tách thành 6 file theo
 // miền nghiệp vụ, đặt trong thư mục logic/:
-//   - logic/dga-logic-core.js               : hằng số dùng chung + hàm lõi (GASES, EQUIPMENT_TYPES,
+//   - src/domain/dga-logic-core.js               : hằng số dùng chung + hàm lõi (GASES, EQUIPMENT_TYPES,
 //                                              các bảng ngưỡng khí thô QĐ1901/IEC, hằng số dầu/OLTC, REGULATION_CITATIONS...)
-//   - logic/dga-logic-gas.js                 : đánh giá khí hòa tan (TCG, tỷ lệ, Duval, tốc độ tăng, khuyến cáo...)
-//   - logic/dga-logic-oil.js                 : thí nghiệm dầu MBA + dầu OLTC
-//   - logic/dga-logic-instrument-oil.js      : thí nghiệm dầu TI/TU
-//   - logic/dga-logic-iec60422-2024.js       : đánh giá THAM KHẢO dầu MBA + TI/TU theo IEC 60422:2024 (Bảng 5/7)
-//   - logic/dga-logic-forecast.js            : dự báo xu hướng khí
-//   - logic/dga-logic-regulation-config.js   : cơ chế cấu hình quy định (ghi đè ngưỡng tại chỗ)
+//   - src/domain/dga-logic-gas.js                 : đánh giá khí hòa tan (TCG, tỷ lệ, Duval, tốc độ tăng, khuyến cáo...)
+//   - src/domain/dga-logic-oil.js                 : thí nghiệm dầu MBA + dầu OLTC
+//   - src/domain/dga-logic-instrument-oil.js      : thí nghiệm dầu TI/TU
+//   - src/domain/dga-logic-iec60422-2024.js       : đánh giá THAM KHẢO dầu MBA + TI/TU theo IEC 60422:2024 (Bảng 5/7)
+//   - src/domain/dga-logic-forecast.js            : dự báo xu hướng khí
+//   - src/domain/dga-logic-regulation-config.js   : cơ chế cấu hình quy định (ghi đè ngưỡng tại chỗ)
 //
 // dga-logic-core.js là "hub" duy nhất: 5 file còn lại chỉ phụ thuộc vào core,
 // không phụ thuộc lẫn nhau (dga-logic-forecast.js không phụ thuộc file nào).
 //
-// File này (dga-logic.js) được GIỮ NGUYÊN đường dẫn gốc vì index.html vẫn
-// tham chiếu <script src="dga-logic.js">. Nhiệm vụ duy nhất của nó là LẮP RÁP:
-//   - Trên trình duyệt: 6 file logic/dga-logic-*.js được nạp bằng thẻ <script>
-//     THÔNG THƯỜNG (không phải module) ngay TRƯỚC thẻ <script src="dga-logic.js">
+// File này (src/domain/dga-logic.js) nằm CÙNG thư mục với các file logic; index.html
+// tham chiếu <script src="src/domain/dga-logic.js">. Nhiệm vụ duy nhất của nó là LẮP RÁP:
+//   - Trên trình duyệt: 6 file src/domain/dga-logic-*.js được nạp bằng thẻ <script>
+//     THÔNG THƯỜNG (không phải module) ngay TRƯỚC thẻ <script src="src/domain/dga-logic.js">
 //     trong index.html, nên mọi const/function khai báo ở top-level của chúng
 //     đã có sẵn trong global scope khi đoạn code dưới đây chạy — file này chỉ
 //     cần gom lại thành object DGA và gán window.DGA.
@@ -3747,7 +3747,7 @@ if (typeof module !== "undefined" && module.exports) {
   const fs = require("fs");
   const path = require("path");
 
-  const LOGIC_DIR = path.join(__dirname, "logic");
+  const LOGIC_DIR = __dirname;
   const LOGIC_FILES = [
     "dga-logic-core.js", // phải nạp đầu tiên — là hub mà các file còn lại phụ thuộc vào
     "dga-logic-gas.js",
@@ -3828,7 +3828,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = DGA;
 } else if (typeof window !== "undefined") {
   // ---------------------------------------------------------------------------
-  // Nhánh trình duyệt: 6 file logic/dga-logic-*.js đã được nạp bằng <script> thường
+  // Nhánh trình duyệt: 6 file src/domain/dga-logic-*.js đã được nạp bằng <script> thường
   // NGAY TRƯỚC file này (xem index.html), nên mọi tên bên dưới đã có sẵn trong
   // global scope của trang — chỉ cần gom lại thành object DGA.
   // ---------------------------------------------------------------------------

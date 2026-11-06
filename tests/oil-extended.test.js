@@ -1,5 +1,5 @@
-/* Chỉ tiêu lý-hóa dầu MBA bổ sung (logic/dga-logic-oil-extended.js) + bộ đọc BBTN dầu MBA (bbtn/mba-oil-bbtn.js). */
-const DGA = require("../dga-logic");
+/* Chỉ tiêu lý-hóa dầu MBA bổ sung (src/domain/dga-logic-oil-extended.js) + bộ đọc BBTN dầu MBA (bbtn/mba-oil-bbtn.js). */
+const DGA = require("../src/domain/dga-logic");
 const MbaOilBbtn = require("../bbtn/mba-oil-bbtn.js");
 
 const base = { voltageClass: "220", oilState: "inservice", moisture: 15, tgd90: 2, bdv: 60 };

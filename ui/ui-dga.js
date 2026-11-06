@@ -1108,13 +1108,13 @@ async function onAnalyze() {
   //    dùng LẠI đúng `all` vừa gọi ở bước 4 (KHÔNG gọi thêm Storage lần nào nữa). Đây
   //    là THAM KHẢO THỐNG KÊ bổ sung — hoàn toàn tách biệt khỏi overallStatus/recs
   //    (không được lẫn với kết quả Đạt/Không đạt theo QĐ1901/IEC), xem giải thích đầy
-  //    đủ ở evaluatePeerAnomaly() (logic/dga-logic-peer.js).
+  //    đủ ở evaluatePeerAnomaly() (src/domain/dga-logic-peer.js).
   const peerAnomaly = DGA.evaluatePeerAnomaly(measurement, gases, all);
 
   // 4ter) "Ca tương tự trong lịch sử đo" (đề xuất #3, case-based reasoning) — tìm trong
   //    TOÀN BỘ Lịch sử đo (không giới hạn cùng loại/hãng như 4bis ở trên) những lần đo
   //    có vector 7 khí gần giống nhất (cosine similarity, xem findSimilarCases() ở
-  //    logic/dga-logic-case.js) — cũng dùng lại `all`, không gọi thêm Storage. Kết luận
+  //    src/domain/dga-logic-case.js) — cũng dùng lại `all`, không gọi thêm Storage. Kết luận
   //    của từng ca tìm được sẽ được TÍNH LẠI ngay dưới đây (không lưu sẵn) bằng đúng
   //    logic đánh giá hiện có, theo tiêu chuẩn áp dụng cho CHÍNH thiết bị/hãng của ca đó.
   const similarCasesRaw = DGA.findSimilarCases(measurement, gases, all);
@@ -1361,7 +1361,7 @@ function renderResults({ tcg, evalRows, overall, diagnosis, bushingCodes, standa
 }
 
 /** Hiện khối "So sánh với nhóm thiết bị tương tự" (đề xuất #2, DGA.evaluatePeerAnomaly()
- *  ở logic/dga-logic-peer.js) — LUÔN gắn nhãn rõ đây là THAM KHẢO THỐNG KÊ, KHÔNG phải
+ *  ở src/domain/dga-logic-peer.js) — LUÔN gắn nhãn rõ đây là THAM KHẢO THỐNG KÊ, KHÔNG phải
  *  ngưỡng quy định QĐ1901/IEC, để không bị hiểu nhầm là 1 tiêu chí Đạt/Không đạt chính
  *  thức như các bảng ở trên. peerAnomaly có thể undefined nếu không tính được (VD lần
  *  đo chưa xác định Loại thiết bị). */
@@ -1420,7 +1420,7 @@ function renderPeerAnomaly(peerAnomaly) {
 }
 
 /** Hiện khối "Ca tương tự trong lịch sử đo" (đề xuất #3, DGA.findSimilarCases() ở
- *  logic/dga-logic-case.js + evaluateHistoricalCase() ở trên) — LUÔN gắn nhãn rõ đây
+ *  src/domain/dga-logic-case.js + evaluateHistoricalCase() ở trên) — LUÔN gắn nhãn rõ đây
  *  là THAM KHẢO (kết luận hiện ra là của CHÍNH lần đo lịch sử đó, KHÔNG áp dụng cho lần
  *  đo đang phân tích). similarCases có thể undefined nếu không tính được. */
 function renderSimilarCases(similarCases) {

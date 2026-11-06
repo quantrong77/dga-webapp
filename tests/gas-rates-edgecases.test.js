@@ -1,5 +1,5 @@
 /**
- * Unit Test Suite for Gas Rates, TCG & Additional Ratios Edge Cases (logic/dga-logic-gas.js)
+ * Unit Test Suite for Gas Rates, TCG & Additional Ratios Edge Cases (src/domain/dga-logic-gas.js)
  * Senior QA Engineer & Test Automation Specialist
  * Structure: AAA (Arrange - Act - Assert)
  * Coverage: computeRateOfChange, computeTcgRateOfChange, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios

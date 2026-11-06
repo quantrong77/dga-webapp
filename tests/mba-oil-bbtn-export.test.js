@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const DGA = require("../dga-logic.js");
+const DGA = require("../src/domain/dga-logic.js");
 const X = require("../bbtn/mba-oil-bbtn-export.js");
 
 // Bản đóng gói PizZip gán vào window (như trình duyệt) — nạp 1 lần, dùng chung cho các test

@@ -1,6 +1,6 @@
 /* ui-oil.js — Tab "Lý-Hóa dầu": thí nghiệm dầu chính MBA/Kháng dầu — 3 chỉ tiêu cơ bản (độ ẩm, tgδ 90°C,
    điện áp chọc thủng — Bảng 58/55/54 QĐ1901) + các chỉ tiêu lý-hóa BỔ SUNG (Điều 48–56 QĐ1901, IEC 60422:2024
-   — xem logic/dga-logic-oil-extended.js). Nhập mới hoặc nhập lại BBTN lịch sử (đọc PDF — bbtn/mba-oil-bbtn.js);
+   — xem src/domain/dga-logic-oil-extended.js). Nhập mới hoặc nhập lại BBTN lịch sử (đọc PDF — bbtn/mba-oil-bbtn.js);
    thùng dầu chung (1 cột) hoặc riêng từng pha (3 cột A/B/C, lưu thành 3 bản ghi cùng bbtn_group_id).
    Tách từ app.js — xem ui-auth.js đầu file đó để biết quy ước chia sẻ scope giữa các file ui-*.js. */
 

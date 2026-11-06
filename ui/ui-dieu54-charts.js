@@ -3,7 +3,7 @@
  *   - Biểu đồ 2: tỷ số hàm lượng khí dạng không gian 3 trục
  *   - Biểu đồ 3: tam giác Duval 1 (vùng lỗi theo Bảng 67) + Ví dụ xác định điểm (CH4 50%, C2H4 30%, C2H2 20%)
  * Ranh giới vùng lấy đúng theo Bảng 66/Bảng 67 (cùng số liệu với diagnoseRatios()/classifyDuval1()
- * ở logic/dga-logic-gas.js — tests/dieu54-charts.test.js đối chiếu 2 bên).
+ * ở src/domain/dga-logic-gas.js — tests/dieu54-charts.test.js đối chiếu 2 bên).
  *
  * Hiển thị 3D bằng SVG thuần (không thư viện ngoài — app phải chạy được offline): mỗi vùng là 1
  * khối hộp/lăng trụ, chiếu phối cảnh + sắp xếp theo độ sâu (painter's algorithm). Kéo chuột/chạm để
@@ -161,7 +161,7 @@ function d54FormatTick(v) {
 // ---------------------------------------------------------------------------
 function d54Logic() {
   if (typeof window !== "undefined" && window.DGA) return window.DGA;
-  if (typeof require === "function") return require("../dga-logic");
+  if (typeof require === "function") return require("../src/domain/dga-logic");
   return null;
 }
 function d54Table1() {
@@ -352,7 +352,7 @@ const D54_TRI_H = 50 * Math.sqrt(3);
 /** (a = %C2H2, e = %C2H4) -> tọa độ thế giới trên mặt sàn. Đỉnh CH4 ở xa (trên), C2H2 trái, C2H4 phải. */
 function d54DuvalXY(a, e) {
   const m = 100 - a - e;
-  const X = (m / 100) * 50 + e; // giống duvalPlotXY() ở logic/dga-logic-gas.js
+  const X = (m / 100) * 50 + e; // giống duvalPlotXY() ở src/domain/dga-logic-gas.js
   const Y = (m / 100) * D54_TRI_H;
   return [(X - 50) / 50, (Y - D54_TRI_H / 3) / 50];
 }

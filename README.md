@@ -243,8 +243,8 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `index.html` | Giao diện (form nhập liệu, lịch sử, cấu hình tiêu chuẩn NSX, tab Hướng dẫn) |
 | `css/*.css` | Giao diện/màu sắc (tách theo tab/khu vực) |
 | `config.js` | Nơi dán URL Apps Script (Google Sheets) hoặc URL/anon key Supabase (để trống hết = chạy chế độ thử nghiệm) |
-| `logic/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
-| `dga-logic.js` | File **lắp ráp**: gom 8 file `logic/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
+| `src/domain/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
+| `src/domain/dga-logic.js` | File **lắp ráp**: gom 8 file `src/domain/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
 | `storage.js` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
 | `ui/ui-errors.js` | Xử lý lỗi tập trung (toast lỗi + handler `error`/`unhandledrejection` toàn cục) — nạp sớm, ngay sau `config.js` |
 | `ui/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
@@ -322,7 +322,7 @@ npm run build-guide   # dựng lại tab "Hướng dẫn" trong index.html từ 
 
 ### 6.1. Kiểm thử tự động (Jest)
 
-Logic DGA (`dga-logic.js` + `logic/*.js`) không phụ thuộc DOM và nạp được trong Node, nên có bộ
+Logic DGA (`src/domain/*.js`) không phụ thuộc DOM và nạp được trong Node, nên có bộ
 kiểm thử tự động ở thư mục `tests/` (~250 test, chạy dưới 3 giây). Bao phủ:
 
 - Đánh giá tuyệt đối từng khí và chọn tiêu chuẩn theo loại thiết bị/nhà sản xuất/ngưỡng loại bỏ.
@@ -344,16 +344,16 @@ code. Các trường hợp đã biết là lệch văn bản gốc được ghi 
 
 ### 6.2. Kiểm tra kiểu (TypeScript `checkJs`, không đổi ngôn ngữ)
 
-`tsconfig.json` + `types.d.ts` bật `tsc --noEmit --checkJs` cho `logic/*.js` + `dga-logic.js` —
+`tsconfig.json` + `types.d.ts` bật `tsc --noEmit --checkJs` cho `src/domain/*.js` —
 bắt lỗi kiểu (sai tên trường, thiếu khí, `undefined` so sánh với số) ngay lúc viết, **không** thêm
-bước build và **không** đổi file `.js` nào (JSDoc trong `logic/*.js` được bổ sung/chỉnh cho khớp
+bước build và **không** đổi file `.js` nào (JSDoc trong `src/domain/*.js` được bổ sung/chỉnh cho khớp
 kiểu, code chạy không đổi). `npm run typecheck` chạy sạch (0 lỗi) tính đến lần cập nhật gần nhất.
 
 ### 6.3. Đồng bộ logic với bản di động (`scripts/sync-mobile.js`)
 
 Bản di động (`mobile/`) được deploy như 1 thư mục độc lập nên không tham chiếu được
 `../logic/...`. `mobile/dga-logic.js` vì vậy **được sinh tự động** bằng cách ghép các file
-`logic/*.js` của bản web theo đúng thứ tự nạp trong `index.html` — **không sửa tay file này**.
+`src/domain/*.js` của bản web theo đúng thứ tự nạp trong `index.html` — **không sửa tay file này**.
 Sau khi sửa bất kỳ file nào trong `logic/`, chạy `npm run sync-mobile` rồi commit cả 2 thay đổi.
 `npm test` tự kiểm tra file đã đồng bộ chưa (`tests/mobile-sync.test.js`) và so kết quả đánh giá
 giữa 2 bản trên nhiều bộ số liệu để bảo đảm **cùng số liệu luôn ra cùng kết luận**.

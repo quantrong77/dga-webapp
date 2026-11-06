@@ -1,5 +1,5 @@
 /* ui/ui-terms.js — Áp dụng "Tên văn bản, điều khoản, bảng, phụ lục" do Admin cấu hình (tab "Cấu hình"
- * > "Quy định", xem mục 10 ở logic/dga-logic-regulation-config.js) lên TOÀN BỘ nội dung hiển thị:
+ * > "Quy định", xem mục 10 ở src/domain/dga-logic-regulation-config.js) lên TOÀN BỘ nội dung hiển thị:
  * chữ trong trang, title / aria-label / data-tooltip / placeholder, và nội dung sinh động (kết quả
  * phân tích, bảng lịch sử, khuyến cáo...) nhờ MutationObserver.
  *

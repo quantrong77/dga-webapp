@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v31-donrac") {
+          if (k !== "dga-offline-v32-domain") {
             caches.delete(k);
           }
         });
@@ -4105,17 +4105,17 @@
        7 file còn lại phụ thuộc vào nên phải nạp đầu tiên; thứ tự giữa 7 file sau không
        quan trọng. dga-logic.js chỉ còn nhiệm vụ lắp ráp (gom lại thành object window.DGA)
        + hỗ trợ require() từ Node khi chạy test (xem đầu file dga-logic.js). -->
-  <script src="logic/dga-logic-core.js"></script>
-  <script src="logic/dga-logic-gas.js"></script>
-  <script src="logic/dga-logic-oil.js"></script>
-  <script src="logic/dga-logic-instrument-oil.js"></script>
-  <script src="logic/dga-logic-iec60422-2024.js"></script>
-  <script src="logic/dga-logic-oil-extended.js"></script>
-  <script src="logic/dga-logic-forecast.js"></script>
-  <script src="logic/dga-logic-regulation-config.js"></script>
-  <script src="logic/dga-logic-peer.js"></script>
-  <script src="logic/dga-logic-case.js"></script>
-  <script src="dga-logic.js"></script>
+  <script src="src/domain/dga-logic-core.js"></script>
+  <script src="src/domain/dga-logic-gas.js"></script>
+  <script src="src/domain/dga-logic-oil.js"></script>
+  <script src="src/domain/dga-logic-instrument-oil.js"></script>
+  <script src="src/domain/dga-logic-iec60422-2024.js"></script>
+  <script src="src/domain/dga-logic-oil-extended.js"></script>
+  <script src="src/domain/dga-logic-forecast.js"></script>
+  <script src="src/domain/dga-logic-regulation-config.js"></script>
+  <script src="src/domain/dga-logic-peer.js"></script>
+  <script src="src/domain/dga-logic-case.js"></script>
+  <script src="src/domain/dga-logic.js"></script>
   <!-- Data Access Tier: các module chuyên trách & Facade Repository -->
   <script src="storage/storage-core.js"></script>
   <script src="storage/storage-remote.js"></script>

@@ -10,5 +10,5 @@
     "types": ["node"],
     "skipLibCheck": true
   },
-  "include": ["types.d.ts", "logic/*.js", "dga-logic.js"]
+  "include": ["types.d.ts", "src/domain/*.js"]
 }

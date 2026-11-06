@@ -54,7 +54,7 @@ export default [
     // Script trình duyệt: biến `let` cấp file (VD _allOilTests, _oilBbtnExport) được GÁN LẠI ở file KHÁC — ESLint chỉ
     // thấy từng file nên prefer-const báo sai, và `npm run lint:fix` sẽ đổi thành const → lỗi "Assignment to constant"
     // khi chạy app. Chỉ giữ prefer-const cho server/scripts/tests (CommonJS, mỗi file độc lập).
-    files: ["*.js", "ui/**/*.js", "bbtn/**/*.js", "storage/**/*.js", "logic/**/*.js"],
+    files: ["*.js", "src/**/*.js", "ui/**/*.js", "bbtn/**/*.js", "storage/**/*.js"],
     rules: { "prefer-const": "off" },
   },
   {

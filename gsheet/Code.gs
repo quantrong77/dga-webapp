@@ -185,7 +185,7 @@ const OILTEST_HEADERS = [
   // trước khi có 2 cột này để trống — web app mặc định coi là "chung" (xem
   // oilPhaseIdentity()/oilSamplePointLabel() ở ui-oil.js/ui-alerts.js — || "chung").
   "oil_sample_point", "phase",
-  // Chỉ tiêu lý-hóa BỔ SUNG (QĐ1901 Điều 48–56, IEC 60422:2024 — logic/dga-logic-oil-extended.js) + BBTN
+  // Chỉ tiêu lý-hóa BỔ SUNG (QĐ1901 Điều 48–56, IEC 60422:2024 — src/domain/dga-logic-oil-extended.js) + BBTN
   // đính kèm (1 file dùng chung cho các pha cùng biên bản, nối bằng bbtn_group_id). Thêm ở CUỐI (xem lưu ý
   // ở STANDARD_HEADERS) — bản ghi cũ để trống các cột này, getOrCreateSheet() tự nâng cấp hàng tiêu đề.
   "acid_mgkoh", "flash_point_c", "mech_visual", "mech_impurity_percent", "particles_6um", "particles_14um",

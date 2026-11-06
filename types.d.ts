@@ -1,4 +1,4 @@
-// types.d.ts — Định nghĩa KIỂU dùng chung cho lớp logic DGA (logic/*.js + dga-logic.js).
+// types.d.ts — Định nghĩa KIỂU dùng chung cho lớp logic DGA (src/domain/*.js).
 //
 // Chỉ phục vụ kiểm tra tĩnh (`npm run typecheck`, tsc --noEmit, checkJs) — KHÔNG được nạp vào trình duyệt
 // và KHÔNG đổi cách app chạy (vẫn là JavaScript thuần, không có bước build). File này KHÔNG có

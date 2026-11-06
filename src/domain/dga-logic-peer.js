@@ -67,7 +67,7 @@ function peerGasVector(record) {
   // Bản ghi đọc từ Storage.listMeasurements() có thể ở dạng khóa CHỮ THƯỜNG (h2, ch4...
   // xem normalizeGasKeys() ở storage.js) trong khi "measurement"/"gases" đang nhập ở
   // form dùng khóa CHỮ HOA — đọc cả 2 dạng cho chắc, KHÔNG phụ thuộc lớp UI nào (giữ
-  // file logic độc lập, kiểm thử được qua Node như các file logic/dga-logic-*.js khác).
+  // file logic độc lập, kiểm thử được qua Node như các file src/domain/dga-logic-*.js khác).
   return GASES.map((g) => {
     const raw = record[g] ?? record[g.toLowerCase()];
     const n = Number(raw);

@@ -2,7 +2,7 @@
  *  - Tam giác Duval: mọi điểm bên trong 1 vùng vẽ -> classifyDuval1() trả đúng mã vùng đó (Bảng 67).
  *  - Biểu đồ 2 (3 trục): điểm bên trong 1 khối -> diagnoseRatios() trả đúng mã (Bảng 66).
  *  - Hình dựng được (không có NaN) ở cả giao diện sáng/tối. */
-const DGA = require("../dga-logic");
+const DGA = require("../src/domain/dga-logic");
 const C = require("../ui/ui-dieu54-charts");
 
 function pointInPoly([x, y], poly) {

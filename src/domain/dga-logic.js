@@ -2,22 +2,22 @@
 //
 // Kể từ đợt tái cấu trúc này, toàn bộ logic đã được tách thành 6 file theo
 // miền nghiệp vụ, đặt trong thư mục logic/:
-//   - logic/dga-logic-core.js               : hằng số dùng chung + hàm lõi (GASES, EQUIPMENT_TYPES,
+//   - src/domain/dga-logic-core.js               : hằng số dùng chung + hàm lõi (GASES, EQUIPMENT_TYPES,
 //                                              các bảng ngưỡng khí thô QĐ1901/IEC, hằng số dầu/OLTC, REGULATION_CITATIONS...)
-//   - logic/dga-logic-gas.js                 : đánh giá khí hòa tan (TCG, tỷ lệ, Duval, tốc độ tăng, khuyến cáo...)
-//   - logic/dga-logic-oil.js                 : thí nghiệm dầu MBA + dầu OLTC
-//   - logic/dga-logic-instrument-oil.js      : thí nghiệm dầu TI/TU
-//   - logic/dga-logic-iec60422-2024.js       : đánh giá THAM KHẢO dầu MBA + TI/TU theo IEC 60422:2024 (Bảng 5/7)
-//   - logic/dga-logic-forecast.js            : dự báo xu hướng khí
-//   - logic/dga-logic-regulation-config.js   : cơ chế cấu hình quy định (ghi đè ngưỡng tại chỗ)
+//   - src/domain/dga-logic-gas.js                 : đánh giá khí hòa tan (TCG, tỷ lệ, Duval, tốc độ tăng, khuyến cáo...)
+//   - src/domain/dga-logic-oil.js                 : thí nghiệm dầu MBA + dầu OLTC
+//   - src/domain/dga-logic-instrument-oil.js      : thí nghiệm dầu TI/TU
+//   - src/domain/dga-logic-iec60422-2024.js       : đánh giá THAM KHẢO dầu MBA + TI/TU theo IEC 60422:2024 (Bảng 5/7)
+//   - src/domain/dga-logic-forecast.js            : dự báo xu hướng khí
+//   - src/domain/dga-logic-regulation-config.js   : cơ chế cấu hình quy định (ghi đè ngưỡng tại chỗ)
 //
 // dga-logic-core.js là "hub" duy nhất: 5 file còn lại chỉ phụ thuộc vào core,
 // không phụ thuộc lẫn nhau (dga-logic-forecast.js không phụ thuộc file nào).
 //
-// File này (dga-logic.js) được GIỮ NGUYÊN đường dẫn gốc vì index.html vẫn
-// tham chiếu <script src="dga-logic.js">. Nhiệm vụ duy nhất của nó là LẮP RÁP:
-//   - Trên trình duyệt: 6 file logic/dga-logic-*.js được nạp bằng thẻ <script>
-//     THÔNG THƯỜNG (không phải module) ngay TRƯỚC thẻ <script src="dga-logic.js">
+// File này (src/domain/dga-logic.js) nằm CÙNG thư mục với các file logic; index.html
+// tham chiếu <script src="src/domain/dga-logic.js">. Nhiệm vụ duy nhất của nó là LẮP RÁP:
+//   - Trên trình duyệt: 6 file src/domain/dga-logic-*.js được nạp bằng thẻ <script>
+//     THÔNG THƯỜNG (không phải module) ngay TRƯỚC thẻ <script src="src/domain/dga-logic.js">
 //     trong index.html, nên mọi const/function khai báo ở top-level của chúng
 //     đã có sẵn trong global scope khi đoạn code dưới đây chạy — file này chỉ
 //     cần gom lại thành object DGA và gán window.DGA.
@@ -37,7 +37,7 @@ if (typeof module !== "undefined" && module.exports) {
   const fs = require("fs");
   const path = require("path");
 
-  const LOGIC_DIR = path.join(__dirname, "logic");
+  const LOGIC_DIR = __dirname;
   const LOGIC_FILES = [
     "dga-logic-core.js", // phải nạp đầu tiên — là hub mà các file còn lại phụ thuộc vào
     "dga-logic-gas.js",
@@ -118,7 +118,7 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = DGA;
 } else if (typeof window !== "undefined") {
   // ---------------------------------------------------------------------------
-  // Nhánh trình duyệt: 6 file logic/dga-logic-*.js đã được nạp bằng <script> thường
+  // Nhánh trình duyệt: 6 file src/domain/dga-logic-*.js đã được nạp bằng <script> thường
   // NGAY TRƯỚC file này (xem index.html), nên mọi tên bên dưới đã có sẵn trong
   // global scope của trang — chỉ cần gom lại thành object DGA.
   // ---------------------------------------------------------------------------
