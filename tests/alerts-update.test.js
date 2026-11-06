@@ -270,7 +270,8 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
     const fs = require("fs");
     const css = fs.readFileSync("src/presentation/styles/style-tab-tables.css", "utf8");
     expect(css).toMatch(/\.btn-action-alert,\s*\.btn-action-hist,\s*\.actions-cell \.row-action-btn \{[^}]*width: 30px;/);
-    expect(css).toMatch(/\.actions-stack \{[^}]*flex-direction: column;/);
+    // flex-direction: column hoặc shorthand tương đương flex-flow: column …
+    expect(css).toMatch(/\.actions-stack \{[^}]*flex-(direction|flow): column\b/);
     expect(css).toMatch(/\.row-action-btn\[data-tooltip\]::after \{[^}]*content: attr\(data-tooltip\);/);
   });
 
