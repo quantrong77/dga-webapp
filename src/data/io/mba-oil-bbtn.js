@@ -1,5 +1,5 @@
 /* mba-oil-bbtn.js — Đọc số liệu BBTN (biên bản thí nghiệm) DẦU CÁCH ĐIỆN MBA/KHÁNG từ danh sách dòng chữ
-   (PDF: BbtnImport.readLines(), bbtn/bbtn-import.js; DOCX: mbaOilDocxXmlToLines() bên dưới) để TỰ ĐIỀN tab
+   (PDF: BbtnImport.readLines(), src/data/io/bbtn-import.js; DOCX: mbaOilDocxXmlToLines() bên dưới) để TỰ ĐIỀN tab
    "Lý-Hóa dầu" — dùng cho cả nhập biên bản MỚI lẫn nhập lại BBTN LỊCH SỬ để theo dõi xu hướng.
 
    Mẫu tham chiếu: "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN" của PTC3 (template/Ly-hoa.docx) — 1 biên bản gồm
@@ -251,7 +251,7 @@ function parseMbaOilBbtnLines(lines) {
   }
 
   const header = { tram: "", thietBi: "", ngay: "", voltageClass: "", oilState: "", phase: "", hangSx: "", serial: "", loaiDau: "", ghiChu: "",
-    // thông số kỹ thuật thiết bị (dùng cho tiện ích "Nhập thông số kỹ thuật từ file" ở tab Lập BBTN, bbtn/device-specs.js)
+    // thông số kỹ thuật thiết bị (dùng cho tiện ích "Nhập thông số kỹ thuật từ file" ở tab Lập BBTN, src/data/io/device-specs.js)
     namSx: "", namVanHanh: "", congSuat: "", dienApDm: "", kieuMay: "" };
   // Giá trị sau nhãn (lấy trên chuỗi GỐC có dấu; cắt ở ô kế tiếp " | "). PDF không có dấu ô: 2 ô cùng hàng
   // nằm chung 1 dòng ("Hãng sản xuất: EEMC Năm sản xuất: 2019") → cắt ở nhãn kế tiếp (chuỗi bỏ dấu cùng độ dài).

@@ -1,9 +1,9 @@
-// BBTN dầu 3 pha chung 1 biên bản (bbtn/oil-bbtn.js). Số liệu golden lấy từ 1 BBTN đã ban hành (mẫu
+// BBTN dầu 3 pha chung 1 biên bản (src/data/io/oil-bbtn.js). Số liệu golden lấy từ 1 BBTN đã ban hành (mẫu
 // PTC3/BM.14): dòng chữ dưới đây đúng như pdf.js đọc ra; ngưỡng lấy từ Phụ lục I của biên bản đó
 // (tiêu chuẩn Arteche): BDV > 60 / < 50 kV, nước < 6 / > 10 ppm, tgδ90 ≤ 1 / > 3 %, tgδ20 < 1 / > 3 %.
 const fs = require("fs");
 const path = require("path");
-const OilBbtn = require("../bbtn/oil-bbtn.js");
+const OilBbtn = require("../src/data/io/oil-bbtn.js");
 const { DGA } = require("./helpers");
 
 const LINES = [

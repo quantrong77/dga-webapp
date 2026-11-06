@@ -50,8 +50,8 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
       vm.runInContext(code, ctx);
     };
 
-    loadScript("storage/storage-core.js");
-    loadScript("storage/storage-auth.js");
+    loadScript("src/data/drivers/storage-core.js");
+    loadScript("src/data/drivers/storage-auth.js");
     loadScript("ui/ui-utils.js");
     loadScript("ui/ui-standards.js");
     loadScript("ui/ui-auth.js");
@@ -333,7 +333,7 @@ describe("Tab Cảnh báo: lọc theo Thiết bị thuộc Trạm", () => {
     };
     ctx2.window = ctx2; ctx2.global = ctx2;
     vm.createContext(ctx2);
-    ["storage/storage-core.js", "storage/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
       .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), ctx2));
     const bad = { equipment_type: "MBA", pha: "chung3pha", sample_date: "2026-10-01", lan_do: 1, h2: 500, ch4: 10, c2h6: 10, c2h4: 10, c2h2: 0, co: 200, co2: 1500 };
     ctx2.__m = [
@@ -375,7 +375,7 @@ describe("Tab Cảnh báo: tỷ lệ bổ sung Điều 54 (O2/N2, CO2/CO) cho MB
     };
     c.window = c; c.global = c;
     vm.createContext(c);
-    ["storage/storage-core.js", "storage/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
       .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), c));
   });
   const run = (recs) => {
@@ -470,7 +470,7 @@ describe("Tab Cảnh báo: lọc Loại cảnh báo + nhận biết cảnh báo 
     };
     c.window = c; c.global = c;
     vm.createContext(c);
-    ["storage/storage-core.js", "storage/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
       .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), c));
   });
   const run = (recs) => {

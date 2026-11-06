@@ -1,4 +1,4 @@
-/* storage/storage-remote.js — Thao tác giao tiếp từ xa qua Google Apps Script Web App hoặc Máy chủ nội bộ On-Premise (REST). */
+/* src/data/drivers/storage-remote.js — Thao tác giao tiếp từ xa qua Google Apps Script Web App hoặc Máy chủ nội bộ On-Premise (REST). */
 
 /** GET với action= (+ token nếu có) trong query string — dùng cho các thao tác đọc. */
 async function gsheetGet(action, params) {

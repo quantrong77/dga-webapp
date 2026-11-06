@@ -1,5 +1,5 @@
-const DS = require("../bbtn/device-specs.js");
-const P = require("../bbtn/mba-oil-bbtn.js");
+const DS = require("../src/data/io/device-specs.js");
+const P = require("../src/data/io/mba-oil-bbtn.js");
 
 describe("Thông số kỹ thuật thiết bị đã lưu (deviceSpecsCollect)", () => {
   const sources = {

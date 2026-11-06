@@ -3,7 +3,7 @@ const path = require("path");
 const vm = require("vm");
 
 function loadBbtnHelpers() {
-  const code = fs.readFileSync(path.join(__dirname, "..", "bbtn", "bbtn-import.js"), "utf8");
+  const code = fs.readFileSync(path.join(__dirname, "..", "src", "data", "io", "bbtn-import.js"), "utf8");
   const m1 = code.indexOf("const VN_DIACRITICS_RE =");
   const m2 = code.indexOf("// Các trường \"Thông số kỹ thuật");
   const subCode = code.slice(m1, m2);
@@ -372,7 +372,7 @@ describe("BbtnImport — Tự động đọc Loại dầu và Số chế tạo",
 });
 
 const { DGA } = require("./helpers");
-const BbtnExport = require("../bbtn/bbtn-export.js");
+const BbtnExport = require("../src/data/io/bbtn-export.js");
 
 describe("DGA Logic — Xử lý các khí dưới ngưỡng phát hiện (KPH)", () => {
   const limits = { H2: 300, CH4: 30, C2H6: 25, C2H4: 4, C2H2: 1, CO: 330, CO2: 900 };
@@ -539,7 +539,7 @@ describe("Form nhập tab Khí hòa tan — ô khí để TRỐNG được hiể
       const a = s.indexOf("const KPH_PATTERN");
       return s.slice(a, s.indexOf("\n}\n", s.indexOf("function extractGasValues", a)));
     };
-    const web = fs.readFileSync(path.join(__dirname, "..", "bbtn", "bbtn-import.js"), "utf8");
+    const web = fs.readFileSync(path.join(__dirname, "..", "src", "data", "io", "bbtn-import.js"), "utf8");
     const mob = fs.readFileSync(path.join(__dirname, "..", "mobile", "bbtn-import.js"), "utf8");
     expect(norm(mob)).toBe(norm(web));
   });

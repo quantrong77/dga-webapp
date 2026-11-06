@@ -1,4 +1,4 @@
-/* storage/storage-offline.js — Quản lý hàng đợi ngoại tuyến (Offline Sync Queue) và thực thi lại tác vụ từ xa. */
+/* src/data/drivers/storage-offline.js — Quản lý hàng đợi ngoại tuyến (Offline Sync Queue) và thực thi lại tác vụ từ xa. */
 
 const LS_SYNC_QUEUE_KEY = "dga_sync_queue_v1";
 

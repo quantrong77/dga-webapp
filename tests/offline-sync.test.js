@@ -8,7 +8,7 @@ const {
   enqueueSyncOp,
   isNetworkError,
   executeRemoteSyncItem,
-} = require("../storage");
+} = require("../src/data/storage");
 
 // Mock đơn giản cho localStorage trong môi trường Node.js
 function createLocalStorageMock() {

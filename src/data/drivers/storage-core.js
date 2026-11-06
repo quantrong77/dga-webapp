@@ -1,4 +1,4 @@
-/* storage/storage-core.js — Hằng số, hàm tiện ích lõi và kết nối cơ sở cho tầng Storage. */
+/* src/data/drivers/storage-core.js — Hằng số, hàm tiện ích lõi và kết nối cơ sở cho tầng Storage. */
 
 const LS_KEYS = {
   measurements: "dga_measurements_v1",

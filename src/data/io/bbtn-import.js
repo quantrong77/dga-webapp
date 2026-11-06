@@ -26,9 +26,9 @@
 // cho <script type="module"> nên sẽ CHẶN, không chạy file, và lỗi này chỉ hiện trong
 // Console (F12) chứ không có thông báo gì trên giao diện. Đuôi ".js" thì hầu như mọi
 // server đều tự nhận đúng loại JavaScript nên không gặp lỗi này.
-import * as pdfjsLib from "../vendor/pdfjs/pdf.min.js";
+import * as pdfjsLib from "../../../vendor/pdfjs/pdf.min.js";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
 
 // OCR (nhận diện chữ từ ảnh) cho trường hợp BBTN là ảnh scan/chụp — không có lớp text
 // nào để pdf.js đọc trực tiếp (pdfFileToLines() ở dưới trả về rỗng/gần rỗng). Dùng
@@ -43,12 +43,12 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min
 // tra kỹ hơn — xem onBbtnFileSelected() ở ui/ui-dga.js.
 // Bản ESM của Tesseract.js chỉ có 1 export mặc định (gói nguyên module.exports kiểu
 // CommonJS gốc thành 1 object) — không có named export createWorker/OEM riêng.
-import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
+import Tesseract from "../../../vendor/tesseract/tesseract.esm.min.js";
 const { createWorker, OEM, PSM } = Tesseract;
 
-const TESS_WORKER_PATH = new URL("../vendor/tesseract/worker.min.js", import.meta.url).href;
-const TESS_CORE_PATH = new URL("../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
-const TESS_LANG_PATH = new URL("../vendor/tesseract/lang-data", import.meta.url).href;
+const TESS_WORKER_PATH = new URL("../../../vendor/tesseract/worker.min.js", import.meta.url).href;
+const TESS_CORE_PATH = new URL("../../../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
+const TESS_LANG_PATH = new URL("../../../vendor/tesseract/lang-data", import.meta.url).href;
 // Dưới ngưỡng này (ký tự), coi như pdf.js không đọc được lớp text thật (file toàn ảnh,
 // hoặc chỉ có vài ký tự rác như số trang) — đủ thấp để không bỏ sót biên bản thật (BBTN
 // PTC3/BM.15 điền đủ luôn có hàng nghìn ký tự), đủ cao để không kích hoạt OCR (chậm hơn
@@ -713,7 +713,7 @@ async function extract(file, onProgress) {
 }
 
 // ---------------------------------------------------------------------------
-// Đọc PDF thành dòng chữ cho BBTN dầu 3 pha (xem bbtn/oil-bbtn.js). Khác pdfFileToLines() ở 2
+// Đọc PDF thành dòng chữ cho BBTN dầu 3 pha (xem src/data/io/oil-bbtn.js). Khác pdfFileToLines() ở 2
 // điểm mà mẫu này cần: bỏ watermark chữ ký số xoay chéo đè lên bảng số liệu, và ghép mảnh chữ theo
 // khoảng cách thật (PDF ký số hay tách "TI 566" thành "T" + "I 5" + "66"). Số biên bản của file đã
 // ký nằm trong hình ảnh của ô ký số, không có ở lớp chữ nên không đọc được.

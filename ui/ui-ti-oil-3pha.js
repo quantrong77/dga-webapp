@@ -1,6 +1,6 @@
 /* ui-ti-oil-3pha.js — Khối "BBTN dầu 3 pha" ở tab "Dầu cách điện" (TI/TU): đọc PDF hoặc nhập tay
    số liệu 3 pha chung 1 biên bản, đánh giá từng pha, tách thành các bản ghi instrument_oil_tests,
-   xuất BBTN theo template/template-bbtn-dau-3pha.docx. Xử lý số liệu nằm ở bbtn/oil-bbtn.js, file
+   xuất BBTN theo template/template-bbtn-dau-3pha.docx. Xử lý số liệu nằm ở src/data/io/oil-bbtn.js, file
    này chỉ lo giao diện. Xem ui-auth.js đầu file đó để biết quy ước chia sẻ scope giữa các file. */
 
 const TIO3_TEMPLATE_URL = "template/template-bbtn-dau-3pha.docx";

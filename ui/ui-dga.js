@@ -529,7 +529,7 @@ function renderNameplateDropzoneLabel() {
 }
 
 /** Khi người dùng CHỌN ảnh chụp TẤM NHÃN THIẾT BỊ (nameplate) ở khối "Thông số kỹ
- *  thuật thiết bị" — đọc bằng OCR (bbtn/nameplate-import.js, KHÔNG gửi ảnh lên server
+ *  thuật thiết bị" — đọc bằng OCR (src/data/io/nameplate-import.js, KHÔNG gửi ảnh lên server
  *  nào để "đọc") và gợi ý điền Kiểu máy/Số chế tạo/Năm sản xuất/Điện áp định mức/Loại
  *  dầu cách điện + Nhà sản xuất (khớp mờ với danh sách ở #f_nsx, cùng cách BBTN import
  *  đã làm với data.hangSanXuat — khác chỗ ở đây không có 1 chuỗi trích riêng nên kiểm
@@ -1189,7 +1189,7 @@ async function onAnalyze() {
   }
 }
 
-// storageErrorMessage(err) moved to storage/storage-core.js
+// storageErrorMessage(err) moved to src/data/drivers/storage-core.js
 
 function verdictPill(v) {
   if (v === "Đạt") return `<span class="pill ok">Đạt</span>`;

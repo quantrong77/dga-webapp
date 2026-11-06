@@ -23,10 +23,9 @@ const ROOT_FILES = [
   "config.js",
   "early-layout.js",
   "app-core.js",
-  "storage.js",
 ];
 /** Thư mục chép nguyên (trừ file bị loại bởi isExcluded). */
-const ROOT_DIRS = ["src", "css", "storage", "ui", "bbtn", "vendor", "image", "mobile"];
+const ROOT_DIRS = ["src", "css", "ui", "vendor", "image", "mobile"];
 /** Mẫu BBTN app tải bằng fetch(): chỉ các file template-*.docx (không chép BBTN thật / file khóa ~$ của Word). */
 const TEMPLATE_PATTERN = /^template-[\w.-]+\.docx$/;
 
@@ -87,13 +86,18 @@ function requiredPaths(siteDir) {
     if (m[1] !== "./") addFrom("", m[1]);
   }
   // Mẫu BBTN tải bằng fetch(*_TEMPLATE_URL)
-  for (const dir of ["bbtn", "ui"]) {
-    for (const f of fs.readdirSync(path.join(ROOT, dir))) {
-      if (!f.endsWith(".js")) continue;
-      const s = fs.readFileSync(path.join(ROOT, dir, f), "utf8");
-      for (const m of s.matchAll(/_TEMPLATE_URL\s*=\s*"([^"]+)"/g)) addFrom("", m[1]);
+  const walkJs = (dir) => {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, e.name);
+      if (e.isDirectory()) {
+        if (e.name !== "vendor" && e.name !== "mobile") walkJs(p);
+      } else if (e.name.endsWith(".js")) {
+        const s = fs.readFileSync(p, "utf8");
+        for (const m of s.matchAll(/_TEMPLATE_URL\s*=\s*"([^"]+)"/g)) addFrom("", m[1]);
+      }
     }
-  }
+  };
+  walkJs(siteDir);
   return [...need].sort((a, b) => a.localeCompare(b));
 }
 

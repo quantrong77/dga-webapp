@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const DGA = require("../src/domain/dga-logic.js");
-const X = require("../bbtn/mba-oil-bbtn-export.js");
+const X = require("../src/data/io/mba-oil-bbtn-export.js");
 
 // Bản đóng gói PizZip gán vào window (như trình duyệt) — nạp 1 lần, dùng chung cho các test
 let _PizZip = null;
@@ -116,7 +116,7 @@ describe("Template BBTN lý-hóa dầu", () => {
 });
 
 describe("Xem nhanh file .docx (docx → HTML)", () => {
-  const P = require("../bbtn/mba-oil-bbtn.js");
+  const P = require("../src/data/io/mba-oil-bbtn.js");
   const W = (body) => `<w:document><w:body>${body}</w:body></w:document>`;
 
   test("đoạn văn: đậm/nghiêng, căn giữa, thoát ký tự HTML", () => {

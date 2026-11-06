@@ -1,4 +1,4 @@
-/* storage/storage-local.js — Thao tác lưu trữ cục bộ (localStorage) cho dữ liệu và file đính kèm thử nghiệm. */
+/* src/data/drivers/storage-local.js — Thao tác lưu trữ cục bộ (localStorage) cho dữ liệu và file đính kèm thử nghiệm. */
 
 const LS_BBTN_KEY = "dga_bbtn_files_v1";
 const MAX_LOCAL_BBTN_BYTES = 4 * 1024 * 1024; // 4MB — dè dặt hơn nhiều so với hạn mức chung của localStorage

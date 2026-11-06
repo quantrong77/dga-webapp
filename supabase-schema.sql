@@ -272,7 +272,7 @@ create table if not exists instrument_oil_tests (
   um_kv numeric,
   ghi_chu text,
   created_at timestamptz default now(),
-  -- BBTN 3 pha chung 1 biên bản (bbtn/oil-bbtn.js): mỗi pha 1 dòng, bbtn_group_id nối các pha,
+  -- BBTN 3 pha chung 1 biên bản (src/data/io/oil-bbtn.js): mỗi pha 1 dòng, bbtn_group_id nối các pha,
   -- bbtn_info là chuỗi JSON thông tin chung của biên bản, bbtn_* là file PDF đính kèm dùng chung.
   bbtn_group_id text,
   bbtn_info text,

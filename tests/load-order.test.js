@@ -47,10 +47,10 @@ describe("index.html (web) — thứ tự nạp", () => {
     expect(logicFiles[0]).toBe("src/domain/dga-logic-core.js");
     logicFiles.forEach((f) => expect(idx("src/domain/dga-logic.js")).toBeGreaterThan(idx(f)));
   });
-  test("config.js → logic → storage.js → ui/* → app-core.js (app-core.js cuối cùng)", () => {
+  test("config.js → logic → src/data/storage.js → ui/* → app-core.js (app-core.js cuối cùng)", () => {
     expect(idx("config.js")).toBeLessThan(idx("src/domain/dga-logic.js"));
-    expect(idx("src/domain/dga-logic.js")).toBeLessThan(idx("storage.js"));
-    order.filter((f) => f.startsWith("ui/") && f !== "ui/ui-errors.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("storage.js")));
+    expect(idx("src/domain/dga-logic.js")).toBeLessThan(idx("src/data/storage.js"));
+    order.filter((f) => f.startsWith("ui/") && f !== "ui/ui-errors.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("src/data/storage.js")));
     expect(order[order.length - 1]).toBe("app-core.js");
   });
   test("ui/ui-auth.js (định nghĩa showToast) nạp trước các ui/* khác dùng nó", () => {
@@ -58,10 +58,10 @@ describe("index.html (web) — thứ tự nạp", () => {
       expect(idx("ui/ui-auth.js")).toBeLessThan(idx(f));
     });
   });
-  test("không bỏ sót file: mọi file trong src/domain/, ui/, bbtn/ đều được index.html tham chiếu", () => {
+  test("không bỏ sót file: mọi file trong src/domain/, src/data/, ui/ đều được index.html tham chiếu", () => {
     const referenced = new Set(order);
     const missing = [];
-    ["src/domain", "ui", "bbtn", "storage"].forEach((dir) => {
+    ["src/domain", "src/data", "src/data/drivers", "src/data/io", "ui"].forEach((dir) => {
       fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(".js")).forEach((f) => {
         if (!referenced.has(`${dir}/${f}`)) missing.push(`${dir}/${f}`);
       });

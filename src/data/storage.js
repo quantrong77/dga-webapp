@@ -1,23 +1,23 @@
 /* storage.js — Facade Repository chính cho Data Access Tier.
  * Lắp ráp các driver từ storage/:
- *   - storage/storage-core.js
- *   - storage/storage-remote.js
- *   - storage/storage-local.js
- *   - storage/storage-offline.js
- *   - storage/storage-auth.js
+ *   - src/data/drivers/storage-core.js
+ *   - src/data/drivers/storage-remote.js
+ *   - src/data/drivers/storage-local.js
+ *   - src/data/drivers/storage-offline.js
+ *   - src/data/drivers/storage-auth.js
  * Cung cấp window.Storage và window.Auth thống nhất, giữ 100% tương thích ngược.
  */
 
 if (typeof module !== "undefined" && module.exports) {
-  const core = require("./storage/storage-core");
+  const core = require("./drivers/storage-core");
   Object.assign(global, core);
-  const remote = require("./storage/storage-remote");
+  const remote = require("./drivers/storage-remote");
   Object.assign(global, remote);
-  const local = require("./storage/storage-local");
+  const local = require("./drivers/storage-local");
   Object.assign(global, local);
-  const offline = require("./storage/storage-offline");
+  const offline = require("./drivers/storage-offline");
   Object.assign(global, offline);
-  const auth = require("./storage/storage-auth");
+  const auth = require("./drivers/storage-auth");
   Object.assign(global, auth);
 }
 

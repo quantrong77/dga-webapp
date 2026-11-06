@@ -1,5 +1,5 @@
 /**
- * Unit Test Suite for storage/storage-core.js
+ * Unit Test Suite for src/data/drivers/storage-core.js
  * Senior QA Engineer & Test Automation Specialist
  * Structure: AAA (Arrange - Act - Assert)
  * Coverage: normalizeGasKeys, databaseManagementUrl, uid uniqueness, isNetworkError, sync status notification
@@ -13,7 +13,7 @@ const {
   notifySyncStatus,
   _syncListeners,
   storageErrorMessage,
-} = require("../storage/storage-core.js");
+} = require("../src/data/drivers/storage-core.js");
 
 describe("storage-core: normalizeGasKeys (Data Normalization)", () => {
   test("Arrange/Act/Assert: normalizes uppercase gas keys to lowercase for database storage", () => {

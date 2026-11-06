@@ -317,10 +317,10 @@ Thanh Header được cố định ở mép trên màn hình (Sticky Header) v�
 | | `ui/ui-admin.js`, `ui-standards.js` | Quản lý người dùng, tiêu chuẩn hãng sản xuất, quy định 13 bảng ngưỡng |
 | | `ui/ui-errors.js`, `ui-busy.js` | Bắt lỗi toàn cục, hiển thị Toast thông báo và chỉ báo bận |
 | **Logic Nghiệp vụ** | `src/domain/dga-logic-*.js` (9 file) | Động cơ chẩn đoán DGA, ngưỡng QĐ1901/IEC, Duval 1, Isolation Forest, Bảng 54/55/58 |
-| **Tầng Dữ liệu** | `storage/storage-*.js` (5 file) | Lớp trừu tượng Google Sheets API, Supabase, LocalStorage, Outbox Sync ngoại tuyến |
+| **Tầng Dữ liệu** | `src/data/drivers/storage-*.js` (5 file) | Lớp trừu tượng Google Sheets API, Supabase, LocalStorage, Outbox Sync ngoại tuyến |
 | **Ngoại tuyến** | `sw.js` | Service Worker cache v4, PWA offline, bắt sự kiện fetch |
-| **Xử lý Biên bản** | `bbtn/bbtn-import.js`, `nameplate-import.js` | Đọc text PDF (PDF.js) và nhận diện ảnh scan/tấm nhãn bằng OCR (Tesseract.js) |
-| | `bbtn/bbtn-export.js`, `oil-bbtn.js` | Điền số liệu vào file mẫu Word (.docx) qua Docxtemplater |
+| **Xử lý Biên bản** | `src/data/io/bbtn-import.js`, `nameplate-import.js` | Đọc text PDF (PDF.js) và nhận diện ảnh scan/tấm nhãn bằng OCR (Tesseract.js) |
+| | `src/data/io/bbtn-export.js`, `oil-bbtn.js` | Điền số liệu vào file mẫu Word (.docx) qua Docxtemplater |
 | **Bản Di động** | `mobile/` | Phiên bản PWA tối ưu cho màn hình cảm ứng di động, dùng chung logic DGA core |
 | **Tài liệu Hướng dẫn** | `docs/huong-dan/user_manual.md` | Sách hướng dẫn sử dụng chi tiết 19 mục dành cho người dùng cuối |
 | **Danh mục Tính năng** | `docs/huong-dan/Features-web-app.md` | *(Tài liệu này)* Báo cáo mô tả toàn diện tính năng và kiến trúc dự án |

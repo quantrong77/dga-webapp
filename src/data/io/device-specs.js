@@ -3,7 +3,7 @@
         tan (kieu_may, nam_sx...), thí nghiệm dầu MBA (device_info JSON), dầu OLTC, dầu TI/TU (bbtn_info JSON) —
         mỗi thông số lấy giá trị MỚI NHẤT khác rỗng, kèm ngày + nguồn để người dùng biết lấy từ đâu.
      2. deviceSpecsFromHeader(): thông số đọc được từ phần thông tin chung của 1 file BBTN/biên bản cũ
-        (MbaOilBbtn.parseMbaOilBbtnLines().header, bbtn/mba-oil-bbtn.js) — dùng cho tiện ích "Nhập thông số kỹ
+        (MbaOilBbtn.parseMbaOilBbtnLines().header, src/data/io/mba-oil-bbtn.js) — dùng cho tiện ích "Nhập thông số kỹ
         thuật từ file" (chỉ lấy thông số, không đọc số liệu đo).
    Khóa thông số chuẩn (DEVICE_SPEC_KEYS) độc lập với id ô nhập của từng form (ánh xạ ở ui/ui-device-specs.js).
    Hàm thuần — kiểm thử bằng Jest (tests/device-specs.test.js). */

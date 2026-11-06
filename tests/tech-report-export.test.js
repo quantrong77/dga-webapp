@@ -1,5 +1,5 @@
 /**
- * Unit Test Suite for bbtn/tech-report-export.js
+ * Unit Test Suite for src/data/io/tech-report-export.js
  * Senior QA Engineer & Test Automation Specialist
  * Structure: AAA (Arrange - Act - Assert)
  * Coverage: buildTechReportData mapping, placeholders, edge cases, condemn text
@@ -11,7 +11,7 @@ const vm = require("vm");
 const { DGA } = require("./helpers");
 
 function loadTechReportModule() {
-  const code = fs.readFileSync(path.join(__dirname, "../bbtn/tech-report-export.js"), "utf8");
+  const code = fs.readFileSync(path.join(__dirname, "../src/data/io/tech-report-export.js"), "utf8");
   const ctx = {
     DGA,
     window: {},

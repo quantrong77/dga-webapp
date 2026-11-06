@@ -22,16 +22,16 @@
 // (xem file đó để biết vì sao chọn Tesseract.js, vì sao vendor local thay vì CDN, và quy
 // ước OEM.LSTM_ONLY/PSM.AUTO) — không tải thêm gì mới, không phụ thuộc CDN ngoài, không
 // gửi ảnh lên bất kỳ server/API OCR nào.
-import * as pdfjsLib from "../vendor/pdfjs/pdf.min.js";
-import Tesseract from "../vendor/tesseract/tesseract.esm.min.js";
+import * as pdfjsLib from "../../../vendor/pdfjs/pdf.min.js";
+import Tesseract from "../../../vendor/tesseract/tesseract.esm.min.js";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
 
 const { createWorker, OEM, PSM } = Tesseract;
 
-const TESS_WORKER_PATH = new URL("../vendor/tesseract/worker.min.js", import.meta.url).href;
-const TESS_CORE_PATH = new URL("../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
-const TESS_LANG_PATH = new URL("../vendor/tesseract/lang-data", import.meta.url).href;
+const TESS_WORKER_PATH = new URL("../../../vendor/tesseract/worker.min.js", import.meta.url).href;
+const TESS_CORE_PATH = new URL("../../../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
+const TESS_LANG_PATH = new URL("../../../vendor/tesseract/lang-data", import.meta.url).href;
 // Chỉ dùng khi người dùng lỡ lưu ảnh chụp nhãn thành PDF (hiếm — thường là JPG/PNG chụp
 // thẳng từ điện thoại, đưa vào worker.recognize() được luôn, không cần dựng trang).
 const OCR_RENDER_SCALE = 3;

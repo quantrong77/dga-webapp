@@ -5,7 +5,7 @@
 
    Toàn bộ là hàm thuần (không đụng DOM/mạng) để kiểm thử được bằng Jest
    (tests/oil-bbtn.test.js). Giao diện nằm ở ui/ui-ti-oil-3pha.js; việc đọc PDF thành dòng
-   nằm ở BbtnImport.readLines() (bbtn/bbtn-import.js). */
+   nằm ở BbtnImport.readLines() (src/data/io/bbtn-import.js). */
 
 const OIL_BBTN_PHASES = ["A", "B", "C"];
 const OIL_BBTN_ITEMS = ["bdv", "tgd90", "tgd20", "moisture"];

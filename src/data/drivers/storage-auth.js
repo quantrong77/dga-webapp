@@ -1,4 +1,4 @@
-/* storage/storage-auth.js — Quản lý đăng ký, đăng nhập, phiên và phân quyền người dùng (Auth). */
+/* src/data/drivers/storage-auth.js — Quản lý đăng ký, đăng nhập, phiên và phân quyền người dùng (Auth). */
 
 const AUTH_LS_KEY = "dga_auth_v1";
 

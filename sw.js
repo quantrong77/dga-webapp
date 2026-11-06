@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v32-domain";
+const CACHE_NAME = "dga-offline-v33-data";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -12,12 +12,12 @@ const PRECACHE_ASSETS = [
   "./manifest.webmanifest",
   "./early-layout.js",
   "./config.js",
-  "./storage/storage-core.js",
-  "./storage/storage-remote.js",
-  "./storage/storage-local.js",
-  "./storage/storage-offline.js",
-  "./storage/storage-auth.js",
-  "./storage.js",
+  "./src/data/drivers/storage-core.js",
+  "./src/data/drivers/storage-remote.js",
+  "./src/data/drivers/storage-local.js",
+  "./src/data/drivers/storage-offline.js",
+  "./src/data/drivers/storage-auth.js",
+  "./src/data/storage.js",
   "./src/domain/dga-logic.js",
   "./app-core.js",
   "./css/style-base.css",
@@ -72,15 +72,15 @@ const PRECACHE_ASSETS = [
   "./ui/ui-trend.js",
   "./ui/ui-alerts.js",
   "./ui/ui-feedback.js",
-  "./bbtn/bbtn-export.js",
-  "./bbtn/bbtn-import.js",
-  "./bbtn/nameplate-import.js",
-  "./bbtn/mba-oil-bbtn.js",
-  "./bbtn/oil-bbtn.js",
-  "./bbtn/mba-oil-bbtn-export.js",
-  "./bbtn/device-specs.js",
+  "./src/data/io/bbtn-export.js",
+  "./src/data/io/bbtn-import.js",
+  "./src/data/io/nameplate-import.js",
+  "./src/data/io/mba-oil-bbtn.js",
+  "./src/data/io/oil-bbtn.js",
+  "./src/data/io/mba-oil-bbtn-export.js",
+  "./src/data/io/device-specs.js",
   "./template/template-bbtn-ly-hoa-dau.docx",
-  "./bbtn/tech-report-export.js",
+  "./src/data/io/tech-report-export.js",
   "./ui/ui-batch-import.js",
   "./vendor/docxtemplater/pizzip.min.js",
   "./vendor/docxtemplater/docxtemplater.min.js",

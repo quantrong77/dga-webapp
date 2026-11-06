@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v32-domain") {
+          if (k !== "dga-offline-v33-data") {
             caches.delete(k);
           }
         });
@@ -589,7 +589,7 @@
         </div>
         <div id="nameplateFieldsWrap">
         <!-- Ô kéo-thả ảnh chụp TẤM NHÃN THIẾT BỊ (nameplate) — đọc bằng OCR (xem
-             bbtn/nameplate-import.js) để gợi ý điền 1 phần các ô bên dưới (Kiểu máy/Số
+             src/data/io/nameplate-import.js) để gợi ý điền 1 phần các ô bên dưới (Kiểu máy/Số
              chế tạo/Năm sản xuất/Điện áp định mức/Loại dầu + Nhà sản xuất ở khối phía
              trên). KHÔNG có mẫu nhãn chung (mỗi hãng trình bày khác nhau) nên độ tin cậy
              THẤP HƠN đọc BBTN — luôn cần xem lại toàn bộ, xem onNameplateFileSelected()
@@ -2161,7 +2161,7 @@
         <div class="bbtn-import-grid">
           <div class="bbtn-import-title bbtn-import-t1"><svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Một BBTN (PDF / Word) — đọc vào form để đối chiếu rồi lưu</div>
           <div class="bbtn-import-title bbtn-import-t2"><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhiều BBTN (PDF / Word) hoặc cả thư mục</div>
-          <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem bbtn/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
+          <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem src/data/io/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
           <div class="file-dropzone bbtn-import-z1" id="oDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
@@ -2369,7 +2369,7 @@
       </div>
 
       <!-- Xuất Biên bản thí nghiệm dầu (thùng chính + OLTC) theo mẫu PTC3 — ui/ui-oil-bbtn-export.js,
-           bbtn/mba-oil-bbtn-export.js, template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
+           src/data/io/mba-oil-bbtn-export.js, template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
            không lưu vào cơ sở dữ liệu. -->
       <div class="panel hidden mode-lap" id="oilBbtnExportPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -4084,12 +4084,12 @@
        app.js bên dưới (script thường, chạy ngay khi gặp). app.js chỉ gọi tới
        window.BbtnImport khi người dùng chọn file, nên không cần chờ module này xong
        trước — nó luôn sẵn sàng từ trước khi có tương tác đầu tiên của người dùng. -->
-  <script type="module" src="bbtn/bbtn-import.js"></script>
+  <script type="module" src="src/data/io/bbtn-import.js"></script>
   <!-- Đọc ẢNH CHỤP TẤM NHÃN THIẾT BỊ (nameplate — khác BBTN ở trên) để gợi ý điền khối
-       "Thông số kỹ thuật thiết bị" — xem bbtn/nameplate-import.js. Cùng cơ chế tải như
+       "Thông số kỹ thuật thiết bị" — xem src/data/io/nameplate-import.js. Cùng cơ chế tải như
        bbtn-import.js ngay phía trên (type="module", luôn sẵn sàng trước tương tác đầu
        tiên của người dùng). -->
-  <script type="module" src="bbtn/nameplate-import.js"></script>
+  <script type="module" src="src/data/io/nameplate-import.js"></script>
   <!-- PizZip + docxtemplater (MIT) — dùng để điền số liệu vào mẫu Biên bản thí nghiệm
        (.docx) ngay trong trình duyệt khi bấm "Xuất BBTN (docx)", xem bbtn-export.js.
        Đóng gói sẵn trong vendor/ (không phụ thuộc CDN ngoài) cùng lý do như vendor/pdfjs/
@@ -4117,12 +4117,12 @@
   <script src="src/domain/dga-logic-case.js"></script>
   <script src="src/domain/dga-logic.js"></script>
   <!-- Data Access Tier: các module chuyên trách & Facade Repository -->
-  <script src="storage/storage-core.js"></script>
-  <script src="storage/storage-remote.js"></script>
-  <script src="storage/storage-local.js"></script>
-  <script src="storage/storage-offline.js"></script>
-  <script src="storage/storage-auth.js"></script>
-  <script src="storage.js"></script>
+  <script src="src/data/drivers/storage-core.js"></script>
+  <script src="src/data/drivers/storage-remote.js"></script>
+  <script src="src/data/drivers/storage-local.js"></script>
+  <script src="src/data/drivers/storage-offline.js"></script>
+  <script src="src/data/drivers/storage-auth.js"></script>
+  <script src="src/data/storage.js"></script>
   <!-- app.js cũ (2548 dòng, mọi tab gộp 1 file) đã được tách theo tab/tính năng
        thành các file ui-*.js + app-core.js bên dưới, để dễ tìm code hơn khi sửa. Các
        file này KHÔNG dùng ES module — chúng chia sẻ chung 1 scope toàn cục giống hệt
@@ -4141,12 +4141,12 @@
   <script src="ui/ui-dieu54-charts.js"></script>
   <script src="ui/ui-dga-workflow.js"></script>
   <script src="ui/ui-dga.js"></script>
-  <script src="bbtn/bbtn-export.js"></script>
-  <script src="bbtn/mba-oil-bbtn.js"></script>
-  <script src="bbtn/mba-oil-bbtn-export.js"></script>
-  <script src="bbtn/device-specs.js"></script>
-  <script src="bbtn/oil-bbtn.js"></script>
-  <script src="bbtn/tech-report-export.js"></script>
+  <script src="src/data/io/bbtn-export.js"></script>
+  <script src="src/data/io/mba-oil-bbtn.js"></script>
+  <script src="src/data/io/mba-oil-bbtn-export.js"></script>
+  <script src="src/data/io/device-specs.js"></script>
+  <script src="src/data/io/oil-bbtn.js"></script>
+  <script src="src/data/io/tech-report-export.js"></script>
   <script src="ui/ui-batch-import.js"></script>
   <script src="ui/ui-standards.js"></script>
   <script src="ui/ui-regulation-config.js"></script>

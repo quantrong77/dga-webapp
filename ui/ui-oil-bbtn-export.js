@@ -1,7 +1,7 @@
 /* ui-oil-bbtn-export.js — Khối "Xuất Biên bản thí nghiệm (docx)" ở tab "Lý-Hóa dầu" (MBA/Kháng dầu): gom
    kết quả VỪA đánh giá của form dầu thùng chính (onAnalyzeOil, ui-oil.js) và form dầu OLTC
    (onAnalyzeOltcOil, ui-oltc.js) — cùng thiết bị + ngày lấy mẫu thì xuất chung 1 biên bản — rồi điền mẫu
-   PTC3 qua bbtn/mba-oil-bbtn-export.js. 7 ô THÔNG SỐ KỸ THUẬT (hãng SX, năm SX, ĐA định mức, công suất, số chế tạo,
+   PTC3 qua src/data/io/mba-oil-bbtn-export.js. 7 ô THÔNG SỐ KỸ THUẬT (hãng SX, năm SX, ĐA định mức, công suất, số chế tạo,
    năm vận hành, loại dầu — OIL_DEVICE_INFO_IDS, ui-oil.js) nằm ở form dầu MBA và LƯU kèm bản ghi (device_info);
    các ô còn lại (vị trí lấy mẫu, lý do thí nghiệm, điều kiện môi trường, kết luận) chỉ dùng khi xuất, KHÔNG lưu.
    App gợi ý từ BBTN vừa đọc hoặc lần đo DGA cùng trạm + thiết bị, người dùng sửa được. */

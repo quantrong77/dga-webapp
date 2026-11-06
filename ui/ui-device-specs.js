@@ -1,6 +1,6 @@
 /* ui-device-specs.js — Thông số kỹ thuật thiết bị ở tab con "Lập BBTN" (tab Khí hòa tan + Lý-Hóa dầu):
      - Chọn/gõ Trạm + Thiết bị (sự kiện change) → tự điền thông số kỹ thuật từ dữ liệu đã lưu của thiết bị đó
-       (DeviceSpecs.deviceSpecsCollect, bbtn/device-specs.js). Chỉ điền ô CÒN TRỐNG (hoặc ô app tự điền trước đó,
+       (DeviceSpecs.deviceSpecsCollect, src/data/io/device-specs.js). Chỉ điền ô CÒN TRỐNG (hoặc ô app tự điền trước đó,
        người dùng chưa sửa — đổi sang thiết bị khác thì các ô này được thay theo thiết bị mới). Ô người dùng đã gõ
        không bị ghi đè. Thiết bị chưa có dữ liệu → người dùng nhập tay.
      - Vùng kéo thả "Nhập thông số kỹ thuật từ file" (PDF/Word cũ): CHỈ lấy thông số (DeviceSpecs.
