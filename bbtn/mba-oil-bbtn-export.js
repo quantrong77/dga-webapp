@@ -1,6 +1,6 @@
 /* mba-oil-bbtn-export.js — Xuất Biên bản thí nghiệm dầu cách điện MBA (thùng chính + OLTC, .docx) cho số
    liệu nhập tay ở tab "Lý-Hóa dầu", theo mẫu PTC3 template/template-bbtn-ly-hoa-dau.docx (dựng từ mẫu
-   "BBTN lyhoadau MBA_OLTC 3 pha" của đơn vị — thay số liệu bằng thẻ docxtemplater). Cùng cách làm với
+   "BBTN lyhoadau MBA_OLTC 3 pha" của đơn vị, file template/bbtn-ly-hoa-dau-mba-oltc-3pha.docx — thay số liệu bằng thẻ docxtemplater). Cùng cách làm với
    bbtn-export.js (tab DGA): chạy hoàn toàn trong trình duyệt, không gửi số liệu đi đâu.
 
    Phần dựng dữ liệu (buildMbaOilBbtnExportData) là hàm thuần để kiểm thử được ở Node; phần tải mẫu/điền/

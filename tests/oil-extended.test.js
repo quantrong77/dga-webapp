@@ -166,7 +166,7 @@ describe("đọc BBTN dầu MBA (PDF -> dòng chữ)", () => {
     expect(p.values.C).toEqual({ bdv_kv: 69, moisture_ppm: 11 });
   });
 
-  // Dòng chữ trích từ mẫu thật template/BBTN lyhoadau MBA_OLTC 1 pha.docx (MBA 1 pha 500 kV) — bỏ phần ký tên
+  // Dòng chữ trích từ mẫu thật template/bbtn-ly-hoa-dau-mba-oltc-1pha.docx (MBA 1 pha 500 kV) — bỏ phần ký tên
   const BBTN_1PHA = [
     "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN (Insulation oil test report)",
     "Tên dự án/tên trạm (Project): Công trình nâng công suất TBA 500kV Di Linh",
