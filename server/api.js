@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const { db, UPLOADS_DIR } = require("./db");
 const auth = require("./auth");
+const uploads = require("./uploads");
 
 // Khởi tạo bảng và Admin mặc định
 auth.initDefaultAdmin();
@@ -160,18 +161,13 @@ async function handleApiRequest(req, res, urlObj) {
         return jsonResponse(res, { error: "Thiếu dữ liệu tệp đính kèm" }, 400);
       }
 
-      // Tạo tên tệp an toàn và lưu vào thư mục data/uploads/
-      const cleanName = path.basename(filename).replace(/[^a-zA-Z0-9._-]/g, "_");
-      const fileId = `${Date.now()}_${cleanName}`;
-      const filePath = path.join(UPLOADS_DIR, fileId);
-
+      // Lưu vào data/uploads/<yyyy>/<mm>/<sha8>_<ten-an-toan> theo mã băm nội dung — cùng nội dung tải lên lại
+      // (VD nhập lại cùng 1 BBTN) dùng lại file đã có, không lưu trùng (server/uploads.js). name vẫn là tên gốc.
       const buffer = Buffer.from(base64Data, "base64");
-      fs.writeFileSync(filePath, buffer);
-
-      const fileUrl = `/api/files/${encodeURIComponent(fileId)}`;
+      const stored = uploads.storeUpload(UPLOADS_DIR, buffer, filename);
       return jsonResponse(res, {
-        id: fileId,
-        url: fileUrl,
+        id: stored.id,
+        url: uploads.fileUrl(stored.id),
         name: filename,
         size: buffer.length,
       });
@@ -310,7 +306,8 @@ function handleFileDownload(req, res, urlObj) {
   const fileId = decodeURIComponent(urlObj.pathname.replace("/api/files/", ""));
   const safePath = path.normalize(path.join(UPLOADS_DIR, fileId));
 
-  if (!safePath.startsWith(UPLOADS_DIR) || !fs.existsSync(safePath)) {
+  // Chỉ phục vụ FILE nằm trong uploads/ (từ khi lưu theo <yyyy>/<mm>/, uploads/ có thư mục con — không stream thư mục)
+  if (!safePath.startsWith(UPLOADS_DIR + path.sep) || !fs.existsSync(safePath) || !fs.statSync(safePath).isFile()) {
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
     res.end("404 Tệp không tồn tại trên máy chủ nội bộ");
     return;
