@@ -117,3 +117,64 @@ interface OverallStatus {
 /** Trình duyệt gắn logic đã lắp ráp vào window.DGA (xem dga-logic.js). Không khai báo cả lib DOM để tsc
  *  báo lỗi nếu lớp logic lỡ dùng document/localStorage/... (lớp logic phải thuần, không phụ thuộc DOM). */
 declare const window: { DGA?: any } | undefined;
+
+// ---------------------------------------------------------------------------------------------------------------
+// LỚP DỮ LIỆU (src/data/) — API dùng chung giữa các driver (Bước 4.5 REFACTOR_PLAN). Các file driver có nhánh
+// module.exports nên tsc coi mỗi file là 1 module riêng; khai báo ở đây để file này kiểm tra được lời gọi sang
+// file khác. Mở rộng dần theo từng file được đưa vào tsconfig.json "include" (hiện: storage-repo.js).
+// ---------------------------------------------------------------------------------------------------------------
+
+/** Khóa localStorage của bộ nhớ đệm từng thực thể (storage-core.js) — KHÔNG đổi tên (dữ liệu cũ phải đọc được). */
+declare const LS_KEYS: {
+  measurements: string; standards: string; stations: string; oilTests: string; oltcOilTests: string;
+  instrumentOilTests: string; feedback: string; regulationConfig: string;
+};
+/** Đọc mảng bản ghi đã lưu đệm (storage-local.js); lỗi/chưa có → []. */
+declare function lsGet(key: string): any[];
+/** Ghi mảng bản ghi vào bộ nhớ đệm (storage-local.js); lỗi ghi chỉ cảnh báo, không ném. */
+declare function lsSet(key: string, value: any): void;
+/** Gọi API kiểu Apps Script (Google Sheets / máy chủ on-premise) — storage-remote.js. Ném lỗi nếu máy chủ trả { error }. */
+declare function gsheetGet(action: string, params?: Record<string, any>): Promise<any>;
+declare function gsheetPost(action: string, body?: Record<string, any>): Promise<any>;
+/** Client Supabase (storage-core.js) — đang tắt, giữ nguyên code. */
+declare function sb(): any;
+/** Lỗi do mất mạng (không phải lỗi nghiệp vụ/máy chủ) — storage-core.js. */
+declare function isNetworkError(err: unknown): boolean;
+/** Báo trạng thái đồng bộ cho các listener (badge đồng bộ) — storage-core.js. */
+declare function notifySyncStatus(override?: { online?: boolean; syncing?: boolean; pending?: number }): void;
+/** Đưa 1 thao tác ghi vào hàng đợi đồng bộ (gửi lại khi có mạng) — storage-offline.js. */
+declare function enqueueSyncOp(action: string, payload: Record<string, any>): { id: string; action: string; payload: any };
+
+/** Mô tả 1 thực thể lưu trữ (STORAGE_ENTITIES ở storage-repo.js). */
+interface StorageEntitySpec {
+  /** Tên khóa trong LS_KEYS. */
+  cacheKey: keyof typeof LS_KEYS;
+  /** Bảng Supabase. */
+  table: string;
+  listAction: string;
+  saveAction: string;
+  deleteAction: string;
+  /** Cột sắp xếp tăng dần khi đọc từ Supabase (không có = không sắp xếp). */
+  orderBy?: string;
+  /** Cách ghi lên Supabase cho thực thể không có xử lý riêng. */
+  supabaseWrite?: "upsert" | "insert";
+  /** Câu console.warn khi đọc lúc mất mạng. */
+  offlineWarn?: string;
+  /** false = không báo trạng thái mất mạng khi đọc lỗi mạng. */
+  notifyOffline?: boolean;
+}
+
+/** 1 thao tác ghi từ xa (repoRemoteWrite). */
+interface RepoRemoteWriteOp {
+  action: string;
+  payload: Record<string, any>;
+  /** Giá trị trả về khi chạy local / mất mạng (đã vào hàng đợi). */
+  localResult?: any;
+  gsheet: () => Promise<any>;
+  supabase: () => Promise<any>;
+}
+
+/** Trình duyệt: navigator.onLine (false = mất mạng). Kiểu Navigator của Node không có thuộc tính này. */
+interface Navigator {
+  onLine?: boolean;
+}

@@ -19,6 +19,7 @@ const REPO_GSHEET_MODES = ["gsheet", "local-server"];
  * - offlineWarn: câu console.warn khi đọc lúc mất mạng (chỉ measurements có)
  * - notifyOffline: false = KHÔNG báo trạng thái mất mạng khi đọc lỗi mạng (regulationConfig)
  */
+/** @type {Record<string, StorageEntitySpec>} */
 const STORAGE_ENTITIES = {
   measurements: {
     cacheKey: "measurements", table: "measurements", orderBy: "sample_date",
@@ -59,7 +60,12 @@ function repoIsOffline() {
   return typeof navigator !== "undefined" && navigator.onLine === false;
 }
 
-/** Đọc danh sách 1 thực thể; ghi lại bộ nhớ đệm khi đọc được từ xa, mất mạng thì trả bộ nhớ đệm. */
+/**
+ * Đọc danh sách 1 thực thể; ghi lại bộ nhớ đệm khi đọc được từ xa, mất mạng thì trả bộ nhớ đệm.
+ * @param {string} mode Storage.mode
+ * @param {StorageEntitySpec} spec
+ * @returns {Promise<any[]>}
+ */
 async function repoList(mode, spec) {
   const cacheKey = LS_KEYS[spec.cacheKey];
   const fromCache = () => {
@@ -97,7 +103,8 @@ async function repoList(mode, spec) {
  * Ghi lên nơi lưu từ xa theo chế độ. Mất mạng (navigator.onLine === false) hoặc lỗi mạng → đưa {action, payload} vào
  * hàng đợi đồng bộ và trả `localResult`; lỗi khác → ném lại. Chế độ localStorage → trả `localResult`.
  * @param {string} mode Storage.mode
- * @param {{ action: string, payload: object, localResult?: any, gsheet: () => Promise<any>, supabase: () => Promise<any> }} op
+ * @param {RepoRemoteWriteOp} op
+ * @returns {Promise<any>}
  */
 async function repoRemoteWrite(mode, op) {
   const queued = () => {
@@ -118,7 +125,13 @@ async function repoRemoteWrite(mode, op) {
   return op.localResult;
 }
 
-/** Supabase insert/upsert 1 bản ghi, trả về dòng máy chủ trả lại (nếu có) hoặc chính bản ghi. */
+/**
+ * Supabase insert/upsert 1 bản ghi, trả về dòng máy chủ trả lại (nếu có) hoặc chính bản ghi.
+ * @param {string} table
+ * @param {"upsert" | "insert"} method
+ * @param {Record<string, any>} record
+ * @returns {Promise<any>}
+ */
 async function repoSupabaseWriteReturning(table, method, record) {
   const { data, error } = await sb().from(table)[method](record).select();
   if (error) throw error;
@@ -127,6 +140,7 @@ async function repoSupabaseWriteReturning(table, method, record) {
 
 /** Lưu (thêm/ghi đè) 1 bản ghi đã gắn id + cập nhật bộ nhớ đệm ở phía gọi: Apps Script trả nguyên kết quả máy chủ,
  *  Supabase trả dòng đã lưu (hoặc bản ghi). Dùng cho thực thể không có xử lý riêng. */
+/** @param {string} mode @param {StorageEntitySpec} spec @param {Record<string, any>} record @returns {Promise<any>} */
 function repoSave(mode, spec, record) {
   return repoRemoteWrite(mode, {
     action: spec.saveAction,
@@ -138,6 +152,7 @@ function repoSave(mode, spec, record) {
 }
 
 /** Xóa 1 bản ghi theo id: bỏ khỏi bộ nhớ đệm ngay, rồi xóa từ xa (mất mạng → hàng đợi). Không trả giá trị. */
+/** @param {string} mode @param {StorageEntitySpec} spec @param {string} id @returns {Promise<void>} */
 async function repoDelete(mode, spec, id) {
   const cacheKey = LS_KEYS[spec.cacheKey];
   lsSet(cacheKey, lsGet(cacheKey).filter((r) => r.id !== id));
@@ -156,6 +171,7 @@ async function repoDelete(mode, spec, id) {
 }
 
 /** Ghi đè bản ghi cùng id trong bộ nhớ đệm, chưa có thì thêm vào cuối. */
+/** @param {StorageEntitySpec} spec @param {Record<string, any>} record @returns {any[]} mảng bộ nhớ đệm sau khi ghi */
 function repoCacheUpsert(spec, record) {
   const cacheKey = LS_KEYS[spec.cacheKey];
   const all = lsGet(cacheKey);
@@ -167,6 +183,7 @@ function repoCacheUpsert(spec, record) {
 }
 
 /** Thêm bản ghi vào CUỐI bộ nhớ đệm (không kiểm tra trùng id — giữ đúng cách làm cũ của dầu MBA/OLTC/góp ý). */
+/** @param {StorageEntitySpec} spec @param {Record<string, any>} record */
 function repoCacheAppend(spec, record) {
   const cacheKey = LS_KEYS[spec.cacheKey];
   const all = lsGet(cacheKey);

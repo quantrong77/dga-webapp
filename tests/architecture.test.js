@@ -139,8 +139,8 @@ describe("Ranh giới lớp", () => {
     expect(stale).toEqual([]);
   });
 
-  test("số ngoại lệ 'Bước 4' còn lại (giảm dần về 0 ở Bước 4)", () => {
+  test("không còn ngoại lệ 'Bước 4' (V1–V7 đã gỡ) — chỉ còn ngoại lệ 'cho phép' V8–V10", () => {
     const step4 = Object.values(EXCEPTIONS).flatMap((m) => Object.values(m)).filter((note) => note.includes("Bước 4"));
-    expect(step4.length).toBeLessThanOrEqual(8);
+    expect(step4).toEqual([]);
   });
 });
