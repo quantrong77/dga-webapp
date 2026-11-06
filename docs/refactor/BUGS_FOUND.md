@@ -9,6 +9,7 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
 | 2 | Bước 0 | **Cao** — chế độ offline không hoạt động | Chờ quyết định |
 | 3 | Bước 3 | Thấp — đọc sai 2 ô thông số khi đọc BBTN TI | Chờ quyết định |
 | 4 | Bước 3 | **Cao (bảo mật)** — máy chủ on-premise phục vụ `data/database.json`, `.git/`, mã nguồn không cần đăng nhập | Chờ quyết định — nên sửa sớm |
+| 5 | Bước 4 | **Cao (mất dữ liệu)** — chế độ on-premise: thao tác lưu lúc mất mạng bị bỏ khỏi hàng đợi mà không gửi lên máy chủ | Chờ quyết định — nên sửa sớm |
 
 ---
 
@@ -69,3 +70,21 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   `manifest.webmanifest`, `sw.js`, `config.js`, `src/`, `vendor/`, `assets/image/`, `assets/template/template-*.docx`
   và `mobile/`. Mọi đường dẫn khác (`data/`, `.git/`, `backend/`, `node_modules/`, `docs/`, `tests/`, `scripts/`,
   `*.md`) trả về 404. Thêm test gọi thử các đường dẫn này.
+
+## #5. Chế độ on-premise: thao tác lưu lúc mất mạng bị "đồng bộ" mà không gửi lên máy chủ
+
+- **Hiện tượng:** chạy máy chủ nội bộ (`Storage.mode === "local-server"`), mất mạng lúc bấm Lưu, nên bản ghi vào hàng
+  đợi đồng bộ (đúng). Khi có mạng lại, `Storage.processSyncQueue()` báo `processed: 1`, hàng đợi rỗng, nhưng **không có
+  lời gọi nào tới máy chủ**. Lần nạp danh sách sau, bộ nhớ đệm bị ghi đè bằng dữ liệu máy chủ, nên bản ghi đó **mất
+  hẳn**. Với chế độ Google Sheets, mục trong hàng đợi được gửi đúng (`gsheetPost("addMeasurement")`).
+- **Kiểm chứng (Node):** thêm 1 lần đo lúc `navigator.onLine = false`, sau đó `processSyncQueue()` lúc có mạng:
+  `gsheet` → gửi `["addMeasurement"]`; `local-server` → gửi `[]`, `processed: 1`, `pending: 0`.
+- **Nguyên nhân:** `executeRemoteSyncItem()` (`src/data/drivers/storage-offline.js`) chỉ có nhánh
+  `currentMode === "gsheet"` và `"supabase"`, chưa có `"local-server"` (chế độ on-premise thêm sau, dùng cùng giao thức
+  `gsheetPost`). Không vào nhánh nào thì hàm trả `undefined`, và `processSyncQueue()` coi đó là thành công, xóa mục khỏi
+  hàng đợi. Có từ trước, không do refactor.
+- **Hướng sửa đề xuất (1 dòng):** `if (currentMode === "gsheet" || currentMode === "local-server")`. Thêm test
+  `processSyncQueue` cho cả 3 chế độ, và cho trường hợp action lạ (hiện cũng bị bỏ âm thầm; nên giữ lại trong hàng đợi
+  hoặc báo lỗi).
+- **Ghi chú:** chưa refactor `executeRemoteSyncItem` (độ phức tạp 72) ở Bước 4, vì refactor thuần sẽ phải giữ nguyên
+  lỗi này. Nên sửa lỗi trước, rồi gom về `STORAGE_ENTITIES` (storage-repo.js) như các hàm CRUD.

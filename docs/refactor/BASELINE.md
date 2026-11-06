@@ -103,3 +103,19 @@ Chạy trên `npm start` (on-premise, cổng 8091), đăng nhập Admin, với d
 - Tab Quản trị, chế độ on-premise: `GET /api?action=supabaseSyncStatus` trả **400** (máy chủ nội bộ không có action này)
   → 1 lỗi console. Xem `BUGS_FOUND.md` #1.
 - Service Worker **không được đăng ký** (cả on-premise lẫn bản tĩnh như Pages). Xem `BUGS_FOUND.md` #2.
+
+## 5. Sau Bước 4 (refactor bên trong từng lớp)
+
+| Cổng | Mốc sau Bước 0 | Sau Bước 4 |
+|---|---|---|
+| Jest | 558 test | **671 test** (+113: đặc tả Storage 29, combo app-core 40, kiến trúc, hàm cung cấp tiêu chuẩn NSX…) |
+| ESLint | 0 lỗi / 61 cảnh báo | **0 lỗi / 0 cảnh báo** |
+| Stylelint | 0 lỗi / 50 cảnh báo | 0 lỗi / 50 cảnh báo (để Bước 5) |
+| tsc | `src/domain/*.js` | `src/domain/*.js` + `src/data/drivers/storage-repo.js` |
+| Kích thước | `storage.js` 1171 dòng, `app-core.js` 1006 dòng | `storage.js` 438 + `storage-repo.js` ~230; `app-core.js` 579 + `app-status.js` 186 + `app-views.js` 211 |
+
+Độ phức tạp: `initApp` (52, 457 dòng) đã chia thành 7 hàm; 28 hàm CRUD của `storage.js` đã gom về khuôn chung.
+Còn lại (để lần sau, cần test đặc tả riêng từng hàm trước khi sửa): `onViewMeasurement` (79), `executeRemoteSyncItem` (72,
+chờ sửa lỗi #5), `mbaOilDocxXmlToHtml` (64), `onAnalyze` (54), `buildRecommendations` (51), `parseMbaOilBbtnLines` (50),
+`handleApiRequest` (50).
+
