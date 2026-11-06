@@ -42,7 +42,7 @@
   font-family: "Be Vietnam Pro", "Segoe UI", sans-serif;
 }
 .d54-svg.dragging { cursor: grabbing; }
-.d54-svg:focus-visible { outline: 2px solid var(--blue-500, #3b82f6); outline-offset: 2px; }
+.d54-svg:focus-visible { outline: 2px solid var(--blue-500); outline-offset: 2px; }
 
 .d54-tools {
   display: flex;

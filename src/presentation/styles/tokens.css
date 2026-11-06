@@ -112,6 +112,56 @@
   --phase-c: #d9262c;
   --gear-gray: #98a2b3;
   --gear-orange: #e2793c;
+  /* ---- Màu cố định theo VAI TRÒ (Bước 5): trước đây viết cứng rải rác trong các file css. Giá trị giữ nguyên;
+          các vai trò này nằm trên nền tối/nền màu đặc ở CẢ 2 giao diện nên khối tối bên dưới không ghi đè. ---- */
+  /* Chữ/biểu tượng trên nền tối hoặc nền màu đặc (header navy, nút chính, lớp phủ ảnh, bước quy trình) */
+  --on-dark: #fff;
+  --on-dark-border: rgba(255, 255, 255, 0.15);
+  --spinner-on-dark: rgba(255, 255, 255, 0.65);
+  /* Header: nút biểu tượng, badge người dùng, vạch ngăn (mờ trắng trên navy) */
+  --header-ctl-bg: rgba(255, 255, 255, 0.1);
+  --header-ctl-bg-hover: rgba(255, 255, 255, 0.25);
+  --header-ctl-border: rgba(255, 255, 255, 0.28);
+  --header-ctl-border-hover: rgba(255, 255, 255, 0.5);
+  --header-badge-bg: rgba(255, 255, 255, 0.16);
+  --header-badge-bg-hover: rgba(255, 255, 255, 0.3);
+  --header-divider: rgba(255, 255, 255, 0.22);
+  /* Tooltip (nút header, nút thao tác trong bảng) */
+  --tooltip-bg: #0f172a;
+  --tooltip-text: #fff;
+  --tooltip-border: rgba(255, 255, 255, 0.18);
+  /* Badge trạng thái kết nối/đồng bộ (trên header) */
+  --status-online-bg: #d7f5df;
+  --status-online-text: #10692f;
+  --status-online-border: rgba(16, 105, 47, 0.25);
+  --status-online-dot: #12b76a;
+  --status-online-dot-ring: rgba(18, 183, 106, 0.2);
+  --status-offline-bg: #fff4e5;
+  --status-offline-text: #b54708;
+  --status-offline-border: #fedf89;
+  --status-offline-dot: #f79009;
+  --status-syncing-bg: #eff8ff;
+  --status-syncing-text: #175cd3;
+  --status-syncing-border: #b2ddff;
+  --status-syncing-dot: #2e90fa;
+  --status-error: #b42318;
+  --status-error-bg: #fde2e1;
+  --status-local-bg: #fff3cd;
+  --status-local-text: #7a5b00;
+  /* Lớp phủ: hộp thoại, xem ảnh phóng to, gợi ý phóng to */
+  --scrim: rgba(15, 23, 42, 0.55);
+  --scrim-lightbox: rgba(8, 16, 28, 0.88);
+  --scrim-hint: rgba(15, 30, 50, 0.75);
+  /* Ô nhập: bóng chìm + vòng focus */
+  --input-inset: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  --focus-ring: 0 0 0 3px rgba(44, 63, 184, 0.18);
+  --focus-ring-strong: 0 0 0 4px rgba(44, 63, 184, 0.22);
+  --btn-primary-text: #fff;
+  --table-stripe: rgba(241, 245, 249, 0.45);
+  --pdf-viewer-bg: #525659; /* nền khung xem PDF (giống trình xem PDF của trình duyệt) */
+  /* Trước đây chỉ dùng kèm giá trị dự phòng var(--x, …) mà không khai báo */
+  --gray-500: #6b7280;
+  --blue-500: #3b82f6;
   font-size: 15px;
 }
 

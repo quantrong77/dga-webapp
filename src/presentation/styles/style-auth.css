@@ -22,7 +22,7 @@
   width: 100%;
   max-width: 400px;
   box-shadow: var(--shadow-5);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--on-dark-border);
 }
 .auth-card h2 {
   margin: 0 0 8px 0;
@@ -156,7 +156,7 @@
   height: 15px;
   flex: none;
   border-radius: 50%;
-  border: 2.5px solid rgba(255, 255, 255, 0.65);
+  border: 2.5px solid var(--spinner-on-dark);
   border-top-color: var(--blue-900);
   animation: dga-spin 0.8s linear infinite;
 }
@@ -195,7 +195,7 @@
 .mini-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--scrim);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,10 +256,10 @@
 }
 
 .role-select { font-size: 12px; padding: 4px 6px; }
-.badge.supabase { background: #d7f5df; color: #10692f; }
+.badge.supabase { background: var(--status-online-bg); color: var(--status-online-text); }
 /* Badge "Database" (#storageBadge) khi MẤT kết nối — dùng khi tải Tiêu chuẩn/Lịch sử
    đo lúc khởi động bị lỗi (xem initApp() ở app-core.js), thay cho màu xanh
    .badge.supabase ở trên để báo ngay tình trạng mất kết nối thay vì vẫn hiện xanh gây
    hiểu lầm là đang hoạt động bình thường. Rê chuột vào badge (title=) xem chi tiết lỗi. */
-.badge.error { background: #fde2e1; color: #b42318; }
+.badge.error { background: var(--status-error-bg); color: var(--status-error); }
 
