@@ -611,7 +611,7 @@ async function oilBbtnReadLines(file, onProgress) {
     if (!doc) throw new Error("File Word không hợp lệ");
     return { lines: window.MbaOilBbtn.mbaOilDocxXmlToLines(doc.asText()), viaOCR: false };
   }
-  if (!window.BbtnImport || !window.BbtnImport.readLines) throw new Error("Bộ đọc PDF chưa tải xong — thử lại sau vài giây");
+  if (!window.BbtnImport || !window.BbtnImport.readLines) throw new Error(importModuleUnavailableMessage("Bộ đọc PDF chưa tải xong — thử lại sau vài giây"));
   return window.BbtnImport.readLines(file, onProgress);
 }
 

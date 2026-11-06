@@ -379,7 +379,7 @@ const Tio3Batch = createOilBatch({
   deviceInputs: ["t3_tram", "t3_thietbi"],
   baseDevice: () => ({ tram: oilBatchNorm($("t3_tram") && $("t3_tram").value), thietBi: oilBatchNorm($("t3_thietbi") && $("t3_thietbi").value) }),
   async read(file) {
-    if (!window.BbtnImport || !window.BbtnImport.readLines || typeof OilBbtn === "undefined") throw new Error("bộ đọc PDF chưa tải xong");
+    if (!window.BbtnImport || !window.BbtnImport.readLines || typeof OilBbtn === "undefined") throw new Error(importModuleUnavailableMessage("bộ đọc PDF chưa tải xong"));
     const read = await window.BbtnImport.readLines(file);
     const parsed = OilBbtn.parseOilBbtnLines(read.lines || []);
     const out = { parsed, ngay: parsed.ngayLayMau || "", tram: parsed.tram, thietBi: parsed.thietBi, warn: [] };

@@ -377,7 +377,7 @@ async function onTio3FileSelected() {
   const note = $("t3ImportNote");
   note.classList.remove("hidden");
   if (!window.BbtnImport || !window.BbtnImport.readLines) {
-    note.textContent = "Bộ đọc PDF chưa tải xong hoặc tải lỗi — vui lòng thử lại sau vài giây, hoặc nhập tay.";
+    note.textContent = importModuleUnavailableMessage("Bộ đọc PDF chưa tải xong hoặc tải lỗi — vui lòng thử lại sau vài giây, hoặc nhập tay.");
     return;
   }
   note.textContent = "Đang đọc biên bản...";

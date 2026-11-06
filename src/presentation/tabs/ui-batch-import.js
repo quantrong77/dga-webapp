@@ -86,7 +86,7 @@ async function handleBatchFileList(fileList) {
     return;
   }
   if (!window.BbtnImport) {
-    notifyError("Không đọc được BBTN (thư viện đọc PDF chưa tải xong) — thử lại sau vài giây.");
+    notifyError(importModuleUnavailableMessage("Không đọc được BBTN (thư viện đọc PDF chưa tải xong) — thử lại sau vài giây."));
     return;
   }
 

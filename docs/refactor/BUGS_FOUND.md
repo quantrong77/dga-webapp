@@ -22,6 +22,9 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   `gsheetGet("supabaseSyncStatus")`. Action này chỉ có ở `backend/gsheet/Code.gs:365`; `backend/onpremise/api.js` không có nên trả 400.
 - **Ảnh hưởng:** chỉ là 1 lỗi console + khối "Bản sao Supabase" không có trạng thái; không mất dữ liệu.
 - **Hướng sửa đề xuất:** ở chế độ on-premise thì không gọi (hoặc `backend/onpremise/api.js` trả `{ enabled: false }`).
+- **ĐÃ SỬA** (nhánh `fix/bugs-1-3-8`): `refreshSupabaseSyncUI()` (`src/presentation/tabs/ui-admin.js`) chỉ gọi
+  `supabaseSyncStatus` khi `Storage.mode === "gsheet"`; chế độ khác báo "Không áp dụng…", khóa nút đồng bộ. Test
+  `tests/admin-supabase-status.test.js` (5 test). Kiểm trên trình duyệt (on-premise): mở tab Quản trị → 0 response lỗi.
 
 ## #2. Service Worker không bao giờ được đăng ký → không có bộ nhớ đệm offline
 
@@ -62,6 +65,15 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   kết quả đánh giá khí.
 - **Hướng sửa đề xuất:** dừng giá trị ở nhãn kế tiếp ("Số chế tạo", "Năm sản xuất"…); bỏ qua giá trị bắt đầu bằng một
   nhãn khác. Thêm test với dòng chữ của mẫu TI.
+- **ĐÃ SỬA** (nhánh `fix/bugs-1-3-8`). Nguyên nhân thật (file mẫu là BBTN MBA AT2 mẫu NPTS/BM.01): (1) nhãn điện áp
+  `D?ien\s*ap` (chữ D tùy chọn cho OCR) khớp cả "Máy **biến áp** AT2" ở dòng Vị trí lắp đặt, ô coi như rỗng nên lấy
+  dòng kế tiếp; (2) "Hãng sản xuất" chỉ dừng ở "Năm sản xuất". Sửa trong `src/data/io/bbtn-import.js`: nhãn điện áp
+  không được đứng ngay sau 1 chữ cái; dòng kế tiếp có dấu `:` (hàng nhãn khác) không lấy làm giá trị; hàm mới
+  `extractHangSanXuat()` dừng ở Năm sản xuất / Số chế tạo / Serial No / Kiểu loại. Test `tests/bbtn-device-info.test.js`
+  (8 test). So bản cũ ↔ mới trên 39 PDF thật trên máy: 20 trường đổi — 15 từ sai thành đúng (Hãng sản xuất của MBA, CSV,
+  TU, DCL, MC; Điện áp định mức MBA AT1 pha B → `550 kV`, AT2 → `225/115/23 (kV)`, kéo theo cấp Bảng 63 của AT2 `500` →
+  `110-220`, đúng với 225 kV); 5 trường còn lại ở 4 file **không phải BBTN dầu** (BBTN mạch nhị thứ TU, biên bản
+  nghiệm thu, tài liệu phần mềm) không có ô điện áp — trước và sau đều đoán sai, chỉ khác chuỗi.
 
 ## #4. Máy chủ on-premise phục vụ MỌI file trong thư mục dự án, kể cả database và `.git/`
 
@@ -138,3 +150,10 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
 - **Hướng sửa đề xuất:** README ghi rõ dùng `chay_dga_offline.bat` thay vì mở file trực tiếp; hoặc đổi 2 module này
   sang script cổ điển (IIFE, gắn `window.BbtnImport`) như các file khác — cần thận trọng vì `pdf.js` đang nạp bằng
   `import`.
+- **ĐÃ XỬ LÝ** (nhánh `fix/bugs-1-3-8`) — không thể làm chạy được: đổi sang script cổ điển cũng không đủ vì pdf.js
+  (Web Worker) và Tesseract (Worker + WASM) cũng bị chặn từ `file://`. Nay 6 chỗ báo "thư viện chưa tải xong, thử lại
+  sau vài giây" (sai — không bao giờ tải xong) đi qua `importModuleUnavailableMessage()`
+  (`src/presentation/components/ui-utils.js`): ở `file://` báo rõ chạy `chay_dga_offline.bat` / `npm start` rồi mở
+  `http://localhost:8080`, hoặc nhập tay. Test `tests/file-protocol-import.test.js` (4 test, có kiểm không còn thông báo
+  "chưa tải xong" nào của bộ đọc PDF/OCR đi riêng). README mục 1 ghi rõ. Lỗi CORS trong console vẫn còn (do thẻ
+  `<script type="module">` tĩnh) — vô hại.

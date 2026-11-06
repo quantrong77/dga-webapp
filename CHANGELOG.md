@@ -29,6 +29,11 @@ Chi tiết: [`docs/refactor/TEST_REPORT.md`](./docs/refactor/TEST_REPORT.md).
 - **Mở app khi mất mạng:** Service Worker trước đây không bao giờ được đăng ký (chỉ chờ sự kiện `load` đã qua từ
   trước khi đăng nhập) → tải lại trang lúc mất mạng không mở được. Nay đăng ký ngay sau đăng nhập; precache thêm 2
   thư viện mà module đọc BBTN PDF / tấm nhãn cần (lỗi #2).
+- Tab Quản trị ở chế độ máy chủ nội bộ không còn gọi trạng thái bản sao Supabase (trước đây HTTP 400 trong console);
+  báo "Không áp dụng" (lỗi #1).
+- Đọc BBTN: ô "Điện áp định mức" không còn lấy nhầm dòng "Hãng sản xuất…" (nhãn khớp nhầm "máy biến áp"); "Hãng sản
+  xuất" dừng trước "Số chế tạo / Kiểu loại" cùng dòng (lỗi #3).
+- Mở bằng `file://`: thay thông báo "thư viện chưa tải xong, thử lại sau vài giây" bằng hướng dẫn mở qua máy chủ (lỗi #8).
 
 ### Cấu trúc thư mục
 
@@ -67,8 +72,7 @@ Chi tiết: [`docs/refactor/TEST_REPORT.md`](./docs/refactor/TEST_REPORT.md).
 - Jest 558 → **741** test (thêm: ranh giới 3 lớp, đặc tả `window.Storage`, hàng đợi đồng bộ 2 chế độ, danh sách cho
   phép của máy chủ nội bộ có gọi HTTP thật, artifact Pages, tệp đính kèm không trùng).
 
-### Còn tồn tại (có từ trước tái cấu trúc, chưa sửa — [`docs/refactor/BUGS_FOUND.md`](./docs/refactor/BUGS_FOUND.md))
+### Còn tồn tại
 
-- #8: mở bằng `file://` không nạp được 2 module đọc BBTN PDF / tấm nhãn.
-- #1: tab Quản trị (on-premise) gọi `supabaseSyncStatus` → HTTP 400 trong console.
-- #3: đọc BBTN khí hòa tan của TI: 2 ô "Điện áp định mức", "Hãng sản xuất" lẫn nội dung dòng khác.
+- Mở bằng `file://`: 2 chức năng đọc BBTN PDF / ảnh nhãn không chạy được (trình duyệt chặn ES module / Worker / WASM);
+  app nay báo rõ cách mở qua máy chủ (lỗi #8, [`docs/refactor/BUGS_FOUND.md`](./docs/refactor/BUGS_FOUND.md)).

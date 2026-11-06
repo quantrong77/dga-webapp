@@ -361,7 +361,7 @@ async function onBbtnFileSelected(e) {
   }
   showBbtnPreview(file, file.name, "Đang đọc BBTN...");
   if (!window.BbtnImport) {
-    note.textContent = "Không tự động đọc được BBTN (thư viện đọc PDF chưa tải xong) — vui lòng nhập tay các trường bên dưới.";
+    note.textContent = importModuleUnavailableMessage("Không tự động đọc được BBTN (thư viện đọc PDF chưa tải xong) — vui lòng nhập tay các trường bên dưới.");
     note.classList.remove("hidden");
     return;
   }
@@ -549,7 +549,7 @@ async function onNameplateFileSelected(e) {
     return;
   }
   if (!window.NameplateImport) {
-    note.textContent = "Không tự động đọc được ảnh nhãn (thư viện OCR chưa tải xong) — vui lòng nhập tay các trường bên dưới.";
+    note.textContent = importModuleUnavailableMessage("Không tự động đọc được ảnh nhãn (thư viện OCR chưa tải xong) — vui lòng nhập tay các trường bên dưới.");
     note.classList.remove("hidden");
     return;
   }

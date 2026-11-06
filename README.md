@@ -92,7 +92,8 @@ Trên Windows: double-click `chay_dga_offline.bat` (tự mở trình duyệt t�
 - Tệp đính kèm lưu theo mã băm SHA-256 (`data/uploads/<yyyy>/<mm>/<sha8>_<tên>`), cùng nội dung không lưu trùng.
   Gom tệp trùng cũ: `node scripts/dedupe-uploads.js --dry-run` (xem trước) rồi bỏ `--dry-run`.
 - Thêm/đổi file web ở gốc dự án → bổ sung `ROOT_FILES` / `ROOT_DIRS` trong `static-allowlist.js`.
-- Mở `index.html` bằng `file://` thì 2 chức năng đọc BBTN PDF / tấm nhãn chưa chạy (lỗi #8) — nên mở qua
+- Mở `index.html` bằng `file://` thì 2 chức năng đọc BBTN PDF / ảnh nhãn **không chạy được** (trình duyệt chặn ES
+  module / Web Worker / WASM từ ổ đĩa; app sẽ báo khi bấm). Muốn dùng: chạy `chay_dga_offline.bat` / `npm start` rồi mở
   `http://localhost:8080`.
 
 ## 2. Database dùng chung trên Internet (nhiều máy / nhiều người cùng nhập, cùng xem)

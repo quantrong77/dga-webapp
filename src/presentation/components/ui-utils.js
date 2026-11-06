@@ -41,6 +41,18 @@ function safeHttpUrl(url) {
   }
 }
 
+/** Thông báo khi bộ đọc BBTN PDF / ảnh nhãn (window.BbtnImport, window.NameplateImport) chưa có. Mở app trực tiếp từ
+ *  ổ đĩa (file://) thì trình duyệt CHẶN 2 module này (ES module, Web Worker, WASM) — "chờ vài giây" không bao giờ
+ *  hết, nên báo rõ cách mở qua máy chủ (lỗi #8, BUGS_FOUND.md). Ngoài file:// trả nguyên thông báo fallback. */
+function importModuleUnavailableMessage(fallback) {
+  const proto = typeof location !== "undefined" && location ? location.protocol : "";
+  if (proto === "file:") {
+    return "Đọc BBTN PDF / ảnh nhãn không dùng được khi mở app trực tiếp từ ổ đĩa (file://) — trình duyệt chặn. " +
+      "Hãy chạy chay_dga_offline.bat (hoặc npm start) rồi mở http://localhost:8080; hoặc nhập tay các trường bên dưới.";
+  }
+  return fallback;
+}
+
 /** Xác thực dữ liệu đầu vào: không đại lượng nào ở đây (nồng độ khí ppm, %, kV, °C, năm,
  *  lần đo, ngưỡng cấu hình...) có thể ÂM về mặt vật lý — người dùng gõ nhầm dấu "-" hoặc
  *  paste nhầm số âm là lỗi nhập liệu, không phải giá trị hợp lệ. Dùng CHUNG cho mọi form
