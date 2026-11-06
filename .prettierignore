@@ -14,5 +14,4 @@ docs/
 .playwright/
 .playwright-cli/
 package-lock.json
-style.css
 *.md

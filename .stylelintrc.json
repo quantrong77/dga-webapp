@@ -1,6 +1,6 @@
 {
   "extends": ["stylelint-config-standard"],
-  "ignoreFiles": ["node_modules/**", "vendor/**", "mobile/**", ".dist/**", "coverage/**", "style.css"],
+  "ignoreFiles": ["node_modules/**", "vendor/**", "mobile/**", "coverage/**"],
   "rules": {
     "selector-id-pattern": null,
     "selector-class-pattern": null,

@@ -140,7 +140,7 @@ Codebase tuân thủ mô hình Module tách biệt rõ ràng theo miền nghiệ
 flowchart TD
     subgraph UI_Layer["Tầng Giao Diện (UI Layer)"]
         HTML["index.html / mobile/index.html"]
-        CSS["style.css / css/*.css"]
+        CSS["css/*.css"]
         Early["early-layout.js"]
         UICore["app-core.js (App Init, Routing, Layout)"]
         UIControllers["ui/ui-*.js (DGA, Oil, Alerts, Trend, History, Auth...)"]
@@ -194,7 +194,7 @@ flowchart TD
 ```
 dga-webapp/
 ├── index.html                 # Trang SPA chính trên Desktop/Tablet
-├── style.css                  # Toàn bộ quy tắc CSS giao diện chính
+├── css/                       # Quy tắc CSS giao diện chính, tách theo tab/khu vực
 ├── early-layout.js            # Script chạy tức thì trước khi render DOM để chống nhảy layout
 ├── app-core.js                # Khởi động ứng dụng, tab switcher, nạp dữ liệu ban đầu
 ├── config.js                  # Điền URL Google Apps Script hoặc Supabase credentials

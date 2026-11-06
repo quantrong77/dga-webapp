@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v30-cfglayout";
+const CACHE_NAME = "dga-offline-v31-donrac";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -20,7 +20,6 @@ const PRECACHE_ASSETS = [
   "./storage.js",
   "./dga-logic.js",
   "./app-core.js",
-  "./style.css",
   "./css/style-base.css",
   "./css/style-auth.css",
   "./css/style-nav-layout.css",

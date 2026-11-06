@@ -15,7 +15,7 @@ const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..");
 
-/** File ở gốc dự án mà trình duyệt tải. style.css: sw.js còn precache (dọn ở Bước 1 của REFACTOR_PLAN). */
+/** File ở gốc dự án mà trình duyệt tải. */
 const ROOT_FILES = [
   "index.html",
   "manifest.webmanifest",
@@ -25,7 +25,6 @@ const ROOT_FILES = [
   "app-core.js",
   "dga-logic.js",
   "storage.js",
-  "style.css",
 ];
 /** Thư mục chép nguyên (trừ file bị loại bởi isExcluded). */
 const ROOT_DIRS = ["css", "logic", "storage", "ui", "bbtn", "vendor", "image", "mobile"];
