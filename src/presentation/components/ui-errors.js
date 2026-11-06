@@ -122,7 +122,28 @@ function installGlobalErrorHandlers(target) {
 
 if (typeof window !== "undefined") installGlobalErrorHandlers(window);
 
+/**
+ * Đánh dấu Ô NHẬP SAI đi kèm thông báo lỗi: viền đỏ (.is-invalid) + aria-invalid (trình đọc màn hình đọc "không hợp
+ * lệ") + đưa con trỏ vào ô. Tự bỏ đánh dấu khi người dùng sửa ô (input/change).
+ * @param {string|HTMLElement} idOrEl
+ */
+function flagInvalidField(idOrEl) {
+  const el = typeof idOrEl === "string" ? (typeof document !== "undefined" ? document.getElementById(idOrEl) : null) : idOrEl;
+  if (!el) return;
+  el.classList.add("is-invalid");
+  el.setAttribute("aria-invalid", "true");
+  const clear = () => {
+    el.classList.remove("is-invalid");
+    el.removeAttribute("aria-invalid");
+    el.removeEventListener("input", clear);
+    el.removeEventListener("change", clear);
+  };
+  el.addEventListener("input", clear);
+  el.addEventListener("change", clear);
+  try { el.focus(); } catch (_) { /* phần tử không nhận focus được: bỏ qua */ }
+}
+
 // Export cho Node (dùng để test) — trình duyệt bỏ qua nhánh này.
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { errorMessageOf, shouldShowErrorToast, notifyError, notifyInfo, reportError, installGlobalErrorHandlers, ERROR_TOAST_DEDUPE_MS };
+  module.exports = { errorMessageOf, shouldShowErrorToast, notifyError, notifyInfo, reportError, installGlobalErrorHandlers, flagInvalidField, ERROR_TOAST_DEDUPE_MS };
 }

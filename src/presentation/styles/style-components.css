@@ -62,6 +62,13 @@ input:focus, select:focus, textarea:focus {
   border-color: var(--blue-700);
   box-shadow: var(--input-inset), var(--focus-ring);
 }
+/* Ô nhập sai (flagInvalidField(), ui-errors.js): viền đỏ, cả khi đang focus (thắng luật focus xanh ở trên và
+   ở style-tab-feedback.css nhờ độ ưu tiên cao hơn), kèm aria-invalid. */
+input.is-invalid, select.is-invalid, textarea.is-invalid { border-color: var(--bad); }
+input.is-invalid:focus, select.is-invalid:focus, textarea.is-invalid:focus {
+  border-color: var(--bad);
+  box-shadow: var(--input-inset), 0 0 0 3px color-mix(in srgb, var(--bad) 22%, transparent);
+}
 
 input::placeholder, textarea::placeholder {
   color: var(--text-tertiary);

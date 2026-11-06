@@ -900,6 +900,7 @@ async function onAnalyze() {
       const n = parseFloat(raw.replace(",", "."));
       if (!Number.isFinite(n)) {
         notifyError(`Giá trị khí ${g} không hợp lệ (vui lòng nhập số hoặc "KPH").`);
+        flagInvalidField("g_" + g);
         return;
       }
       gases[g] = n;
@@ -914,6 +915,7 @@ async function onAnalyze() {
     const n = parseFloat(s.replace(",", "."));
     if (!Number.isFinite(n)) {
       notifyError(`Giá trị khí ${label} không hợp lệ (vui lòng nhập số hoặc "KPH").`);
+      flagInvalidField("g_" + label);
       return null;
     }
     return n;
@@ -994,7 +996,10 @@ async function onAnalyze() {
   }
 
   if (!measurement.thiet_bi || !measurement.sample_date) {
-    notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
+    // Nói rõ ô nào còn thiếu + đưa con trỏ tới ô đó (trước đây chỉ 1 câu chung cho cả 2 ô)
+    const missing = [!measurement.thiet_bi && "Thiết bị", !measurement.sample_date && "Ngày lấy mẫu"].filter(Boolean);
+    notifyError(`Vui lòng nhập ${missing.join(" và ")} (bắt buộc để lưu lần đo).`);
+    flagInvalidField(!measurement.thiet_bi ? "f_thietbi" : "f_ngay");
     return;
   }
   if (alertIfNegative([
