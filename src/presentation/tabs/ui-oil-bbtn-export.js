@@ -165,7 +165,8 @@ async function onExportMbaOilBbtn() {
   btn.disabled = true;
   try {
     oilBbtnRefreshConclusion(parts, false);
-    const name = await MbaOilBbtnExport.exportMbaOilBbtnDocx(DGA, oilBbtnExportInput(parts));
+    const { blob, fileName } = await MbaOilBbtnExport.renderMbaOilBbtnDocx(DGA, oilBbtnExportInput(parts));
+    const name = downloadBlob(blob, fileName);
     showToast(`Đã xuất ${name}. Mở trong Word để bổ sung số biên bản, thiết bị thí nghiệm và ký trước khi ban hành.`);
   } catch (err) {
     notifyError("Không xuất được BBTN: " + ((err && err.message) || err));

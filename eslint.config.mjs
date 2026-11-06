@@ -80,8 +80,8 @@ export default [
     rules: { "no-restricted-globals": ["error", ...DATA_BANNED.map((name) => ({ name, message: "src/data/ không chạm DOM trang / không toast: báo lỗi bằng throw hoặc sự kiện (ARCHITECTURE.md mục 4)." }))] },
   },
   {
-    // V5–V9: document (canvas OCR ngoài trang — cho phép; gắn <a> tải file — gỡ ở Bước 4). Xem EXCEPTIONS trong tests/architecture.test.js
-    files: ["src/data/io/bbtn-import.js", "src/data/io/nameplate-import.js", "src/data/io/bbtn-export.js", "src/data/io/mba-oil-bbtn-export.js", "src/data/io/tech-report-export.js"],
+    // V8–V9 (cho phép): <canvas> NGOÀI trang để render PDF cho OCR. Xem EXCEPTIONS trong tests/architecture.test.js
+    files: ["src/data/io/bbtn-import.js", "src/data/io/nameplate-import.js"],
     rules: { "no-restricted-globals": ["error", ...DATA_BANNED.filter((n) => n !== "document").map((name) => ({ name, message: "src/data/ không toast." }))] },
   },
   {

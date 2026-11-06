@@ -327,14 +327,7 @@ async function onTio3Export() {
       mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     });
     const namePart = [form.thietBi, form.ngayLayMau].filter(Boolean).join("_").replace(/[\\/:*?"<>|\s]+/g, "-");
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `BBTN_Dau_3pha${namePart ? "_" + namePart : ""}.docx`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    downloadBlob(blob, `BBTN_Dau_3pha${namePart ? "_" + namePart : ""}.docx`);
     showToast("Đã xuất BBTN. Bổ sung Phụ lục và ký trong Word trước khi ban hành.");
   } catch (err) {
     notifyError("Không xuất được BBTN: " + ((err && err.message) || err));

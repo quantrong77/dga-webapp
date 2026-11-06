@@ -132,10 +132,10 @@ function buildBbtnExportData(a) {
   return data;
 }
 
-/** Tải mẫu .docx, điền số liệu bằng docxtemplater, rồi tải file kết quả xuống máy
- *  người dùng (tên file gồm Thiết bị + Pha + Ngày lấy mẫu để dễ phân biệt). Ném lỗi ra
- *  ngoài (không tự alert) để nơi gọi (onExportBbtn() ở ui-dga.js) quyết định cách báo. */
-async function exportBbtnDocx(analysis) {
+/** Tải mẫu .docx và điền số liệu bằng docxtemplater → { blob, fileName } (tên file gồm Thiết bị + Pha + Ngày lấy mẫu
+ *  để dễ phân biệt). KHÔNG tự tải xuống (lớp data không chạm DOM) — nơi gọi (onExportBbtn() ở ui-dga.js) gọi
+ *  downloadBlob(). Ném lỗi ra ngoài (không tự alert) để nơi gọi quyết định cách báo. */
+async function renderBbtnDocx(analysis) {
   const res = await fetch(BBTN_TEMPLATE_URL);
   if (!res.ok) throw new Error(`Không tải được mẫu BBTN (${BBTN_TEMPLATE_URL}) — mã lỗi ${res.status}`);
   const buf = await res.arrayBuffer();
@@ -146,8 +146,8 @@ async function exportBbtnDocx(analysis) {
   const zip = new window.PizZip(buf);
   const doc = new Ctor(zip, { paragraphLoop: true, linebreaks: true });
   const data = buildBbtnExportData(analysis);
-  // Tên văn bản/điều/bảng đã cấu hình (src/presentation/components/ui-terms.js) — áp cho nội dung điền vào biên bản
-  doc.render(typeof applyRegulationTermsDeep === "function" ? applyRegulationTermsDeep(data) : data);
+  // Tên văn bản/điều/bảng đã cấu hình (DGA.applyRegulationTermsDeep) — áp cho nội dung điền vào biên bản
+  doc.render(typeof DGA !== "undefined" && DGA && DGA.applyRegulationTermsDeep ? DGA.applyRegulationTermsDeep(data) : data);
   const blob = doc.getZip().generate({
     type: "blob",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -160,17 +160,9 @@ async function exportBbtnDocx(analysis) {
     .replace(/[\\/:*?"<>|\s]+/g, "-");
   const fileName = "BBTN_DGA" + (namePart ? "_" + namePart : "") + ".docx";
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  return fileName;
+  return { blob, fileName };
 }
 
-const BbtnExport = { exportBbtnDocx, buildBbtnExportData, bbtnBuildKetLuan, bbtnFormatDateVN, bbtnFormatNum };
+const BbtnExport = { renderBbtnDocx, buildBbtnExportData, bbtnBuildKetLuan, bbtnFormatDateVN, bbtnFormatNum };
 if (typeof window !== "undefined") window.BbtnExport = BbtnExport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnExport;

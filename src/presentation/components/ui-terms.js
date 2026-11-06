@@ -88,22 +88,13 @@ function applyRegulationTermsToPage() {
 }
 
 /** Áp dụng tên đã cấu hình lên MỌI chuỗi trong 1 object dữ liệu (dùng trước khi xuất file Word). */
-function applyRegulationTermsDeep(value) {
-  if (typeof DGA === "undefined" || !DGA.regulationTermsActive()) return value;
-  if (typeof value === "string") return DGA.applyRegulationTerms(value);
-  if (Array.isArray(value)) return value.map(applyRegulationTermsDeep);
-  if (value && typeof value === "object") {
-    const out = {};
-    Object.keys(value).forEach((k) => { out[k] = applyRegulationTermsDeep(value[k]); });
-    return out;
-  }
-  return value;
-}
+// applyRegulationTermsDeep() (thay tên cho dữ liệu điền mẫu BBTN) là hàm thuần → đã chuyển vào lớp domain:
+// DGA.applyRegulationTermsDeep (src/domain/dga-logic-regulation-config.js).
 
 if (typeof document !== "undefined") {
   document.addEventListener("dga:regulationchange", applyRegulationTermsToPage);
 }
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { applyRegulationTermsToPage, applyRegulationTermsDeep, termsApplyTree };
+  module.exports = { applyRegulationTermsToPage, termsApplyTree };
 }

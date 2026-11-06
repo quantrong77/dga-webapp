@@ -205,6 +205,20 @@ function regulationTermsActive() {
   return !!compiledRegulationTerms().re;
 }
 
+/** applyRegulationTerms() cho MỌI chuỗi trong 1 giá trị lồng nhau (object/mảng) — dùng cho dữ liệu điền mẫu BBTN/báo cáo
+ *  (src/data/io/*-export.js). Không có tên nào đổi khác mặc định → trả NGUYÊN giá trị (không sao chép). */
+function applyRegulationTermsDeep(value) {
+  if (!regulationTermsActive()) return value;
+  if (typeof value === "string") return applyRegulationTerms(value);
+  if (Array.isArray(value)) return value.map(applyRegulationTermsDeep);
+  if (value && typeof value === "object") {
+    const out = {};
+    Object.keys(value).forEach((k) => { out[k] = applyRegulationTermsDeep(value[k]); });
+    return out;
+  }
+  return value;
+}
+
 /**
  * Đăng ký toàn bộ các bảng ngưỡng "đơn giản" có thể cấu hình qua tab "Cấu hình quy
  * định". Mỗi mục:

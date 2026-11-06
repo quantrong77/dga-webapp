@@ -88,18 +88,7 @@ const EXCEPTIONS = {
     toManufacturerStandardsForLogic: "V1 Bước 4 — chuyển hàm thuần sang data/domain",
   },
   "src/data/io/nameplate-import.js": { document: "V9 cho phép — <canvas> NGOÀI trang để render PDF cho OCR" },
-  "src/data/io/bbtn-export.js": {
-    document: "V5 Bước 4 — trả Blob, việc tải xuống (gắn <a> vào trang) chuyển sang presentation",
-    applyRegulationTermsDeep: "V2 Bước 4 — hàm thuần, chuyển vào domain (DGA)",
-  },
-  "src/data/io/mba-oil-bbtn-export.js": {
-    document: "V6 Bước 4 — như V5",
-    applyRegulationTermsDeep: "V3 Bước 4 — như V2",
-  },
-  "src/data/io/tech-report-export.js": {
-    document: "V7 Bước 4 — như V5",
-    applyRegulationTermsDeep: "V4 Bước 4 — như V2",
-  },
+  // V2–V7 đã gỡ ở Bước 4.3: applyRegulationTermsDeep → domain; 3 hàm xuất .docx trả {blob, fileName}, tải xuống ở presentation.
 };
 
 const violationsOf = (rel, banned, extraBanned) => {

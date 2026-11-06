@@ -4,7 +4,7 @@
    bbtn-export.js (tab DGA): chạy hoàn toàn trong trình duyệt, không gửi số liệu đi đâu.
 
    Phần dựng dữ liệu (buildMbaOilBbtnExportData) là hàm thuần để kiểm thử được ở Node; phần tải mẫu/điền/
-   tải file xuống (exportMbaOilBbtnDocx) chỉ chạy trong trình duyệt.
+   dựng file .docx (renderMbaOilBbtnDocx) chỉ chạy trong trình duyệt; việc tải xuống ở lớp presentation (downloadBlob).
 
    Mỗi "mục" (section) là 1 bảng kết quả: thùng chính chung (1 bảng, không tiêu đề) hoặc từng pha; OLTC
    chung (điểm trung tính, 1 bảng) hoặc từng pha ("+ OLTC pha A"...). Dòng kết quả chỉ gồm chỉ tiêu ĐÃ NHẬP,
@@ -175,14 +175,15 @@ function buildMbaOilBbtnExportData(DGA, input) {
   };
 }
 
-/** Tải mẫu, điền, tải file xuống (chỉ trình duyệt). Ném lỗi để nơi gọi báo. */
-async function exportMbaOilBbtnDocx(DGA, input) {
+/** Tải mẫu và điền → { blob, fileName } (chỉ trình duyệt; KHÔNG tự tải xuống — nơi gọi dùng downloadBlob()).
+ *  Ném lỗi để nơi gọi báo. */
+async function renderMbaOilBbtnDocx(DGA, input) {
   const res = await fetch(MBA_OIL_BBTN_TEMPLATE_URL);
   if (!res.ok) throw new Error(`Không tải được mẫu BBTN (${MBA_OIL_BBTN_TEMPLATE_URL}) — mã lỗi ${res.status}`);
   const Ctor = typeof window.docxtemplater === "function" ? window.docxtemplater : window.docxtemplater.default;
   const doc = new Ctor(new window.PizZip(await res.arrayBuffer()), { paragraphLoop: true, linebreaks: true });
   const data = buildMbaOilBbtnExportData(DGA, input);
-  doc.render(typeof applyRegulationTermsDeep === "function" ? applyRegulationTermsDeep(data) : data);
+  doc.render(typeof DGA !== "undefined" && DGA && DGA.applyRegulationTermsDeep ? DGA.applyRegulationTermsDeep(data) : data);
   const blob = doc.getZip().generate({
     type: "blob",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -190,21 +191,13 @@ async function exportMbaOilBbtnDocx(DGA, input) {
   const info = input.info || {};
   const namePart = [info.thietBi, info.ngayLayMau].filter(Boolean).join("_").replace(/[\\/:*?"<>|\s]+/g, "-");
   const fileName = "BBTN_LyHoaDau" + (namePart ? "_" + namePart : "") + ".docx";
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  return fileName;
+  return { blob, fileName };
 }
 
 const MbaOilBbtnExport = {
   MBA_OIL_BBTN_TEMPLATE_URL, MBA_OIL_BBTN_ITEMS, mobDateVN,
   buildMbaOilBbtnExportData, buildMbaOilBbtnSection, buildMbaOilBbtnConclusion, buildMbaOilBbtnItemList,
-  exportMbaOilBbtnDocx,
+  renderMbaOilBbtnDocx,
 };
 if (typeof window !== "undefined") window.MbaOilBbtnExport = MbaOilBbtnExport;
 if (typeof module !== "undefined" && module.exports) module.exports = MbaOilBbtnExport;

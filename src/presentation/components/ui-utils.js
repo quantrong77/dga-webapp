@@ -136,6 +136,20 @@ function parseEditedFields(editedFieldsStr) {
   return map;
 }
 
+/** Tải 1 Blob xuống máy người dùng với tên file cho trước (thẻ <a download> tạm, giải phóng URL sau 5 giây).
+ *  Dùng cho các file .docx do src/data/io/*-export.js dựng ra. Trả lại fileName. */
+function downloadBlob(blob, fileName) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return fileName;
+}
+
 /** Icon nhỏ cạnh TÊN 1 khí hòa tan cụ thể. */
 function gasLabelIcon(gas) {
   const icon = gas === "CO" || gas === "CO2" ? "book" : "flask";

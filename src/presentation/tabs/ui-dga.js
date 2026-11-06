@@ -1491,7 +1491,8 @@ async function onExportBbtn() {
   btn.disabled = true;
   btn.textContent = "Đang tạo file...";
   try {
-    await BbtnExport.exportBbtnDocx(_lastAnalysis);
+    const { blob, fileName } = await BbtnExport.renderBbtnDocx(_lastAnalysis);
+    downloadBlob(blob, fileName);
   } catch (err) {
     notifyError("Xuất BBTN (docx) thất bại: " + ((err && err.message) || err));
   } finally {
@@ -1516,7 +1517,8 @@ async function onExportTechReport() {
   btn.disabled = true;
   btn.textContent = "Đang tạo file...";
   try {
-    await TechReportExport.exportTechReportDocx(_lastAnalysis);
+    const { blob, fileName } = await TechReportExport.renderTechReportDocx(_lastAnalysis);
+    downloadBlob(blob, fileName);
   } catch (err) {
     notifyError("Xuất báo cáo phân tích kỹ thuật (docx) thất bại: " + ((err && err.message) || err));
   } finally {

@@ -13,7 +13,7 @@
    khí lặp lại {xx_kq}/{xx_tc}/{xx_dg} như BBTN — xem BBTN_GAS_TAG_KEYS ở bbtn-export.js)
    — KHÔNG dùng loop {#tag} của docxtemplater cho các danh sách dài/ngắn tùy trường hợp
    (Căn cứ trạng thái tổng thể, Việc cần làm): thay vào đó nối nhiều dòng bằng "\n" rồi
-   dựa vào option {linebreaks:true} (đã bật sẵn, xem exportTechReportDocx()) để
+   dựa vào option {linebreaks:true} (đã bật sẵn, xem renderTechReportDocx()) để
    docxtemplater tự tách thành nhiều dòng trong cùng 1 đoạn văn — đơn giản, chắc chắn
    chạy đúng với đúng 1 bản build docxtemplater đang đóng gói sẵn (vendor/docxtemplater),
    không phụ thuộc tính năng loop-trong-bảng nào khác. */
@@ -102,10 +102,10 @@ function buildTechReportData(a) {
   return data;
 }
 
-/** Tải mẫu .docx, điền số liệu bằng docxtemplater, rồi tải file kết quả xuống máy
- *  người dùng. Ném lỗi ra ngoài (không tự alert) để nơi gọi (onExportTechReport() ở
- *  ui-dga.js) quyết định cách báo — giống hệt cấu trúc exportBbtnDocx() ở bbtn-export.js. */
-async function exportTechReportDocx(analysis) {
+/** Tải mẫu .docx và điền số liệu bằng docxtemplater → { blob, fileName }. KHÔNG tự tải xuống — nơi gọi
+ *  (onExportTechReport() ở ui-dga.js) gọi downloadBlob(). Ném lỗi ra ngoài để nơi gọi quyết định cách báo — giống hệt
+ *  cấu trúc renderBbtnDocx() ở bbtn-export.js. */
+async function renderTechReportDocx(analysis) {
   const res = await fetch(TECH_REPORT_TEMPLATE_URL);
   if (!res.ok) throw new Error(`Không tải được mẫu báo cáo (${TECH_REPORT_TEMPLATE_URL}) — mã lỗi ${res.status}`);
   const buf = await res.arrayBuffer();
@@ -114,8 +114,8 @@ async function exportTechReportDocx(analysis) {
   const zip = new window.PizZip(buf);
   const doc = new Ctor(zip, { paragraphLoop: true, linebreaks: true });
   const data = buildTechReportData(analysis);
-  // Tên văn bản/điều/bảng đã cấu hình (src/presentation/components/ui-terms.js) — áp cho nội dung điền vào báo cáo
-  doc.render(typeof applyRegulationTermsDeep === "function" ? applyRegulationTermsDeep(data) : data);
+  // Tên văn bản/điều/bảng đã cấu hình (DGA.applyRegulationTermsDeep) — áp cho nội dung điền vào báo cáo
+  doc.render(typeof DGA !== "undefined" && DGA && DGA.applyRegulationTermsDeep ? DGA.applyRegulationTermsDeep(data) : data);
   const blob = doc.getZip().generate({
     type: "blob",
     mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -128,15 +128,7 @@ async function exportTechReportDocx(analysis) {
     .replace(/[\\/:*?"<>|\s]+/g, "-");
   const fileName = "BaoCao_PhanTichKyThuat_DGA" + (namePart ? "_" + namePart : "") + ".docx";
 
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-  return fileName;
+  return { blob, fileName };
 }
 
-window.TechReportExport = { exportTechReportDocx, buildTechReportData };
+window.TechReportExport = { renderTechReportDocx, buildTechReportData };

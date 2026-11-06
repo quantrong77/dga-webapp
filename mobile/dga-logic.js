@@ -2819,6 +2819,20 @@ function regulationTermsActive() {
   return !!compiledRegulationTerms().re;
 }
 
+/** applyRegulationTerms() cho MỌI chuỗi trong 1 giá trị lồng nhau (object/mảng) — dùng cho dữ liệu điền mẫu BBTN/báo cáo
+ *  (src/data/io/*-export.js). Không có tên nào đổi khác mặc định → trả NGUYÊN giá trị (không sao chép). */
+function applyRegulationTermsDeep(value) {
+  if (!regulationTermsActive()) return value;
+  if (typeof value === "string") return applyRegulationTerms(value);
+  if (Array.isArray(value)) return value.map(applyRegulationTermsDeep);
+  if (value && typeof value === "object") {
+    const out = {};
+    Object.keys(value).forEach((k) => { out[k] = applyRegulationTermsDeep(value[k]); });
+    return out;
+  }
+  return value;
+}
+
 /**
  * Đăng ký toàn bộ các bảng ngưỡng "đơn giản" có thể cấu hình qua tab "Cấu hình quy
  * định". Mỗi mục:
@@ -3817,7 +3831,7 @@ if (typeof module !== "undefined" && module.exports) {
       OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
       linearRegression, theilSenSlope, consecutiveAverageSlope, FORECAST_METHOD_LABELS, forecastGasTrend,
       REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
-      resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive,
+      resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive, applyRegulationTermsDeep,
       getValueAtPath, setValueAtPath,
       PEER_MIN_SAMPLES, PEER_Z_WARN, PEER_Z_ALERT, PEER_IF_WARN, PEER_IF_ALERT, evaluatePeerAnomaly,
       CASE_TOP_N, CASE_MIN_SIMILARITY, findSimilarCases,
@@ -3862,7 +3876,7 @@ if (typeof module !== "undefined" && module.exports) {
     OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
     linearRegression, theilSenSlope, consecutiveAverageSlope, FORECAST_METHOD_LABELS, forecastGasTrend,
     REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
-    resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive,
+    resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive, applyRegulationTermsDeep,
     getValueAtPath, setValueAtPath,
     PEER_MIN_SAMPLES, PEER_Z_WARN, PEER_Z_ALERT, PEER_IF_WARN, PEER_IF_ALERT, evaluatePeerAnomaly,
     CASE_TOP_N, CASE_MIN_SIMILARITY, findSimilarCases,
