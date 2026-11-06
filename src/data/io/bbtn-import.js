@@ -553,8 +553,10 @@ function extractDienApDm(lines, foldedLines) {
 
   for (let i = 0; i < lines.length; i++) {
     const folded = fLines[i];
-    // Nhãn: Điện áp định mức, Điện áp, Rated voltage, Um, Un
-    const m = folded.match(/(?:D?ien\s*ap\s*(?:dinh\s*muc)?|Rated\s*voltage|\bUm\b|\bUn\b)[^:.]*[:.]?/i);
+    // Nhãn: Điện áp định mức, Điện áp, Rated voltage, Um, Un. "D" tùy chọn (OCR có thể rụng ký tự đầu ô) nhưng
+    // KHÔNG được dính sau 1 chữ cái khác — trước đây khớp cả "biến áp" ("Vị trí lắp đặt: Máy biến áp AT2") rồi lấy
+    // nhầm dòng kế tiếp (lỗi #3, BUGS_FOUND.md).
+    const m = folded.match(/(?:(?<![A-Za-z])D?ien\s*ap\s*(?:dinh\s*muc)?|Rated\s*voltage|\bUm\b|\bUn\b)[^:.]*[:.]?/i);
     if (!m) continue;
 
     // Loại trừ nếu là dòng hạng mục thí nghiệm khác (điện áp chọc thủng, điện áp chịu đựng...)
@@ -571,7 +573,8 @@ function extractDienApDm(lines, foldedLines) {
     if (!rest && i + 1 < lines.length) {
       const nextLine = lines[i + 1].trim();
       const nextFolded = fLines[i + 1];
-      if (!/(?:Bien\s*ban|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc|Cong\s*suat|Nam)/i.test(nextFolded)) {
+      // Dòng kế tiếp có dấu ":" là 1 hàng nhãn khác ("Hãng sản xuất (Manufacturer): …"), không phải giá trị.
+      if (!nextFolded.includes(":") && !/(?:Bien\s*ban|Ngay|Ly\s*do|Dieu\s*kien|STT|Ket\s*qua|Hang\s*muc|Cong\s*suat|Nam)/i.test(nextFolded)) {
         if (/(\d+(?:\s*\d+)*\s*(?:kV|V)|\b\d{2,3}\b)/i.test(nextFolded)) {
           rest = nextLine;
         }
@@ -594,6 +597,14 @@ function extractDienApDm(lines, foldedLines) {
   if (mVolt) return mVolt[0];
 
   return null;
+}
+
+// "Hãng sản xuất" — nằm chung hàng với nhãn khác: "Hãng sản xuất (Manufacturer): EEMC  Số chế tạo (Serial No): …"
+// (mẫu NPTS/BM.01) hoặc "… HAEFELY  Năm sản xuất: 2000" (PTC3/BM.15). Trước đây chỉ dừng ở "Năm sản xuất" nên lấy
+// lẫn cả "Số chế tạo (Serial No): …" (lỗi #3, BUGS_FOUND.md).
+function extractHangSanXuat(lines, foldedLines) {
+  const fLines = foldedLines || lines.map(stripVnDiacritics);
+  return extractLabelValue(lines, fLines, /H?ang san xuat[^:]*:/i, /Nam san xuat|So che tao|Serial\s*No|Kieu loai|\(Type\)/i);
 }
 
 // Ánh xạ "Điện áp định mức" (hoặc trạm/thiết bị) sang cấp điện áp Bảng 63 ("110-220" hoặc "500").
@@ -692,7 +703,7 @@ async function extract(file, onProgress) {
   // trực tiếp (pdf.js không rụng ký tự) vì "?" vẫn khớp bình thường khi ký tự đó CÓ mặt.
   const tram = extractLabelValue(lines, foldedLines, /T?en du an\/t?en tram[^:]*:/i, /\s{2,}\S/);
   const viTri = extractLabelValue(lines, foldedLines, /V?i tri lap dat[^:]*:/i, /\s{2,}\S/);
-  const hangSanXuat = extractLabelValue(lines, foldedLines, /H?ang san xuat[^:]*:/i, /Nam san xuat/i);
+  const hangSanXuat = extractHangSanXuat(lines, foldedLines);
   const dienApDm = extractDienApDm(lines, foldedLines);
   const namSx = extractYearAfterLabel(foldedFullText, /Nam san xuat[^:]*:\s*(\d{4})/i);
   const namVanHanh = extractYearAfterLabel(foldedFullText, /Nam (?:van hanh|dua vao van hanh)[^:]*:\s*(\d{4})/i);
@@ -776,11 +787,11 @@ async function readLines(file, onProgress) {
 }
 
 const BbtnImport = {
-  extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class,
-  setManufacturerStandardsProvider,
+  extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, extractHangSanXuat,
+  mapVoltageToBang63Class, setManufacturerStandardsProvider,
 };
 window.BbtnImport = BbtnImport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
-export { extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class };
+export { extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, extractHangSanXuat, mapVoltageToBang63Class };
 export default BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));
