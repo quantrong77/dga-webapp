@@ -46,7 +46,7 @@ test("index.html có khung lưu đồ và nạp script/CSS", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   expect(html).toContain('id="dgaWorkflowSvg"');
   expect(html).toContain('<script src="src/presentation/tabs/ui-dga-workflow.js"></script>');
-  expect(html).toContain('href="css/style-dga-workflow.css"');
+  expect(html).toContain('href="src/presentation/styles/style-dga-workflow.css"');
 });
 
 test("các khối không chồng lên nhau (VD ô Bình thường không đè ô Xác định tiêu chuẩn)", () => {

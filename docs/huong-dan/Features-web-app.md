@@ -304,7 +304,7 @@ Thanh Header được cố định ở mép trên màn hình (Sticky Header) v�
 | Phân hệ | Đường dẫn File chính | Trách nhiệm chính |
 |---|---|---|
 | **Khung nhìn Web** | `index.html` | Cấu trúc giao diện HTML5, SVG icons sprite, meta CSP, bố cục chia đôi |
-| **Bố cục & Phong cách** | `css/style-*.css` (8 file) | Hệ thống Refactoring UI tokens, CSS Grid sidebar, Split layout đối chiếu PDF, Dark mode |
+| **Bố cục & Phong cách** | `src/presentation/styles/style-*.css` (8 file) | Hệ thống Refactoring UI tokens, CSS Grid sidebar, Split layout đối chiếu PDF, Dark mode |
 | **Khởi động Giao diện** | `early-layout.js` | Áp dụng theme và bố cục sidebar sớm trước khi vẽ trang để chống giật nháy |
 | **Điều phối Chính** | `app-core.js` | Khởi tạo ứng dụng, kết nối sự kiện giao diện, vòng đời ứng dụng |
 | **Phân hệ Giao diện** | `src/presentation/tabs/ui-dga.js` | Điều khiển form DGA, khung đối chiếu song song Split View, đọc BBTN |

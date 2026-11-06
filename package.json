@@ -14,8 +14,8 @@
     "extract-images": "node scripts/extract-md-images.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "lint:css": "stylelint \"css/**/*.css\"",
-    "lint:css:fix": "stylelint \"css/**/*.css\" --fix",
+    "lint:css": "stylelint \"src/presentation/styles/**/*.css\"",
+    "lint:css:fix": "stylelint \"src/presentation/styles/**/*.css\" --fix",
     "format": "prettier --write",
     "format:check": "prettier --check \"**/*.{js,css,html,json}\""
   },

@@ -5,7 +5,7 @@ function escapeHtml(s) {
 }
 
 /** Nút thao tác DẠNG ICON trong cột "Thao tác" của các bảng (tab Cảnh báo, Lịch sử đo/dầu):
- *  chỉ hiện icon, tooltip (data-tooltip, CSS ở css/style-tab-tables.css) mô tả hành động khi
+ *  chỉ hiện icon, tooltip (data-tooltip, CSS ở src/presentation/styles/style-tab-tables.css) mô tả hành động khi
  *  trỏ chuột/focus bàn phím, aria-label cho trình đọc màn hình. Các nút xếp thành 1 CỘT dọc
  *  nhờ khung .actions-stack — xem rowActionsHtml() bên dưới.
  *  @param {string} action  giá trị data-action (code bắt sự kiện tìm nút theo thuộc tính này)

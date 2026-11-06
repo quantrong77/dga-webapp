@@ -5,7 +5,7 @@
  * IEC 60599:2022 (mức ALERT/ALARM, "change in fault type"). Đây đúng là thuật toán ứng dụng đang chạy
  * (computeOverallStatus()/buildRecommendations() ở src/domain/dga-logic-gas.js).
  *
- * Vẽ bằng SVG với class CSS (css/style-dga-workflow.css) dùng biến màu giao diện nên tự đổi theo chế
+ * Vẽ bằng SVG với class CSS (src/presentation/styles/style-dga-workflow.css) dùng biến màu giao diện nên tự đổi theo chế
  * độ sáng/tối, không cần vẽ lại. Tọa độ khung cố định (viewBox 1100 × 1570), co giãn theo bề ngang.
  *
  * Mũi tên khai báo theo CẠNH khối (from/to: [id, "top"|"bottom"|"left"|"right"]) — tọa độ đường đi

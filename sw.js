@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v34-presentation";
+const CACHE_NAME = "dga-offline-v35-styles";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -20,16 +20,16 @@ const PRECACHE_ASSETS = [
   "./src/data/storage.js",
   "./src/domain/dga-logic.js",
   "./src/presentation/app-core.js",
-  "./css/style-base.css",
-  "./css/style-auth.css",
-  "./css/style-nav-layout.css",
-  "./css/style-components.css",
-  "./css/style-tab-feedback.css",
-  "./css/style-tab-tables.css",
-  "./css/style-tabs-secondary.css",
-  "./css/style-tab-regulation-config.css",
-  "./css/style-dieu54-charts.css",
-  "./css/style-dga-workflow.css",
+  "./src/presentation/styles/style-base.css",
+  "./src/presentation/styles/style-auth.css",
+  "./src/presentation/styles/style-nav-layout.css",
+  "./src/presentation/styles/style-components.css",
+  "./src/presentation/styles/style-tab-feedback.css",
+  "./src/presentation/styles/style-tab-tables.css",
+  "./src/presentation/styles/style-tabs-secondary.css",
+  "./src/presentation/styles/style-tab-regulation-config.css",
+  "./src/presentation/styles/style-dieu54-charts.css",
+  "./src/presentation/styles/style-dga-workflow.css",
   "./image/app-icon-96.webp",
   "./image/favicon-32.png",
   "./image/favicon-16.png",

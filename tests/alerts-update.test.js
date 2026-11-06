@@ -268,7 +268,7 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
 
   test("9. Nút thao tác dạng icon cùng kích thước, xếp thành 1 cột, có tooltip (Cảnh báo + Lịch sử)", () => {
     const fs = require("fs");
-    const css = fs.readFileSync("css/style-tab-tables.css", "utf8");
+    const css = fs.readFileSync("src/presentation/styles/style-tab-tables.css", "utf8");
     expect(css).toMatch(/\.btn-action-alert,\s*\.btn-action-hist,\s*\.actions-cell \.row-action-btn \{[^}]*width: 30px;/);
     expect(css).toMatch(/\.actions-stack \{[^}]*flex-direction: column;/);
     expect(css).toMatch(/\.row-action-btn\[data-tooltip\]::after \{[^}]*content: attr\(data-tooltip\);/);

@@ -677,7 +677,7 @@ async function initApp() {
 
 /** Gắn sự kiện cho nút #btnCollapseSidebar trong <nav class="tabs"> — thu gọn sidebar
  *  (chỉ còn 1 cột icon hẹp) để "mở rộng màn hình" cho nội dung chính, hoặc mở lại như
- *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem css/style-nav-layout.css) nên ở
+ *  cũ. Nút này CSS đã tự ẩn khi không ở bố cục dọc/màn hình hẹp (xem src/presentation/styles/style-nav-layout.css) nên ở
  *  đây chỉ cần lo phần bật/tắt + lưu lựa chọn, không cần kiểm tra thêm điều kiện. */
 /** Khóa localStorage lưu trạng thái tick "Hiện dự báo xu hướng tương lai" ở tab "Xu
  *  hướng" (#tr_forecastEnabled) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng

@@ -23,7 +23,7 @@ const ROOT_FILES = [
   "config.js",
 ];
 /** Thư mục chép nguyên (trừ file bị loại bởi isExcluded). */
-const ROOT_DIRS = ["src", "css", "vendor", "image", "mobile"];
+const ROOT_DIRS = ["src", "vendor", "image", "mobile"];
 /** Mẫu BBTN app tải bằng fetch(): chỉ các file template-*.docx (không chép BBTN thật / file khóa ~$ của Word). */
 const TEMPLATE_PATTERN = /^template-[\w.-]+\.docx$/;
 

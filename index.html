@@ -22,20 +22,20 @@
   <link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png" />
   <link rel="apple-touch-icon" sizes="180x180" href="image/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
-  <!-- style.css (2031 dòng) đã được tách thành 8 file theo tab/khu vực trong css/, giữ
+  <!-- style.css (2031 dòng) đã được tách thành 8 file theo tab/khu vực trong src/presentation/styles/, giữ
        NGUYÊN thứ tự các đoạn như file gốc (chỉ cắt, không đảo) nên thứ tự cascade CSS
        không đổi. style-base.css chứa các biến :root (--blue-900, --radius...) dùng
        chung nên phải nạp ĐẦU TIÊN. -->
-  <link rel="stylesheet" href="css/style-base.css" />
-  <link rel="stylesheet" href="css/style-auth.css" />
-  <link rel="stylesheet" href="css/style-nav-layout.css" />
-  <link rel="stylesheet" href="css/style-components.css" />
-  <link rel="stylesheet" href="css/style-tab-feedback.css" />
-  <link rel="stylesheet" href="css/style-tab-tables.css" />
-  <link rel="stylesheet" href="css/style-tabs-secondary.css" />
-  <link rel="stylesheet" href="css/style-tab-regulation-config.css" />
-  <link rel="stylesheet" href="css/style-dieu54-charts.css" />
-  <link rel="stylesheet" href="css/style-dga-workflow.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-base.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-auth.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-nav-layout.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-components.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-tab-feedback.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-tab-tables.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-tabs-secondary.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-tab-regulation-config.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-dieu54-charts.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-dga-workflow.css" />
   <script src="vendor/supabase/supabase.js"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
   <script src="vendor/chartjs/chart.umd.min.js"></script>
@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v34-presentation") {
+          if (k !== "dga-offline-v35-styles") {
             caches.delete(k);
           }
         });
@@ -255,7 +255,7 @@
   <!-- ===================== MODAL: ĐỔI MẬT KHẨU =====================
        Tự phục vụ cho user ĐÃ đăng nhập (cần biết mật khẩu cũ) — mở qua #btnOpenChangePassword
        ở header, xem setupChangePassword() ở ui-auth.js. Dùng chung khung ".mini-modal-*" với
-       modal "mật khẩu tạm" ở tab Quản trị (xem css/style-auth.css). -->
+       modal "mật khẩu tạm" ở tab Quản trị (xem src/presentation/styles/style-auth.css). -->
   <div id="changePasswordOverlay" class="mini-modal-overlay hidden">
     <div class="mini-modal-card">
       <button type="button" class="mini-modal-close" id="btnCloseChangePassword" aria-label="Đóng">&times;</button>
@@ -283,7 +283,7 @@
 
   <nav class="tabs">
     <!-- Nút thu gọn/mở rộng sidebar — CHỈ hiện khi đang ở bố cục dọc (body.tabs-sidebar,
-         xem css/style-nav-layout.css) và tự ẩn lại ở màn hình hẹp (sidebar tự động về dạng ngang thì nút
+         xem src/presentation/styles/style-nav-layout.css) và tự ẩn lại ở màn hình hẹp (sidebar tự động về dạng ngang thì nút
          này cũng vô nghĩa). Thu gọn giúp "mở rộng màn hình" cho nội dung chính, chỉ còn
          icon từng tab (đã có title= để vẫn xem được tên tab qua tooltip khi rê chuột) —
          xem setupSidebarCollapseToggle() ở app-core.js. -->
@@ -291,7 +291,7 @@
       <svg class="icon-svg" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
     </button>
     <!-- .tabs-inner: bọc riêng để canh GIỮA cả cụm nút tab bằng margin:0 auto (xem
-         css/style-nav-layout.css) — margin auto trên 1 flex-item tự co về 0 khi cụm nút không đủ chỗ
+         src/presentation/styles/style-nav-layout.css) — margin auto trên 1 flex-item tự co về 0 khi cụm nút không đủ chỗ
          (màn hình hẹp), nên overflow-x:auto ở nav.tabs vẫn cuộn ngang bình thường từ
          mép trái, không bị lỗi "kẹt giữa" như dùng justify-content:center trực tiếp
          trên nav.tabs khi nội dung tràn. -->

@@ -1,5 +1,5 @@
 /* ui-theme.js — Nút đổi giao diện sáng/tối ở header. Giao diện được áp sớm ở early-layout.js để không
-   nháy nền trắng; file này chỉ lo đổi và ghi nhớ lựa chọn. Bảng màu nằm ở css/style-base.css. */
+   nháy nền trắng; file này chỉ lo đổi và ghi nhớ lựa chọn. Bảng màu nằm ở src/presentation/styles/style-base.css. */
 
 const THEME_STORAGE_KEY = "dga_theme";
 

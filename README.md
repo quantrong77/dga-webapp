@@ -241,7 +241,7 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | File / thư mục | Vai trò |
 |---|---|
 | `index.html` | Giao diện (form nhập liệu, lịch sử, cấu hình tiêu chuẩn NSX, tab Hướng dẫn) |
-| `css/*.css` | Giao diện/màu sắc (tách theo tab/khu vực) |
+| `src/presentation/styles/*.css` | Giao diện/màu sắc (tách theo tab/khu vực) |
 | `config.js` | Nơi dán URL Apps Script (Google Sheets) hoặc URL/anon key Supabase (để trống hết = chạy chế độ thử nghiệm) |
 | `src/domain/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
 | `src/domain/dga-logic.js` | File **lắp ráp**: gom 8 file `src/domain/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
