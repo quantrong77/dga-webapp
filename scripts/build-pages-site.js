@@ -15,22 +15,8 @@ const path = require("node:path");
 
 const ROOT = path.resolve(__dirname, "..");
 
-/** File ở gốc dự án mà trình duyệt tải. */
-const ROOT_FILES = [
-  "index.html",
-  "manifest.webmanifest",
-  "sw.js",
-  "config.js",
-];
-/** Thư mục chép nguyên (trừ file bị loại bởi isExcluded). */
-const ROOT_DIRS = ["src", "vendor", "assets/image", "mobile"];
-/** Mẫu BBTN app tải bằng fetch(): chỉ các file template-*.docx (không chép BBTN thật / file khóa ~$ của Word). */
-const TEMPLATE_PATTERN = /^template-[\w.-]+\.docx$/;
-
-/** Loại khỏi artifact dù nằm trong thư mục được chép. */
-function isExcluded(name) {
-  return /\.md$/i.test(name) || /^~\$/.test(name) || /\.(tmp|bak)$/i.test(name) || name === ".DS_Store";
-}
+// Danh sách cho phép DÙNG CHUNG với máy chủ nội bộ (backend/onpremise/serve.js) — sửa ở static-allowlist.js.
+const { ROOT_FILES, ROOT_DIRS, TEMPLATE_PATTERN, isExcluded } = require("../backend/onpremise/static-allowlist");
 
 function copyDir(src, dst) {
   fs.mkdirSync(dst, { recursive: true });

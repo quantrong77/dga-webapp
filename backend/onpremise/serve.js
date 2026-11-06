@@ -5,6 +5,7 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const { handleApiRequest } = require("./api");
+const { isAllowedStaticPath } = require("./static-allowlist");
 
 const PORT = parseInt(process.env.PORT, 10) || 8080;
 const ROOT = path.resolve(__dirname, "..", "..");
@@ -63,18 +64,21 @@ const server = http.createServer((req, res) => {
     reqPath = "/index.html";
   }
 
-  // Resolve safe path
+  // Chỉ phục vụ file web theo DANH SÁCH CHO PHÉP (static-allowlist.js, dùng chung với bản GitHub Pages) — mọi đường
+  // dẫn khác (data/database.json, data/uploads/, .git/, backend/, node_modules/, docs/, *.md, BBTN thật…) trả 404 như
+  // không tồn tại (lỗi #4). File đính kèm chỉ tải qua /api/files/… (có kiểm tra phiên đăng nhập).
   const safePath = path.normalize(path.join(ROOT, reqPath));
-  if (!safePath.startsWith(ROOT)) {
-    res.writeHead(403, { "Content-Type": "text/plain; charset=utf-8" });
-    res.end("403 Forbidden");
+  const rel = path.relative(ROOT, safePath).split(path.sep).join("/");
+  if (!isAllowedStaticPath(rel)) {
+    res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+    res.end("404 Not Found");
     return;
   }
 
   fs.stat(safePath, (err, stats) => {
     if (err || !stats.isFile()) {
       res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("404 Not Found: " + reqPath);
+      res.end("404 Not Found");
       return;
     }
 
