@@ -1,0 +1,11118 @@
+{
+ "listMeasurements": {
+  "local": {
+   "ret": [
+    {
+     "id": "m_old",
+     "tram": "T1",
+     "h2": 1
+    },
+    {
+     "id": "m_edit",
+     "tram": "T2",
+     "h2": 2,
+     "created_at": "2025-01-01T00:00:00.000Z"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listMeasurements",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listMeasurements",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listMeasurements",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "m_old",
+     "tram": "T1",
+     "h2": 1
+    },
+    {
+     "id": "m_edit",
+     "tram": "T2",
+     "h2": 2,
+     "created_at": "2025-01-01T00:00:00.000Z"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listMeasurements",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": [
+    "Mất kết nối mạng: trả về measurements từ bộ nhớ đệm ngoại tuyến (localStorage)"
+   ]
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listMeasurements",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "m_old",
+     "tram": "T1",
+     "h2": 1
+    },
+    {
+     "id": "m_edit",
+     "tram": "T2",
+     "h2": 2,
+     "created_at": "2025-01-01T00:00:00.000Z"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": [
+    "Mất kết nối mạng: trả về measurements từ bộ nhớ đệm ngoại tuyến (localStorage)"
+   ]
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listStandards": {
+  "local": {
+   "ret": [
+    {
+     "id": "s_old",
+     "manufacturer": "A"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStandards",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStandards",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStandards",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "s_old",
+     "manufacturer": "A"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStandards",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listStandards",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "s_old",
+     "manufacturer": "A"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listRegulationConfig": {
+  "local": {
+   "ret": [
+    {
+     "id": "BANG64_MBA",
+     "citation": "c",
+     "values": {
+      "a": 1
+     }
+    },
+    {
+     "id": "BAD",
+     "citation": null,
+     "values": null
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": [
+    "Không đọc được values_json của cấu hình quy định:"
+   ]
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1",
+     "citation": null,
+     "values": null
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listRegulationConfig",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listRegulationConfig",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1",
+     "citation": null,
+     "values": null
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listRegulationConfig",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "BANG64_MBA",
+     "citation": "c",
+     "values": {
+      "a": 1
+     }
+    },
+    {
+     "id": "BAD",
+     "citation": null,
+     "values": null
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listRegulationConfig",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": [
+    "Không đọc được values_json của cấu hình quy định:"
+   ]
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listRegulationConfig",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1",
+     "citation": null,
+     "values": null
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "BANG64_MBA",
+     "citation": "c",
+     "values": {
+      "a": 1
+     }
+    },
+    {
+     "id": "BAD",
+     "citation": null,
+     "values": null
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": [
+    "Không đọc được values_json của cấu hình quy định:"
+   ]
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet values_json": {
+   "ret": [
+    {
+     "id": "X",
+     "citation": null,
+     "values": {
+      "k": [
+       1,
+       2
+      ]
+     },
+     "updated_by": "a",
+     "updated_at": "t"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listRegulationConfig",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "X",
+      "citation": "",
+      "values_json": "{\"k\":[1,2]}",
+      "updated_by": "a",
+      "updated_at": "t"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listStations": {
+  "local": {
+   "ret": [
+    {
+     "id": "st_old",
+     "TenTram": "T1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStations",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStations",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStations",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "st_old",
+     "TenTram": "T1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listStations",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listStations",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "stations": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "st_old",
+     "TenTram": "T1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listOilTests": {
+  "local": {
+   "ret": [
+    {
+     "id": "o_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "o_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "o_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listOltcOilTests": {
+  "local": {
+   "ret": [
+    {
+     "id": "ol_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOltcOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOltcOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOltcOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "ol_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listOltcOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listOltcOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "ol_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listInstrumentOilTests": {
+  "local": {
+   "ret": [
+    {
+     "id": "i_old"
+    },
+    {
+     "id": "i_edit",
+     "created_at": "2025-02-02T00:00:00.000Z"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listInstrumentOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listInstrumentOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listInstrumentOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "i_old"
+    },
+    {
+     "id": "i_edit",
+     "created_at": "2025-02-02T00:00:00.000Z"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listInstrumentOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listInstrumentOilTests",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "i_old"
+    },
+    {
+     "id": "i_edit",
+     "created_at": "2025-02-02T00:00:00.000Z"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "sample_date",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "listFeedback": {
+  "local": {
+   "ret": [
+    {
+     "id": "f_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listFeedback",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listFeedback",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": [
+    {
+     "id": "srv1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listFeedback",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "srv1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": [
+    {
+     "id": "f_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [
+    {
+     "get": "listFeedback",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "get": "listFeedback",
+     "params": null
+    }
+   ],
+   "sbCalls": [],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": [
+    {
+     "id": "sb1"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "created_at",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": [
+     {
+      "id": "sb1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase null": {
+   "ret": [],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "created_at",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": [
+    {
+     "id": "f_old"
+    }
+   ],
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "created_at",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 0
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "permission denied",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "select": [
+       "*"
+      ]
+     },
+     {
+      "order": [
+       "created_at",
+       {
+        "ascending": true
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {},
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addMeasurement (mới)": {
+  "local": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "tram": "TBA X",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z",
+        "h2": 5,
+        "ch4": 1
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "id": "sbrow",
+      "fromServer": true
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "tram": "TBA X",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z",
+        "h2": 5,
+        "ch4": 1
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "tram": "TBA X",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z",
+    "h2": 5,
+    "ch4": 1
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "tram": "TBA X",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z",
+        "h2": 5,
+        "ch4": 1
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "tram": "TBA X",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z",
+       "h2": 5,
+       "ch4": 1
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "tram": "TBA X",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z",
+        "h2": 5,
+        "ch4": 1
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     },
+     {
+      "tram": "TBA X",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z",
+      "h2": 5,
+      "ch4": 1
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addMeasurement (sửa)": {
+  "local": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addMeasurement",
+     "body": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "id": "m_edit",
+        "tram": "T2",
+        "h2": 9,
+        "created_at": "2025-01-01T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "sbrow",
+      "fromServer": true
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "id": "m_edit",
+        "tram": "T2",
+        "h2": 9,
+        "created_at": "2025-01-01T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "id": "m_edit",
+    "tram": "T2",
+    "h2": 9,
+    "created_at": "2025-01-01T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "id": "m_edit",
+        "tram": "T2",
+        "h2": 9,
+        "created_at": "2025-01-01T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addMeasurement",
+     "payload": {
+      "record": {
+       "id": "m_edit",
+       "tram": "T2",
+       "h2": 9,
+       "created_at": "2025-01-01T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "upsert": [
+       {
+        "id": "m_edit",
+        "tram": "T2",
+        "h2": 9,
+        "created_at": "2025-01-01T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_old",
+      "tram": "T1",
+      "h2": 1
+     },
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 9,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "saveStandard": {
+  "local": {
+   "ret": {
+    "manufacturer": "B",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "manufacturer": "B",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "manufacturer": "B",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "manufacturer": "B",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "manufacturer": "B",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "manufacturer": "B",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "manufacturer": "B",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "manufacturer": "B",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "manufacturer": "B",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "manufacturer": "B",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "manufacturer": "B",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A"
+     },
+     {
+      "manufacturer": "B",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "saveStandard (sửa)": {
+  "local": {
+   "ret": {
+    "id": "s_old",
+    "manufacturer": "A2"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "id": "s_old",
+    "manufacturer": "A2"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "id": "s_old",
+    "manufacturer": "A2"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "saveStandard",
+     "body": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "id": "s_old",
+        "manufacturer": "A2"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "id": "s_old",
+    "manufacturer": "A2"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "id": "s_old",
+        "manufacturer": "A2"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "id": "s_old",
+    "manufacturer": "A2"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "id": "s_old",
+    "manufacturer": "A2"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "id": "s_old",
+        "manufacturer": "A2"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStandard",
+     "payload": {
+      "record": {
+       "id": "s_old",
+       "manufacturer": "A2"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "upsert": [
+       {
+        "id": "s_old",
+        "manufacturer": "A2"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "standards": [
+     {
+      "id": "s_old",
+      "manufacturer": "A2"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "saveStation": {
+  "local": {
+   "ret": {
+    "TenTram": "T9",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStation",
+     "body": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStation",
+     "body": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStation",
+     "body": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "TenTram": "T9",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStation",
+     "payload": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "TenTram": "T9",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveStation",
+     "body": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStation",
+     "payload": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "saveStation",
+     "body": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "upsert": [
+       {
+        "TenTram": "T9",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "TenTram": "T9",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "upsert": [
+       {
+        "TenTram": "T9",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "TenTram": "T9",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStation",
+     "payload": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "TenTram": "T9",
+    "id": "uid_1"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "upsert": [
+       {
+        "TenTram": "T9",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveStation",
+     "payload": {
+      "record": {
+       "TenTram": "T9",
+       "id": "uid_1"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "upsert": [
+       {
+        "TenTram": "T9",
+        "id": "uid_1"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "stations": [
+     {
+      "id": "st_old",
+      "TenTram": "T1"
+     },
+     {
+      "TenTram": "T9",
+      "id": "uid_1"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "saveRegulationConfig": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "BANG64_MBA",
+        "citation": "QĐ",
+        "values_json": "{\"a\":2}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "BANG64_MBA",
+        "citation": "QĐ",
+        "values_json": "{\"a\":2}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "BANG64_MBA",
+        "citation": "QĐ",
+        "values_json": "{\"a\":2}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "BANG64_MBA",
+       "citation": "QĐ",
+       "values_json": "{\"a\":2}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "BANG64_MBA",
+        "citation": "QĐ",
+        "values_json": "{\"a\":2}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "QĐ",
+      "values_json": "{\"a\":2}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "saveRegulationConfig (mới, thiếu citation)": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "saveRegulationConfig",
+     "body": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "NEW_TABLE",
+        "citation": "",
+        "values_json": "{}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "NEW_TABLE",
+        "citation": "",
+        "values_json": "{}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "NEW_TABLE",
+        "citation": "",
+        "values_json": "{}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "saveRegulationConfig",
+     "payload": {
+      "record": {
+       "id": "NEW_TABLE",
+       "citation": "",
+       "values_json": "{}",
+       "updated_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "upsert": [
+       {
+        "id": "NEW_TABLE",
+        "citation": "",
+        "values_json": "{}",
+        "updated_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BANG64_MBA",
+      "citation": "c",
+      "values_json": "{\"a\":1}"
+     },
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     },
+     {
+      "id": "NEW_TABLE",
+      "citation": "",
+      "values_json": "{}",
+      "updated_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addOilTest": {
+  "local": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addOilTest (device_info)": {
+  "local": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "device_info": "{\"hang\":\"X\"}",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "device_info": "{\"hang\":\"X\"}",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "device_info": "{\"hang\":\"X\"}",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "device_info": "{\"hang\":\"X\"}",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "device_info": "{\"hang\":\"X\"}",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "device_info": "{\"hang\":\"X\"}",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "device_info": "{\"hang\":\"X\"}",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "thiet_bi": "MBA1",
+    "device_info": "{\"hang\":\"X\"}",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "device_info": "{\"hang\":\"X\"}",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "MBA1",
+       "device_info": "{\"hang\":\"X\"}",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "device_info": "{\"hang\":\"X\"}",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase thiếu cột device_info": {
+   "ret": {
+    "id": "retry"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "device_info": "{\"hang\":\"X\"}",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ],
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "MBA1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": [
+     {
+      "id": "o_old"
+     },
+     {
+      "thiet_bi": "MBA1",
+      "device_info": "{\"hang\":\"X\"}",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addOltcOilTest": {
+  "local": {
+   "ret": {
+    "thiet_bi": "OLTC1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOltcOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOltcOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOltcOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "thiet_bi": "OLTC1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOltcOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "thiet_bi": "OLTC1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addOltcOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOltcOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addOltcOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "OLTC1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "thiet_bi": "OLTC1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "OLTC1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "thiet_bi": "OLTC1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOltcOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "thiet_bi": "OLTC1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "OLTC1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addOltcOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "OLTC1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "insert": [
+       {
+        "thiet_bi": "OLTC1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": [
+     {
+      "id": "ol_old"
+     },
+     {
+      "thiet_bi": "OLTC1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addInstrumentOilTest": {
+  "local": {
+   "ret": {
+    "thiet_bi": "TI1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "thiet_bi": "TI1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "thiet_bi": "TI1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "thiet_bi": "TI1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "thiet_bi": "TI1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "thiet_bi": "TI1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "thiet_bi": "TI1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "thiet_bi": "TI1",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "thiet_bi": "TI1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "thiet_bi": "TI1",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "thiet_bi": "TI1",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     },
+     {
+      "thiet_bi": "TI1",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addInstrumentOilTest (sửa)": {
+  "local": {
+   "ret": {
+    "id": "i_edit",
+    "thiet_bi": "TI1",
+    "created_at": "2025-02-02T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "id": "i_edit",
+    "thiet_bi": "TI1",
+    "created_at": "2025-02-02T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "id": "i_edit",
+    "thiet_bi": "TI1",
+    "created_at": "2025-02-02T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addInstrumentOilTest",
+     "body": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "id": "i_edit",
+        "thiet_bi": "TI1",
+        "created_at": "2025-02-02T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "id": "i_edit",
+    "thiet_bi": "TI1",
+    "created_at": "2025-02-02T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "id": "i_edit",
+        "thiet_bi": "TI1",
+        "created_at": "2025-02-02T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "id": "i_edit",
+    "thiet_bi": "TI1",
+    "created_at": "2025-02-02T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "id": "i_edit",
+    "thiet_bi": "TI1",
+    "created_at": "2025-02-02T00:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "id": "i_edit",
+        "thiet_bi": "TI1",
+        "created_at": "2025-02-02T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addInstrumentOilTest",
+     "payload": {
+      "record": {
+       "id": "i_edit",
+       "thiet_bi": "TI1",
+       "created_at": "2025-02-02T00:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "upsert": [
+       {
+        "id": "i_edit",
+        "thiet_bi": "TI1",
+        "created_at": "2025-02-02T00:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_old"
+     },
+     {
+      "id": "i_edit",
+      "thiet_bi": "TI1",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "addFeedback": {
+  "local": {
+   "ret": {
+    "noi_dung": "góp ý",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addFeedback",
+     "body": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": null,
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addFeedback",
+     "body": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": {
+    "id": "srv",
+    "ok": true
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addFeedback",
+     "body": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": {
+    "noi_dung": "góp ý",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addFeedback",
+     "payload": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": {
+    "noi_dung": "góp ý",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "addFeedback",
+     "body": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addFeedback",
+     "payload": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "addFeedback",
+     "body": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": {
+    "id": "sbrow",
+    "fromServer": true
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "insert": [
+       {
+        "noi_dung": "góp ý",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": {
+    "noi_dung": "góp ý",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "insert": [
+       {
+        "noi_dung": "góp ý",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": {
+    "noi_dung": "góp ý",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addFeedback",
+     "payload": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": {
+    "noi_dung": "góp ý",
+    "id": "uid_1",
+    "created_at": "2026-11-06T08:00:00.000Z"
+   },
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "insert": [
+       {
+        "noi_dung": "góp ý",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "addFeedback",
+     "payload": {
+      "record": {
+       "noi_dung": "góp ý",
+       "id": "uid_1",
+       "created_at": "2026-11-06T08:00:00.000Z"
+      }
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "insert": [
+       {
+        "noi_dung": "góp ý",
+        "id": "uid_1",
+        "created_at": "2026-11-06T08:00:00.000Z"
+       }
+      ]
+     },
+     {
+      "select": []
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": [
+     {
+      "id": "f_old"
+     },
+     {
+      "noi_dung": "góp ý",
+      "id": "uid_1",
+      "created_at": "2026-11-06T08:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteMeasurement": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteMeasurement",
+     "body": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteMeasurement",
+     "body": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteMeasurement",
+     "body": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteMeasurement",
+     "payload": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteMeasurement",
+     "body": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteMeasurement",
+     "payload": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteMeasurement",
+     "body": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "m_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "m_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteMeasurement",
+     "payload": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "m_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteMeasurement",
+     "payload": {
+      "id": "m_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "measurements"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "m_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "measurements": [
+     {
+      "id": "m_edit",
+      "tram": "T2",
+      "h2": 2,
+      "created_at": "2025-01-01T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteStandard": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStandard",
+     "body": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStandard",
+     "body": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStandard",
+     "body": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [
+    {
+     "action": "deleteStandard",
+     "payload": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStandard",
+     "body": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [
+    {
+     "action": "deleteStandard",
+     "payload": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteStandard",
+     "body": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "s_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "s_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "standards": []
+   },
+   "queue": [
+    {
+     "action": "deleteStandard",
+     "payload": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "s_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "standards": []
+   },
+   "queue": [
+    {
+     "action": "deleteStandard",
+     "payload": {
+      "id": "s_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "manufacturer_standards"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "s_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "standards": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteRegulationConfig": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteRegulationConfig",
+     "body": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteRegulationConfig",
+     "body": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteRegulationConfig",
+     "body": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteRegulationConfig",
+     "payload": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteRegulationConfig",
+     "body": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteRegulationConfig",
+     "payload": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteRegulationConfig",
+     "body": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "BANG64_MBA"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "BANG64_MBA"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteRegulationConfig",
+     "payload": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "BANG64_MBA"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteRegulationConfig",
+     "payload": {
+      "id": "BANG64_MBA"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "regulation_config"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "BANG64_MBA"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "regulationConfig": [
+     {
+      "id": "BAD",
+      "values_json": "{không phải json"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteStation": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStation",
+     "body": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStation",
+     "body": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStation",
+     "body": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [
+    {
+     "action": "deleteStation",
+     "payload": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteStation",
+     "body": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [
+    {
+     "action": "deleteStation",
+     "payload": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteStation",
+     "body": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "st_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "st_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "stations": []
+   },
+   "queue": [
+    {
+     "action": "deleteStation",
+     "payload": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "st_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "stations": []
+   },
+   "queue": [
+    {
+     "action": "deleteStation",
+     "payload": {
+      "id": "st_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "stations"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "st_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "stations": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteOilTest": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOilTest",
+     "body": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOilTest",
+     "body": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOilTest",
+     "body": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOilTest",
+     "payload": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOilTest",
+     "body": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOilTest",
+     "payload": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteOilTest",
+     "body": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "o_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "o_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOilTest",
+     "payload": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "o_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOilTest",
+     "payload": {
+      "id": "o_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "o_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteOltcOilTest": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOltcOilTest",
+     "body": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOltcOilTest",
+     "body": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOltcOilTest",
+     "body": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOltcOilTest",
+     "payload": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteOltcOilTest",
+     "body": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOltcOilTest",
+     "payload": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteOltcOilTest",
+     "body": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "ol_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "ol_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOltcOilTest",
+     "payload": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "ol_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [
+    {
+     "action": "deleteOltcOilTest",
+     "payload": {
+      "id": "ol_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "oltc_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "ol_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "oltcOilTests": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteInstrumentOilTest": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteInstrumentOilTest",
+     "body": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteInstrumentOilTest",
+     "body": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteInstrumentOilTest",
+     "body": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteInstrumentOilTest",
+     "payload": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteInstrumentOilTest",
+     "body": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteInstrumentOilTest",
+     "payload": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteInstrumentOilTest",
+     "body": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "i_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "i_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteInstrumentOilTest",
+     "payload": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "i_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [
+    {
+     "action": "deleteInstrumentOilTest",
+     "payload": {
+      "id": "i_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "instrument_oil_tests"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "i_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "instrumentOilTests": [
+     {
+      "id": "i_edit",
+      "created_at": "2025-02-02T00:00:00.000Z"
+     }
+    ]
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ },
+ "deleteFeedback": {
+  "local": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteFeedback",
+     "body": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet trả null": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteFeedback",
+     "body": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "local-server ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteFeedback",
+     "body": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "gsheet offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [
+    {
+     "action": "deleteFeedback",
+     "payload": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [
+    {
+     "post": "deleteFeedback",
+     "body": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [
+    {
+     "action": "deleteFeedback",
+     "payload": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "gsheet lỗi khác": {
+   "ret": "<undefined>",
+   "err": "Lỗi nghiệp vụ từ máy chủ",
+   "gsCalls": [
+    {
+     "post": "deleteFeedback",
+     "body": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase ok": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "f_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase rỗng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "f_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  },
+  "supabase offline": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [
+    {
+     "action": "deleteFeedback",
+     "payload": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": false,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase lỗi mạng": {
+   "ret": "<undefined>",
+   "err": null,
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "f_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [
+    {
+     "action": "deleteFeedback",
+     "payload": {
+      "id": "f_old"
+     }
+    }
+   ],
+   "statuses": [
+    {
+     "online": true,
+     "pendingCount": 1
+    }
+   ],
+   "warns": []
+  },
+  "supabase error object": {
+   "ret": "<undefined>",
+   "err": "duplicate key",
+   "gsCalls": [],
+   "sbCalls": [
+    [
+     {
+      "from": "feedback"
+     },
+     {
+      "delete": []
+     },
+     {
+      "eq": [
+       "id",
+       "f_old"
+      ]
+     }
+    ]
+   ],
+   "ls": {
+    "feedback": []
+   },
+   "queue": [],
+   "statuses": [],
+   "warns": []
+  }
+ }
+}
