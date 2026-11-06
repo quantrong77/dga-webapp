@@ -263,6 +263,13 @@ input:disabled, select:disabled, textarea:disabled {
   height: 28px;
   color: var(--blue-700);
 }
+/* Ô kéo thả trong khung Nhập BBTN rộng hơn hẳn nội dung 1 dòng — cho chữ xuống dòng thay vì cắt "…" */
+.bbtn-import-grid > .file-dropzone .file-dropzone-text {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.5;
+}
 #bbtnDropzone.file-dropzone .file-dropzone-text,
 #batchDropzone.file-dropzone .file-dropzone-text,
 #oDropzone.file-dropzone .file-dropzone-text,
@@ -450,8 +457,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas: "t1 t2" "z1 z2" "x1 x2";
-  column-gap: 18px;
-  row-gap: var(--space-2);
+  gap: var(--space-2) 18px;
   align-items: stretch;
 }
 .bbtn-import-t1 { grid-area: t1; }
@@ -468,6 +474,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   font-weight: var(--font-bold);
   color: var(--blue-900);
 }
+.spec-import-panel .file-dropzone { margin-top: 0; }
 .bbtn-import-grid > .file-dropzone,
 #tab-nhap .bbtn-import-grid > .file-dropzone,
 #tab-dau .bbtn-import-grid > .file-dropzone {
@@ -480,17 +487,9 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 }
 .bbtn-import-extra { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
 .bbtn-import-extra > .note { margin: 0; }
-.spec-import-panel .file-dropzone { margin-top: 0; }
 @media (max-width: 900px) {
   .bbtn-import-grid {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "t1" "z1" "x1" "t2" "z2" "x2";
   }
-}
-/* Ô kéo thả trong khung Nhập BBTN rộng hơn hẳn nội dung 1 dòng — cho chữ xuống dòng thay vì cắt "…" */
-.bbtn-import-grid > .file-dropzone .file-dropzone-text {
-  white-space: normal;
-  overflow: visible;
-  text-overflow: clip;
-  line-height: 1.5;
 }

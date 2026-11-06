@@ -63,8 +63,8 @@
 
   /* Các lớp bề mặt & đường viền ngữ nghĩa (Semantic Surfaces & Borders) */
   --surface-page: #f8fafc;
-  --surface: #ffffff;
-  --surface-raised: #ffffff;
+  --surface: #fff;
+  --surface-raised: #fff;
   --surface-sunken: #f1f5f9;
   --border: #e2e8f0;
   --border-strong: #cbd5e1;
@@ -82,7 +82,7 @@
   --blue-50: #f5f7ff;
   --btn-primary: #1b2470;
   --btn-primary-hover: #232e8c;
-  --on-accent: #ffffff;
+  --on-accent: #fff;
 
   /* Tương thích ngược hệ màu gray-* */
   --gray-50: var(--surface-page);

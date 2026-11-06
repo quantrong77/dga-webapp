@@ -37,7 +37,6 @@
 .process-step h3 { margin: 2px 0 6px; font-size: 14px; color: var(--blue-900); }
 .process-step p { margin: 0 0 6px; font-size: var(--text-sm); color: var(--gray-900); line-height: 1.55; }
 .process-step .maps-to { font-size: var(--text-xs); color: var(--gray-600); }
-.process-step .maps-to strong { color: var(--blue-700); }
 
 .status-legend {
   display: grid;
@@ -240,7 +239,6 @@ footer.app-footer {
   height: auto;
   transition: transform 0.35s ease;
 }
-.handbook-thumb:hover img { transform: scale(1.015); }
 .handbook-zoom-hint {
   position: absolute;
   right: 14px;
@@ -365,7 +363,6 @@ footer.app-footer {
   flex: none;
   box-shadow: 0 0 0 3px var(--mm-accent-bg);
 }
-.mm-node > summary:hover { background: var(--mm-accent-bg); }
 .mm-node > summary .mm-chevron {
   margin-left: auto;
   width: 15px;
@@ -422,8 +419,8 @@ footer.app-footer {
   font-weight: 600;
 }
 .mm-node-sm > summary::before { width: 7px; height: 7px; }
+.mm-node > summary:hover { background: var(--mm-accent-bg); }
 .mm-node-sm .mm-leaves { padding: 2px 14px 10px 26px; }
-.mm-node-sm .mm-leaves li { font-size: 12.5px; }
 
 .mm-node[open] > .mm-leaves,
 .mm-node[open] > .mm-sub {
@@ -484,6 +481,8 @@ footer.app-footer {
   flex: none;
 }
 .sm-steps li strong { color: inherit; }
+/* Bước quy trình (.process-step .maps-to, đầu file). Đặt sau các luật cùng phần tử có độ ưu tiên (specificity) thấp hơn — stylelint no-descending-specificity. */
+.process-step .maps-to strong { color: var(--blue-700); }
 
 .sm-note {
   margin: 0;
@@ -533,7 +532,6 @@ footer.app-footer {
   height: auto;
   transition: transform 0.35s ease;
 }
-.qt-img-btn:hover img { transform: scale(1.02); }
 
 .mm-node[open] > .sm-body { animation: dga-fade-up 0.25s ease; }
 
@@ -543,7 +541,6 @@ footer.app-footer {
   gap: 14px;
 }
 .sm-gallery figure { margin: 0; }
-.sm-gallery .qt-img-btn img { height: 130px; object-fit: cover; }
 .sm-gallery figcaption {
   font-size: var(--text-xs);
   color: var(--gray-700);
@@ -589,6 +586,12 @@ footer.app-footer {
   box-shadow: var(--shadow-md);
 }
 .about-logo img { width: 100%; height: 100%; display: block; object-fit: cover; }
+/* Ảnh trong lưới thư viện (.sm-gallery, mục Quy trình phía trên): cắt cùng chiều cao. Đặt sau .about-logo img (stylelint no-descending-specificity). */
+.sm-gallery .qt-img-btn img { height: 130px; object-fit: cover; }
+/* Ảnh cẩm nang (.handbook-thumb) và ảnh quy trình (.qt-img-btn) phóng nhẹ khi trỏ chuột. Đặt sau các luật
+   "… img" có độ ưu tiên (specificity) thấp hơn — stylelint no-descending-specificity. */
+.qt-img-btn:hover img { transform: scale(1.02); }
+.handbook-thumb:hover img { transform: scale(1.015); }
 .about-hero h2 { margin: 2px 0 6px; font-size: var(--text-xl); color: var(--blue-900); letter-spacing: 0.01em; }
 .about-hero .note { margin: 0; }
 
@@ -614,6 +617,8 @@ footer.app-footer {
   border-bottom: 1px solid var(--gray-100);
 }
 .about-contact-list li:last-child { border-bottom: none; }
+/* Lá của nhánh phụ sơ đồ tư duy (.mm-node-sm, phía trên). Đặt sau các luật cùng phần tử có độ ưu tiên (specificity) thấp hơn — stylelint no-descending-specificity. */
+.mm-node-sm .mm-leaves li { font-size: 12.5px; }
 .about-contact-list .icon-svg {
   flex: none;
   width: 18px;

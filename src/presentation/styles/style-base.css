@@ -72,6 +72,13 @@ header.app-header::after {
 
 /* Trái: tên ứng dụng, rồi bố cục tab và trạng thái kết nối. Phải: giao diện và tài khoản.
    Đặt z-index: 10 để các nút icon và tooltip luôn nổi TRÊN thanh cái 3 pha (z-index: 1 ở ::after). */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
 header.app-header .header-left,
 header.app-header .header-center,
 header.app-header .header-right {
@@ -105,14 +112,6 @@ header.app-header p {
   margin: 0;
   font-size: 13px;
   opacity: 0.85;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-left: auto;
 }
 
 @media (max-width: 800px) {
@@ -236,9 +235,9 @@ header.app-header p {
   top: calc(100% + 5px);
   left: 50%;
   transform: translateX(-50%) translateY(-2px);
-  border-width: 0 5px 6px 5px;
+  border-width: 0 5px 6px;
   border-style: solid;
-  border-color: transparent transparent var(--tooltip-bg) transparent;
+  border-color: transparent transparent var(--tooltip-bg);
   pointer-events: none;
   opacity: 0;
   visibility: hidden;
@@ -280,6 +279,23 @@ header.app-header p {
 }
 
 /* Neo tooltip cho các nút ở sát mép phải header để không bị tràn viền màn hình */
+/* Neo tooltip cho nút sát mép trái header (#btnToggleTabLayout) */
+.header-left .header-icon-btn[data-tooltip]::after {
+  left: 0;
+  transform: translateY(-2px);
+}
+.header-left .header-icon-btn[data-tooltip]::before {
+  left: 11px;
+  transform: translateY(-2px);
+}
+.header-left .header-icon-btn[data-tooltip]:hover::after,
+.header-left .header-icon-btn[data-tooltip]:focus-visible::after {
+  transform: translateY(0);
+}
+.header-left .header-icon-btn[data-tooltip]:hover::before,
+.header-left .header-icon-btn[data-tooltip]:focus-visible::before {
+  transform: translateY(0);
+}
 .header-right .header-icon-btn:last-of-type[data-tooltip]::after,
 #btnToggleTheme[data-tooltip]::after,
 #btnOpenChangePassword[data-tooltip]::after {
@@ -308,24 +324,6 @@ header.app-header p {
 #btnToggleTheme[data-tooltip]:focus-visible::before,
 #btnOpenChangePassword[data-tooltip]:hover::before,
 #btnOpenChangePassword[data-tooltip]:focus-visible::before {
-  transform: translateY(0);
-}
-
-/* Neo tooltip cho nút sát mép trái header (#btnToggleTabLayout) */
-.header-left .header-icon-btn[data-tooltip]::after {
-  left: 0;
-  transform: translateY(-2px);
-}
-.header-left .header-icon-btn[data-tooltip]::before {
-  left: 11px;
-  transform: translateY(-2px);
-}
-.header-left .header-icon-btn[data-tooltip]:hover::after,
-.header-left .header-icon-btn[data-tooltip]:focus-visible::after {
-  transform: translateY(0);
-}
-.header-left .header-icon-btn[data-tooltip]:hover::before,
-.header-left .header-icon-btn[data-tooltip]:focus-visible::before {
   transform: translateY(0);
 }
 /* Badge trạng thái kết nối & Tự động đồng bộ ngoại tuyến (#syncStatusBadge) */

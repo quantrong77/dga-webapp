@@ -7,7 +7,7 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--blue-900);
-  margin: 22px 0 10px 0;
+  margin: 22px 0 10px;
   padding-bottom: 6px;
   border-bottom: 1px solid var(--gray-100);
 }
@@ -19,7 +19,7 @@
   margin-bottom: 14px;
 }
 .rc-item h4 {
-  margin: 0 0 var(--space-2) 0;
+  margin: 0 0 var(--space-2);
   font-size: 14px;
   color: var(--gray-900);
 }
@@ -47,7 +47,6 @@
   gap: 6px;
   align-items: center;
 }
-.rc-item .rc-range-field input { width: 0; flex: 1; }
 .rc-item .rc-actions {
   margin-top: var(--space-3);
   display: flex;
@@ -191,8 +190,6 @@
 .std-list-scroll { overflow-y: auto; min-height: 0; border-top: 1px solid var(--gray-100); }
 .std-list-table { width: 100%; border-collapse: collapse; }
 .std-list-table td { padding: var(--space-2) 6px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
-.std-list-table tr.is-editing td { background: var(--blue-50); }
-.std-list-table tr.is-editing td:first-child { box-shadow: inset 3px 0 0 var(--blue-700); }
 .std-list-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .std-list-applies { font-size: var(--text-xs); color: var(--gray-600); }
 .std-list-thresholds { font-size: 11.5px; color: var(--gray-600); margin-top: 3px; line-height: 1.45; overflow-wrap: anywhere; }
@@ -204,8 +201,13 @@
 .std-threshold-table tbody th { font-weight: 600; white-space: nowrap; width: 1%; }
 .std-threshold-table tbody th .gas-icon { width: 14px; height: 14px; vertical-align: -2px; margin-right: var(--space-1); }
 .std-threshold-table input { width: 100%; box-sizing: border-box; }
+/* Ô số trong khoảng ngưỡng (.rc-item .rc-range-field, phía trên). Đặt sau các luật cùng phần tử có độ ưu tiên (specificity) thấp hơn — stylelint no-descending-specificity. */
+.rc-item .rc-range-field input { width: 0; flex: 1; }
 .std-threshold-table .std-col-reject { color: var(--bad); }
 .std-th-note { font-weight: 400; color: var(--gray-500); }
+/* Dòng tiêu chuẩn đang sửa (.std-list-table, phía trên). Đặt sau các luật cùng phần tử có độ ưu tiên (specificity) thấp hơn — stylelint no-descending-specificity. */
+.std-list-table tr.is-editing td { background: var(--blue-50); }
+.std-list-table tr.is-editing td:first-child { box-shadow: inset 3px 0 0 var(--blue-700); }
 #stdOilFields.is-mba .std-instr-only { display: none; }
 @media (max-width: 1000px) {
   .std-layout { grid-template-columns: minmax(0, 1fr); }

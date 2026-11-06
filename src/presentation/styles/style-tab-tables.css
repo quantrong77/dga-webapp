@@ -118,6 +118,9 @@
    canh giữa icon, vẫn giữ .btn/.ghost để đồng bộ màu/hover với các nút khác; LUÔN
    kèm title/aria-label ở HTML vì không còn chữ hiển thị cho biết chức năng. */
 .btn.icon-only { padding: 6px; display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+/* Icon trong .status-pill (mục Pill cấp độ phía dưới) dùng màu chữ (currentColor); gap đã có sẵn nên bỏ
+   margin-right mặc định của .icon-svg. Đặt TRƯỚC .btn.icon-only .icon-svg (stylelint no-descending-specificity). */
+.status-pill .icon-svg { width: 13px; height: 13px; margin-right: 0; }
 .btn.icon-only .icon-svg { width: 16px; height: 16px; margin-right: 0; }
 
 /* Bọc mỗi bảng trong 1 khung cuộn ngang riêng — nếu không, trên màn hình hẹp
@@ -147,8 +150,8 @@ th, td {
    OLTC, tiêu chuẩn NSX) — trước đây ép "white-space:nowrap" nên khi bảng nhiều cột +
    cửa sổ hẹp, nút cuối (thường là "Xóa") bị .table-scroll cuộn ngang che mất mà không rõ
    còn cuộn được nữa hay không, trông như bị THIẾU nút. Đổi sang flex-wrap: các nút tự
-   xuống dòng bên trong ô khi không đủ chỗ — LUÔN thấy đủ nút, không phụ thuộc cuộn ngang. */
-.actions-cell { white-space: normal; }
+   xuống dòng bên trong ô khi không đủ chỗ — LUÔN thấy đủ nút, không phụ thuộc cuộn ngang.
+   (Nay các nút xếp thành 1 cột icon .actions-stack, xem mục "Cột Thao tác dạng ICON" phía dưới.) */
 .actions-cell .btn-row,
 /* Bộ chọn Khí hòa tan (DGA)/Dầu MBA chính/Dầu OLTC ở tab "Lịch sử đo" (xem
    setupLichSuViewToggle(), app-core.js) — tái dùng class ".btn-row" cho khoảng cách
@@ -172,6 +175,9 @@ th, td {
 .actions-col-header { z-index: 2; background: var(--surface-sunken); }
 .actions-cell {
   z-index: 1;
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: middle;
   background: var(--surface);
   box-shadow: -4px 0 6px -2px rgba(15, 23, 42, 0.08);
 }
@@ -186,8 +192,8 @@ th {
   letter-spacing: 0.05em;
   border-bottom: 1px solid var(--border-strong);
 }
-tbody tr:nth-child(even) { background: var(--table-stripe); }
 tbody tr { transition: background-color 0.1s ease; }
+tbody tr:nth-child(even) { background: var(--table-stripe); }
 tbody tr:hover { background: var(--blue-100); }
 
 .pill {
@@ -319,9 +325,12 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   margin-bottom: var(--space-2);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
-.status-normal .status-badge, .status-legend-card.normal .status-badge { background: var(--ok); }
-.status-alert .status-badge, .status-legend-card.alert .status-badge { background: var(--warn); }
-.status-alarm .status-badge, .status-legend-card.alarm .status-badge { background: var(--bad); }
+.status-normal .status-badge { background: var(--ok); }
+.status-alert .status-badge { background: var(--warn); }
+.status-alarm .status-badge { background: var(--bad); }
+.status-legend-card.normal .status-badge { background: var(--ok); }
+.status-legend-card.alert .status-badge { background: var(--warn); }
+.status-legend-card.alarm .status-badge { background: var(--bad); }
 
 .status-reasons { margin: 6px 0 var(--space-2) 18px; padding: 0; font-size: var(--text-sm); }
 .status-reasons li { margin-bottom: 3px; }
@@ -347,9 +356,6 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
 }
 .status-pill.status-alert { background: var(--warn); }
 .status-pill.status-alarm { background: var(--bad); }
-/* icon bên trong .status-pill dùng chung màu chữ trắng (currentColor), gap đã có
-   sẵn ở .status-pill nên bỏ margin-right mặc định của .icon-svg để khỏi bị dư. */
-.status-pill .icon-svg { width: 13px; height: 13px; margin-right: 0; }
 
 
 
@@ -360,13 +366,11 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
    - Tooltip (data-tooltip) mô tả hành động khi trỏ chuột/focus bàn phím, hiện BÊN TRÁI nút:
      cột Thao tác là cột cuối, khung bảng cuộn ngang (overflow-x) sẽ cắt mất tooltip nếu hiện
      sang phải.
+   Ô .actions-cell: bề rộng tối thiểu (width:1%), không xuống dòng — khai báo ở mục ghim cột phía trên.
    ===================================================================== */
-.actions-cell { width: 1%; white-space: nowrap; vertical-align: middle; }
-
 .actions-cell .btn-row.actions-stack {
   display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
+  flex-flow: column nowrap;
   align-items: center;
   gap: var(--space-1);
 }
@@ -436,22 +440,21 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   transform: translate(0, -50%);
 }
 
-/* Tab "Cảnh báo": dòng cảnh báo CŨ (đã có số liệu mới hơn trong database — alertSeriesContext(), ui-alerts.js) */
-#alertsTable tr.alert-row-stale > td { opacity: 0.72; background: color-mix(in srgb, var(--warn) 7%, transparent); }
-#alertsTable tr.alert-row-stale:hover > td { opacity: 1; }
-#alertsStaleNote { color: var(--warn); font-weight: 600; }
-
 /* Tab "Lý-Hóa dầu": bảng nhập chỉ tiêu dầu MBA theo nhóm (renderOilParamTable(), ui-oil.js) */
 .oil-param-group { margin: 10px 0; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
 .oil-param-group > summary { cursor: pointer; padding: 10px 14px; font-weight: 600; list-style-position: inside; }
 .oil-param-group[open] > summary { border-bottom: 1px solid var(--border); }
 .oil-param-group .oil-group-count { font-weight: 500; color: var(--btn-primary); font-size: 12.5px; }
 .oil-param-group .table-scroll { margin: 0; }
+tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 .oil-param-table td:first-child { min-width: 260px; }
 .oil-param-table input, .oil-param-table select { width: 100%; min-width: 110px; }
 .oil-param-table .oil-unit { color: var(--text-tertiary); font-size: var(--text-xs); }
-tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 #oDropzone { margin-bottom: 10px; }
+/* Tab "Cảnh báo": dòng cảnh báo CŨ (đã có số liệu mới hơn trong database — alertSeriesContext(), ui-alerts.js) */
+#alertsTable tr.alert-row-stale > td { opacity: 0.72; background: color-mix(in srgb, var(--warn) 7%, transparent); }
+#alertsTable tr.alert-row-stale:hover > td { opacity: 1; }
+#alertsStaleNote { color: var(--warn); font-weight: 600; }
 
 /* Dầu OLTC: kế thừa thông tin chung của dầu MBA chính (#ot_inherit, ui-oltc.js) */
 .oltc-inherit-toggle { display: flex; align-items: flex-start; gap: var(--space-2); margin: var(--space-1) 0 var(--space-2); font-weight: 600; cursor: pointer; }
