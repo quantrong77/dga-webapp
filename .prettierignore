@@ -9,7 +9,6 @@ template/
 image/
 pdf/
 docs/
-dga_webapp_spec_docs/
 .agent/
 .claude/
 .playwright/

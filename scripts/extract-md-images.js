@@ -6,7 +6,7 @@
  * Sau khi chạy:                            [image1]: docs/images/<ten-file>/image1.png
  *
  * Cách dùng:
- *   npm run extract-images -- "Dieu54_QD1901.md"
+ *   npm run extract-images -- "docs/quy-dinh/Dieu54_QD1901.md"
  *   npm run extract-images -- "tai-lieu.md" --out docs/images/tai-lieu
  *
  * - Thư mục ảnh mặc định: docs/images/<tên file .md, viết thường, bỏ dấu cách>/

@@ -6,7 +6,7 @@ const { spawnSync } = require("child_process");
 const { ROOT } = require("./scripts-helpers");
 const { parseSections } = require("../scripts/build-user-guide");
 
-const manual = fs.readFileSync(path.join(ROOT, "user_manual.md"), "utf8").replace(/\r\n/g, "\n");
+const manual = fs.readFileSync(path.join(ROOT, "docs", "huong-dan", "user_manual.md"), "utf8").replace(/\r\n/g, "\n");
 const sections = parseSections(manual);
 
 describe("user_manual.md", () => {
@@ -24,7 +24,7 @@ describe("user_manual.md", () => {
   });
   test("không còn tên file/tab đã đổi và các file được nhắc đến đều tồn tại", () => {
     expect(manual).not.toMatch(/HUONG-DAN-SU-DUNG|Quy trình lấy mẫu\b.*Quy trình đánh giá\b/);
-    ["README.md", "Features-web-app.md", "mobile/README.md"].forEach((f) => {
+    ["README.md", "docs/huong-dan/Features-web-app.md", "mobile/README.md"].forEach((f) => {
       if (manual.includes("`" + f + "`")) expect(fs.existsSync(path.join(ROOT, f))).toBe(true);
     });
   });

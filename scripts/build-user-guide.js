@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* build-user-guide.js — Dựng lại nội dung tab "Hướng dẫn" của app từ user_manual.md.
  *
- * Nguồn duy nhất của hướng dẫn là `user_manual.md`. Khối HTML giữa 2 dấu
+ * Nguồn duy nhất của hướng dẫn là `docs/huong-dan/user_manual.md`. Khối HTML giữa 2 dấu
  *   <!-- USER-GUIDE:BEGIN --> ... <!-- USER-GUIDE:END -->
  * trong index.html được SINH từ file đó (mỗi mục "## N. Tiêu đề" thành 1 khối <details class="mm-node">) —
  * KHÔNG sửa tay khối này (sẽ bị ghi đè). Sửa user_manual.md rồi chạy:
@@ -19,7 +19,7 @@ const path = require("path");
 const { mdToHtml } = require("./md-to-html");
 
 const ROOT = path.resolve(__dirname, "..");
-const MANUAL = path.join(ROOT, "user_manual.md");
+const MANUAL = path.join(ROOT, "docs", "huong-dan", "user_manual.md");
 const INDEX = path.join(ROOT, "index.html");
 const BEGIN = "<!-- USER-GUIDE:BEGIN — sinh tự động bởi scripts/build-user-guide.js từ user_manual.md, KHÔNG sửa tay -->";
 const END = "<!-- USER-GUIDE:END -->";

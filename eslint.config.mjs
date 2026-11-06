@@ -15,7 +15,6 @@ export default [
       ".dist/**",
       "coverage/**",
       "data/**",
-      "dga_webapp_spec_docs/**",
       ".agent/**",
       ".claude/**",
       ".playwright/**",

@@ -47,7 +47,7 @@ Tính năng:
 - **Khung hiển thị Biên bản đối chiếu song song (Split View)**: Kéo-thả hoặc chọn file PDF BBTN tự động mở khung xem tài liệu gốc bên cạnh form nhập liệu để so sánh, xác nhận số liệu trước khi lưu.
 - **BBTN dầu 3 pha TI/TU (PTC3/BM.14)**: Nhập PDF hoặc nhập tay chung 1 biên bản cho 3 pha A, B, C; tự tách 3 bản ghi độc lập; đánh giá theo 2 tầng ngưỡng NSX; đối chiếu cột "Trên BBTN" và xuất lại Word.
 - **Kiến trúc 3 tầng (Three-Tier Architecture)** & **Offline-First PWA (Service Worker v4)**: Hoạt động bền bỉ khi mất mạng, tự động đồng bộ khi có kết nối trở lại.
-- *Xem tài liệu chi tiết toàn bộ tính năng và tiện ích tại [Features-web-app.md](./Features-web-app.md).*
+- *Xem tài liệu chi tiết toàn bộ tính năng và tiện ích tại [docs/huong-dan/Features-web-app.md](./docs/huong-dan/Features-web-app.md).*
 
 > **Lưu ý về nguồn dữ liệu IEC**: các bảng Annex A (A.2, A.6, A.9) và bảng ranh
 > giới vùng của Tam giác Duval (Annex B, Figure B.3) được trích trực tiếp và
@@ -253,8 +253,12 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
 | `gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
 | `mobile/` | Bản giao diện tối ưu cho điện thoại — dùng chung logic với bản web (xem mục 6 và `mobile/README.md`) |
-| `user_manual.md` | Hướng dẫn sử dụng cho người dùng cuối — cũng là nguồn của tab "Hướng dẫn" trong app (xem mục 6) |
-| `Features-web-app.md` | Danh sách đầy đủ tính năng theo từng tab |
+| `docs/huong-dan/user_manual.md` | Hướng dẫn sử dụng cho người dùng cuối — cũng là nguồn của tab "Hướng dẫn" trong app (xem mục 6) |
+| `docs/huong-dan/Features-web-app.md` | Danh sách đầy đủ tính năng theo từng tab |
+| `docs/huong-dan/KNOWLEDGE.md` | Kiến thức nền & kiến trúc chi tiết cho người phát triển |
+| `docs/quy-dinh/` | Văn bản QĐ1901 (`QD1901.md`), Điều 54 (`Dieu54_QD1901.md`) |
+| `docs/spec/` | Đặc tả thiết kế theo module |
+| `docs/assets/` | Ảnh gốc dung lượng lớn (app dùng bản `.webp` trong `image/`) |
 
 ## 5. Giới hạn / lưu ý
 
@@ -313,7 +317,7 @@ npm install          # lần đầu (cài Jest/TypeScript vào node_modules/, đ
 npm test              # chạy toàn bộ kiểm thử tự động
 npm run typecheck     # kiểm tra kiểu (TypeScript checkJs) cho lớp logic/
 npm run sync-mobile   # đồng bộ mobile/dga-logic.js từ logic/ của bản web
-npm run build-guide   # dựng lại tab "Hướng dẫn" trong index.html từ user_manual.md (cần cài pandoc)
+npm run build-guide   # dựng lại tab "Hướng dẫn" trong index.html từ docs/huong-dan/user_manual.md (cần cài pandoc)
 ```
 
 ### 6.1. Kiểm thử tự động (Jest)
@@ -332,7 +336,7 @@ kiểm thử tự động ở thư mục `tests/` (~250 test, chạy dưới 3 g
   (`tests/load-order.test.js`) — bắt sớm việc 2 file khai báo trùng 1 tên hoặc thiếu file tham chiếu.
 - **Bản di động khớp bản web** (mục 6.3) và **tên cột khớp giữa Supabase/Google Sheets**
   (`tests/schema-consistency.test.js`) — 2 backend lệch tên cột thì dữ liệu mất/rỗng khi đổi backend.
-- **Tab "Hướng dẫn" khớp `user_manual.md`** (mục 6.4, cần pandoc — tự bỏ qua nếu máy chưa cài).
+- **Tab "Hướng dẫn" khớp `docs/huong-dan/user_manual.md`** (mục 6.4, cần pandoc — tự bỏ qua nếu máy chưa cài).
 
 Số liệu chuẩn (golden) lấy từ văn bản gốc QĐ1901/IEC 60599:2022, không sao chép kết quả từ chính
 code. Các trường hợp đã biết là lệch văn bản gốc được ghi bằng `test.failing` trong
@@ -356,8 +360,8 @@ giữa 2 bản trên nhiều bộ số liệu để bảo đảm **cùng số li
 
 ### 6.4. Dựng tab "Hướng dẫn" trong app (`scripts/build-user-guide.js`)
 
-`user_manual.md` là **nguồn duy nhất** của hướng dẫn người dùng. Nội dung tab "Hướng dẫn" trong
+`docs/huong-dan/user_manual.md` là **nguồn duy nhất** của hướng dẫn người dùng. Nội dung tab "Hướng dẫn" trong
 `index.html` (giữa 2 dấu `<!-- USER-GUIDE:BEGIN -->` / `<!-- USER-GUIDE:END -->`) được **sinh tự
-động** từ file đó — không sửa tay khối HTML này. Sau khi sửa `user_manual.md`, chạy
+động** từ file đó — không sửa tay khối HTML này. Sau khi sửa `docs/huong-dan/user_manual.md`, chạy
 `npm run build-guide` rồi commit cả 2 thay đổi. Cần cài [pandoc](https://pandoc.org) trên máy
 đang cập nhật hướng dẫn (người dùng mở app không cần).
