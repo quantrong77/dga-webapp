@@ -1,5 +1,5 @@
 /* bbtn-batch-import.js — Tùy chọn nhập liệu THỨ 2 ở tab "DGA", BÊN CẠNH tùy chọn nhập
-   rời từng lần đo (form "1. Thông tin lần đo" + ô "Biên bản thí nghiệm" 1 file, xem
+   rời từng lần đo (form "Thí nghiệm khí hòa tan trong dầu cách điện" + ô "Biên bản thí nghiệm" 1 file, xem
    onBbtnFileSelected()/onAnalyze() ở ui-dga.js). Dùng khi có SẴN nhiều BBTN (PDF) lịch
    sử của CÙNG 1 thiết bị để chung 1 thư mục — chọn nhiều file/cả thư mục 1 lần, xem lại
    bảng preview rồi lưu thẳng hàng loạt vào Lịch sử đo, phục vụ nhập nhanh dữ liệu backfill
@@ -285,7 +285,7 @@ async function onBatchSave() {
   const tram = $("f_tram").value.trim();
   const thietbi = $("f_thietbi").value.trim();
   if (!thietbi) {
-    notifyError('Vui lòng nhập ít nhất "Thiết bị" ở form "1. Thông tin lần đo" phía trên trước khi lưu hàng loạt (áp dụng chung cho cả đợt).');
+    notifyError('Vui lòng nhập ít nhất "Thiết bị" ở form "Thí nghiệm khí hòa tan trong dầu cách điện" bên dưới trước khi lưu hàng loạt (áp dụng chung cho cả đợt).');
     return;
   }
   const equipmentType = $("f_loai").value;
@@ -397,7 +397,7 @@ async function onBatchSave() {
  *  tự ngày, xem batchDateCompare() ở trên xử lý đúng thứ tự NGAY KHI LƯU trong 1 đợt —
  *  nhưng "Lần đo" của các bản ghi ĐÃ LƯU TỪ TRƯỚC thì không tự lùi lại được, xem ghi chú
  *  ở onBatchSave()). Bấm nút này để quét lại TOÀN BỘ Lịch sử đo của ĐÚNG thiết bị đang
- *  chọn ở form "1. Thông tin lần đo" phía trên (Trạm+Thiết bị, cả 3 Pha) và sắp xếp lại
+ *  chọn ở form "Thí nghiệm khí hòa tan trong dầu cách điện" bên dưới (Trạm+Thiết bị, cả 3 Pha) và sắp xếp lại
  *  cho đúng thứ tự thời gian — xem renumberLanDoForDevice() ở ui-history.js (dùng chung
  *  với nút cùng tên ở tab "Lịch sử đo"). Dùng được bất kể đã "Lưu hàng loạt" hay chưa —
  *  không phụ thuộc _batchRows. */

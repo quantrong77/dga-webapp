@@ -22,6 +22,11 @@
     "testEnvironment": "node",
     "testMatch": [
       "<rootDir>/tests/**/*.test.js"
-    ]
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/setup-test-env.js"
+    ],
+    "globalTeardown": "<rootDir>/tests/global-teardown.js",
+    "globalSetup": "<rootDir>/tests/global-setup.js"
   }
 }

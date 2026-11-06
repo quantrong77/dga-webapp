@@ -225,7 +225,7 @@ async function onAnalyzeOltcOil() {
   if (!canSaveEntry()) return;
   if (overwrite.length) {
     const what = overwrite.some((r) => r.phase) ? `của ${overwrite.map((r) => "pha " + r.phase).join(", ")} ` : "";
-    if (!confirm(`Đã có thí nghiệm dầu OLTC ${what}của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
+    if ((typeof _oilBatchSaving === "undefined" || !_oilBatchSaving) && !confirm(`Đã có thí nghiệm dầu OLTC ${what}của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
   }
   const wasEditing = Object.keys(_editingOltcRecords).length > 0;
   // Cùng biên bản với phần thùng chính (BBTN đọc từ file) → dùng chung file + bbtn_group_id (ui-oil.js)

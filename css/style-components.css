@@ -240,7 +240,11 @@ input:disabled, select:disabled, textarea:disabled {
 
 /* Ô kéo-thả file BBTN đơn (#bbtnDropzone) và hàng loạt (#batchDropzone) — chiều cao tăng gấp 1.5 lần (từ ~40px lên 60px) và focus nổi bật */
 #bbtnDropzone.file-dropzone,
-#batchDropzone.file-dropzone {
+#batchDropzone.file-dropzone,
+#oDropzone.file-dropzone,
+#oBatchDropzone.file-dropzone,
+#t3Dropzone.file-dropzone,
+#t3BatchDropzone.file-dropzone {
   min-height: 60px;
   padding: 16px 20px;
   gap: 14px;
@@ -250,13 +254,21 @@ input:disabled, select:disabled, textarea:disabled {
   box-shadow: var(--shadow-1);
 }
 #bbtnDropzone.file-dropzone .icon-svg,
-#batchDropzone.file-dropzone .icon-svg {
+#batchDropzone.file-dropzone .icon-svg,
+#oDropzone.file-dropzone .icon-svg,
+#oBatchDropzone.file-dropzone .icon-svg,
+#t3Dropzone.file-dropzone .icon-svg,
+#t3BatchDropzone.file-dropzone .icon-svg {
   width: 28px;
   height: 28px;
   color: var(--blue-700);
 }
 #bbtnDropzone.file-dropzone .file-dropzone-text,
-#batchDropzone.file-dropzone .file-dropzone-text {
+#batchDropzone.file-dropzone .file-dropzone-text,
+#oDropzone.file-dropzone .file-dropzone-text,
+#oBatchDropzone.file-dropzone .file-dropzone-text,
+#t3Dropzone.file-dropzone .file-dropzone-text,
+#t3BatchDropzone.file-dropzone .file-dropzone-text {
   font-size: 13.5px;
   color: var(--gray-700);
 }
@@ -265,7 +277,13 @@ input:disabled, select:disabled, textarea:disabled {
 #bbtnDropzone.file-dropzone.is-focused,
 #batchDropzone.file-dropzone:focus,
 #batchDropzone.file-dropzone:focus-within,
-#batchDropzone.file-dropzone.is-focused {
+#batchDropzone.file-dropzone.is-focused,
+#oDropzone.file-dropzone:focus-within,
+#oBatchDropzone.file-dropzone:focus,
+#oBatchDropzone.file-dropzone:focus-within,
+#t3Dropzone.file-dropzone:focus-within,
+#t3BatchDropzone.file-dropzone:focus,
+#t3BatchDropzone.file-dropzone:focus-within {
   outline: 2px solid var(--blue-700);
   outline-offset: 2px;
   border-color: var(--blue-700);
@@ -422,4 +440,57 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
     height: 70vh;
     min-height: 460px;
   }
+}
+
+/* ===================== KHUNG "NHẬP BBTN" (tab con Nhập BBTN cũ) =====================
+   2 ô kéo thả NGANG HÀNG: trái 1 BBTN (đọc vào form để đối chiếu), phải nhiều BBTN / cả thư mục.
+   Lưới 3 hàng (tiêu đề / ô kéo thả / phần phụ) để 2 ô kéo thả luôn cùng bề ngang và cùng chiều cao
+   bất kể nội dung phần phụ bên dưới mỗi ô; màn hình hẹp thì xếp dọc theo từng cột. */
+.bbtn-import-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "t1 t2" "z1 z2" "x1 x2";
+  column-gap: 18px;
+  row-gap: 8px;
+  align-items: stretch;
+}
+.bbtn-import-t1 { grid-area: t1; }
+.bbtn-import-t2 { grid-area: t2; }
+.bbtn-import-z1 { grid-area: z1; }
+.bbtn-import-z2 { grid-area: z2; }
+.bbtn-import-x1 { grid-area: x1; }
+.bbtn-import-x2 { grid-area: x2; }
+.bbtn-import-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  color: var(--blue-900);
+}
+.bbtn-import-grid > .file-dropzone,
+#tab-nhap .bbtn-import-grid > .file-dropzone,
+#tab-dau .bbtn-import-grid > .file-dropzone {
+  /* #tab-*: thắng min-height riêng của #bbtnDropzone/#batchDropzone ở trên — 4 ô của 2 tab cùng 1 chiều cao */
+  margin: 0;
+  min-height: 112px;
+  height: 100%;
+  box-sizing: border-box;
+  justify-content: center;
+}
+.bbtn-import-extra { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.bbtn-import-extra > .note { margin: 0; }
+.spec-import-panel .file-dropzone { margin-top: 0; }
+@media (max-width: 900px) {
+  .bbtn-import-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "t1" "z1" "x1" "t2" "z2" "x2";
+  }
+}
+/* Ô kéo thả trong khung Nhập BBTN rộng hơn hẳn nội dung 1 dòng — cho chữ xuống dòng thay vì cắt "…" */
+.bbtn-import-grid > .file-dropzone .file-dropzone-text {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.5;
 }

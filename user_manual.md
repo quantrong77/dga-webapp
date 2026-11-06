@@ -152,7 +152,7 @@ Hai tab con dùng **chung một form** — đổi tab con không mất số li�
 
 Ở ô **Loại thiết bị** trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — **hãy chọn đúng**.
 
-### Bước 2 — Điền "Thông tin lần đo"
+### Bước 2 — Điền khối "Thí nghiệm khí hòa tan trong dầu cách điện"
 
 | Trường | Cách điền |
 |---|---|
@@ -244,7 +244,7 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
 
 ### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song
 
-1. Ở tab **Khí hòa tan**, mục **"Biên bản thí nghiệm (PDF, tùy chọn)"**: **kéo thả** file PDF vào khung (đã được tăng chiều cao và có viền sáng focus khi rê chuột), hoặc bấm khung để chọn file.
+1. Ở tab **Khí hòa tan**, tab con **Nhập BBTN cũ**, khung **"Nhập BBTN"** trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái **"Một BBTN (PDF)"** — **kéo thả** file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải **"Nhiều BBTN hoặc cả thư mục"** — xem mục 7.
 2. **Khung hiển thị Biên bản đối chiếu song song (Split View):** Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới):
    - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc.
    - Nút **"Mở tab mới"** giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần.
@@ -270,8 +270,8 @@ Trong khối **"Thông số kỹ thuật thiết bị"**, kéo thả **ảnh ch�
 
 Dùng khi cần **nhập bổ sung dữ liệu lịch sử** (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích & Lưu" từng lần.
 
-1. **Điền trước** ở form phía trên: **Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất** (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho **tất cả** file trong đợt; riêng **Pha, Ngày lấy mẫu và 7 khí** được đọc riêng từ mỗi file.
-2. Ở khối **"Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị"**: kéo thả nhiều file PDF vào khung (đã được đồng bộ kích thước tăng chiều cao x1.5 và hiệu ứng viền sáng), hoặc bấm **Chọn cả thư mục…**.
+1. **Điền trước** ở form "Thí nghiệm khí hòa tan trong dầu cách điện" (bên dưới khung Nhập BBTN): **Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất** (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho **tất cả** file trong đợt; riêng **Pha, Ngày lấy mẫu và 7 khí** được đọc riêng từ mỗi file.
+2. Ở ô phải **"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"** của khung **Nhập BBTN** (ngang hàng với ô 1 BBTN): kéo thả nhiều file PDF vào, hoặc bấm **Chọn cả thư mục…**.
 3. Tick/bỏ tick **"Đính kèm PDF gốc vào từng lần đo"** (mặc định đang tick).
 4. Xem **bảng xem trước**: mỗi file có một trạng thái:
    - **Sẵn sàng** — có thể nhập.
@@ -281,6 +281,8 @@ Dùng khi cần **nhập bổ sung dữ liệu lịch sử** (nhiều năm đo) 
 6. Bấm **Lưu các lần đo đã chọn**. App lưu lần lượt từng dòng (một dòng lỗi **không chặn** các dòng còn lại) và tự đánh số **Lần đo** tăng dần theo đúng nhóm Trạm + Thiết bị + Pha.
 
 > Trình duyệt Firefox không lọc theo thư mục được (nút "Chọn cả thư mục" chỉ mở hộp chọn file thường). Nên dùng Chrome/Edge.
+
+**Tab Lý-Hóa dầu** (MBA/Kháng dầu) có khung **Nhập BBTN** giống hệt: ô trái đọc 1 BBTN (PDF/Word) vào form, ô phải nhận **nhiều BBTN (PDF/Word) hoặc cả thư mục**. Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có) và được lưu đúng như khi chọn từng file rồi bấm **"Đánh giá & Lưu cả biên bản"**. Trạm/Thiết bị lấy theo form nếu đã nhập (dùng chung cả đợt), để trống thì theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ tiêu đọc riêng từng file. Bảng xem trước báo **Hợp lệ** / **Đã có biên bản thiết bị này cùng ngày** (mặc định không chọn — tick để ghi đè) / **Lỗi**; sửa Ngày ở từng dòng nếu cần, rồi bấm **Lưu các biên bản đã chọn**.
 
 ---
 
@@ -322,9 +324,11 @@ Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: **Nhập BB
 
 Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) hoặc Bảng 58 (dầu mới lắp). Điểm lấy mẫu: *Điểm cuối trung tính* (3 pha dùng chung) hoặc *Pha riêng*.
 
-### 9.3. Dầu TI / TU
+### 9.3. Dầu TI / TU / Sứ xuyên
 
-**QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU** (chỉ dẫn chiếu "theo quy định nhà sản xuất"). Vì vậy:
+Chọn **Loại thiết bị** là TI, TU hoặc **Sứ xuyên (Bushing)** — cả 3 dùng chung khối nhập dầu này.
+
+**QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU/Sứ xuyên** (chỉ dẫn chiếu "theo quy định nhà sản xuất"). Vì vậy:
 
 - Bạn **bắt buộc phải chọn một Nhà sản xuất** đã được cấu hình đủ tiêu chuẩn **2 tầng (Bình thường / Loại bỏ)** ở mục **Quản trị → Cấu hình → Tiêu chuẩn**.
 - Nếu chưa chọn hoặc hãng chưa có cấu hình, app **chặn lưu** và báo rõ lý do; hãy nhờ Admin cấu hình.
@@ -332,9 +336,11 @@ Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) 
 
 #### BBTN dầu 3 pha (A, B, C chung một biên bản)
 
-Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.
+Khối này nằm đầu phần TI/TU/Sứ xuyên, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.
 
-1. **Có file PDF:** kéo thả vào ô tải file. Giao diện tự động mở **Khung hiển thị Biên bản đối chiếu song song** bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm **Đánh giá & Lưu 3 pha**. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
+Ở tab con **Nhập BBTN cũ**, khung **"Nhập BBTN dầu 3 pha"** trên cùng có 2 ô ngang hàng, cùng kích thước (giống dầu MBA và tab Khí hòa tan): ô trái đọc **một BBTN** vào form để đối chiếu; ô phải nhận **nhiều BBTN (PDF) hoặc cả thư mục** — mỗi file được lưu đúng như bấm **Đánh giá & Lưu 3 pha** (Trạm / Vị trí lắp đặt lấy theo form nếu đã nhập, Nhà sản xuất tự khớp theo hãng ghi trên biên bản), bảng xem trước báo Hợp lệ / Đã có biên bản cùng ngày (tick để ghi đè) / Lỗi.
+
+1. **Có file PDF:** kéo thả vào ô trái của khung Nhập BBTN dầu 3 pha. Giao diện tự động mở **Khung hiển thị Biên bản đối chiếu song song** bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm **Đánh giá & Lưu 3 pha**. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.
 2. **Nhập tay:** điền thông tin chung và bảng kết quả theo từng pha. Pha nào không thí nghiệm thì để trống.
 3. Chọn **Nhà sản xuất áp tiêu chuẩn** (app tự chọn nếu tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm **Đánh giá & Lưu 3 pha**.
 
@@ -348,7 +354,7 @@ Muốn xem hoặc xuất lại biên bản cũ: ở bảng lịch sử, bấm **
 
 ### 9.4. Sứ xuyên (Bushing)
 
-Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab **Khí hòa tan** (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).
+Thí nghiệm dầu sứ xuyên nhập ở khối **TI / TU / Sứ xuyên** (mục 9.3): đánh giá theo **tiêu chuẩn nhà sản xuất** (cấu hình tiêu chuẩn dầu với loại thiết bị "Sứ xuyên (Bushing)" ở **Quản trị → Cấu hình → Tiêu chuẩn**). Bảng tham chiếu IEC 60422:2024 Bảng 7 chỉ dành cho máy biến dòng/biến điện áp nên **không áp dụng** cho sứ xuyên. Khí hòa tan của sứ xuyên vẫn nhập ở tab **Khí hòa tan** (IEC 60599 Bảng A.10).
 
 ---
 

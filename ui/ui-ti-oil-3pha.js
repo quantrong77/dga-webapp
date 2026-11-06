@@ -110,8 +110,8 @@ function tio3EquipmentType() {
   return $("dau_equipmenttype").value;
 }
 
-function tio3ManufacturerNames() {
-  const type = tio3EquipmentType();
+function tio3ManufacturerNames(forType) {
+  const type = forType || tio3EquipmentType();
   return Array.from(new Set(
     _allStandards
       .filter((s) => isOilStandardRecord(s) && (s.equipment_type || s.equipmentType) === type)
@@ -217,6 +217,14 @@ function tio3FindExisting(rec) {
 }
 
 async function onTio3Analyze() {
+  return tio3AnalyzeAndSave({});
+}
+
+/** Đánh giá + lưu BBTN 3 pha đang ở form. opts.file: file đính kèm (mặc định file đang chọn ở #t3_file);
+ *  opts.batch: nhập hàng loạt (ui-oil-batch-import.js) — không hỏi "Ghi đè?" (người dùng đã tick chọn).
+ *  Trả về true khi đã lưu. */
+async function tio3AnalyzeAndSave(opts) {
+  opts = opts || {};
   const form = tio3ReadForm();
   const hasData = OilBbtn.PHASES.some((ph) => OilBbtn.ITEMS.some((k) => form.phases[ph][k] !== null));
   if (!form.thietBi || !form.ngayLayMau) {
@@ -228,7 +236,7 @@ async function onTio3Analyze() {
     return;
   }
   if (!form.manufacturer) {
-    notifyError("QĐ1901 Điều 10/11 không có bảng số mặc định cho dầu TI/TU — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\".");
+    notifyError("QĐ1901 không có bảng số mặc định cho dầu TI/TU/Sứ xuyên (theo quy định nhà sản xuất) — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\".");
     return;
   }
   const negativeCheck = [];
@@ -257,9 +265,9 @@ async function onTio3Analyze() {
     rec.bbtn_name = existing.bbtn_name;
     if (!loaded) toOverwrite.push(rec.phase);
   });
-  if (toOverwrite.length && !confirm(`Đã có số liệu pha ${toOverwrite.join(", ")} của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
+  if (toOverwrite.length && !opts.batch && !confirm(`Đã có số liệu pha ${toOverwrite.join(", ")} của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
 
-  const file = $("t3_file").files && $("t3_file").files[0];
+  const file = "file" in opts ? opts.file : ($("t3_file").files && $("t3_file").files[0]);
   const btn = $("btnT3Analyze");
   btn.disabled = true;
   try {
@@ -290,6 +298,7 @@ async function onTio3Analyze() {
     _tio3LoadedRecords = _allTioOilTests.filter((r) => r.bbtn_group_id === groupId);
     $("t3EditingNote").classList.remove("hidden");
     showToast(`Đã lưu ${saved.length} bản ghi: pha ${saved.join(", ")}.`);
+    return true;
   } finally {
     btn.disabled = false;
   }

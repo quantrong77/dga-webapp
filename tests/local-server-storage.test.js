@@ -241,3 +241,12 @@ describe("3. API Endpoints & File Uploads (server/api.js)", () => {
     expect(found.created_by).toBe("admin@ptc3.evnnpt.vn");
   });
 });
+
+describe("Cô lập dữ liệu test", () => {
+  test("database của test nằm trong thư mục tạm riêng, không phải data/ của dự án", () => {
+    const path = require("path");
+    const projectData = path.resolve(__dirname, "..", "data");
+    expect(path.resolve(DATA_DIR)).not.toBe(projectData);
+    expect(path.resolve(DATA_DIR)).toBe(path.resolve(process.env.DGA_DATA_DIR));
+  });
+});

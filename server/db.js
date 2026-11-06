@@ -5,7 +5,9 @@
 const fs = require("fs");
 const path = require("path");
 
-const DATA_DIR = path.resolve(__dirname, "..", "data");
+// Thư mục dữ liệu: mặc định ./data của dự án; đặt biến môi trường DGA_DATA_DIR để dùng thư mục khác — bộ test
+// (tests/setup-test-env.js) dùng thư mục tạm riêng cho từng file test, KHÔNG ghi vào database thật.
+const DATA_DIR = process.env.DGA_DATA_DIR ? path.resolve(process.env.DGA_DATA_DIR) : path.resolve(__dirname, "..", "data");
 const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
 const DB_FILE = path.join(DATA_DIR, "database.json");
 

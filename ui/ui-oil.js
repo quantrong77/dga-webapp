@@ -331,7 +331,7 @@ async function onAnalyzeOil() {
   if (!canSaveEntry()) return;
   if (overwrite.length) {
     const what = overwrite.some((r) => r.phase) ? `của ${overwrite.map((r) => "pha " + r.phase).join(", ")} ` : "";
-    if (!confirm(`Đã có thí nghiệm dầu ${what}của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
+    if ((typeof _oilBatchSaving === "undefined" || !_oilBatchSaving) && !confirm(`Đã có thí nghiệm dầu ${what}của thiết bị này cùng ngày lấy mẫu. Ghi đè bằng số liệu mới?`)) return;
   }
   const wasEditing = Object.keys(_editingOilRecords).length > 0;
   const file = oilBbtnPendingFile();
@@ -684,6 +684,7 @@ async function onSaveOilBbtnAll() {
     oilBbtnClearImport();
     showToast("Đã lưu cả biên bản (thùng dầu chính và OLTC).");
   }
+  return ok && (hasMain || hasOltc); // nhập hàng loạt (ui-oil-batch-import.js) cần biết đã lưu được chưa
 }
 
 // ---------------------------------------------------------------------

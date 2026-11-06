@@ -98,6 +98,7 @@ function oilBbtnGuessEquipment(site) {
   const s = oilBbtnFold(site).trim().toUpperCase();
   if (/^(TI|CT)\b/.test(s)) return "TI (biến dòng điện)";
   if (/^(TU|CVT|VT)\b/.test(s)) return "TU (biến điện áp)";
+  if (/^(SU XUYEN|SU DAU VAO|BUSHING)\b/.test(s)) return "Sứ xuyên (Bushing)";
   return null;
 }
 

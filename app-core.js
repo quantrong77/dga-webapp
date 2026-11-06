@@ -406,7 +406,7 @@ async function initApp() {
     getOptions: () => {
       const byName = new Map();
       _allMeasurements.forEach((r) => {
-        if (r.equipment_type !== DGA.EQUIPMENT_TYPES.TI && r.equipment_type !== DGA.EQUIPMENT_TYPES.TU) return;
+        if (![DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING].includes(r.equipment_type)) return;
         const name = (r.thiet_bi || "").trim();
         if (!name || byName.has(name)) return;
         byName.set(name, r.tram || "");
@@ -489,6 +489,7 @@ async function initApp() {
   $("o_voltage_class").addEventListener("change", toggleOilMembraneField);
   $("o_samplepoint").addEventListener("change", toggleOilPhaseField);
   setupOilBbtnImport();
+  if (typeof setupOilBatchImport === "function") setupOilBatchImport();
   if (typeof setupOilBbtnExport === "function") setupOilBbtnExport();
   $("btnAnalyzeOltcOil").addEventListener("click", onAnalyzeOltcOil);
   $("btnClearOltcOilForm").addEventListener("click", clearOltcOilForm);
@@ -829,7 +830,8 @@ function toggleDauEquipmentType() {
   if (!select) return;
   const value = select.value;
   const isMba = value === DGA.EQUIPMENT_TYPES.MBA;
-  const isInstrument = value === DGA.EQUIPMENT_TYPES.TI || value === DGA.EQUIPMENT_TYPES.TU;
+  // Sứ xuyên dùng chung khối dầu TI/TU: cùng kiểu đánh giá theo tiêu chuẩn nhà sản xuất (2 mức Bình thường/Loại bỏ)
+  const isInstrument = value === DGA.EQUIPMENT_TYPES.TI || value === DGA.EQUIPMENT_TYPES.TU || value === DGA.EQUIPMENT_TYPES.BUSHING;
 
   $("dauMbaWrap").classList.toggle("hidden", !isMba);
   $("dauInstrumentWrap").classList.toggle("hidden", !isInstrument);

@@ -25,6 +25,7 @@ let _editingTioOilBbtnFields = {};
 let _allTioOilTests = [];
 
 function tioEquipmentTypeShort(equipmentType) {
+  if (equipmentType === DGA.EQUIPMENT_TYPES.BUSHING) return "Sứ xuyên";
   return equipmentType === DGA.EQUIPMENT_TYPES.TU ? "TU" : "TI";
 }
 
@@ -115,7 +116,7 @@ async function onAnalyzeTioOil() {
     return;
   }
   if (!manufacturer) {
-    notifyError("QĐ1901 Điều 10/11 không có bảng số mặc định cho dầu TI/TU — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" trước.");
+    notifyError("QĐ1901 không có bảng số mặc định cho dầu TI/TU/Sứ xuyên (theo quy định nhà sản xuất) — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" trước.");
     return;
   }
   if (alertIfNegative([
@@ -135,11 +136,17 @@ async function onAnalyzeTioOil() {
 
   // Tham khảo SONG SONG — IEC 60422:2024 Bảng 7 (Category D/E) — xem dga-logic-
   // iec60422-2024.js. KHÔNG ảnh hưởng evalResult/việc lưu ở trên, chỉ hiển thị thêm.
-  const iecResult = DGA.evaluateIec60422TituOilTest({
-    umKv: tioOilTest.um_kv, moisture: tioOilTest.moisture_ppm,
-    tgd90: tioOilTest.tgd_90c_percent, bdv: tioOilTest.bdv_kv,
-  });
-  renderTioIec60422Results(iecResult);
+  // IEC 60422:2024 Bảng 7 chỉ phân loại máy biến dòng/biến điện áp (Category D/E) — KHÔNG áp cho sứ xuyên
+  // (không tự suy diễn ngưỡng): sứ xuyên chỉ đánh giá theo tiêu chuẩn nhà sản xuất ở trên.
+  if (equipmentType === DGA.EQUIPMENT_TYPES.BUSHING) {
+    $("tioIec60422Panel").classList.add("hidden");
+  } else {
+    const iecResult = DGA.evaluateIec60422TituOilTest({
+      umKv: tioOilTest.um_kv, moisture: tioOilTest.moisture_ppm,
+      tgd90: tioOilTest.tgd_90c_percent, bdv: tioOilTest.bdv_kv,
+    });
+    renderTioIec60422Results(iecResult);
+  }
 
   if (!canSaveEntry()) return;
   const wasEditing = !!_editingTioOilTestId;

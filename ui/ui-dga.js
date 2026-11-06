@@ -1,4 +1,4 @@
-/* ui-dga.js — Tab "DGA": form "1. Thông tin lần đo" (đính kèm BBTN, tự động điền
+/* ui-dga.js — Tab "DGA": form "Thí nghiệm khí hòa tan trong dầu cách điện" (đính kèm BBTN, tự động điền
    từ bbtn-import.js), phân tích & lưu (onAnalyze), hiển thị kết quả (renderResults),
    và vẽ Tam giác Duval. Tách từ app.js — xem ui-auth.js đầu file đó để biết quy ước
    chia sẻ scope giữa các file ui-*.js. */
@@ -343,7 +343,7 @@ async function viewBbtn(att) {
   }
 }
 
-/** Khi người dùng CHỌN file BBTN (PDF) ở form "1. Thông tin lần đo" — thử đọc PDF
+/** Khi người dùng CHỌN file BBTN (PDF) ở form "Thí nghiệm khí hòa tan trong dầu cách điện" — thử đọc PDF
  *  ngay trong trình duyệt (bbtn-import.js, KHÔNG gửi file lên server nào để "đọc")
  *  và tự động điền Trạm/Thiết bị/Loại thiết bị/Pha/Ngày lấy mẫu/Nhà sản xuất/hàm
  *  lượng khí nếu nhận diện được — đỡ phải gõ tay lại khi nhập bổ sung các lần đo

@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v26-devicespecs") {
+          if (k !== "dga-offline-v29-batchfix") {
             caches.delete(k);
           }
         });
@@ -354,12 +354,97 @@
       <p class="note input-subtab-hint mode-lap">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
-      <!-- Bố cục chia đôi (Split layout): cột trái là form nhập liệu, cột phải là khung hiển thị BBTN (PDF)
-           để đối chiếu số liệu song song khi kéo thả/chọn file BBTN trước khi lưu và đánh giá -->
-      <div class="dga-input-split-layout" id="dgaInputSplitLayout">
-        <div class="dga-input-main-col">
-          <div class="panel">
-            <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thông tin lần đo</h2>
+      <!-- ===================== NHẬP HÀNG LOẠT NHIỀU BBTN (PDF) =====================
+           Dùng khi có nhiều Biên bản thí nghiệm LỊCH SỬ của CÙNG 1 thiết bị để chung 1
+           thư mục (ví dụ nhiều năm đo) — chọn nhiều file/cả thư mục 1 lần, xem lại rồi
+           lưu thẳng vào Lịch sử đo, không phải lặp lại "chọn file -> Phân tích & Lưu"
+           từng file một qua form bên dưới. Dùng ĐÚNG Trạm/Thiết bị/Loại thiết bị/Ngăn
+           OLTC/Nhà sản xuất đang chọn Ở FORM BÊN DƯỚI cho TẤT CẢ file trong đợt —
+           chỉ Pha/Ngày lấy mẫu/hàm lượng khí đọc riêng từng file (xem bbtn-batch-import.js). -->
+      <!-- Khung "Nhập BBTN" (tab con Nhập BBTN cũ): 2 ô kéo thả NGANG HÀNG, rộng/cao bằng nhau (.bbtn-import-grid,
+           style-components.css) — trái: 1 BBTN (đọc vào form để đối chiếu rồi lưu); phải: nhiều BBTN / cả thư mục. -->
+      <div class="panel mode-import bbtn-import-panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN</h2>
+        <div class="bbtn-import-grid">
+          <div class="bbtn-import-title bbtn-import-t1"><svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Một BBTN (PDF) — đọc vào form để đối chiếu rồi lưu</div>
+          <div class="bbtn-import-title bbtn-import-t2"><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị</div>
+          <!-- Ô kéo-thả: input file THẬT phủ toàn bộ (opacity:0) để bấm vào bất kỳ
+               đâu trong khung đều mở được hộp thoại chọn file như trước (không cần
+               thêm JS cho việc này) — 3 sự kiện dragenter/dragover/dragleave + drop
+               gắn ở khung ngoài để đổi viền/nền khi kéo file qua và xử lý khi thả,
+               xem setupBbtnDropzone() ở app-core.js. -->
+          <div class="file-dropzone bbtn-import-z1" id="bbtnDropzone" tabindex="0" role="button" aria-label="Kéo thả file PDF vào đây, hoặc bấm để chọn file">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="bbtnDropzoneText">Kéo thả file PDF vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
+            <input id="f_bbtn" type="file" accept="application/pdf,.pdf" />
+          </div>
+          <div class="file-dropzone bbtn-import-z2" id="batchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file PDF vào đây (chọn hết trong thư mục rồi kéo vào), hoặc bấm để chọn nhiều file">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="batchDropzoneText">Kéo thả nhiều file PDF vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
+            <input id="batchFiles" type="file" accept="application/pdf,.pdf" multiple />
+          </div>
+          <div class="bbtn-import-extra bbtn-import-x1">
+            <div class="bbtn-current hidden" id="bbtnCurrentWrap">
+              <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+              <span id="bbtnCurrentName">—</span>
+              <button type="button" class="btn ghost" id="btnViewBbtn" style="padding:3px 9px; font-size:11.5px;">Xem BBTN đã lưu</button>
+              <button type="button" class="btn ghost" id="btnRemoveBbtn" style="padding:3px 9px; font-size:11.5px;" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
+            </div>
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="button" class="btn ghost hidden" id="btnToggleBbtnPreview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+                <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                <span id="btnToggleBbtnPreviewText">Hiện BBTN đối chiếu</span>
+              </button>
+            </div>
+            <p class="note hidden" id="bbtnImportNote"></p>
+          </div>
+          <div class="bbtn-import-extra bbtn-import-x2">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+              <button type="button" class="btn ghost" id="btnBatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
+                <input type="checkbox" id="batchAttachPdf" checked /> Đính kèm PDF gốc vào từng lần đo
+              </label>
+            </div>
+          </div>
+        </div>
+        <p class="note" style="margin-top:12px;">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
+          đang chọn ở form "Thí nghiệm khí hòa tan trong dầu cách điện" bên dưới cho TẤT CẢ file — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
+          được đọc riêng từng file PDF. Phù hợp khi nhập bổ sung nhiều lần đo lịch sử để phân tích xu hướng (tab "Xu hướng").</p>
+
+        <!-- input[webkitdirectory] ẩn — kích hoạt qua btnBatchChooseFolder, xem app-core.js.
+             Thuộc tính không chuẩn (chỉ Chrome/Edge/Safari) nhưng đây là công cụ nội bộ,
+             chấp nhận được; Firefox sẽ mở hộp thoại chọn file thường (vẫn dùng được, chỉ
+             không lọc theo thư mục). -->
+        <input id="batchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
+        <p class="note hidden" id="batchSkippedNote"></p>
+
+        <div id="batchPreviewWrap" class="hidden" style="margin-top:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="batchSummaryText">—</div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn ghost" id="btnBatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
+              <button type="button" class="btn ghost" id="btnBatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
+            </div>
+          </div>
+          <div class="table-scroll" style="margin-top:8px;"><table>
+            <thead><tr><th></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
+            <tbody id="batchTable"></tbody>
+          </table></div>
+          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <button type="button" class="btn primary" id="btnBatchSave">Lưu các lần đo đã chọn</button>
+            <!-- Sắp xếp lại "Lần đo" của ĐÚNG thiết bị đang chọn ở form phía trên (Trạm+
+                 Thiết bị, cả 3 Pha) theo đúng thứ tự thời gian — dùng khi BBTN vừa nhập có
+                 ngày CŨ HƠN các lần đo đã lưu từ trước (xem onBatchRenumber(),
+                 bbtn-batch-import.js). Không phụ thuộc bảng preview — bấm được bất kể đã
+                 "Lưu hàng loạt" hay chưa. -->
+            <button type="button" class="btn ghost" id="btnBatchRenumber" style="padding:7px 14px;" title="Quét lại toàn bộ Lịch sử đo của thiết bị đang chọn và sắp xếp lại &quot;Lần đo&quot; cho đúng thứ tự thời gian (Ngày lấy mẫu)">Sắp xếp lại Lần đo...</button>
+            <span class="note" id="batchProgressText" style="margin:0;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab con "Lập BBTN": tiện ích chỉ lấy thông số kỹ thuật từ file — cùng VỊ TRÍ với khung "Nhập BBTN" ở trên. -->
+      <div class="panel mode-lap spec-import-panel">
         <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
              không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
         <div class="file-dropzone spec-dropzone mode-lap" id="fSpecDropzone">
@@ -369,6 +454,14 @@
         </div>
         <p class="note spec-note mode-lap hidden" id="f_specNote" role="status"></p>
         <p class="note attach-note mode-lap hidden" id="f_attachNote"></p>
+      </div>
+
+      <!-- Bố cục chia đôi (Split layout): cột trái là form nhập liệu, cột phải là khung hiển thị BBTN (PDF)
+           để đối chiếu số liệu song song khi kéo thả/chọn file BBTN trước khi lưu và đánh giá -->
+      <div class="dga-input-split-layout" id="dgaInputSplitLayout">
+        <div class="dga-input-main-col">
+          <div class="panel">
+            <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thí nghiệm khí hòa tan trong dầu cách điện</h2>
         <!-- Đang nạp Trạm/Thiết bị từ database (ẩn khi setComboLoading(false), xem
              app-core.js) — tránh cảm giác app bị đứng khi bấm mở gợi ý mà danh sách
              còn rỗng lúc mới vào app. -->
@@ -413,31 +506,6 @@
           </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="f_ghichu" type="text" placeholder="(không bắt buộc)" />
-          </label>
-          <label class="field field-wide mode-import"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Biên bản thí nghiệm (PDF, tùy chọn)
-            <!-- Ô kéo-thả: input file THẬT phủ toàn bộ (opacity:0) để bấm vào bất kỳ
-                 đâu trong khung đều mở được hộp thoại chọn file như trước (không cần
-                 thêm JS cho việc này) — 3 sự kiện dragenter/dragover/dragleave + drop
-                 gắn ở khung ngoài để đổi viền/nền khi kéo file qua và xử lý khi thả,
-                 xem setupBbtnDropzone() ở app-core.js. -->
-            <div class="file-dropzone" id="bbtnDropzone" tabindex="0" role="button" aria-label="Kéo thả file PDF vào đây, hoặc bấm để chọn file">
-              <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-              <span class="file-dropzone-text" id="bbtnDropzoneText">Kéo thả file PDF vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-              <input id="f_bbtn" type="file" accept="application/pdf,.pdf" />
-            </div>
-            <div class="bbtn-current hidden" id="bbtnCurrentWrap">
-              <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
-              <span id="bbtnCurrentName">—</span>
-              <button type="button" class="btn ghost" id="btnViewBbtn" style="padding:3px 9px; font-size:11.5px;">Xem BBTN đã lưu</button>
-              <button type="button" class="btn ghost" id="btnRemoveBbtn" style="padding:3px 9px; font-size:11.5px;" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
-            </div>
-            <div class="mode-import" style="display:flex; justify-content:flex-end; margin-top:4px;">
-              <button type="button" class="btn ghost hidden" id="btnToggleBbtnPreview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
-                <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
-                <span id="btnToggleBbtnPreviewText">Hiện BBTN đối chiếu</span>
-              </button>
-            </div>
-            <p class="note hidden" id="bbtnImportNote"></p>
           </label>
         </div>
 
@@ -602,62 +670,6 @@
       </div>
     </aside>
   </div><!-- /#dgaInputSplitLayout -->
-
-      <!-- ===================== NHẬP HÀNG LOẠT NHIỀU BBTN (PDF) =====================
-           Dùng khi có nhiều Biên bản thí nghiệm LỊCH SỬ của CÙNG 1 thiết bị để chung 1
-           thư mục (ví dụ nhiều năm đo) — chọn nhiều file/cả thư mục 1 lần, xem lại rồi
-           lưu thẳng vào Lịch sử đo, không phải lặp lại "chọn file -> Phân tích & Lưu"
-           từng file một qua form phía trên. Dùng ĐÚNG Trạm/Thiết bị/Loại thiết bị/Ngăn
-           OLTC/Nhà sản xuất đang chọn Ở FORM PHÍA TRÊN cho TẤT CẢ file trong đợt —
-           chỉ Pha/Ngày lấy mẫu/hàm lượng khí đọc riêng từng file (xem bbtn-batch-import.js). -->
-      <div class="panel mode-import">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị</h2>
-        <p class="note" style="margin-top:-6px;">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
-          đang chọn ở form "1. Thông tin lần đo" phía trên cho TẤT CẢ file bên dưới — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
-          được đọc riêng từng file PDF. Phù hợp khi nhập bổ sung nhiều lần đo lịch sử để phân tích xu hướng (tab "Xu hướng").</p>
-
-        <div class="file-dropzone" id="batchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file PDF vào đây (chọn hết trong thư mục rồi kéo vào), hoặc bấm để chọn nhiều file">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-          <span class="file-dropzone-text" id="batchDropzoneText">Kéo thả nhiều file PDF vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
-          <input id="batchFiles" type="file" accept="application/pdf,.pdf" multiple />
-        </div>
-        <div style="margin-top:10px; display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
-          <button type="button" class="btn ghost" id="btnBatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
-          <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
-            <input type="checkbox" id="batchAttachPdf" checked /> Đính kèm PDF gốc vào từng lần đo
-          </label>
-        </div>
-        <!-- input[webkitdirectory] ẩn — kích hoạt qua btnBatchChooseFolder, xem app-core.js.
-             Thuộc tính không chuẩn (chỉ Chrome/Edge/Safari) nhưng đây là công cụ nội bộ,
-             chấp nhận được; Firefox sẽ mở hộp thoại chọn file thường (vẫn dùng được, chỉ
-             không lọc theo thư mục). -->
-        <input id="batchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
-        <p class="note hidden" id="batchSkippedNote"></p>
-
-        <div id="batchPreviewWrap" class="hidden" style="margin-top:16px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="batchSummaryText">—</div>
-            <div style="display:flex; gap:8px;">
-              <button type="button" class="btn ghost" id="btnBatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
-              <button type="button" class="btn ghost" id="btnBatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
-            </div>
-          </div>
-          <div class="table-scroll" style="margin-top:8px;"><table>
-            <thead><tr><th></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
-            <tbody id="batchTable"></tbody>
-          </table></div>
-          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-            <button type="button" class="btn primary" id="btnBatchSave">Lưu các lần đo đã chọn</button>
-            <!-- Sắp xếp lại "Lần đo" của ĐÚNG thiết bị đang chọn ở form phía trên (Trạm+
-                 Thiết bị, cả 3 Pha) theo đúng thứ tự thời gian — dùng khi BBTN vừa nhập có
-                 ngày CŨ HƠN các lần đo đã lưu từ trước (xem onBatchRenumber(),
-                 bbtn-batch-import.js). Không phụ thuộc bảng preview — bấm được bất kể đã
-                 "Lưu hàng loạt" hay chưa. -->
-            <button type="button" class="btn ghost" id="btnBatchRenumber" style="padding:7px 14px;" title="Quét lại toàn bộ Lịch sử đo của thiết bị đang chọn và sắp xếp lại &quot;Lần đo&quot; cho đúng thứ tự thời gian (Ngày lấy mẫu)">Sắp xếp lại Lần đo...</button>
-            <span class="note" id="batchProgressText" style="margin:0;"></span>
-          </div>
-        </div>
-      </div>
 
       <div class="panel hidden" id="resultsPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -2139,9 +2151,85 @@
 
       <p class="note hidden" id="dauNoOilSupportNote">Tab "Lý-Hóa dầu" hiện chưa hỗ trợ
         nhập thí nghiệm dầu cho loại thiết bị này — vui lòng dùng tab "Khí hòa tan" để nhập kết
-        quả khí hòa tan (áp dụng được cho mọi loại thiết bị, kể cả Sứ xuyên/Khác).</p>
+        quả khí hòa tan (áp dụng được cho mọi loại thiết bị).</p>
 
       <div id="dauMbaWrap">
+      <!-- Khung "Nhập BBTN" (tab con Nhập BBTN cũ): 2 ô kéo thả NGANG HÀNG, rộng/cao bằng nhau (.bbtn-import-grid,
+           style-components.css) — trái: 1 BBTN (đọc vào form để đối chiếu rồi lưu); phải: nhiều BBTN / cả thư mục. -->
+      <div class="panel mode-import bbtn-import-panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN</h2>
+        <div class="bbtn-import-grid">
+          <div class="bbtn-import-title bbtn-import-t1"><svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Một BBTN (PDF / Word) — đọc vào form để đối chiếu rồi lưu</div>
+          <div class="bbtn-import-title bbtn-import-t2"><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhiều BBTN (PDF / Word) hoặc cả thư mục</div>
+          <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem bbtn/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
+          <div class="file-dropzone bbtn-import-z1" id="oDropzone">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
+            <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          </div>
+          <div class="file-dropzone bbtn-import-z2" id="oBatchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file BBTN dầu (PDF/Word) vào đây, hoặc bấm để chọn nhiều file">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="oBatchDropzoneText">Kéo thả nhiều file BBTN dầu MBA (PDF / Word .docx) vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
+            <input id="oBatchFiles" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
+          </div>
+          <div class="bbtn-import-extra bbtn-import-x1">
+            <p class="note hidden" id="oImportNote" role="status"></p>
+            <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button>
+              <button type="button" class="btn ghost hidden mode-import" id="btnToggleOilPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+                <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
+                <span id="btnToggleOilPreviewText">Hiện BBTN đối chiếu</span>
+              </button>
+            </div>
+          </div>
+          <div class="bbtn-import-extra bbtn-import-x2">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+              <button type="button" class="btn ghost" id="oBatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
+                <input type="checkbox" id="oBatchAttach" checked /> Đính kèm file gốc vào từng biên bản
+              </label>
+            </div>
+          </div>
+        </div>
+        <p class="note" style="margin-top:12px;">Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
+          chọn từng file rồi bấm "Đánh giá &amp; Lưu cả biên bản". <strong>Trạm / Thiết bị</strong> lấy theo form bên dưới nếu đã
+          nhập (dùng chung cho cả đợt), để trống thì lấy theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ
+          tiêu đọc riêng từng file. Phù hợp khi nhập bổ sung nhiều BBTN lịch sử để theo dõi xu hướng.</p>
+        <!-- webkitdirectory: chọn cả thư mục (Chrome/Edge/Safari) — xem createOilBatch(), ui/ui-oil-batch-import.js -->
+        <input id="oBatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
+        <p class="note hidden" id="oBatchSkippedNote"></p>
+        <div id="oBatchPreviewWrap" class="hidden" style="margin-top:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="oBatchSummaryText">—</div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn ghost" id="oBatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
+              <button type="button" class="btn ghost" id="oBatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
+            </div>
+          </div>
+          <div class="table-scroll" style="margin-top:8px;"><table>
+            <thead><tr><th></th><th>File</th><th>Trạm</th><th>Thiết bị</th><th>Ngày lấy mẫu</th><th>Thùng dầu chính</th><th>OLTC</th><th>Trạng thái</th></tr></thead>
+            <tbody id="oBatchTable"></tbody>
+          </table></div>
+          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <button type="button" class="btn primary" id="oBatchSave">Lưu các biên bản đã chọn</button>
+            <span class="note" id="oBatchProgressText" style="margin:0;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel mode-lap spec-import-panel">
+        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
+             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+        <div class="file-dropzone spec-dropzone mode-lap" id="oSpecDropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="oSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> máy biến áp từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
+          <input id="o_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        </div>
+        <p class="note spec-note mode-lap hidden" id="o_specNote" role="status"></p>
+        <p class="note attach-note mode-lap hidden" id="o_attachNote"></p>
+      </div>
+
   <div class="dga-input-split-layout" id="oSplitLayout">
     <div class="dga-input-main-col">
       <div class="panel">
@@ -2154,30 +2242,6 @@
           (Bảng 3 dầu mới / Bảng 5 dầu vận hành, gồm cả các chỉ tiêu QĐ1901 không quy định: sức căng bề mặt, PCB, lưu
           huỳnh ăn mòn, cặn/bùn, chất ức chế...). Chỉ nhập những chỉ tiêu có trong biên bản.</p>
 
-        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
-             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
-        <div class="file-dropzone spec-dropzone mode-lap" id="oSpecDropzone">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-          <span class="file-dropzone-text" id="oSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> máy biến áp từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
-          <input id="o_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-        </div>
-        <p class="note spec-note mode-lap hidden" id="o_specNote" role="status"></p>
-        <p class="note attach-note mode-lap hidden" id="o_attachNote"></p>
-        <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem bbtn/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
-        <div class="file-dropzone mode-import" id="oDropzone">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-          <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-          <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-        </div>
-        <p class="note hidden mode-import" id="oImportNote" role="status"></p>
-        <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
-        <div style="margin:-4px 0 10px; display:flex; gap:10px; flex-wrap:wrap;">
-          <button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button>
-          <button type="button" class="btn ghost hidden mode-import" id="btnToggleOilPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
-            <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
-            <span id="btnToggleOilPreviewText">Hiện BBTN đối chiếu</span>
-          </button>
-        </div>
 
         <div class="loading-hint combo-loading-hint hidden" id="oilComboLoadingHint">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
@@ -2502,35 +2566,86 @@
 
       <!-- ============== DẦU CÁCH ĐIỆN TI/TU — Điều 10/11 QĐ1901 (theo NSX) ============== -->
       <div id="dauInstrumentWrap">
+      <!-- Khung "Nhập BBTN" cho BBTN dầu 3 pha TI/TU/Sứ xuyên — cùng bố cục với khung của dầu MBA ở trên (.bbtn-import-grid):
+           trái 1 BBTN (đọc vào form "BBTN dầu 3 pha" để đối chiếu), phải nhiều BBTN / cả thư mục (createOilBatch "t3"). -->
+      <div class="panel mode-import bbtn-import-panel">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN dầu 3 pha</h2>
+        <div class="bbtn-import-grid">
+          <div class="bbtn-import-title bbtn-import-t1"><svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Một BBTN (PDF) — đọc vào form để đối chiếu rồi lưu</div>
+          <div class="bbtn-import-title bbtn-import-t2"><svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhiều BBTN (PDF) hoặc cả thư mục</div>
+          <div class="file-dropzone bbtn-import-z1" id="t3Dropzone">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN dầu 3 pha (A, B, C) vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
+            <input id="t3_file" type="file" accept="application/pdf,.pdf" />
+          </div>
+          <div class="file-dropzone bbtn-import-z2" id="t3BatchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file PDF BBTN dầu 3 pha vào đây, hoặc bấm để chọn nhiều file">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+            <span class="file-dropzone-text" id="t3BatchDropzoneText">Kéo thả nhiều file PDF BBTN dầu 3 pha vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
+            <input id="t3BatchFiles" type="file" accept="application/pdf,.pdf" multiple />
+          </div>
+          <div class="bbtn-import-extra bbtn-import-x1">
+            <div style="display:flex; justify-content:flex-end;">
+              <button type="button" class="btn ghost hidden" id="btnToggleT3Preview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+                <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
+                <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
+              </button>
+            </div>
+            <p class="note hidden" id="t3ImportNote" role="status"></p>
+          </div>
+          <div class="bbtn-import-extra bbtn-import-x2">
+            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+              <button type="button" class="btn ghost" id="t3BatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
+              <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
+                <input type="checkbox" id="t3BatchAttach" checked /> Đính kèm PDF gốc vào từng biên bản
+              </label>
+            </div>
+          </div>
+        </div>
+        <p class="note" style="margin-top:12px;">Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
+          "Đánh giá &amp; Lưu 3 pha" (tách 1 bản ghi mỗi pha). <strong>Trạm / Vị trí lắp đặt</strong> lấy theo form bên dưới nếu đã nhập
+          (dùng chung cho cả đợt), để trống thì theo từng biên bản; Nhà sản xuất tự khớp theo hãng ghi trên biên bản, không khớp thì
+          dùng Nhà sản xuất đang chọn ở form.</p>
+        <input id="t3BatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
+        <p class="note hidden" id="t3BatchSkippedNote"></p>
+        <div id="t3BatchPreviewWrap" class="hidden" style="margin-top:16px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="t3BatchSummaryText">—</div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn ghost" id="t3BatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
+              <button type="button" class="btn ghost" id="t3BatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
+            </div>
+          </div>
+          <div class="table-scroll" style="margin-top:8px;"><table>
+            <thead><tr><th></th><th>File</th><th>Trạm</th><th>Vị trí lắp đặt</th><th>Ngày lấy mẫu</th><th>Loại</th><th>Nhà sản xuất</th><th>Số liệu</th><th>Trạng thái</th></tr></thead>
+            <tbody id="t3BatchTable"></tbody>
+          </table></div>
+          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <button type="button" class="btn primary" id="t3BatchSave">Lưu các biên bản đã chọn</button>
+            <span class="note" id="t3BatchProgressText" style="margin:0;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel mode-lap spec-import-panel">
+        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
+             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+        <div class="file-dropzone spec-dropzone mode-lap" id="t3SpecDropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="t3SpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> TI/TU/Sứ xuyên từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
+          <input id="t3_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        </div>
+        <p class="note spec-note mode-lap hidden" id="t3_specNote" role="status"></p>
+        <p class="note attach-note mode-lap hidden" id="t3_attachNote"></p>
+      </div>
+
       <!-- BBTN 3 pha chung 1 biên bản (mẫu PTC3/BM.14) — đọc PDF hoặc nhập tay, tách thành 3 bản ghi
            A/B/C, xuất lại theo template/template-bbtn-dau-3pha.docx. Xem ui/ui-ti-oil-3pha.js. -->
       <div class="dga-input-split-layout" id="t3SplitLayout">
         <div class="dga-input-main-col">
           <div class="panel" id="tio3Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>BBTN dầu 3 pha (A, B, C chung một biên bản)</h2>
-        <p class="note">Tải PDF biên bản để tự điền, hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành 1 bản ghi
-          cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
-        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
-             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
-        <div class="file-dropzone spec-dropzone mode-lap" id="t3SpecDropzone">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-          <span class="file-dropzone-text" id="t3SpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> TI/TU từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
-          <input id="t3_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
-        </div>
-        <p class="note spec-note mode-lap hidden" id="t3_specNote" role="status"></p>
-        <p class="note attach-note mode-lap hidden" id="t3_attachNote"></p>
-        <div class="file-dropzone mode-import" id="t3Dropzone">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
-          <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN 3 pha vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-          <input id="t3_file" type="file" accept="application/pdf,.pdf" />
-        </div>
-        <div class="mode-import" style="display:flex; justify-content:flex-end; margin-top:4px;">
-          <button type="button" class="btn ghost hidden" id="btnToggleT3Preview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
-            <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
-            <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
-          </button>
-        </div>
-        <p class="note hidden mode-import" id="t3ImportNote" role="status"></p>
+        <p class="note">Đọc từ BBTN (khung Nhập BBTN dầu 3 pha ở trên) hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành
+          1 bản ghi cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
         <div class="grid">
           <label class="field">Trạm
             <div class="combo-wrap">
@@ -2615,7 +2730,7 @@
     </aside>
   </div><!-- /#t3SplitLayout -->
       <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU/Sứ xuyên</h2>
         <p class="note">Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
           chọc thủng dầu (kV) — kèm 1 hạng mục tùy chọn tgδ ở 20°C (%) nếu nhà sản xuất có quy định riêng (VD
           Arteche) — áp dụng cho TI/TU kiểu kín, cách điện dầu. QĐ1901 Điều 10 (Bảng 9, mục 12) và Điều 11
@@ -2639,6 +2754,7 @@
             <select id="tio_equipmenttype">
               <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
               <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
             </select>
           </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
@@ -2720,7 +2836,7 @@
       </div>
 
       <div class="panel mode-import">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu TI/TU</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu TI/TU/Sứ xuyên</h2>
         <p class="note" id="tioSavedCaption"></p>
         <div class="table-scroll"><table>
           <thead><tr>
@@ -2982,7 +3098,7 @@
           <p>Hai tab con dùng <strong>chung một form</strong> — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con <strong>Nhập BBTN cũ</strong>.</p>
           <h3>Bước 1 — Chọn loại thiết bị</h3>
           <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — <strong>hãy chọn đúng</strong>.</p>
-          <h3>Bước 2 — Điền "Thông tin lần đo"</h3>
+          <h3>Bước 2 — Điền khối "Thí nghiệm khí hòa tan trong dầu cách điện"</h3>
           <div class="table-scroll"><table>
           <thead>
           <tr>
@@ -3153,7 +3269,7 @@
           <div class="sm-body">
           <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song</h3>
           <ol type="1">
-          <li>Ở tab <strong>Khí hòa tan</strong>, mục <strong>"Biên bản thí nghiệm (PDF, tùy chọn)"</strong>: <strong>kéo thả</strong> file PDF vào khung (đã được tăng chiều cao và có viền sáng focus khi rê chuột), hoặc bấm khung để chọn file.</li>
+          <li>Ở tab <strong>Khí hòa tan</strong>, tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN"</strong> trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái <strong>"Một BBTN (PDF)"</strong> — <strong>kéo thả</strong> file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải <strong>"Nhiều BBTN hoặc cả thư mục"</strong> — xem mục 7.</li>
           <li><strong>Khung hiển thị Biên bản đối chiếu song song (Split View):</strong> Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới): - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc. - Nút <strong>"Mở tab mới"</strong> giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần. - Nút <strong>"✕ Ẩn"</strong> hoặc <strong>"Hiện BBTN đối chiếu"</strong> để đóng hoặc mở lại khung xem bất kỳ lúc nào.</li>
           <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và <strong>7 khí hòa tan</strong>.</li>
           <li><strong>Đối chiếu và xác nhận số liệu:</strong> So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.</li>
@@ -3173,14 +3289,15 @@
           <div class="sm-body">
           <p>Dùng khi cần <strong>nhập bổ sung dữ liệu lịch sử</strong> (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích &amp; Lưu" từng lần.</p>
           <ol type="1">
-          <li><strong>Điền trước</strong> ở form phía trên: <strong>Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất</strong> (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho <strong>tất cả</strong> file trong đợt; riêng <strong>Pha, Ngày lấy mẫu và 7 khí</strong> được đọc riêng từ mỗi file.</li>
-          <li>Ở khối <strong>"Nhập hàng loạt nhiều BBTN (PDF) — cùng 1 thiết bị"</strong>: kéo thả nhiều file PDF vào khung (đã được đồng bộ kích thước tăng chiều cao x1.5 và hiệu ứng viền sáng), hoặc bấm <strong>Chọn cả thư mục…</strong>.</li>
+          <li><strong>Điền trước</strong> ở form "Thí nghiệm khí hòa tan trong dầu cách điện" (bên dưới khung Nhập BBTN): <strong>Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất</strong> (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho <strong>tất cả</strong> file trong đợt; riêng <strong>Pha, Ngày lấy mẫu và 7 khí</strong> được đọc riêng từ mỗi file.</li>
+          <li>Ở ô phải <strong>"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"</strong> của khung <strong>Nhập BBTN</strong> (ngang hàng với ô 1 BBTN): kéo thả nhiều file PDF vào, hoặc bấm <strong>Chọn cả thư mục…</strong>.</li>
           <li>Tick/bỏ tick <strong>"Đính kèm PDF gốc vào từng lần đo"</strong> (mặc định đang tick).</li>
           <li>Xem <strong>bảng xem trước</strong>: mỗi file có một trạng thái: - <strong>Sẵn sàng</strong> — có thể nhập. - <strong>Cảnh báo</strong> — không đọc được Pha, hoặc <strong>trùng Pha + Ngày</strong> với bản ghi đã có/dòng khác trong đợt. - <strong>Lỗi</strong> — không đọc được file hoặc thiếu dữ liệu bắt buộc.</li>
           <li>Sửa tay <strong>Pha / Ngày</strong> ở từng dòng nếu cần; tick chọn từng dòng, hoặc dùng <strong>Chọn tất cả hợp lệ / Bỏ chọn tất cả</strong>.</li>
           <li>Bấm <strong>Lưu các lần đo đã chọn</strong>. App lưu lần lượt từng dòng (một dòng lỗi <strong>không chặn</strong> các dòng còn lại) và tự đánh số <strong>Lần đo</strong> tăng dần theo đúng nhóm Trạm + Thiết bị + Pha.</li>
           </ol>
           <p class="sm-note">Trình duyệt Firefox không lọc theo thư mục được (nút "Chọn cả thư mục" chỉ mở hộp chọn file thường). Nên dùng Chrome/Edge.</p>
+          <p><strong>Tab Lý-Hóa dầu</strong> (MBA/Kháng dầu) có khung <strong>Nhập BBTN</strong> giống hệt: ô trái đọc 1 BBTN (PDF/Word) vào form, ô phải nhận <strong>nhiều BBTN (PDF/Word) hoặc cả thư mục</strong>. Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có) và được lưu đúng như khi chọn từng file rồi bấm <strong>"Đánh giá &amp; Lưu cả biên bản"</strong>. Trạm/Thiết bị lấy theo form nếu đã nhập (dùng chung cả đợt), để trống thì theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ tiêu đọc riêng từng file. Bảng xem trước báo <strong>Hợp lệ</strong> / <strong>Đã có biên bản thiết bị này cùng ngày</strong> (mặc định không chọn — tick để ghi đè) / <strong>Lỗi</strong>; sửa Ngày ở từng dòng nếu cần, rồi bấm <strong>Lưu các biên bản đã chọn</strong>.</p>
 
           </div>
         </details>
@@ -3234,17 +3351,19 @@
           </ul>
           <h3>9.2. Dầu OLTC (bộ đổi nấc có tải)</h3>
           <p>Cùng 3 chỉ tiêu, theo <strong>Điều 37, Bảng 49 QĐ1901</strong> (dầu vận hành) hoặc Bảng 58 (dầu mới lắp). Điểm lấy mẫu: <em>Điểm cuối trung tính</em> (3 pha dùng chung) hoặc <em>Pha riêng</em>.</p>
-          <h3>9.3. Dầu TI / TU</h3>
-          <p><strong>QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU</strong> (chỉ dẫn chiếu "theo quy định nhà sản xuất"). Vì vậy:</p>
+          <h3>9.3. Dầu TI / TU / Sứ xuyên</h3>
+          <p>Chọn <strong>Loại thiết bị</strong> là TI, TU hoặc <strong>Sứ xuyên (Bushing)</strong> — cả 3 dùng chung khối nhập dầu này.</p>
+          <p><strong>QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU/Sứ xuyên</strong> (chỉ dẫn chiếu "theo quy định nhà sản xuất"). Vì vậy:</p>
           <ul class="rec-list">
           <li>Bạn <strong>bắt buộc phải chọn một Nhà sản xuất</strong> đã được cấu hình đủ tiêu chuẩn <strong>2 tầng (Bình thường / Loại bỏ)</strong> ở mục <strong>Quản trị → Cấu hình → Tiêu chuẩn</strong>.</li>
           <li>Nếu chưa chọn hoặc hãng chưa có cấu hình, app <strong>chặn lưu</strong> và báo rõ lý do; hãy nhờ Admin cấu hình.</li>
           <li>Kết quả có 3 mức: <strong>Đạt / Cảnh báo / Không đạt</strong>.</li>
           </ul>
           <h4>BBTN dầu 3 pha (A, B, C chung một biên bản)</h4>
-          <p>Khối này nằm đầu phần TI/TU, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.</p>
+          <p>Khối này nằm đầu phần TI/TU/Sứ xuyên, dùng cho biên bản mẫu PTC3/BM.14 có 3 cột kết quả pha A, B, C.</p>
+          <p>Ở tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN dầu 3 pha"</strong> trên cùng có 2 ô ngang hàng, cùng kích thước (giống dầu MBA và tab Khí hòa tan): ô trái đọc <strong>một BBTN</strong> vào form để đối chiếu; ô phải nhận <strong>nhiều BBTN (PDF) hoặc cả thư mục</strong> — mỗi file được lưu đúng như bấm <strong>Đánh giá &amp; Lưu 3 pha</strong> (Trạm / Vị trí lắp đặt lấy theo form nếu đã nhập, Nhà sản xuất tự khớp theo hãng ghi trên biên bản), bảng xem trước báo Hợp lệ / Đã có biên bản cùng ngày (tick để ghi đè) / Lỗi.</p>
           <ol type="1">
-          <li><strong>Có file PDF:</strong> kéo thả vào ô tải file. Giao diện tự động mở <strong>Khung hiển thị Biên bản đối chiếu song song</strong> bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm <strong>Đánh giá &amp; Lưu 3 pha</strong>. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.</li>
+          <li><strong>Có file PDF:</strong> kéo thả vào ô trái của khung Nhập BBTN dầu 3 pha. Giao diện tự động mở <strong>Khung hiển thị Biên bản đối chiếu song song</strong> bên cạnh bảng số liệu 3 pha. App đọc thông tin chung và số liệu từng pha, rồi điền sẵn vào form. Bạn đối chiếu kết quả 3 pha (A, B, C) với văn bản gốc ngay bên cạnh trước khi bấm <strong>Đánh giá &amp; Lưu 3 pha</strong>. Biên bản dạng ảnh scan được đọc bằng OCR nên cần so kỹ hơn.</li>
           <li><strong>Nhập tay:</strong> điền thông tin chung và bảng kết quả theo từng pha. Pha nào không thí nghiệm thì để trống.</li>
           <li>Chọn <strong>Nhà sản xuất áp tiêu chuẩn</strong> (app tự chọn nếu tên trên biên bản khớp tiêu chuẩn đã cấu hình), rồi bấm <strong>Đánh giá &amp; Lưu 3 pha</strong>.</li>
           </ol>
@@ -3253,7 +3372,7 @@
           <p><strong>Xuất biên bản:</strong> bấm <strong>Xuất BBTN (docx)</strong> để tải file Word theo mẫu, đã điền số liệu, tiêu chuẩn, đánh giá và kết luận. Kết luận do app viết sẵn và sửa được trước khi xuất. Trong Word, bổ sung Phụ lục (tiêu chuẩn nhà sản xuất, số liệu xuất xưởng), số biên bản và ngày ban hành rồi ký.</p>
           <p>Muốn xem hoặc xuất lại biên bản cũ: ở bảng lịch sử, bấm <strong>BBTN 3 pha</strong> trên một dòng bất kỳ của biên bản đó. Các pha nhập lẻ trước đây cũng mở được, gom theo cùng trạm, thiết bị và ngày lấy mẫu.</p>
           <h3>9.4. Sứ xuyên (Bushing)</h3>
-          <p>Không có thí nghiệm dầu. Tab hiển thị ghi chú và hướng bạn dùng tab <strong>Khí hòa tan</strong> (khí hòa tan là phương pháp đánh giá chính cho sứ xuyên kín dầu).</p>
+          <p>Thí nghiệm dầu sứ xuyên nhập ở khối <strong>TI / TU / Sứ xuyên</strong> (mục 9.3): đánh giá theo <strong>tiêu chuẩn nhà sản xuất</strong> (cấu hình tiêu chuẩn dầu với loại thiết bị "Sứ xuyên (Bushing)" ở <strong>Quản trị → Cấu hình → Tiêu chuẩn</strong>). Bảng tham chiếu IEC 60422:2024 Bảng 7 chỉ dành cho máy biến dòng/biến điện áp nên <strong>không áp dụng</strong> cho sứ xuyên. Khí hòa tan của sứ xuyên vẫn nhập ở tab <strong>Khí hòa tan</strong> (IEC 60599 Bảng A.10).</p>
 
           </div>
         </details>
@@ -3961,6 +4080,7 @@
   <script src="ui/ui-oil.js"></script>
   <script src="ui/ui-oltc.js"></script>
   <script src="ui/ui-oil-bbtn-export.js"></script>
+  <script src="ui/ui-oil-batch-import.js"></script>
   <script src="ui/ui-ti-oil.js"></script>
   <script src="ui/ui-ti-oil-3pha.js"></script>
   <script src="ui/ui-history.js"></script>
