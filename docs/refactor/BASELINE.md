@@ -119,3 +119,21 @@ Còn lại (để lần sau, cần test đặc tả riêng từng hàm trước 
 chờ sửa lỗi #5), `mbaOilDocxXmlToHtml` (64), `onAnalyze` (54), `buildRecommendations` (51), `parseMbaOilBbtnLines` (50),
 `handleApiRequest` (50).
 
+
+## 6. Sau Bước 5 (design tokens, Stylelint, chuẩn hóa thành phần)
+
+| Cổng | Sau Bước 4 | Sau Bước 5 |
+|---|---|---|
+| Jest | 671 test | 671 test |
+| ESLint | 0 lỗi / 0 cảnh báo | 0 lỗi / 0 cảnh báo |
+| Stylelint | 0 lỗi / 50 cảnh báo | **0 lỗi / 0 cảnh báo** |
+| CSS | token ở đầu `style-base.css` | `tokens.css` nạp đầu tiên: 82 → 132 token (vai trò màu, bóng có hướng, `--gray-500/700`, `--blue-500`) |
+
+- Màu viết cứng ngoài `tokens.css`: còn bảng màu sơ đồ tư duy (biến cục bộ `--mm-accent`), bóng sơ đồ quy trình
+  (`style-dga-workflow.css`) và vệt sáng trong nút chính.
+- Khoảng cách / cỡ chữ / bo góc: 188 giá trị khớp thang đã dùng token; khoảng 375 giá trị NGOÀI thang (6/10/14px,
+  cỡ chữ 13/12,5/11,5px…) giữ nguyên, chờ quyết định.
+- Style viết trực tiếp (`style=""`): 285 → 262 (26 nút dùng `.btn.sm` / `.btn.xs`; 2 nút còn giữ phần style riêng).
+- Ảnh `screenshots/after-step5/` so với `before/`: 12/40 giống hệt; khác biệt còn lại đều thuộc các thay đổi có chủ
+  đích (sọc bảng tối #6, `--gray-700` #7, cỡ nút nhỏ làm trang Nhập/Dầu ngắn 2–3px), hoặc là nhiễu khử răng cưa
+  (0 px vượt ngưỡng) và dấu thời gian trong dữ liệu.
