@@ -1,17 +1,7 @@
 /* style-tab-regulation-config.css — Phần 8/8 của style.css. Tab "Cấu hình" — mục "Quy
-   định" (src/presentation/tabs/ui-regulation-config.js): mỗi bảng ngưỡng render thành 1 khối .rc-category. */
+   định" (src/presentation/tabs/ui-regulation-config.js) và mục "Tiêu chuẩn NSX". */
 
-/* Tab "Cấu hình quy định" (src/presentation/tabs/ui-regulation-config.js) — mỗi bảng ngưỡng render thành 1
-   "thẻ" con (.rc-item) bên trong panel, nhóm theo loại thiết bị/bối cảnh (.rc-category). */
-.rc-category {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--blue-900);
-  margin: 22px 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--gray-100);
-}
-.rc-category:first-of-type { margin-top: var(--space-1); }
+/* Mỗi bảng ngưỡng render thành 1 "thẻ" con (.rc-item); danh sách bảng bên trái là .rc-nav-list. */
 .rc-item {
   border: 1px solid var(--gray-300);
   border-radius: var(--radius);

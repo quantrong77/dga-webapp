@@ -275,22 +275,6 @@ tbody tr:hover { background: var(--blue-100); }
 .gas-icon { width: 13px; height: 13px; margin-right: var(--space-1); vertical-align: -2px; flex: none; }
 label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chiếm hẳn 1 dòng riêng phía trên chữ */
 
-/* Ô lọc dạng "tìm kiếm" (icon kính lúp đặt đè lên input bằng position:absolute thay
-   vì đứng trước như nhãn field thường, giống UX thanh tìm kiếm phổ biến) — hiện KHÔNG
-   còn nơi nào dùng (tab "Lịch sử đo" đã đổi #historyFilter cũ sang 2 ô combo tự gõ-tìm
-   #lichsu_station/#lichsu_device, xem ui-history.js/app-core.js) nhưng giữ lại class
-   dùng chung này phòng khi cần 1 ô tìm kiếm tự do kiểu này ở chỗ khác sau này. */
-.search-input-wrap { position: relative; display: inline-flex; align-items: center; }
-.search-input-wrap .search-input-icon {
-  position: absolute;
-  left: 10px;
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  color: var(--gray-600);
-  pointer-events: none;
-}
-.search-input-wrap input { padding-left: 30px; }
 .stat-card .value {
   font-size: var(--text-2xl);
   font-weight: var(--font-extrabold);

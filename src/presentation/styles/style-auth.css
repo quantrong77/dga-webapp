@@ -148,19 +148,6 @@
   font-weight: 600;
 }
 .loading-hint.hidden { display: none; }
-/* .spinner-sm (vòng tròn xoay đơn, nhỏ) không còn dùng ở các ô "Vui lòng chờ! Đang
-   nạp dữ liệu..." (đã đổi sang .gear-loader.gear-loader-sm ở trên) nhưng GIỮ LẠI rule
-   này (không xóa), tương tự .spinner phía trên — có thể cần dùng lại sau này. */
-.spinner-sm {
-  width: 15px;
-  height: 15px;
-  flex: none;
-  border-radius: 50%;
-  border: 2.5px solid var(--spinner-on-dark);
-  border-top-color: var(--blue-900);
-  animation: dga-spin 0.8s linear infinite;
-}
-
 /* Thông báo "toast" góc trên bên phải (vd: "Đăng nhập thành công!") */
 .toast-container {
   position: fixed;
