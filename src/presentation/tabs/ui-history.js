@@ -36,6 +36,11 @@ async function refreshHistoryUI() {
   );
   filtered.sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
 
+  // Trạng thái rỗng: phân biệt "chưa có dữ liệu" (hướng dẫn đi nhập) với "bộ lọc không khớp" (hướng dẫn bỏ lọc) —
+  // trước đây cả 2 trường hợp đều báo "Chưa có lần đo nào được lưu." dù database đang có dữ liệu.
+  $("historyEmpty").textContent = all.length === 0
+    ? 'Chưa có lần đo nào được lưu. Vào tab "Khí hòa tan" để nhập số liệu (hoặc kéo-thả BBTN PDF) rồi bấm "Phân tích & Lưu".'
+    : `Không có lần đo nào khớp bộ lọc hiện tại (${all.length} lần đo đã lưu). Xóa bớt Trạm / Thiết bị / Loại thiết bị ở ô lọc phía trên để xem.`;
   $("historyEmpty").classList.toggle("hidden", filtered.length > 0);
   renderMeasurementRows($("historyTable"), filtered);
   if (typeof renderNhapSavedTable === "function") renderNhapSavedTable();

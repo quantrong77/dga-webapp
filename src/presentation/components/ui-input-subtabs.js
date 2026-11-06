@@ -55,7 +55,7 @@ function savedFilterRecords(records, f) {
 }
 
 /** Dòng mô tả trên bảng + nội dung thông báo khi bảng trống. */
-function savedRenderCaption(captionId, emptyId, f, count, noun) {
+function savedRenderCaption(captionId, emptyId, f, count, noun, saveLabel = "Đánh giá & Lưu") {
   const label = [f.station, f.device].filter(Boolean).join(" · ");
   if ($(captionId)) {
     $(captionId).textContent = f.active
@@ -63,7 +63,8 @@ function savedRenderCaption(captionId, emptyId, f, count, noun) {
       : "Nhập hoặc chọn Trạm và Thiết bị ở form phía trên để xem số liệu đã lưu của thiết bị đó (toàn bộ dữ liệu xem ở tab \"Lịch sử đo\").";
   }
   if ($(emptyId)) {
-    $(emptyId).textContent = f.active ? `Thiết bị này chưa có ${noun} nào được lưu.` : "";
+    // Kèm bước tiếp theo (trước chỉ báo "chưa có")
+    $(emptyId).textContent = f.active ? `Thiết bị này chưa có ${noun} nào được lưu — nhập số liệu ở form phía trên rồi bấm "${saveLabel}".` : "";
   }
 }
 
@@ -71,7 +72,7 @@ function renderNhapSavedTable() {
   if (!$("nhapSavedTable") || typeof renderMeasurementRows !== "function") return;
   const f = savedDeviceFilter("f_tram", "f_thietbi");
   const rows = savedFilterRecords(_allMeasurements, f);
-  savedRenderCaption("nhapSavedCaption", "nhapSavedEmpty", f, rows.length, "lần đo khí hòa tan");
+  savedRenderCaption("nhapSavedCaption", "nhapSavedEmpty", f, rows.length, "lần đo khí hòa tan", "Phân tích & Lưu");
   renderMeasurementRows($("nhapSavedTable"), rows);
   $("nhapSavedEmpty").classList.toggle("hidden", rows.length > 0 || !f.active);
 }
