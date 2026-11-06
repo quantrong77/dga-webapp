@@ -229,7 +229,7 @@ function createOilBatch(cfg) {
       summary();
     });
     id("BatchSave").addEventListener("click", save);
-    zone.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+    // Bàn phím: <input type="file"> phủ trong ô tự nhận Tab + Enter/Space (enhanceDropzoneA11y(), ui-dropzone.js).
     ["dragenter", "dragover"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.add("dragover"); }));
     ["dragleave", "dragend"].forEach((evt) => zone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); zone.classList.remove("dragover"); }));
     zone.addEventListener("drop", (e) => {

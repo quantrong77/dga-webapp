@@ -286,6 +286,8 @@ input:disabled, select:disabled, textarea:disabled {
   font-size: var(--text-sm);
   color: var(--gray-700);
 }
+/* Mọi ô kéo-thả: input bên trong đang focus → viền trên ô (input trong suốt nên không tự hiện viền). */
+.file-dropzone:focus-within { outline: 2px solid var(--blue-700); outline-offset: 2px; }
 #bbtnDropzone.file-dropzone:focus,
 #bbtnDropzone.file-dropzone:focus-within,
 #bbtnDropzone.file-dropzone.is-focused,

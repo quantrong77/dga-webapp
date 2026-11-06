@@ -134,13 +134,13 @@
   <!-- Chỉ hiện khi Auth.enabled (chế độ Google Sheets) VÀ chưa xác thực được phiên
        đăng nhập đã lưu. Ẩn hẳn (display:none qua .hidden) ở chế độ Supabase/local. -->
   <div id="authOverlay" class="auth-overlay hidden">
-    <div class="auth-card" id="authCard">
+    <div class="auth-card" id="authCard" role="dialog" aria-modal="true" aria-labelledby="authCardTitle">
       <div id="authLoadingOverlay" class="auth-loading hidden">
         <svg class="gear-loader" width="56" height="56" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg>
         <p id="authLoadingText">Đang xử lý...</p>
       </div>
 
-      <h2>Đánh giá Dầu cách điện</h2>
+      <h2 id="authCardTitle">Đánh giá Dầu cách điện</h2>
       <p class="note">Đăng nhập để xem và nhập dữ liệu. Xóa dữ liệu chỉ dành cho Admin.</p>
 
       <!-- Chỉ hiện khi config.js có GOOGLE_CLIENT_ID VÀ thư viện Google Identity Services
@@ -258,9 +258,9 @@
        ở header, xem setupChangePassword() ở ui-auth.js. Dùng chung khung ".mini-modal-*" với
        modal "mật khẩu tạm" ở tab Quản trị (xem src/presentation/styles/style-auth.css). -->
   <div id="changePasswordOverlay" class="mini-modal-overlay hidden">
-    <div class="mini-modal-card">
+    <div class="mini-modal-card" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
       <button type="button" class="mini-modal-close" id="btnCloseChangePassword" aria-label="Đóng">&times;</button>
-      <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h3>
+      <h3 id="changePasswordTitle"><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h3>
       <!-- Chế độ BẮT BUỘC (mật khẩu tạm do Admin cấp) — xem enterApp()/openChangePasswordModal() ở ui-auth.js. -->
       <p class="note hidden" id="changePasswordForcedHint">Bạn đang đăng nhập bằng <strong>mật khẩu tạm</strong> do Admin cấp.
         Vui lòng đặt mật khẩu riêng để tiếp tục sử dụng (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại").
@@ -374,15 +374,15 @@
                thêm JS cho việc này) — 3 sự kiện dragenter/dragover/dragleave + drop
                gắn ở khung ngoài để đổi viền/nền khi kéo file qua và xử lý khi thả,
                xem setupBbtnDropzone() ở app-core.js. -->
-          <div class="file-dropzone bbtn-import-z1" id="bbtnDropzone" tabindex="0" role="button" aria-label="Kéo thả file PDF vào đây, hoặc bấm để chọn file">
+          <div class="file-dropzone bbtn-import-z1" id="bbtnDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="bbtnDropzoneText">Kéo thả file PDF vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-            <input id="f_bbtn" type="file" accept="application/pdf,.pdf" />
+            <input id="f_bbtn" type="file" aria-labelledby="bbtnDropzoneText" accept="application/pdf,.pdf" />
           </div>
-          <div class="file-dropzone bbtn-import-z2" id="batchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file PDF vào đây (chọn hết trong thư mục rồi kéo vào), hoặc bấm để chọn nhiều file">
+          <div class="file-dropzone bbtn-import-z2" id="batchDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="batchDropzoneText">Kéo thả nhiều file PDF vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
-            <input id="batchFiles" type="file" accept="application/pdf,.pdf" multiple />
+            <input id="batchFiles" type="file" aria-labelledby="batchDropzoneText" accept="application/pdf,.pdf" multiple />
           </div>
           <div class="bbtn-import-extra bbtn-import-x1">
             <div class="bbtn-current hidden" id="bbtnCurrentWrap">
@@ -451,7 +451,7 @@
         <div class="file-dropzone spec-dropzone mode-lap" id="fSpecDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="fSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> thiết bị từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
-          <input id="f_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          <input id="f_spec_file" type="file" aria-labelledby="fSpecDropzoneText" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
         </div>
         <p class="note spec-note mode-lap hidden" id="f_specNote" role="status"></p>
         <p class="note attach-note mode-lap hidden" id="f_attachNote"></p>
@@ -602,7 +602,7 @@
           <div class="file-dropzone" id="nameplateDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="nameplateDropzoneText">Kéo thả ảnh chụp nhãn máy vào đây, hoặc <span class="file-dropzone-link">bấm để chọn ảnh</span></span>
-            <input id="f_nameplate" type="file" accept="image/*,application/pdf,.pdf" />
+            <input id="f_nameplate" type="file" aria-labelledby="nameplateDropzoneText" accept="image/*,application/pdf,.pdf" />
           </div>
           <p class="note hidden" id="nameplateImportNote"></p>
           <p class="note hidden" id="nameplateRawTextNote" style="max-height:120px; overflow-y:auto; white-space:pre-wrap; font-family:monospace; font-size:11px;"></p>
@@ -796,7 +796,7 @@
       <div class="panel mode-import" id="nhapSavedPanel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Khí hòa tan</h2>
         <p class="note" id="nhapSavedCaption"></p>
-        <div class="table-scroll"><table>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Khí hòa tan (cuộn ngang)"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
             <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
@@ -1595,7 +1595,7 @@
           <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-alarm"></span><b>Báo động (ALARM)</b><small>Hành động ngay</small></div>
           <div class="wf-legend-item" role="listitem"><span class="wf-sw sw-dash"></span><b>Mũi tên nét đứt</b><small>Luồng tham khảo / quay về luồng chính</small></div>
         </div>
-        <div class="wf-wrap">
+        <div class="wf-wrap" tabindex="0" role="region" aria-label="Sơ đồ quy trình đánh giá DGA (cuộn ngang)">
           <svg id="dgaWorkflowSvg" class="wf-svg" viewBox="0 0 1100 1570" role="img"
             aria-label="Lưu đồ quy trình nghiệp vụ đánh giá DGA theo Điều 54 QĐ1901 và IEC 60599"></svg>
         </div>
@@ -1792,7 +1792,7 @@
               C<sub>2</sub>H<sub>2</sub> (%) = [C<sub>2</sub>H<sub>2</sub> / (C<sub>2</sub>H<sub>2</sub> + C<sub>2</sub>H<sub>4</sub> + CH<sub>4</sub>)] × 100<br>
               C<sub>2</sub>H<sub>4</sub> (%) = [C<sub>2</sub>H<sub>4</sub> / (C<sub>2</sub>H<sub>2</sub> + C<sub>2</sub>H<sub>4</sub> + CH<sub>4</sub>)] × 100<br>
               CH<sub>4</sub> (%) = [CH<sub>4</sub> / (C<sub>2</sub>H<sub>2</sub> + C<sub>2</sub>H<sub>4</sub> + CH<sub>4</sub>)] × 100</p>
-            <div class="table-scroll"><table class="d54-table">
+            <div class="table-scroll" tabindex="0" role="region" aria-label="Bảng số liệu của biểu đồ (cuộn ngang)"><table class="d54-table">
               <caption>Bảng 67. Giới hạn các vùng lỗi</caption>
               <thead><tr><th>Mã lỗi</th><th colspan="4">Giới hạn theo các vùng</th></tr></thead>
               <tbody id="d54Bang67Body"><!-- dựng bởi renderDieu54Bang67Table() theo cấu hình hiện hành --></tbody>
@@ -2166,12 +2166,12 @@
           <div class="file-dropzone bbtn-import-z1" id="oDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-            <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+            <input id="o_bbtn_file" type="file" aria-labelledby="oDropzoneText" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
           </div>
-          <div class="file-dropzone bbtn-import-z2" id="oBatchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file BBTN dầu (PDF/Word) vào đây, hoặc bấm để chọn nhiều file">
+          <div class="file-dropzone bbtn-import-z2" id="oBatchDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="oBatchDropzoneText">Kéo thả nhiều file BBTN dầu MBA (PDF / Word .docx) vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
-            <input id="oBatchFiles" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
+            <input id="oBatchFiles" type="file" aria-labelledby="oBatchDropzoneText" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
           </div>
           <div class="bbtn-import-extra bbtn-import-x1">
             <p class="note hidden" id="oImportNote" role="status"></p>
@@ -2225,7 +2225,7 @@
         <div class="file-dropzone spec-dropzone mode-lap" id="oSpecDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="oSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> máy biến áp từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
-          <input id="o_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          <input id="o_spec_file" type="file" aria-labelledby="oSpecDropzoneText" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
         </div>
         <p class="note spec-note mode-lap hidden" id="o_specNote" role="status"></p>
         <p class="note attach-note mode-lap hidden" id="o_attachNote"></p>
@@ -2399,7 +2399,7 @@
       <div class="panel mode-import">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu MBA chính</h2>
         <p class="note" id="oilSavedCaption"></p>
-        <div class="table-scroll"><table>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Dầu MBA chính (cuộn ngang)"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
             <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
@@ -2523,7 +2523,7 @@
       <div class="panel mode-import">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu đã lưu — Dầu OLTC</h2>
         <p class="note" id="oltcSavedCaption"></p>
-        <div class="table-scroll"><table>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Dầu OLTC (cuộn ngang)"><table>
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
             <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
@@ -2577,12 +2577,12 @@
           <div class="file-dropzone bbtn-import-z1" id="t3Dropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN dầu 3 pha (A, B, C) vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
-            <input id="t3_file" type="file" accept="application/pdf,.pdf" />
+            <input id="t3_file" type="file" aria-labelledby="t3DropzoneText" accept="application/pdf,.pdf" />
           </div>
-          <div class="file-dropzone bbtn-import-z2" id="t3BatchDropzone" tabindex="0" role="button" aria-label="Kéo thả nhiều file PDF BBTN dầu 3 pha vào đây, hoặc bấm để chọn nhiều file">
+          <div class="file-dropzone bbtn-import-z2" id="t3BatchDropzone">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
             <span class="file-dropzone-text" id="t3BatchDropzoneText">Kéo thả nhiều file PDF BBTN dầu 3 pha vào đây (chọn hết trong thư mục rồi kéo vào), hoặc <span class="file-dropzone-link">bấm để chọn nhiều file</span></span>
-            <input id="t3BatchFiles" type="file" accept="application/pdf,.pdf" multiple />
+            <input id="t3BatchFiles" type="file" aria-labelledby="t3BatchDropzoneText" accept="application/pdf,.pdf" multiple />
           </div>
           <div class="bbtn-import-extra bbtn-import-x1">
             <div style="display:flex; justify-content:flex-end;">
@@ -2633,7 +2633,7 @@
         <div class="file-dropzone spec-dropzone mode-lap" id="t3SpecDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="t3SpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> TI/TU/Sứ xuyên từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
-          <input id="t3_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+          <input id="t3_spec_file" type="file" aria-labelledby="t3SpecDropzoneText" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
         </div>
         <p class="note spec-note mode-lap hidden" id="t3_specNote" role="status"></p>
         <p class="note attach-note mode-lap hidden" id="t3_attachNote"></p>
@@ -3739,7 +3739,7 @@
             <div class="file-dropzone" id="fbDropzone">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
               <span class="file-dropzone-text" id="fbDropzoneText">Kéo thả ảnh vào đây, <span class="file-dropzone-link">bấm để chọn ảnh</span>, hoặc dán ảnh đã chụp/copy (Ctrl+V)</span>
-              <input id="fb_image" type="file" accept="image/*" />
+              <input id="fb_image" type="file" aria-labelledby="fbDropzoneText" accept="image/*" />
             </div>
             <div class="feedback-image-preview hidden" id="fbImagePreviewWrap">
               <img id="fbImagePreviewImg" alt="Ảnh minh họa đã chọn" />
@@ -4032,7 +4032,7 @@
        showTempPasswordModal() ở ui-admin.js. Đóng modal này KHÔNG hiện lại được mật khẩu đó
        (app không lưu), nên phải copy/ghi lại trước khi đóng. -->
   <div id="tempPasswordOverlay" class="mini-modal-overlay hidden">
-    <div class="mini-modal-card">
+    <div class="mini-modal-card" role="dialog" aria-modal="true" aria-labelledby="tempPasswordTitle">
       <button type="button" class="mini-modal-close" id="btnCloseTempPassword" aria-label="Đóng">&times;</button>
       <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span id="tempPasswordTitle">Mật khẩu tạm</span></h3>
       <p class="note">Mật khẩu này chỉ hiện <strong>đúng 1 lần</strong>, ứng dụng không lưu lại. Nên gửi tách

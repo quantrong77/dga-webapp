@@ -95,8 +95,8 @@ function setupTabs() {
         }
       }
       if (targetTab === "dga" || targetTab === "nhap") {
-        const dropzone = $("bbtnDropzone");
-        if (dropzone) dropzone.focus();
+        const bbtnInput = $("f_bbtn"); // ô chọn file trong #bbtnDropzone (control nhận bàn phím)
+        if (bbtnInput) bbtnInput.focus();
       }
       // Tránh cuộn trang khi bấm các nút icon trên Header (chỉ cuộn cho các nút trong sidebar/nav.tabs)
       if (!btn.classList.contains("header-icon-btn")) {
@@ -151,5 +151,38 @@ function setupQuantriSubtabs() {
         if (activeSub) activeSub.click();
       }
     });
+  });
+}
+
+/** Đồng bộ thuộc tính ARIA với class "active" của nút tab — 1 bộ nghe chung ở document (chạy SAU trình xử lý
+ *  click của từng nút vì sự kiện nổi bọt lên document; cả .click() gọi bằng code cũng đi qua đây):
+ *  - tab chính (.tab-btn, nằm trong <nav> + vài nút ở header): aria-current="page" cho tab đang mở;
+ *  - tab con (role="tab" trong role="tablist"): aria-selected="true/false" — trước đây chỉ tab con "cách nhập"
+ *    cập nhật, các tab con Quy trình/Quản trị/Cấu hình luôn để aria-selected="false". */
+function syncTabAria() {
+  document.querySelectorAll(".tab-btn").forEach((b) => {
+    if (b.classList.contains("active")) b.setAttribute("aria-current", "page");
+    else b.removeAttribute("aria-current");
+  });
+  document.querySelectorAll('[role="tab"]').forEach((b) => {
+    b.setAttribute("aria-selected", b.classList.contains("active") ? "true" : "false");
+  });
+}
+
+function setupTabAriaSync() {
+  syncTabAria();
+  document.addEventListener("click", (e) => {
+    if (e.target && e.target.closest && e.target.closest('.tab-btn, [role="tab"]')) syncTabAria();
+  });
+}
+
+/** Phím Esc đóng hộp thoại nhỏ (.mini-modal-overlay: đổi mật khẩu, mật khẩu tạm) — bằng chính nút "×" của hộp,
+ *  nên khi nút bị ẩn (bắt buộc đổi mật khẩu tạm) thì Esc cũng không đóng được. */
+function setupMiniModalEscape() {
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const overlay = document.querySelector(".mini-modal-overlay:not(.hidden)");
+    const closeBtn = overlay && overlay.querySelector(".mini-modal-close:not(.hidden)");
+    if (closeBtn) closeBtn.click();
   });
 }

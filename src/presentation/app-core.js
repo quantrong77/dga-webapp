@@ -72,12 +72,13 @@ async function initApp() {
   setupStationDeviceCombos();
   bindInputFormEvents();
   bindHistoryTrendAlertEvents();
+  enhanceAllDropzonesA11y();
   toggleMbaSubtypeField();
   toggleStandardTypeFields();
   drawDuvalTriangleBase();
-  const bbtnZone = $("bbtnDropzone");
-  if (bbtnZone && $("tab-dga") && !$("tab-dga").classList.contains("hidden")) {
-    bbtnZone.focus();
+  const bbtnInput = $("f_bbtn");
+  if (bbtnInput && $("tab-dga") && !$("tab-dga").classList.contains("hidden")) {
+    bbtnInput.focus();
   }
 }
 
@@ -97,6 +98,8 @@ function renderUserHeader() {
 /** Khởi tạo giao diện KHÔNG phụ thuộc dữ liệu: tab, bố cục, tab con, khối nội dung tĩnh, ngày mặc định, các ô phụ thuộc. */
 function setupStaticUI() {
   setupTabs();
+  setupTabAriaSync();
+  setupMiniModalEscape();
   setupStickyHeaderObserver();
   setupTabLayoutToggle();
   setupSidebarCollapseToggle();

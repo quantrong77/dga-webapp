@@ -25,6 +25,7 @@ async function refreshUsersUI() {
       const roleCell = tr.children[1];
       const sel = document.createElement("select");
       sel.className = "role-select";
+      sel.setAttribute("aria-label", `Vai trò của ${u.email}`); // ô chọn trong bảng không có <label> riêng
       // 3 vai trò hợp lệ — xem VALID_ROLES ở backend/gsheet/Code.gs. "viewer" từng bị thiếu ở đây
       // (chỉ có user/admin) dù server đã hỗ trợ đủ 3 vai trò từ trước.
       sel.innerHTML = `<option value="user">User</option><option value="viewer">Viewer</option><option value="admin">Admin</option>`;

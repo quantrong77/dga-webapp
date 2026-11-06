@@ -6,16 +6,8 @@ function setupBbtnDropzone() {
   const input = $("f_bbtn");
   if (!zone || !input) return;
 
-  zone.setAttribute("tabindex", "0");
-  zone.setAttribute("role", "button");
-  zone.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      input.click();
-    }
-  });
-  zone.addEventListener("focus", () => zone.classList.add("is-focused"));
-  zone.addEventListener("blur", () => zone.classList.remove("is-focused"));
+  // Bàn phím: chính <input type="file"> phủ trong ô nhận focus và mở hộp chọn file (Enter/Space) — xem
+  // enhanceDropzoneA11y() cuối file; viền focus hiện trên ô nhờ :focus-within (style-components.css).
 
   ["dragenter", "dragover"].forEach((evt) => {
     zone.addEventListener(evt, (e) => {
@@ -95,21 +87,9 @@ function setupNameplateDropzone() {
 /** Kéo-thả NHIỀU file cùng lúc cho panel "Nhập hàng loạt" (#batchDropzone) */
 function setupBatchDropzone() {
   const zone = $("batchDropzone");
-  const input = $("batchFiles");
   if (!zone) return;
 
-  zone.setAttribute("tabindex", "0");
-  zone.setAttribute("role", "button");
-  if (input) {
-    zone.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        input.click();
-      }
-    });
-  }
-  zone.addEventListener("focus", () => zone.classList.add("is-focused"));
-  zone.addEventListener("blur", () => zone.classList.remove("is-focused"));
+  // Bàn phím: <input type="file"> phủ trong ô nhận focus (xem enhanceDropzoneA11y() cuối file).
 
   ["dragenter", "dragover"].forEach((evt) => {
     zone.addEventListener(evt, (e) => {
@@ -135,4 +115,26 @@ function setupBatchDropzone() {
       handleBatchFileList(files);
     }
   });
+}
+
+/**
+ * Truy cập bàn phím / trình đọc màn hình cho MỌI ô kéo-thả (.file-dropzone) — gọi 1 lần lúc khởi động.
+ * <input type="file"> phủ trong suốt lên cả ô (để bấm chuột / thả file đều trúng). Trước đây 4 ô còn được đánh dấu
+ * role=button + tabindex=0 → mỗi ô 2 điểm dừng Tab, input không có nhãn, axe báo "nested-interactive" / "label".
+ * Nay CHỈ input là control: nó nhận Tab, Enter/Space mở hộp chọn file (hành vi gốc của trình duyệt); tên truy cập
+ * = đúng chữ hiển thị trong ô (aria-labelledby → .file-dropzone-text, tự đổi theo tên file đã chọn); viền focus
+ * vẽ trên ô bằng :focus-within.
+ */
+function enhanceDropzoneA11y(zone) {
+  const input = zone.querySelector('input[type="file"]');
+  if (!input) return;
+  const oldLabel = zone.getAttribute("aria-label");
+  ["role", "tabindex", "aria-label"].forEach((a) => zone.removeAttribute(a));
+  const text = zone.querySelector(".file-dropzone-text[id]");
+  if (text) input.setAttribute("aria-labelledby", text.id);
+  else if (oldLabel && !input.getAttribute("aria-label")) input.setAttribute("aria-label", oldLabel);
+}
+
+function enhanceAllDropzonesA11y() {
+  document.querySelectorAll(".file-dropzone").forEach(enhanceDropzoneA11y);
 }
