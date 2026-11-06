@@ -37,11 +37,14 @@ function enqueueSyncOp(action, payload) {
   return item;
 }
 
-/** Thực thi lại 1 tác vụ từ hàng đợi đồng bộ lên server (Google Sheets hoặc Supabase). */
+/** Thực thi lại 1 tác vụ từ hàng đợi đồng bộ lên server: Google Sheets / máy chủ on-premise (cùng giao thức
+ *  gsheetPost) hoặc Supabase. Không khớp chế độ/action nào → NÉM LỖI để processSyncQueue() giữ lại + báo lỗi, không
+ *  coi là "đã đồng bộ" (lỗi #5, docs/refactor/BUGS_FOUND.md: chế độ "local-server" trước đây rơi vào trường hợp
+ *  này nên mục trong hàng đợi bị xóa mà không gửi → mất bản ghi). */
 async function executeRemoteSyncItem(item) {
   const { action, payload } = item;
   const currentMode = typeof Storage !== "undefined" ? Storage.mode : (hasGsheetConfig() ? "gsheet" : hasSupabaseConfig() ? "supabase" : "local");
-  if (currentMode === "gsheet") {
+  if (currentMode === "gsheet" || currentMode === "local-server") {
     if (action === "addMeasurement") return await gsheetPost("addMeasurement", payload);
     if (action === "deleteMeasurement") return await gsheetPost("deleteMeasurement", payload);
     if (action === "saveStandard") return await gsheetPost("saveStandard", payload);
@@ -154,6 +157,7 @@ async function executeRemoteSyncItem(item) {
       return;
     }
   }
+  throw new Error(`Không đồng bộ được thao tác "${action}" ở chế độ lưu trữ "${currentMode}" (không hỗ trợ).`);
 }
 
 if (typeof module !== "undefined" && module.exports) {
