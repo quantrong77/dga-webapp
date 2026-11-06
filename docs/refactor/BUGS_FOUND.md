@@ -88,3 +88,21 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   hoặc báo lỗi).
 - **Ghi chú:** chưa refactor `executeRemoteSyncItem` (độ phức tạp 72) ở Bước 4, vì refactor thuần sẽ phải giữ nguyên
   lỗi này. Nên sửa lỗi trước, rồi gom về `STORAGE_ENTITIES` (storage-repo.js) như các hàm CRUD.
+
+## #6. Giao diện tối: hàng chẵn của mọi bảng có nền xám sáng, chữ trắng gần như không đọc được
+
+- **Hiện tượng:** ở giao diện tối, hàng chẵn các bảng (Lịch sử đo, Cảnh báo, Cấu hình…) có nền xám-tím sáng;
+  chữ trắng trên nền đó tương phản rất thấp. Ô "Thao tác" ở cùng hàng lại tối, nên bảng trông loang lổ.
+  Xem `docs/refactor/screenshots/before/desktop-dark-lichsu.png`.
+- **Nguyên nhân:** `tbody tr:nth-child(even) { background: rgba(241, 245, 249, 0.45) }` (style-tab-tables.css) là
+  màu sáng viết cứng, không theo giao diện tối. Có từ trước, không do refactor.
+- **Đã sửa ở Bước 5** (commit riêng `style(css): soc bang giao dien toi…`): token `--table-stripe`, giao diện
+  tối dùng `var(--surface-page)`, cùng màu với ô Thao tác của hàng chẵn. Giao diện sáng giữ nguyên.
+
+## #7. Biến `--gray-700` được dùng nhưng chưa khai báo
+
+- **Hiện tượng:** chữ ô kéo thả BBTN (6 ô), ghi chú quy trình `.sm-note` và chú thích ảnh `.sm-gallery figcaption`
+  khai báo `color: var(--gray-700)`. Biến này không tồn tại, nên trình duyệt bỏ khai báo và các chữ này **kế thừa
+  màu phần tử cha**, không phải màu chữ phụ như ý định.
+- **Đã sửa ở Bước 5** (commit riêng `style(css): khai bao --gray-700…`): `--gray-700` = `#334155` (sáng) /
+  `#cbd5e1` (tối), đậm hơn `--text-secondary` một bậc.

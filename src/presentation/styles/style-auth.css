@@ -163,7 +163,7 @@
   background: var(--surface);
   border-radius: 10px;
   padding: var(--space-3) var(--space-4);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-4); /* toast nổi trên nội dung */
   font-size: 13px;
   font-weight: 600;
   border-left: 4px solid var(--ok);
@@ -197,7 +197,7 @@
   padding: 26px var(--space-5);
   width: 100%;
   max-width: 360px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-5); /* hộp thoại: cao nhất */
 }
 .mini-modal-card h3 {
   margin: 0 0 10px;

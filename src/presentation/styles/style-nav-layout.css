@@ -155,7 +155,7 @@ body.tabs-sidebar nav.tabs {
   overflow: visible auto;
   border-bottom: none;
   border-right: 1px solid var(--gray-300);
-  box-shadow: 2px 0 10px rgba(20, 40, 70, 0.06);
+  box-shadow: var(--shadow-sidebar);
   /* "Bóng cuộn" ngang ở nav.tabs (xem ghi chú tại luật "nav.tabs" gốc phía trên) chỉ có ý
      nghĩa khi cuộn NGANG (overflow-x:auto) — ở đây overflow-x:visible (cuộn DỌC nếu cần,
      overflow-y:auto) nên đặt lại nền trắng đơn giản, tránh 2 dải mờ/bóng đứng yên vô
@@ -261,7 +261,7 @@ body.tabs-sidebar.sidebar-collapsed nav.tabs button {
     overflow: auto visible;
     border-right: none;
     border-bottom: 1px solid var(--gray-300);
-    box-shadow: 0 2px 10px rgba(20, 40, 70, 0.06);
+    box-shadow: var(--shadow-tabbar);
   }
   body.tabs-sidebar .tabs-inner {
     flex-direction: row;
