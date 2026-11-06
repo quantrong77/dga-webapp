@@ -6,6 +6,10 @@ import js from "@eslint/js";
 import globals from "globals";
 import prettier from "eslint-config-prettier";
 
+// Tên toàn cục cấm theo lớp — giữ khớp với DOMAIN_BANNED / DATA_BANNED trong tests/architecture.test.js
+const DOMAIN_BANNED = ["document", "window", "localStorage", "sessionStorage", "fetch", "navigator", "alert", "confirm", "gsheetGet", "gsheetPost", "sb", "Storage", "Auth"];
+const DATA_BANNED = ["document", "showToast", "notifyError", "$", "alert", "confirm"];
+
 export default [
   {
     ignores: [
@@ -60,6 +64,25 @@ export default [
     // 2 file nạp bằng <script type="module"> (import pdf.js/tesseract từ vendor/)
     files: ["src/data/io/bbtn-import.js", "src/data/io/nameplate-import.js"],
     languageOptions: { sourceType: "module" },
+  },
+  // ---- Ranh giới 3 lớp (docs/refactor/ARCHITECTURE.md mục 4; kiểm tra đầy đủ bằng AST ở tests/architecture.test.js) ----
+  {
+    files: ["src/domain/**/*.js"],
+    rules: { "no-restricted-globals": ["error", ...DOMAIN_BANNED.map((name) => ({ name, message: "src/domain/ là logic thuần: không DOM/storage/fetch (ARCHITECTURE.md mục 4)." }))] },
+  },
+  {
+    // V10 (cho phép): facade UMD gán window.DGA = DGA
+    files: ["src/domain/dga-logic.js"],
+    rules: { "no-restricted-globals": ["error", ...DOMAIN_BANNED.filter((n) => n !== "window").map((name) => ({ name, message: "src/domain/ là logic thuần." }))] },
+  },
+  {
+    files: ["src/data/**/*.js"],
+    rules: { "no-restricted-globals": ["error", ...DATA_BANNED.map((name) => ({ name, message: "src/data/ không chạm DOM trang / không toast: báo lỗi bằng throw hoặc sự kiện (ARCHITECTURE.md mục 4)." }))] },
+  },
+  {
+    // V5–V9: document (canvas OCR ngoài trang — cho phép; gắn <a> tải file — gỡ ở Bước 4). Xem EXCEPTIONS trong tests/architecture.test.js
+    files: ["src/data/io/bbtn-import.js", "src/data/io/nameplate-import.js", "src/data/io/bbtn-export.js", "src/data/io/mba-oil-bbtn-export.js", "src/data/io/tech-report-export.js"],
+    rules: { "no-restricted-globals": ["error", ...DATA_BANNED.filter((n) => n !== "document").map((name) => ({ name, message: "src/data/ không toast." }))] },
   },
   {
     files: ["sw.js"],
