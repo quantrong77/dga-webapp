@@ -22,7 +22,7 @@
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px 20px;
+  gap: var(--space-4) 20px;
 }
 .grid.gases { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .field-wide { grid-column: 1 / -1; }
@@ -51,7 +51,7 @@ input, select, textarea {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   line-height: var(--leading-normal);
   box-shadow: var(--input-inset);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
@@ -115,7 +115,7 @@ input:disabled, select:disabled, textarea:disabled {
   width: 26px;
   height: 26px;
   padding: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--gray-300);
   background: var(--surface);
   color: var(--gray-600);
@@ -134,7 +134,7 @@ input:disabled, select:disabled, textarea:disabled {
 .field-icon-toggle-btn .icon-svg { width: 15px; height: 15px; margin-right: 0; }
 .info-popover {
   position: relative;
-  padding: 12px 34px 12px 14px;
+  padding: var(--space-3) 34px var(--space-3) 14px;
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-left: 4px solid var(--blue-700);
@@ -146,7 +146,7 @@ input:disabled, select:disabled, textarea:disabled {
   color: var(--text-primary);
 }
 .info-popover.hidden { display: none; }
-.info-popover p { margin: 0 0 8px; }
+.info-popover p { margin: 0 0 var(--space-2); }
 .info-popover p:last-child { margin-bottom: 0; }
 .info-popover-close {
   position: absolute;
@@ -169,9 +169,9 @@ input:disabled, select:disabled, textarea:disabled {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
-  padding: 8px 12px;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  padding: var(--space-2) var(--space-3);
   background: var(--blue-50);
   border: 1px solid color-mix(in srgb, var(--blue-700) 25%, transparent);
   border-radius: var(--radius-md);
@@ -246,7 +246,7 @@ input:disabled, select:disabled, textarea:disabled {
 #t3Dropzone.file-dropzone,
 #t3BatchDropzone.file-dropzone {
   min-height: 60px;
-  padding: 16px 20px;
+  padding: var(--space-4) 20px;
   gap: 14px;
   border-width: 2px;
   border-color: var(--blue-700);
@@ -269,7 +269,7 @@ input:disabled, select:disabled, textarea:disabled {
 #oBatchDropzone.file-dropzone .file-dropzone-text,
 #t3Dropzone.file-dropzone .file-dropzone-text,
 #t3BatchDropzone.file-dropzone .file-dropzone-text {
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   color: var(--gray-700);
 }
 #bbtnDropzone.file-dropzone:focus,
@@ -301,13 +301,13 @@ input:disabled, select:disabled, textarea:disabled {
   z-index: 1100;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   max-width: calc(100vw - 32px);
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   background: var(--surface);
   color: var(--blue-900);
   border: 1px solid var(--blue-700);
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
   font-size: 13px;
   font-weight: 600;
@@ -362,12 +362,12 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   max-height: 920px;
 }
 .bbtn-preview-header {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   background: var(--surface-sunken);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   flex-wrap: wrap;
 }
 .bbtn-preview-title {
@@ -380,7 +380,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   white-space: nowrap;
 }
 .bbtn-preview-filename {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -395,12 +395,12 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   margin-left: auto;
 }
 .bbtn-preview-actions .btn {
-  padding: 3px 8px;
+  padding: 3px var(--space-2);
   font-size: 11.5px;
   height: 28px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .bbtn-preview-body {
   flex: 1;
@@ -416,7 +416,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   display: block;
 }
 .bbtn-preview-footer {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   background: var(--surface-sunken);
   border-top: 1px solid var(--border);
   font-size: 11.5px;
@@ -424,7 +424,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: var(--space-2);
   line-height: 1.4;
 }
 @media (max-width: 1100px) {
@@ -434,7 +434,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   .bbtn-preview-col {
     position: static;
     max-height: none;
-    margin-top: 16px;
+    margin-top: var(--space-4);
   }
   .bbtn-preview-panel {
     height: 70vh;
@@ -451,7 +451,7 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas: "t1 t2" "z1 z2" "x1 x2";
   column-gap: 18px;
-  row-gap: 8px;
+  row-gap: var(--space-2);
   align-items: stretch;
 }
 .bbtn-import-t1 { grid-area: t1; }

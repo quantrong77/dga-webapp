@@ -8,11 +8,11 @@
 .process-flow {
   position: relative;
   margin: 10px 0;
-  padding-left: 12px;
+  padding-left: var(--space-3);
 }
 .process-step {
   position: relative;
-  padding: 4px 0 20px 40px;
+  padding: var(--space-1) 0 20px 40px;
   border-left: 2px solid var(--blue-100);
 }
 .process-step:last-child { border-left-color: transparent; padding-bottom: 2px; }
@@ -35,28 +35,28 @@
 }
 .process-step.branch .step-num { background: var(--warn); box-shadow: 0 0 0 2px var(--warn-bg); }
 .process-step h3 { margin: 2px 0 6px; font-size: 14px; color: var(--blue-900); }
-.process-step p { margin: 0 0 6px; font-size: 13.5px; color: var(--gray-900); line-height: 1.55; }
-.process-step .maps-to { font-size: 12px; color: var(--gray-600); }
+.process-step p { margin: 0 0 6px; font-size: var(--text-sm); color: var(--gray-900); line-height: 1.55; }
+.process-step .maps-to { font-size: var(--text-xs); color: var(--gray-600); }
 .process-step .maps-to strong { color: var(--blue-700); }
 
 .status-legend {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  margin: 4px 0 18px;
+  margin: var(--space-1) 0 18px;
 }
 @media (max-width: 800px) { .status-legend { grid-template-columns: minmax(0, 1fr); } }
 .status-legend-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   border-left-width: 4px;
-  padding: 14px 16px;
+  padding: 14px var(--space-4);
   box-shadow: var(--shadow-1);
 }
 .status-legend-card.normal { background: var(--ok-bg); border-left-color: var(--ok); }
 .status-legend-card.alert { background: var(--warn-bg); border-left-color: var(--warn); }
 .status-legend-card.alarm { background: var(--bad-bg); border-left-color: var(--bad); }
-.status-legend-card p { margin: 0 0 8px; font-size: 13px; line-height: 1.5; color: var(--gray-900); }
+.status-legend-card p { margin: 0 0 var(--space-2); font-size: 13px; line-height: 1.5; color: var(--gray-900); }
 .status-legend-card p.action { margin: 0; font-size: 12.5px; font-weight: 700; }
 .status-legend-card.normal p.action { color: var(--ok); }
 .status-legend-card.alert p.action { color: var(--warn); }
@@ -71,9 +71,9 @@
   padding: 10px 14px;
   background: var(--blue-100);
   border-left: 4px solid var(--blue-700);
-  border-radius: 6px;
-  margin-bottom: 8px;
-  font-size: 13.5px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+  font-size: var(--text-sm);
 }
 
 .note {
@@ -87,11 +87,11 @@
   background: var(--bad-bg);
   border: 2px solid var(--bad);
   color: var(--bad);
-  padding: 14px 16px;
+  padding: 14px var(--space-4);
   border-radius: var(--radius);
   font-weight: 700;
   font-size: 14px;
-  margin-bottom: 16px;
+  margin-bottom: var(--space-4);
   line-height: 1.5;
 }
 
@@ -123,21 +123,21 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  gap: 12px;
+  margin-bottom: var(--space-3);
+  gap: var(--space-3);
   flex-wrap: wrap;
 }
 
 .section-title {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-weight: var(--font-bold);
   color: var(--text-secondary);
-  margin: 24px 0 12px;
+  margin: var(--space-5) 0 var(--space-3);
 }
 .section-title::after {
   content: "";
@@ -148,7 +148,7 @@
 
 footer.app-footer {
   text-align: center;
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--gray-600);
   padding: 20px;
 }
@@ -157,7 +157,7 @@ footer.app-footer {
 .trend-checks {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 10px;
+  gap: var(--space-2) 10px;
 }
 .trend-checks label.chk {
   display: inline-flex;
@@ -169,7 +169,7 @@ footer.app-footer {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-full);
-  padding: 6px 14px 6px 12px;
+  padding: 6px 14px 6px var(--space-3);
   cursor: pointer;
   user-select: none;
   box-shadow: var(--shadow-1);
@@ -191,7 +191,7 @@ footer.app-footer {
 .trend-chart-wrap {
   position: relative;
   height: 420px;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 @media (max-width: 800px) {
   .trend-chart-wrap { height: 320px; }
@@ -207,7 +207,7 @@ footer.app-footer {
 .handbook-item {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .handbook-caption {
   margin: 0;
@@ -252,7 +252,7 @@ footer.app-footer {
   font-size: 12.5px;
   font-weight: 600;
   padding: 6px 13px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
 }
 .handbook-zoom-hint .icon-svg { margin-right: 5px; }
 
@@ -263,7 +263,7 @@ footer.app-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
+  padding: var(--space-6);
   z-index: 300;
   animation: dga-fade-up 0.2s ease;
 }
@@ -271,7 +271,7 @@ footer.app-footer {
 .lightbox img {
   max-width: 100%;
   max-height: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
 }
 .lightbox-close {
@@ -284,7 +284,7 @@ footer.app-footer {
   border: none;
   background: var(--on-dark-border);
   color: var(--on-dark);
-  font-size: 18px;
+  font-size: var(--text-lg);
   line-height: 1;
   cursor: pointer;
   transition: background-color 0.15s ease, transform 0.15s ease;
@@ -292,18 +292,18 @@ footer.app-footer {
 .lightbox-close:hover { background: var(--header-ctl-border); transform: scale(1.06); }
 
 /* ===== Mindmap tương tác (tab "Quy trình đánh giá") ===== */
-.mindmap { margin-top: 4px; }
+.mindmap { margin-top: var(--space-1); }
 
 .mm-root {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   background: linear-gradient(135deg, var(--blue-700), var(--blue-900));
   color: var(--on-dark);
   font-weight: 700;
   font-size: 14px;
   padding: 10px 18px;
-  border-radius: 999px;
+  border-radius: var(--radius-full);
   box-shadow: var(--shadow-md);
   margin-bottom: 14px;
 }
@@ -311,10 +311,10 @@ footer.app-footer {
 
 .mindmap-controls {
   display: flex;
-  gap: 8px;
+  gap: var(--space-2);
   margin-bottom: 14px;
 }
-.mindmap-controls .btn { padding: 6px 12px; font-size: 12.5px; }
+.mindmap-controls .btn { padding: 6px var(--space-3); font-size: 12.5px; }
 
 .mm-branches {
   display: flex;
@@ -350,7 +350,7 @@ footer.app-footer {
   gap: 10px;
   padding: 11px 14px;
   font-weight: 600;
-  font-size: 13.5px;
+  font-size: var(--text-sm);
   color: var(--gray-900);
   user-select: none;
   transition: background-color 0.15s ease;
@@ -378,7 +378,7 @@ footer.app-footer {
 
 .mm-leaves {
   margin: 0;
-  padding: 4px 18px 14px 33px;
+  padding: var(--space-1) 18px 14px 33px;
   list-style: none;
   display: flex;
   flex-direction: column;
@@ -407,17 +407,17 @@ footer.app-footer {
   padding: 2px 14px 14px 25px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .mm-node-sm {
   --mm-accent-bg: rgba(0, 0, 0, 0.03);
   border: 1px dashed var(--gray-300);
   border-left: 3px solid var(--mm-accent);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   background: var(--gray-50);
 }
 .mm-node-sm > summary {
-  padding: 8px 12px;
+  padding: var(--space-2) var(--space-3);
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -437,10 +437,10 @@ footer.app-footer {
 /* ===== Tab "Quy trình lấy mẫu" — Điều 8 dùng lại khung .mm-node/.mm-branches ở trên,
    chỉ thêm phần nội dung bên trong (.sm-*) và thư viện ảnh (.sm-gallery) ===== */
 .sm-body {
-  padding: 4px 18px 16px 33px;
+  padding: var(--space-1) 18px var(--space-4) 33px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .sm-body > p {
   margin: 0;
@@ -460,7 +460,7 @@ footer.app-footer {
 }
 .sm-steps li {
   position: relative;
-  padding-left: 32px;
+  padding-left: var(--space-6);
   font-size: 13px;
   line-height: 1.6;
   color: var(--gray-900);
@@ -492,8 +492,8 @@ footer.app-footer {
   color: var(--gray-700);
   background: var(--mm-accent-bg);
   border-left: 3px solid var(--mm-accent);
-  padding: 9px 12px;
-  border-radius: 6px;
+  padding: 9px var(--space-3);
+  border-radius: var(--radius-md);
 }
 
 .sm-figure {
@@ -503,7 +503,7 @@ footer.app-footer {
   margin: 0;
 }
 .sm-figure figcaption {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--gray-600);
   margin-top: 6px;
   text-align: center;
@@ -545,7 +545,7 @@ footer.app-footer {
 .sm-gallery figure { margin: 0; }
 .sm-gallery .qt-img-btn img { height: 130px; object-fit: cover; }
 .sm-gallery figcaption {
-  font-size: 12px;
+  font-size: var(--text-xs);
   color: var(--gray-700);
   margin-top: 6px;
   text-align: center;
@@ -575,7 +575,7 @@ footer.app-footer {
 .about-hero {
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: var(--space-4);
   padding-bottom: 20px;
   margin-bottom: 20px;
   border-bottom: 1px solid var(--gray-100);
@@ -589,11 +589,11 @@ footer.app-footer {
   box-shadow: var(--shadow-md);
 }
 .about-logo img { width: 100%; height: 100%; display: block; object-fit: cover; }
-.about-hero h2 { margin: 2px 0 6px; font-size: 20px; color: var(--blue-900); letter-spacing: 0.01em; }
+.about-hero h2 { margin: 2px 0 6px; font-size: var(--text-xl); color: var(--blue-900); letter-spacing: 0.01em; }
 .about-hero .note { margin: 0; }
 
 .about-contact h3 {
-  margin: 0 0 12px;
+  margin: 0 0 var(--space-3);
   font-size: 13px;
   font-weight: 700;
   color: var(--gray-600);
@@ -604,13 +604,13 @@ footer.app-footer {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .about-contact-list li {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 11px 4px;
+  gap: var(--space-3);
+  padding: 11px var(--space-1);
   border-bottom: 1px solid var(--gray-100);
 }
 .about-contact-list li:last-child { border-bottom: none; }

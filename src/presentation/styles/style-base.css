@@ -31,7 +31,7 @@ body {
 /* Thanh cuộn tùy biến (Chrome/Edge) — chi tiết nhỏ giúp giao diện đỡ mặc định/đơn điệu */
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: var(--gray-50); }
-::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 999px; border: 2px solid var(--gray-50); }
+::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: var(--radius-full); border: 2px solid var(--gray-50); }
 ::-webkit-scrollbar-thumb:hover { background: var(--blue-700); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -50,11 +50,11 @@ header.app-header {
   box-shadow: 0 2px 10px rgba(10, 15, 45, 0.2);
   background: var(--header-bg);
   color: var(--on-dark);
-  padding: 12px 24px 16px;
+  padding: var(--space-3) var(--space-5) var(--space-4);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 16px;
+  gap: var(--space-2) var(--space-4);
 }
 
 /* Thanh cái 3 pha ở mép dưới header: dấu hiệu riêng của app, cùng màu với cột pha A/B/C. */
@@ -123,9 +123,9 @@ header.app-header p {
 .badge {
   display: inline-block;
   vertical-align: middle;
-  font-size: 12px;
-  padding: 5px 12px;
-  border-radius: 999px;
+  font-size: var(--text-xs);
+  padding: 5px var(--space-3);
+  border-radius: var(--radius-full);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -140,7 +140,7 @@ header.app-header p {
 .local-mode-banner {
   background: var(--status-error);
   color: var(--on-dark);
-  padding: 8px 16px;
+  padding: var(--space-2) var(--space-4);
   font-size: 13px;
   line-height: 1.45;
   text-align: center;
@@ -169,7 +169,7 @@ header.app-header p {
   border: 1px solid var(--header-ctl-border);
   box-shadow: none;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
@@ -189,7 +189,7 @@ header.app-header p {
   width: 1px;
   height: 20px;
   background: var(--header-divider);
-  margin: 0 4px;
+  margin: 0 var(--space-1);
   flex: none;
 }
 
@@ -257,7 +257,7 @@ header.app-header p {
   font-weight: 500;
   white-space: nowrap;
   padding: 5px 9px;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--tooltip-border);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
   pointer-events: none;
@@ -335,7 +335,7 @@ header.app-header p {
   gap: 6px;
   cursor: pointer;
   font: inherit;
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: 600;
   border: 1px solid transparent;
   transition: all 0.2s ease;

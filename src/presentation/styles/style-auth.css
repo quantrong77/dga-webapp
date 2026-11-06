@@ -18,25 +18,25 @@
   position: relative;
   background: var(--surface-raised);
   border-radius: 16px;
-  padding: 32px 28px;
+  padding: var(--space-6) 28px;
   width: 100%;
   max-width: 400px;
   box-shadow: var(--shadow-5);
   border: 1px solid var(--on-dark-border);
 }
 .auth-card h2 {
-  margin: 0 0 8px 0;
+  margin: 0 0 var(--space-2) 0;
   font-size: var(--text-xl);
   font-weight: var(--font-bold);
   color: var(--blue-900);
 }
-.auth-card .note { margin-top: 0; margin-bottom: 16px; }
-.auth-card .field { margin-bottom: 12px; }
+.auth-card .note { margin-top: 0; margin-bottom: var(--space-4); }
+.auth-card .field { margin-bottom: var(--space-3); }
 .auth-error {
   color: var(--bad);
   background: var(--bad-bg);
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  padding: var(--space-2) 10px;
   font-size: 13px;
   margin-top: 10px;
 }
@@ -57,7 +57,7 @@
   display: flex;
   align-items: center;
   color: var(--gray-600);
-  font-size: 12px;
+  font-size: var(--text-xs);
   margin: 14px 0;
 }
 .auth-divider::before, .auth-divider::after {
@@ -77,7 +77,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: var(--space-3);
   z-index: 5;
 }
 .auth-loading.hidden { display: none; }
@@ -138,11 +138,11 @@
 .loading-hint {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  margin-bottom: 12px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
   background: var(--blue-100);
-  border-radius: 8px;
+  border-radius: var(--radius-lg);
   font-size: 13px;
   color: var(--blue-900);
   font-weight: 600;
@@ -169,13 +169,13 @@
   z-index: 200;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
   max-width: min(90vw, 340px);
 }
 .toast {
   background: var(--surface);
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--space-4);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
   font-size: 13px;
   font-weight: 600;
@@ -207,7 +207,7 @@
   position: relative;
   background: var(--surface);
   border-radius: 14px;
-  padding: 26px 24px;
+  padding: 26px var(--space-5);
   width: 100%;
   max-width: 360px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -220,7 +220,7 @@
   align-items: center;
   gap: 6px;
 }
-.mini-modal-card .field { margin-bottom: 12px; }
+.mini-modal-card .field { margin-bottom: var(--space-3); }
 .mini-modal-close {
   position: absolute;
   top: 10px;
@@ -238,24 +238,24 @@
 /* Hộp hiển thị mật khẩu tạm (#tempPasswordOverlay) — chỉ hiện đúng 1 lần, cần dễ đọc/copy */
 .temp-password-box {
   background: var(--blue-100);
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) 14px;
   font-size: 13px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
-.temp-password-label { font-weight: 600; color: var(--blue-900); margin-right: 4px; }
+.temp-password-label { font-weight: 600; color: var(--blue-900); margin-right: var(--space-1); }
 .temp-password-box code {
   background: var(--surface);
   border-radius: 5px;
-  padding: 3px 8px;
+  padding: 3px var(--space-2);
   font-size: 14px;
   letter-spacing: 0.5px;
   border: 1px solid var(--gray-300);
 }
 
-.role-select { font-size: 12px; padding: 4px 6px; }
+.role-select { font-size: var(--text-xs); padding: var(--space-1) 6px; }
 .badge.supabase { background: var(--status-online-bg); color: var(--status-online-text); }
 /* Badge "Database" (#storageBadge) khi MẤT kết nối — dùng khi tải Tiêu chuẩn/Lịch sử
    đo lúc khởi động bị lỗi (xem initApp() ở app-core.js), thay cho màu xanh

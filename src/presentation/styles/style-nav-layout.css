@@ -10,7 +10,7 @@
    lightbox (100–300) để các lớp đó luôn nổi trên cùng. */
 nav.tabs {
   display: flex;
-  padding: 10px 24px 0;
+  padding: 10px var(--space-5) 0;
   border-bottom: 1px solid var(--border);
   overflow-x: auto;
   position: sticky;
@@ -47,7 +47,7 @@ nav.tabs {
    phần đầu cụm nút bị che khuất, phải cuộn cả 2 hướng mới thấy hết. */
 .tabs-inner {
   display: flex;
-  gap: 4px;
+  gap: var(--space-1);
   margin: 0 auto;
   flex: none;
 }
@@ -57,7 +57,7 @@ nav.tabs button {
   align-items: center;
   border: none;
   background: transparent;
-  padding: 11px 16px;
+  padding: 11px var(--space-4);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
   color: var(--text-secondary);
@@ -170,7 +170,7 @@ body.tabs-sidebar nav.tabs button {
   text-align: left;
   border-bottom: none;
   border-left: 3px solid transparent;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 body.tabs-sidebar nav.tabs button.active {
   border-bottom-color: transparent;
@@ -188,7 +188,7 @@ body.tabs-sidebar nav.tabs button.active {
   align-self: flex-end;
   width: 28px;
   height: 28px;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
   padding: 0;
   border: 1px solid var(--gray-300);
   border-radius: 7px;
@@ -222,7 +222,7 @@ body.tabs-sidebar.sidebar-collapsed {
   grid-template-columns: 60px minmax(0, 1fr);
 }
 body.tabs-sidebar.sidebar-collapsed nav.tabs {
-  padding: 14px 8px;
+  padding: 14px var(--space-2);
 }
 body.tabs-sidebar.sidebar-collapsed .sidebar-collapse-btn {
   align-self: center;
@@ -250,7 +250,7 @@ body.tabs-sidebar.sidebar-collapsed nav.tabs button {
     height: auto;
     flex-direction: row;
     align-items: center;
-    padding: 10px 24px 0;
+    padding: 10px var(--space-5) 0;
     overflow-x: auto;
     overflow-y: visible;
     border-right: none;
@@ -261,14 +261,14 @@ body.tabs-sidebar.sidebar-collapsed nav.tabs button {
     flex-direction: row;
     margin: 0 auto;
     width: auto;
-    gap: 4px;
+    gap: var(--space-1);
   }
   body.tabs-sidebar nav.tabs button {
     width: auto;
     white-space: nowrap;
     border-left: none;
     border-bottom: 3px solid transparent;
-    border-radius: 8px 8px 0 0;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   }
   body.tabs-sidebar nav.tabs button.active {
     border-left-color: transparent;
@@ -291,7 +291,7 @@ body.tabs-sidebar.sidebar-collapsed nav.tabs button {
 main {
   max-width: 1180px;
   margin: 0 auto;
-  padding: 24px;
+  padding: var(--space-5);
 }
 body.tabs-sidebar main { max-width: none; }
 
@@ -299,8 +299,8 @@ body.tabs-sidebar main { max-width: none; }
   background: var(--surface-raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 24px;
-  margin-bottom: 24px;
+  padding: var(--space-5);
+  margin-bottom: var(--space-5);
   box-shadow: var(--shadow-1);
 }
 
@@ -308,8 +308,8 @@ body.tabs-sidebar main { max-width: none; }
   font-size: var(--text-lg);
   font-weight: var(--font-bold);
   color: var(--text-primary);
-  margin: 0 0 16px 0;
-  padding-bottom: 12px;
+  margin: 0 0 var(--space-4) 0;
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -319,7 +319,7 @@ body.tabs-sidebar main { max-width: none; }
    setupInfoPopovers() ở app-core.js) — .icon-svg đã tự có margin-right riêng nên chỉ cần
    thêm khoảng cách cho icon "i" (không dùng gap chung trên .panel h2 để tránh cộng dồn
    khoảng cách với các h2 khác đang dùng .icon-svg). */
-.panel h2 .info-icon-btn { margin-left: 8px; }
+.panel h2 .info-icon-btn { margin-left: var(--space-2); }
 
 /* Tab "Cấu hình" — gộp 2 tab cũ "Tiêu chuẩn theo nhà sản xuất" + "Cấu hình quy định" vào
    chung 1 mục trên thanh tab (thu gọn thanh tab ngang bớt 1 nút), chọn nội dung nào hiện
@@ -330,8 +330,8 @@ body.tabs-sidebar main { max-width: none; }
    hướng sang tab khác — tránh nhầm lẫn 2 tầng điều hướng cùng 1 kiểu nút. */
 .cauhinh-subtabs {
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--space-1);
+  padding: var(--space-1);
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -343,7 +343,7 @@ body.tabs-sidebar main { max-width: none; }
   color: var(--text-secondary);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  padding: 8px 18px;
+  padding: var(--space-2) 18px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
@@ -364,8 +364,8 @@ body.tabs-sidebar main { max-width: none; }
    app-core.js. */
 .quytrinh-subtabs {
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--space-1);
+  padding: var(--space-1);
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -377,7 +377,7 @@ body.tabs-sidebar main { max-width: none; }
   color: var(--text-secondary);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  padding: 8px 18px;
+  padding: var(--space-2) 18px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
@@ -397,12 +397,12 @@ body.tabs-sidebar main { max-width: none; }
    <section> — !important vì nhiều khối tự đổi display bằng inline style/JS (.hidden vẫn ẩn như cũ). */
 .input-subtabs {
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--space-1);
+  padding: var(--space-1);
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 .input-subtab-btn {
   display: inline-flex;
@@ -413,7 +413,7 @@ body.tabs-sidebar main { max-width: none; }
   color: var(--text-secondary);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  padding: 8px 18px;
+  padding: var(--space-2) 18px;
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
@@ -437,8 +437,8 @@ body.tabs-sidebar main { max-width: none; }
 /* Tab "Quản trị" — phân mục con bằng segmented control: Người dùng | Cấu hình | Bản sao Supabase */
 .quantri-subtabs {
   display: inline-flex;
-  gap: 4px;
-  padding: 4px;
+  gap: var(--space-1);
+  padding: var(--space-1);
   background: var(--surface-sunken);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -450,7 +450,7 @@ body.tabs-sidebar main { max-width: none; }
   color: var(--text-secondary);
   font-size: var(--text-sm);
   font-weight: var(--font-semibold);
-  padding: 8px 18px;
+  padding: var(--space-2) 18px;
   border-radius: var(--radius-md);
   cursor: pointer;
   display: inline-flex;

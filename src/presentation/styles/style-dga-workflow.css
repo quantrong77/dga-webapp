@@ -46,7 +46,7 @@
 .wf-arrow { fill: var(--text-secondary); }
 .wf-label {
   fill: var(--text-secondary);
-  font-size: 12px;
+  font-size: var(--text-xs);
   font-weight: var(--font-semibold);
   dominant-baseline: middle;
   paint-order: stroke;
@@ -58,7 +58,7 @@
 .wf-legend {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 10px 16px;
+  gap: 10px var(--space-4);
   margin-top: var(--space-3);
   padding: var(--space-3) var(--space-4);
   background: var(--surface-raised);
