@@ -42,7 +42,7 @@ const server = http.createServer((req, res) => {
   }
 
   // Parse URL & decode URI components
-  let reqPath = "";
+  let reqPath;
   let urlObj;
   try {
     urlObj = new URL(req.url, `http://${req.headers.host || "localhost"}`);
