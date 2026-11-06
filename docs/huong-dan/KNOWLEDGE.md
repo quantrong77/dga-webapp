@@ -159,7 +159,7 @@ flowchart TD
         Case["src/domain/dga-logic-case.js (Cosine CBR)"]
     end
 
-    subgraph Doc_Engine["Tự động hóa Văn bản & OCR (bbtn/)"]
+    subgraph Doc_Engine["Tự động hóa Văn bản & OCR (src/data/io/)"]
         PDFImport["bbtn-import.js / bbtn-batch-import.js (pdf.js + regex)"]
         OCRNameplate["nameplate-import.js (Tesseract.js WebWorker)"]
         DocxExport["bbtn-export.js / tech-report-export.js / oil-bbtn.js (docxtemplater)"]
@@ -193,101 +193,72 @@ flowchart TD
 ### 3.2. Cấu trúc Thư mục Chi tiết
 ```
 dga-webapp/
-├── index.html                 # Trang SPA chính trên Desktop/Tablet
-├── src/presentation/styles/   # Quy tắc CSS giao diện chính, tách theo tab/khu vực
-├── early-layout.js            # Script chạy tức thì trước khi render DOM để chống nhảy layout
-├── app-core.js                # Khởi động ứng dụng, tab switcher, nạp dữ liệu ban đầu
-├── config.js                  # Điền URL Google Apps Script hoặc Supabase credentials
-├── storage.js                 # Lớp trừu tượng hóa truy cập dữ liệu (Storage layer)
-├── dga-logic.js               # Điểm kết nối (Assembler) gom 9 file logic thành window.DGA
-├── types.d.ts                 # Định nghĩa Type tĩnh phục vụ typecheck qua JSDoc
-├── tsconfig.json              # Cấu hình TypeScript kiểm tra checkJs
-├── package.json               # Khai báo test Jest, devDependencies và maintenance scripts
+├── index.html                 # Trang SPA chính trên Desktop/Tablet (thứ tự <script> = thứ tự phụ thuộc)
+├── manifest.webmanifest, sw.js # PWA + Service Worker (phải ở gốc: phạm vi SW = thư mục chứa sw.js)
+├── config.js                  # Điền URL Google Apps Script hoặc Supabase credentials (người dùng sửa trực tiếp)
+├── types.d.ts, tsconfig.json  # Kiểu tĩnh JSDoc + cấu hình tsc --checkJs (lớp domain)
+├── package.json               # Lệnh npm (start, test, lint, sync-mobile, build-guide…) và devDependencies
+├── chay_dga_offline.bat       # Chạy máy chủ on-premise trên Windows (gọi backend/onpremise/serve.js)
 │
-├── logic/                     # TẦNG NGHIỆP VỤ (0% DOM, chạy được cả Browser lẫn Node.js)
-│   ├── dga-logic-core.js              # Bảng ngưỡng số học gốc, Enum loại thiết bị, pha, citations
-│   ├── dga-logic-gas.js               # Đánh giá 7 khí, Duval 1, Tỷ số khí Bảng 66/A.10, TCG, Khuyến cáo
-│   ├── dga-logic-oil.js               # Đánh giá dầu MBA và dầu bộ đổi nấc OLTC
-│   ├── dga-logic-instrument-oil.js    # Đánh giá dầu TI/TU theo tiêu chuẩn NSX (Arteche tgδ20)
-│   ├── dga-logic-iec60422-2024.js     # Đánh giá độc lập tham khảo theo IEC 60422:2024 Bảng 5 & 7
-│   ├── dga-logic-forecast.js          # Dự báo chuỗi thời gian: OLS, Theil-Sen, Consecutive Average
-│   ├── dga-logic-regulation-config.js # Quản trị ghi đè động 15 bảng quy định kỹ thuật
-│   ├── dga-logic-peer.js              # So sánh nhóm thiết bị tương tự: Z-score log1p & Isolation Forest
-│   └── dga-logic-case.js              # Ca sự cố tương tự lịch sử: Cosine similarity log1p
+├── src/                       # MÃ NGUỒN APP — 3 lớp: presentation → data → domain (docs/refactor/ARCHITECTURE.md)
+│   ├── domain/                # LỚP NGHIỆP VỤ (0% DOM, chạy được cả Browser lẫn Node.js)
+│   │   ├── dga-logic-core.js              # Bảng ngưỡng số học gốc, Enum loại thiết bị, pha, citations (hub)
+│   │   ├── dga-logic-gas.js               # Đánh giá 7 khí, Duval 1, Tỷ số khí Bảng 66/A.10, TCG, Khuyến cáo
+│   │   ├── dga-logic-oil.js               # Đánh giá dầu MBA và dầu bộ đổi nấc OLTC
+│   │   ├── dga-logic-instrument-oil.js    # Đánh giá dầu TI/TU theo tiêu chuẩn NSX (Arteche tgδ20)
+│   │   ├── dga-logic-iec60422-2024.js     # Đánh giá độc lập tham khảo theo IEC 60422:2024 Bảng 5 & 7
+│   │   ├── dga-logic-oil-extended.js      # Chỉ tiêu lý-hóa dầu bổ sung (QĐ1901 Điều 48–56, IEC 60422)
+│   │   ├── dga-logic-forecast.js          # Dự báo chuỗi thời gian: OLS, Theil-Sen, Consecutive Average
+│   │   ├── dga-logic-regulation-config.js # Quản trị ghi đè động các bảng quy định kỹ thuật
+│   │   ├── dga-logic-peer.js              # So sánh nhóm thiết bị tương tự: Z-score log1p & Isolation Forest
+│   │   ├── dga-logic-case.js              # Ca sự cố tương tự lịch sử: Cosine similarity log1p
+│   │   └── dga-logic.js                   # Facade: gom các file trên thành window.DGA / module.exports
+│   ├── data/                  # LỚP DỮ LIỆU (không chạm DOM trang)
+│   │   ├── storage.js         # Facade window.Storage: Google Sheets / on-premise / Supabase / localStorage
+│   │   ├── drivers/           # storage-core, -remote, -local, -offline (hàng đợi đồng bộ), -auth (window.Auth)
+│   │   └── io/                # Đọc/xuất định dạng file
+│   │       ├── bbtn-import.js         # Trích xuất BBTN PDF/Word (pdf.js + regex + OCR) — ES module
+│   │       ├── nameplate-import.js    # Đọc biển nhãn thiết bị (Tesseract OCR) — ES module
+│   │       ├── bbtn-export.js         # Xuất BBTN khí hòa tan PTC3/BM.15 (.docx, docxtemplater)
+│   │       ├── mba-oil-bbtn.js, mba-oil-bbtn-export.js # Đọc/xuất BBTN lý-hóa dầu MBA + OLTC
+│   │       ├── oil-bbtn.js            # BBTN dầu 3 pha TI/TU/Sứ xuyên
+│   │       ├── device-specs.js        # Thông số kỹ thuật thiết bị từ BBTN cũ
+│   │       └── tech-report-export.js  # Báo cáo phân tích kỹ thuật (.docx)
+│   └── presentation/          # LỚP GIAO DIỆN
+│       ├── early-layout.js    # Chạy tức thì trước khi render để chống nhảy layout
+│       ├── app-core.js        # Khởi động ứng dụng, tab switcher, nạp dữ liệu ban đầu (nạp CUỐI)
+│       ├── components/        # Dùng chung: ui-errors, ui-utils, ui-terms, ui-combobox, ui-dropzone, ui-busy,
+│       │                      # ui-theme, ui-layout, ui-input-subtabs
+│       ├── tabs/              # Theo tab: ui-auth, ui-dga, ui-dga-workflow, ui-dieu54-charts, ui-batch-import,
+│       │                      # ui-device-specs, ui-oil, ui-oltc, ui-oil-bbtn-export, ui-oil-batch-import,
+│       │                      # ui-ti-oil, ui-ti-oil-3pha, ui-history, ui-trend, ui-alerts, ui-standards,
+│       │                      # ui-regulation-config, ui-admin, ui-feedback, ui-guides
+│       └── styles/            # CSS tách theo tab/khu vực (style-base.css chứa biến màu sáng/tối)
 │
-├── ui/                        # TẦNG ĐIỀU KHIỂN GIAO DIỆN (UI CONTROLLERS)
-│   ├── ui-errors.js           # Xử lý lỗi toàn cục, popup Toast thông báo
-│   ├── ui-theme.js            # Xử lý chế độ sáng/tối (Dark/Light mode)
-│   ├── ui-busy.js             # Quản lý hiệu ứng loading spinner / bánh răng xoay
-│   ├── ui-auth.js             # Đăng ký, đăng nhập email/mật khẩu, Google Identity GIS
-│   ├── ui-dga.js              # Điều khiển tab DGA, vẽ SVG Tam giác Duval, hiển thị khuyến cáo
-│   ├── ui-oil.js              # Điều khiển tab Dầu MBA
-│   ├── ui-oltc.js             # Điều khiển tab Dầu OLTC
-│   ├── ui-ti-oil.js           # Điều khiển tab Dầu TI/TU 1 pha
-│   ├── ui-ti-oil-3pha.js      # Điều khiển tab Dầu TI/TU 3 pha tích hợp
-│   ├── ui-history.js          # Bảng nhật ký lịch sử đo, so sánh tốc độ tăng khí giữa 2 lần đo bất kỳ
-│   ├── ui-alerts.js           # Bảng theo dõi tình trạng cảnh báo thiết bị (ALERT/ALARM), xuất Excel
-│   ├── ui-trend.js            # Vẽ biểu đồ Chart.js đa trục tung, bảng ngoại suy dự báo 30 năm
-│   ├── ui-standards.js        # Cấu hình tiêu chuẩn riêng theo hãng sản xuất
-│   ├── ui-regulation-config.js# Giao diện hiệu chỉnh 15 bảng quy định kỹ thuật
-│   ├── ui-admin.js            # Quản trị tài khoản người dùng, kích hoạt đồng bộ Supabase mirror
-│   ├── ui-feedback.js         # Gửi và hiển thị phản hồi người dùng kèm dán ảnh màn hình
-│   └── ui-guides.js           # Điều khiển hiển thị tài liệu hướng dẫn sử dụng dạng accordion
+├── backend/
+│   ├── onpremise/             # MÁY CHỦ NỘI BỘ (Node, không phụ thuộc thư viện ngoài)
+│   │   ├── serve.js           # Web tĩnh + /api (npm start)
+│   │   ├── api.js, auth.js    # API tương thích giao thức Apps Script; xác thực/phân quyền
+│   │   ├── db.js              # Database JSON ghi nguyên tử, dữ liệu ở data/ (gốc dự án)
+│   │   └── uploads.js         # Tệp đính kèm theo mã băm SHA-256 (không lưu trùng)
+│   ├── gsheet/Code.gs         # Google Apps Script backend: REST API, LockService, Auth, Supabase mirror
+│   └── supabase/              # supabase-schema.sql (bản chuẩn), lockdown-anon.sql, mirror-setup.sql
 │
-├── bbtn/                      # TỰ ĐỘNG HÓA BIÊN BẢN & XỬ LÝ TÀI LIỆU
-│   ├── bbtn-import.js         # Trích xuất dữ liệu từ file PDF BBTN (pdf.js + regex + OCR fallback)
-│   ├── bbtn-batch-import.js   # Nhập hàng loạt nhiều file PDF cùng lúc để backfill dữ liệu
-│   ├── nameplate-import.js    # Đọc biển nhãn thiết bị từ ảnh chụp qua Tesseract OCR WebWorker
-│   ├── bbtn-export.js         # Xuất BBTN chuẩn PTC3/BM.15 ra file .docx qua docxtemplater
-│   ├── oil-bbtn.js            # Xuất BBTN Dầu 3 pha TI/TU ra file .docx
-│   └── tech-report-export.js  # Xuất Báo cáo phân tích kỹ thuật sự cố bất thường ra file .docx
-│
-├── gsheet/                    # GOOGLE APPS SCRIPT BACKEND
-│   └── Code.gs                # Script toàn bộ backend: REST API, LockService, Auth, PBKDF2, Supabase mirror
-│
-├── supabase/                  # SQL SCRIPTS CHO SUPABASE
-│   ├── lockdown-anon.sql      # Khóa toàn bộ quyền anon key để bảo mật
-│   └── mirror-setup.sql       # Bổ sung các cột mirror và audit trail
-├── supabase-schema.sql        # Lược đồ bảng cơ sở dữ liệu Supabase ban đầu
-│
-├── mobile/                    # PHIÊN BẢN GIAO DIỆN DI ĐỘNG ĐỘC LẬP
-│   ├── index.html             # Layout tối ưu cho màn hình cảm ứng di động
-│   ├── app.js                 # Logic điều khiển di động
-│   ├── dga-logic.js           # FILE SINH TỰ ĐỘNG từ scripts/sync-mobile.js (ghép các file logic/)
-│   ├── storage.js             # Lớp lưu trữ di động
-│   ├── style.css              # Style responsive mobile
-│   └── README.md              # Tài liệu riêng cho bản di động
-│
-├── scripts/                   # CÔNG CỤ TỰ ĐỘNG DÀNH CHO DEVELOPER
-│   ├── sync-mobile.js         # Ghép nối src/domain/dga-logic-*.js thành mobile/dga-logic.js
-│   └── build-user-guide.js    # Dựng mã HTML tab Hướng dẫn trong index.html từ docs/huong-dan/user_manual.md (Pandoc)
-│
-├── tests/                     # 15 BỘ UNIT TEST JEST (~300 TESTS)
-│   ├── diagnosis.test.js      # Kiểm thử Bảng 66, Table A.10, Duval 1
-│   ├── gas-absolute.test.js   # Kiểm thử đánh giá nồng độ tuyệt đối & tiêu chuẩn chặt hơn
-│   ├── rate-status.test.js    # Kiểm thử tốc độ tăng khí Bảng 65 & trạng thái tổng thể
-│   ├── oil.test.js            # Kiểm thử thí nghiệm dầu MBA, OLTC và TI/TU (Arteche)
-│   ├── forecast.test.js       # Kiểm thử thuật toán ngoại suy OLS, Theil-Sen
-│   ├── peer-case.test.js      # Kiểm thử Z-score log1p, Isolation Forest, Cosine CBR
-│   ├── regulation-config.test.js # Kiểm thử cơ chế override và reset 15 bảng quy định
-│   ├── oil-bbtn.test.js       # Kiểm thử trích xuất và dựng dữ liệu báo cáo BBTN dầu
-│   ├── load-order.test.js     # Kiểm thử thứ tự thẻ <script> và không trùng biến global
-│   ├── schema-consistency.test.js # Kiểm thử nhất quán tên cột giữa Supabase và Google Sheets
-│   ├── mobile-sync.test.js    # Kiểm thử tính đồng bộ giữa bản web và bản mobile
-│   ├── user-guide.test.js     # Kiểm thử tính toàn vẹn của tài liệu hướng dẫn
-│   ├── invariants.test.js     # Kiểm thử các bất biến toán học và trường hợp biên đặc biệt
-│   ├── errors.test.js         # Kiểm thử xử lý lỗi tập trung
-│   └── gsheet-code.test.js    # Kiểm thử cú pháp và cấu trúc hằng số trong Code.gs
-│
-├── template/                  # MẪU WORD BIÊN BẢN THÍ NGHIỆM (.DOCX)
-│   └── template-bbtn-dau-3pha.docx
+├── assets/
+│   ├── image/                 # Ảnh .webp, favicon, icon PWA
+│   └── template/              # Mẫu Word: template-*.docx (app tải bằng fetch), mau-goc-*.docx
+├── vendor/                    # Thư viện bên thứ ba đóng gói sẵn (pdf.js, tesseract, chart.js, docxtemplater, xlsx…)
+├── mobile/                    # PHIÊN BẢN DI ĐỘNG ĐỘC LẬP (mobile/dga-logic.js SINH TỰ ĐỘNG — không sửa tay)
+├── data/                      # Dữ liệu on-premise: database.json, uploads/ (KHÔNG commit, KHÔNG deploy)
+├── scripts/                   # Công cụ phát triển: sync-mobile, build-user-guide, build-pages-site, dedupe-uploads…
+├── tests/                     # Bộ test Jest (npm test) — gồm architecture.test.js kiểm tra ranh giới 3 lớp
 └── docs/                      # TÀI LIỆU (không được trình duyệt nạp, không deploy)
     ├── huong-dan/             # user_manual.md (nguồn duy nhất của tab Hướng dẫn), KNOWLEDGE.md (tài liệu này),
     │                          # Features-web-app.md (danh sách tính năng theo từng màn hình)
     ├── quy-dinh/              # QD1901.md, Dieu54_QD1901.md
-    ├── spec/                  # đặc tả thiết kế theo module
-    ├── assets/                # ảnh gốc dung lượng lớn (app dùng bản .webp trong image/)
-    └── refactor/              # mốc chuẩn, ghi chú bảo mật, lỗi phát hiện khi tái cấu trúc
+    ├── spec/                  # đặc tả thiết kế theo module (ghi lại thời điểm viết, đường dẫn có thể cũ)
+    ├── assets/                # ảnh gốc dung lượng lớn (app dùng bản .webp trong assets/image/)
+    └── refactor/              # mốc chuẩn, kiến trúc, ghi chú bảo mật, lỗi phát hiện khi tái cấu trúc
 ```
 
 ---
@@ -500,7 +471,7 @@ Codebase đã trải qua đợt rà soát và gia cố bảo mật chuyên sâu 
 npm install              # Cài đặt môi trường phát triển (Jest, Babel parser, TypeScript)
 npm test                 # Chạy toàn bộ 15 test suites kiểm thử tự động
 npm run typecheck        # Chạy kiểm tra kiểu tĩnh (tsc --noEmit --checkJs)
-npm run sync-mobile      # ĐỒNG BỘ: Ghép logic/ của web sang mobile/dga-logic.js
+npm run sync-mobile      # ĐỒNG BỘ: Ghép src/domain/ của web sang mobile/dga-logic.js
 npm run sync-mobile:check # Kiểm tra xem bản mobile có bị lệch so với web hay không
 npm run build-guide      # Dựng lại tab Hướng dẫn trong index.html từ docs/huong-dan/user_manual.md (cần pandoc)
 npm run build-guide:check # Kiểm tra tab Hướng dẫn có khớp tài liệu gốc docs/huong-dan/user_manual.md
@@ -522,7 +493,7 @@ Bộ test nằm tại thư mục `tests/` với hơn 300 test cases thực hiệ
 2. Chạy `npm run typecheck` để bảo đảm không có lỗi kiểu dữ liệu hoặc sai tên thuộc tính.
 3. Chạy `npm run sync-mobile` để script tự động ghép code và cập nhật sang `mobile/dga-logic.js`.
 4. Chạy `npm test` để xác nhận tất cả các bài kiểm thử đều chuyển màu xanh (PASS).
-5. Thực hiện `git commit` cả file ở `logic/` lẫn `mobile/dga-logic.js`.
+5. Thực hiện `git commit` cả file ở `src/domain/` lẫn `mobile/dga-logic.js`.
 
 ### 8.4. Quy trình Cập Nhật Tài Liệu Hướng Dẫn
 1. Sửa đổi nội dung tại file gốc [user_manual.md](./user_manual.md).

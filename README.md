@@ -258,7 +258,7 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `docs/huong-dan/KNOWLEDGE.md` | Kiến thức nền & kiến trúc chi tiết cho người phát triển |
 | `docs/quy-dinh/` | Văn bản QĐ1901 (`QD1901.md`), Điều 54 (`Dieu54_QD1901.md`) |
 | `docs/spec/` | Đặc tả thiết kế theo module |
-| `docs/assets/` | Ảnh gốc dung lượng lớn (app dùng bản `.webp` trong `image/`) |
+| `docs/assets/` | Ảnh gốc dung lượng lớn (app dùng bản `.webp` trong `assets/image/`) |
 
 ## 5. Giới hạn / lưu ý
 
@@ -316,7 +316,7 @@ nhau khi sửa mã.
 npm install          # lần đầu (cài Jest/TypeScript vào node_modules/, đã có trong .gitignore)
 npm test              # chạy toàn bộ kiểm thử tự động
 npm run typecheck     # kiểm tra kiểu (TypeScript checkJs) cho lớp logic/
-npm run sync-mobile   # đồng bộ mobile/dga-logic.js từ logic/ của bản web
+npm run sync-mobile   # đồng bộ mobile/dga-logic.js từ src/domain/ của bản web
 npm run build-guide   # dựng lại tab "Hướng dẫn" trong index.html từ docs/huong-dan/user_manual.md (cần cài pandoc)
 ```
 
@@ -354,7 +354,7 @@ kiểu, code chạy không đổi). `npm run typecheck` chạy sạch (0 lỗi) 
 Bản di động (`mobile/`) được deploy như 1 thư mục độc lập nên không tham chiếu được
 `../logic/...`. `mobile/dga-logic.js` vì vậy **được sinh tự động** bằng cách ghép các file
 `src/domain/*.js` của bản web theo đúng thứ tự nạp trong `index.html` — **không sửa tay file này**.
-Sau khi sửa bất kỳ file nào trong `logic/`, chạy `npm run sync-mobile` rồi commit cả 2 thay đổi.
+Sau khi sửa bất kỳ file nào trong `src/domain/`, chạy `npm run sync-mobile` rồi commit cả 2 thay đổi.
 `npm test` tự kiểm tra file đã đồng bộ chưa (`tests/mobile-sync.test.js`) và so kết quả đánh giá
 giữa 2 bản trên nhiều bộ số liệu để bảo đảm **cùng số liệu luôn ra cùng kết luận**.
 

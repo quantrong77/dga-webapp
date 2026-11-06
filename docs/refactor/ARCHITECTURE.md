@@ -1,7 +1,10 @@
-# Đề xuất kiến trúc 3 lớp (Bước 2 — CHỈ ĐỀ XUẤT, chưa di chuyển file)
+# Kiến trúc 3 lớp
 
-> Trạng thái: **chờ chủ dự án duyệt**. Sau khi duyệt (kèm chỉnh sửa nếu có), Bước 3 di chuyển file đúng theo
-> bảng ánh xạ ở mục 6. Bản đồ phụ thuộc ở mục 2 sinh tự động bằng trình phân tích cú pháp (espree + eslint-scope —
+> Trạng thái: **đã duyệt (Bước 2) và đã di chuyển file (Bước 3)** đúng theo bảng ánh xạ ở mục 6, không điều chỉnh
+> thêm. Các commit Bước 3: `9fe9020` domain · `bf3fc73` data · `63eea26` presentation · `fbfb0cc` styles ·
+> `ba26421` backend · `ae41ecb` assets · `928637b` kiểm tra ranh giới lớp (`tests/architecture.test.js` +
+> `no-restricted-globals` trong `eslint.config.mjs`). Mục 1, 2, 5 mô tả hiện trạng **lúc lập đề xuất** (đường dẫn cũ);
+> vi phạm ở mục 5 hiện là ngoại lệ có ghi chú trong `tests/architecture.test.js`, gỡ ở Bước 4. Bản đồ phụ thuộc ở mục 2 sinh tự động bằng trình phân tích cú pháp (espree + eslint-scope —
 > có sẵn trong `node_modules` của ESLint), không phải khớp chuỗi: một file "dùng" file khác khi nó tham chiếu một
 > tên toàn cục (hàm/biến cấp cao nhất, hoặc `window.X =`) mà file kia khai báo.
 

@@ -22,7 +22,7 @@ Hệ thống được thiết kế theo mô hình **3 tầng phân tách độc 
 
 ```mermaid
 graph TD
-    subgraph PresentationTier["1. Presentation Tier (ui/ & index.html)"]
+    subgraph PresentationTier["1. Presentation Tier (src/presentation/ & index.html)"]
         UI_DGA["ui-dga.js<br/>(DGA & Split View)"]
         UI_Oil["ui-oil.js & ui-ti-oil-3pha.js<br/>(Thí nghiệm dầu & 3 pha)"]
         UI_History["ui-history.js & ui-trend.js<br/>(Lịch sử & Xu hướng Chart.js)"]
@@ -31,7 +31,7 @@ graph TD
         UI_Errors["ui-errors.js & ui-busy.js<br/>(Xử lý lỗi tập trung, Toast)"]
     end
 
-    subgraph LogicTier["2. Logic Tier (logic/ & dga-logic.js)"]
+    subgraph LogicTier["2. Logic Tier (src/domain/)"]
         DGA_Core["dga-logic-core.js<br/>(Hằng số & Bộ điều phối)"]
         DGA_Gas["dga-logic-gas.js<br/>(Tuyệt đối, Bảng 66, Duval 1, TCG)"]
         DGA_Oil["dga-logic-oil.js & instrument-oil.js<br/>(Bảng 54/55/58 & Dầu TI/TU)"]
@@ -40,7 +40,7 @@ graph TD
         DGA_Stats["dga-logic-peer.js & case.js<br/>(Z-Score, Isolation Forest, CBR)"]
     end
 
-    subgraph StorageTier["3. Storage Tier (storage/ & storage.js)"]
+    subgraph StorageTier["3. Storage Tier (src/data/)"]
         Store_Core["storage-core.js<br/>(Trừu tượng hóa & Điều phối)"]
         Store_Offline["storage-offline.js & sw.js<br/>(Service Worker v4 & Outbox Sync)"]
         Store_Local["storage-local.js<br/>(LocalStorage bộ nhớ đệm)"]
@@ -53,13 +53,13 @@ graph TD
 ```
 
 1. **Presentation Tier (Tầng hiển thị):**
-   - Đặt trong thư mục `ui/`, chia thành 18 module chuyên trách quản lý từng tab và tương tác người dùng.
+   - Đặt trong thư mục `src/presentation/` (`components/`, `tabs/`), chia thành 18 module chuyên trách quản lý từng tab và tương tác người dùng.
    - Hoàn toàn không chứa công thức tính toán ngưỡng hoặc chẩn đoán sự cố.
 2. **Logic Tier (Tầng nghiệp vụ DGA):**
-   - Đặt trong thư mục `logic/`, là mã JavaScript thuần (vanilla JS), phi trạng thái (stateless), 100% không phụ thuộc DOM hoặc trình duyệt.
+   - Đặt trong thư mục `src/domain/`, là mã JavaScript thuần (vanilla JS), phi trạng thái (stateless), 100% không phụ thuộc DOM hoặc trình duyệt.
    - Được biên dịch tự động thành `mobile/dga-logic.js` cho bản di động, đảm bảo Web và Mobile cho ra kết quả chẩn đoán giống hệt nhau với cùng một bộ số liệu.
 3. **Storage Tier (Tầng lưu trữ dữ liệu):**
-   - Đặt trong thư mục `storage/`, cung cấp API thống nhất qua `storage.js` hỗ trợ 3 backend: **Google Sheets (qua Apps Script)**, **Supabase (PostgreSQL)**, và **LocalStorage (Offline/Demo)**.
+   - Đặt trong thư mục `src/data/drivers/`, cung cấp API thống nhất qua `src/data/storage.js` hỗ trợ 3 backend: **Google Sheets (qua Apps Script)**, **Supabase (PostgreSQL)**, và **LocalStorage (Offline/Demo)**.
    - Tích hợp mô hình hàng đợi ngoại tuyến **Outbox Sync Pattern** tự động đẩy dữ liệu lên máy chủ khi có mạng trở lại.
 
 ---
