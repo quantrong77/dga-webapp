@@ -388,11 +388,11 @@
             <div class="bbtn-current hidden" id="bbtnCurrentWrap">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
               <span id="bbtnCurrentName">—</span>
-              <button type="button" class="btn ghost" id="btnViewBbtn" style="padding:3px 9px; font-size:11.5px;">Xem BBTN đã lưu</button>
-              <button type="button" class="btn ghost" id="btnRemoveBbtn" style="padding:3px 9px; font-size:11.5px;" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
+              <button type="button" class="btn xs ghost" id="btnViewBbtn">Xem BBTN đã lưu</button>
+              <button type="button" class="btn xs ghost" id="btnRemoveBbtn" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
             </div>
             <div style="display:flex; justify-content:flex-end;">
-              <button type="button" class="btn ghost hidden" id="btnToggleBbtnPreview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+              <button type="button" class="btn xs ghost hidden" id="btnToggleBbtnPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
                 <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
                 <span id="btnToggleBbtnPreviewText">Hiện BBTN đối chiếu</span>
               </button>
@@ -401,7 +401,7 @@
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
             <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
-              <button type="button" class="btn ghost" id="btnBatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
+              <button type="button" class="btn sm ghost" id="btnBatchChooseFolder">Chọn cả thư mục...</button>
               <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
                 <input type="checkbox" id="batchAttachPdf" checked /> Đính kèm PDF gốc vào từng lần đo
               </label>
@@ -423,8 +423,8 @@
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
             <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="batchSummaryText">—</div>
             <div style="display:flex; gap:8px;">
-              <button type="button" class="btn ghost" id="btnBatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
-              <button type="button" class="btn ghost" id="btnBatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
+              <button type="button" class="btn sm ghost" id="btnBatchSelectAll">Chọn tất cả hợp lệ</button>
+              <button type="button" class="btn sm ghost" id="btnBatchSelectNone">Bỏ chọn tất cả</button>
             </div>
           </div>
           <div class="table-scroll" style="margin-top:8px;"><table>
@@ -654,10 +654,10 @@
           <span class="badge" id="bbtnPreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
           <span class="bbtn-preview-filename" id="bbtnPreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
-            <button type="button" class="btn ghost" id="btnBbtnNewTab" title="Mở file ở tab mới" style="padding:3px 8px; font-size:11.5px;">
+            <button type="button" class="btn xs ghost" id="btnBbtnNewTab" title="Mở file ở tab mới">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-external-link"></use></svg> Mở tab mới
             </button>
-            <button type="button" class="btn ghost" id="btnCloseBbtnPreview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu" style="padding:3px 8px; font-size:11.5px;">
+            <button type="button" class="btn xs ghost" id="btnCloseBbtnPreview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu">
               ✕ Ẩn
             </button>
           </div>
@@ -886,7 +886,7 @@
             <!-- Dùng LẠI đúng ô combo #lichsu_station/#lichsu_device ở trên (không thêm ô
                  chọn thiết bị riêng) — cần chọn/gõ đúng Thiết bị ở đó trước mới xử lý được,
                  xem onHistoryRenumber()/renumberLanDoForDevice() ở ui-history.js. -->
-            <button type="button" class="btn ghost" id="btnHistoryRenumber" style="padding:5px 10px; font-size:12px; font-weight:400; text-transform:none;" title="Chọn/gõ đúng Thiết bị ở ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
+            <button type="button" class="btn sm ghost" id="btnHistoryRenumber" style="font-weight:400; text-transform:none;" title="Chọn/gõ đúng Thiết bị ở ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
           </h2>
           <p class="note">Các ô số liệu khí tô <strong style="color:var(--bad);">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
             gốc — di chuột vào ô để xem giá trị trước khi sửa và thời điểm sửa; cột "Người nhập" có thêm huy hiệu
@@ -2186,7 +2186,7 @@
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
             <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
-              <button type="button" class="btn ghost" id="oBatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
+              <button type="button" class="btn sm ghost" id="oBatchChooseFolder">Chọn cả thư mục...</button>
               <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
                 <input type="checkbox" id="oBatchAttach" checked /> Đính kèm file gốc vào từng biên bản
               </label>
@@ -2204,8 +2204,8 @@
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
             <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="oBatchSummaryText">—</div>
             <div style="display:flex; gap:8px;">
-              <button type="button" class="btn ghost" id="oBatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
-              <button type="button" class="btn ghost" id="oBatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
+              <button type="button" class="btn sm ghost" id="oBatchSelectAll">Chọn tất cả hợp lệ</button>
+              <button type="button" class="btn sm ghost" id="oBatchSelectNone">Bỏ chọn tất cả</button>
             </div>
           </div>
           <div class="table-scroll" style="margin-top:8px;"><table>
@@ -2389,7 +2389,7 @@
           <label class="field">Độ ẩm môi trường (%)<input id="ob_doam" type="number" step="0.1" min="0" max="100" placeholder="VD: 68" /></label>
           <label class="field field-wide">
             <span class="field-label-row">Kết luận
-              <button type="button" class="btn ghost" id="btnOilBbtnAutoConclusion" style="padding:2px 8px; font-size:11.5px; margin-left:8px;">Viết lại tự động</button>
+              <button type="button" class="btn xs ghost" id="btnOilBbtnAutoConclusion" style="margin-left:8px;">Viết lại tự động</button>
             </span>
             <textarea id="ob_ketluan" rows="2" placeholder="App tự viết theo kết quả đánh giá — sửa được"></textarea>
           </label>
@@ -2546,10 +2546,10 @@
           <span class="badge" id="oPreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
           <span class="bbtn-preview-filename" id="oPreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
-            <button type="button" class="btn ghost" id="btnOilPreviewNewTab" title="Mở file ở tab mới" style="padding:3px 8px; font-size:11.5px;">
+            <button type="button" class="btn xs ghost" id="btnOilPreviewNewTab" title="Mở file ở tab mới">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-external-link"></use></svg> Mở tab mới
             </button>
-            <button type="button" class="btn ghost" id="btnCloseOilPreview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu" style="padding:3px 8px; font-size:11.5px;">
+            <button type="button" class="btn xs ghost" id="btnCloseOilPreview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu">
               ✕ Ẩn
             </button>
           </div>
@@ -2586,7 +2586,7 @@
           </div>
           <div class="bbtn-import-extra bbtn-import-x1">
             <div style="display:flex; justify-content:flex-end;">
-              <button type="button" class="btn ghost hidden" id="btnToggleT3Preview" style="padding:3px 9px; font-size:11.5px;" title="Ẩn/Hiện khung xem biên bản bên cạnh">
+              <button type="button" class="btn xs ghost hidden" id="btnToggleT3Preview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
                 <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
                 <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
               </button>
@@ -2595,7 +2595,7 @@
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
             <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
-              <button type="button" class="btn ghost" id="t3BatchChooseFolder" style="padding:6px 12px; font-size:12.5px;">Chọn cả thư mục...</button>
+              <button type="button" class="btn sm ghost" id="t3BatchChooseFolder">Chọn cả thư mục...</button>
               <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
                 <input type="checkbox" id="t3BatchAttach" checked /> Đính kèm PDF gốc vào từng biên bản
               </label>
@@ -2612,8 +2612,8 @@
           <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
             <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="t3BatchSummaryText">—</div>
             <div style="display:flex; gap:8px;">
-              <button type="button" class="btn ghost" id="t3BatchSelectAll" style="padding:5px 10px; font-size:12px;">Chọn tất cả hợp lệ</button>
-              <button type="button" class="btn ghost" id="t3BatchSelectNone" style="padding:5px 10px; font-size:12px;">Bỏ chọn tất cả</button>
+              <button type="button" class="btn sm ghost" id="t3BatchSelectAll">Chọn tất cả hợp lệ</button>
+              <button type="button" class="btn sm ghost" id="t3BatchSelectNone">Bỏ chọn tất cả</button>
             </div>
           </div>
           <div class="table-scroll" style="margin-top:8px;"><table>
@@ -2713,10 +2713,10 @@
           <span class="badge" id="t3PreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
           <span class="bbtn-preview-filename" id="t3PreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
-            <button type="button" class="btn ghost" id="btnT3NewTab" title="Mở file ở tab mới" style="padding:3px 8px; font-size:11.5px;">
+            <button type="button" class="btn xs ghost" id="btnT3NewTab" title="Mở file ở tab mới">
               <svg class="icon-svg" aria-hidden="true"><use href="#icon-external-link"></use></svg> Mở tab mới
             </button>
-            <button type="button" class="btn ghost" id="btnCloseT3Preview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu" style="padding:3px 8px; font-size:11.5px;">
+            <button type="button" class="btn xs ghost" id="btnCloseT3Preview" title="Ẩn khung đối chiếu" aria-label="Ẩn khung đối chiếu">
               ✕ Ẩn
             </button>
           </div>
@@ -3745,7 +3745,7 @@
               <img id="fbImagePreviewImg" alt="Ảnh minh họa đã chọn" />
               <div class="feedback-image-preview-info">
                 <span id="fbImagePreviewName">—</span>
-                <button type="button" class="btn ghost" id="btnRemoveFbImage" style="padding:3px 9px; font-size:11.5px;">Bỏ ảnh</button>
+                <button type="button" class="btn xs ghost" id="btnRemoveFbImage">Bỏ ảnh</button>
               </div>
             </div>
           </label>
@@ -3827,7 +3827,7 @@
       <div class="panel std-list-col">
         <div class="std-list-head">
           <h2 style="margin:0;">Tiêu chuẩn đã cấu hình <span class="std-count" id="stdListCount"></span></h2>
-          <button type="button" class="btn primary" id="btnNewStandard" style="padding:6px 12px; font-size:12.5px;">+ Thêm tiêu chuẩn</button>
+          <button type="button" class="btn sm primary" id="btnNewStandard">+ Thêm tiêu chuẩn</button>
         </div>
         <div class="std-list-filters">
           <input type="search" id="stdListSearch" placeholder="Tìm nhà sản xuất, loại thiết bị..." aria-label="Tìm tiêu chuẩn" />
@@ -4042,7 +4042,7 @@
       <div class="temp-password-box">
         <div><span class="temp-password-label">Email:</span> <span id="tempPasswordEmail"></span></div>
         <div><span class="temp-password-label">Mật khẩu tạm:</span> <code id="tempPasswordValue"></code>
-          <button type="button" class="btn ghost" id="btnCopyTempPassword" style="padding:3px 9px; font-size:11.5px;">Copy</button>
+          <button type="button" class="btn xs ghost" id="btnCopyTempPassword">Copy</button>
         </div>
       </div>
       <button type="button" class="btn primary" id="btnCloseTempPassword2" style="width:100%; margin-top:10px;">Đã lưu lại, đóng</button>

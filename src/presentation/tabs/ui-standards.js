@@ -339,7 +339,7 @@ function renderStandardsList() {
         <div class="std-list-thresholds">${escapeHtml(thresholdText)}</div>
         ${rec.source ? `<div class="std-list-source">Nguồn: ${escapeHtml(rec.source)}</div>` : ""}
       </td>
-      <td class="actions-cell"><div class="btn-row">${canWrite() ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button> <button class="btn danger" data-action="del">Xóa</button>` : ""}</div></td>
+      <td class="actions-cell"><div class="btn-row">${canWrite() ? `<button class="btn sm ghost" data-action="edit">Sửa</button> <button class="btn danger" data-action="del">Xóa</button>` : ""}</div></td>
     `;
     const editBtn = tr.querySelector('[data-action="edit"]');
     const delBtn = tr.querySelector('[data-action="del"]');

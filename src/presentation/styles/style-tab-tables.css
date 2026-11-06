@@ -113,6 +113,10 @@
   background: var(--bad-bg);
   border-color: var(--bad);
 }
+/* Cỡ nút nhỏ — thay cho padding/cỡ chữ viết trực tiếp (style="") trên từng nút trước đây.
+   .sm: nút phụ trong khung (Chọn tất cả, Chọn cả thư mục, Sửa…); .xs: nút rất nhỏ cạnh nhãn/khung xem biên bản. */
+.btn.sm { padding: 5px 10px; font-size: var(--text-xs); }
+.btn.xs { padding: 3px var(--space-2); font-size: 11.5px; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; filter: none !important; }
 /* Nút chỉ có icon, không chữ (vd. "Xem xu hướng" ở bảng tab "Cảnh báo") — vuông,
    canh giữa icon, vẫn giữ .btn/.ghost để đồng bộ màu/hover với các nút khác; LUÔN
