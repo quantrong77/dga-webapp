@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v35-styles";
+const CACHE_NAME = "dga-offline-v36-assets";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -30,10 +30,10 @@ const PRECACHE_ASSETS = [
   "./src/presentation/styles/style-tab-regulation-config.css",
   "./src/presentation/styles/style-dieu54-charts.css",
   "./src/presentation/styles/style-dga-workflow.css",
-  "./image/app-icon-96.webp",
-  "./image/favicon-32.png",
-  "./image/favicon-16.png",
-  "./image/apple-touch-icon.png",
+  "./assets/image/app-icon-96.webp",
+  "./assets/image/favicon-32.png",
+  "./assets/image/favicon-16.png",
+  "./assets/image/apple-touch-icon.png",
   "./src/domain/dga-logic-core.js",
   "./src/domain/dga-logic-gas.js",
   "./src/domain/dga-logic-oil.js",
@@ -79,7 +79,7 @@ const PRECACHE_ASSETS = [
   "./src/data/io/oil-bbtn.js",
   "./src/data/io/mba-oil-bbtn-export.js",
   "./src/data/io/device-specs.js",
-  "./template/template-bbtn-ly-hoa-dau.docx",
+  "./assets/template/template-bbtn-ly-hoa-dau.docx",
   "./src/data/io/tech-report-export.js",
   "./src/presentation/tabs/ui-batch-import.js",
   "./vendor/docxtemplater/pizzip.min.js",

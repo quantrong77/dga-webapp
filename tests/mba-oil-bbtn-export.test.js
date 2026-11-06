@@ -97,7 +97,7 @@ describe("Dữ liệu xuất BBTN lý-hóa dầu MBA", () => {
 
 describe("Template BBTN lý-hóa dầu", () => {
   const PizZip = loadPizZip();
-  const buf = fs.readFileSync(path.join(__dirname, "..", "template", "template-bbtn-ly-hoa-dau.docx"));
+  const buf = fs.readFileSync(path.join(__dirname, "..", "assets", "template", "template-bbtn-ly-hoa-dau.docx"));
   const text = new PizZip(buf.toString("binary")).file("word/document.xml").asText().replace(/<[^>]+>/g, "");
 
   test("không còn số liệu mẫu cứng; mọi thẻ đều có dữ liệu", () => {
@@ -141,7 +141,7 @@ describe("Xem nhanh file .docx (docx → HTML)", () => {
 
   test("mẫu BBTN thật chuyển được và giữ nội dung bảng", () => {
     const PizZip = loadPizZip();
-    const buf = fs.readFileSync(path.join(__dirname, "..", "template", "template-bbtn-ly-hoa-dau.docx"));
+    const buf = fs.readFileSync(path.join(__dirname, "..", "assets", "template", "template-bbtn-ly-hoa-dau.docx"));
     const xml = new PizZip(buf.toString("binary")).file("word/document.xml").asText();
     const page = P.mbaOilDocxHtmlPage(P.mbaOilDocxXmlToHtml(xml), "x.docx");
     expect(page).toMatch(/^<!DOCTYPE html>/);

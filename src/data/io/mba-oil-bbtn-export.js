@@ -1,6 +1,6 @@
 /* mba-oil-bbtn-export.js — Xuất Biên bản thí nghiệm dầu cách điện MBA (thùng chính + OLTC, .docx) cho số
-   liệu nhập tay ở tab "Lý-Hóa dầu", theo mẫu PTC3 template/template-bbtn-ly-hoa-dau.docx (dựng từ mẫu
-   "BBTN lyhoadau MBA_OLTC 3 pha" của đơn vị, file template/bbtn-ly-hoa-dau-mba-oltc-3pha.docx — thay số liệu bằng thẻ docxtemplater). Cùng cách làm với
+   liệu nhập tay ở tab "Lý-Hóa dầu", theo mẫu PTC3 assets/template/template-bbtn-ly-hoa-dau.docx (dựng từ mẫu
+   "BBTN lyhoadau MBA_OLTC 3 pha" của đơn vị, file assets/template/bbtn-ly-hoa-dau-mba-oltc-3pha.docx — thay số liệu bằng thẻ docxtemplater). Cùng cách làm với
    bbtn-export.js (tab DGA): chạy hoàn toàn trong trình duyệt, không gửi số liệu đi đâu.
 
    Phần dựng dữ liệu (buildMbaOilBbtnExportData) là hàm thuần để kiểm thử được ở Node; phần tải mẫu/điền/
@@ -11,7 +11,7 @@
    theo thứ tự của mẫu BBTN. Tiêu chuẩn/đánh giá lấy theo QĐ1901; chỉ tiêu QĐ1901 không quy định ngưỡng
    nhưng IEC 60422:2024 có (sức căng bề mặt, PCB, lưu huỳnh ăn mòn...) thì ghi ngưỡng IEC kèm "(IEC 60422)". */
 
-const MBA_OIL_BBTN_TEMPLATE_URL = "template/template-bbtn-ly-hoa-dau.docx";
+const MBA_OIL_BBTN_TEMPLATE_URL = "assets/template/template-bbtn-ly-hoa-dau.docx";
 
 // Thứ tự + tên song ngữ in trên BBTN (key khớp DGA.OIL_PARAM_DEFS[].key). Đơn vị để trống = lấy theo định nghĩa.
 const MBA_OIL_BBTN_ITEMS = [

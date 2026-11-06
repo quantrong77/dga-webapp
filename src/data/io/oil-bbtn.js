@@ -1,7 +1,7 @@
 /* oil-bbtn.js — Lõi xử lý BBTN dầu cách điện 3 PHA CHUNG 1 BIÊN BẢN (mẫu PTC3/BM.14: Điện áp
    chọc thủng, tgδ 90°C/20°C, Hàm lượng nước — mỗi hạng mục 1 cột pha A/B/C): đọc số liệu từ
    danh sách dòng chữ của PDF, đánh giá từng pha, tách thành 3 bản ghi instrument_oil_tests,
-   và dựng dữ liệu điền template/template-bbtn-dau-3pha.docx.
+   và dựng dữ liệu điền assets/template/template-bbtn-dau-3pha.docx.
 
    Toàn bộ là hàm thuần (không đụng DOM/mạng) để kiểm thử được bằng Jest
    (tests/oil-bbtn.test.js). Giao diện nằm ở src/presentation/tabs/ui-ti-oil-3pha.js; việc đọc PDF thành dòng
@@ -316,7 +316,7 @@ function oilBbtnDateVN(iso) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : String(iso || "");
 }
 
-/** Dữ liệu điền template/template-bbtn-dau-3pha.docx — key khớp đúng tên {tag} trong mẫu. */
+/** Dữ liệu điền assets/template/template-bbtn-dau-3pha.docx — key khớp đúng tên {tag} trong mẫu. */
 function buildOilBbtnExportData(form, evaluation) {
   const serials = form.soCheTao || {};
   const serialText = OIL_BBTN_PHASES.filter((ph) => serials[ph]).map((ph) => `pha ${ph}: ${serials[ph]}`).join(", ");

@@ -9,7 +9,7 @@
    hướng tiếp theo, (6) việc cần làm — TOÀN BỘ lấy đúng từ dữ liệu/kết quả đã tính sẵn
    trong _lastAnalysis, không tự suy diễn thêm nội dung nào ngoài đó.
 
-   Mẫu template/template-baocao-phantich-dga.docx CHỈ dùng placeholder phẳng {tag} (7
+   Mẫu assets/template/template-baocao-phantich-dga.docx CHỈ dùng placeholder phẳng {tag} (7
    khí lặp lại {xx_kq}/{xx_tc}/{xx_dg} như BBTN — xem BBTN_GAS_TAG_KEYS ở bbtn-export.js)
    — KHÔNG dùng loop {#tag} của docxtemplater cho các danh sách dài/ngắn tùy trường hợp
    (Căn cứ trạng thái tổng thể, Việc cần làm): thay vào đó nối nhiều dòng bằng "\n" rồi
@@ -18,7 +18,7 @@
    chạy đúng với đúng 1 bản build docxtemplater đang đóng gói sẵn (vendor/docxtemplater),
    không phụ thuộc tính năng loop-trong-bảng nào khác. */
 
-const TECH_REPORT_TEMPLATE_URL = "template/template-baocao-phantich-dga.docx";
+const TECH_REPORT_TEMPLATE_URL = "assets/template/template-baocao-phantich-dga.docx";
 
 const TECH_REPORT_GAS_TAG_KEYS = { H2: "h2", CH4: "ch4", C2H6: "c2h6", C2H4: "c2h4", C2H2: "c2h2", CO: "co", CO2: "co2" };
 
@@ -37,7 +37,7 @@ function techEmptyDash(v) {
 }
 
 /** Dựng object dữ liệu để docxtemplater điền vào mẫu — key khớp CHÍNH XÁC với tên
- *  placeholder {tag} đã cài trong template/template-baocao-phantich-dga.docx. Chỉ gọi
+ *  placeholder {tag} đã cài trong assets/template/template-baocao-phantich-dga.docx. Chỉ gọi
  *  khi overallStatus.level !== "normal" (xem onExportTechReport() ở ui-dga.js — nút chỉ
  *  hiện trong trường hợp đó), nhưng hàm này không tự kiểm tra lại điều đó (để nơi khác
  *  có thể tái dùng nếu cần xem trước dữ liệu). */

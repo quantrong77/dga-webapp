@@ -18,9 +18,9 @@
   <meta http-equiv="Expires" content="0" />
   <title>Đánh giá Dầu cách điện — QĐ1901/EVNNPT</title>
   <!-- Icon ứng dụng (DGAOil): bình tam giác dầu cam + máy biến áp + biểu đồ xu hướng -->
-  <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="image/favicon-16.png" />
-  <link rel="apple-touch-icon" sizes="180x180" href="image/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/image/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/image/favicon-16.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/image/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.webmanifest" />
   <!-- style.css (2031 dòng) đã được tách thành 8 file theo tab/khu vực trong src/presentation/styles/, giữ
        NGUYÊN thứ tự các đoạn như file gốc (chỉ cắt, không đảo) nên thứ tự cascade CSS
@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v35-styles") {
+          if (k !== "dga-offline-v36-assets") {
             caches.delete(k);
           }
         });
@@ -222,7 +222,7 @@
     </div>
     <div class="header-center">
       <div class="app-title-row">
-        <img src="image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
+        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
         <h1>Đánh giá Dầu cách điện</h1>
       </div>
     </div>
@@ -1335,8 +1335,8 @@
               <p class="sm-note">Kiểm tra độ rò rỉ của van bằng cách dùng giẻ lau sạch cửa van, chờ 2 phút không
                 phát hiện dầu bị rò rỉ ra là được.</p>
               <figure class="sm-figure">
-                <button type="button" class="qt-img-btn" data-full="image/qt-anh-lay-mau-mba.webp" data-caption="Lấy mẫu dầu MBA — nhiệt độ chai lấy mẫu và nơi đặt thiết bị không được chênh nhau quá 5°C.">
-                  <img src="image/qt-anh-lay-mau-mba-thumb.webp" alt="Ảnh minh họa lấy mẫu dầu MBA ngoài hiện trường" loading="lazy" />
+                <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-lay-mau-mba.webp" data-caption="Lấy mẫu dầu MBA — nhiệt độ chai lấy mẫu và nơi đặt thiết bị không được chênh nhau quá 5°C.">
+                  <img src="assets/image/qt-anh-lay-mau-mba-thumb.webp" alt="Ảnh minh họa lấy mẫu dầu MBA ngoài hiện trường" loading="lazy" />
                 </button>
                 <figcaption>Lấy mẫu dầu MBA (ảnh minh họa thực tế)</figcaption>
               </figure>
@@ -1354,8 +1354,8 @@
                 <li><strong>Bước 3:</strong> Lấy mẫu vào chai đã tráng.</li>
               </ol>
               <figure class="sm-figure">
-                <button type="button" class="qt-img-btn" data-full="image/qt-hinh1-chai.webp" data-caption="Sơ đồ lắp đặt lấy mẫu vào chai — 1: Van lấy mẫu của thiết bị, 2: Mặt bích, 3: Ống cao su chịu dầu hoặc ống Silicon, 4: Chai đựng mẫu, 5: Bồn chứa dầu xả bỏ, 6: Nút nhựa cứng, 7: Miếng đệm kín.">
-                  <img src="image/qt-hinh1-chai-thumb.webp" alt="Sơ đồ lắp đặt dụng cụ lấy mẫu dầu vào chai" loading="lazy" />
+                <button type="button" class="qt-img-btn" data-full="assets/image/qt-hinh1-chai.webp" data-caption="Sơ đồ lắp đặt lấy mẫu vào chai — 1: Van lấy mẫu của thiết bị, 2: Mặt bích, 3: Ống cao su chịu dầu hoặc ống Silicon, 4: Chai đựng mẫu, 5: Bồn chứa dầu xả bỏ, 6: Nút nhựa cứng, 7: Miếng đệm kín.">
+                  <img src="assets/image/qt-hinh1-chai-thumb.webp" alt="Sơ đồ lắp đặt dụng cụ lấy mẫu dầu vào chai" loading="lazy" />
                 </button>
                 <figcaption>Sơ đồ lắp đặt lấy mẫu vào chai</figcaption>
               </figure>
@@ -1387,8 +1387,8 @@
                 lọt không khí vào theo. Dầu nạp vào xilanh nhờ áp lực dầu từ thiết bị đẩy piston ra. Tiến hành lấy 2
                 mẫu để thí nghiệm song song.</p>
               <figure class="sm-figure">
-                <button type="button" class="qt-img-btn" data-full="image/qt-hinh2-xilanh.webp" data-caption="Hình 2 — a: Vị trí rửa van lấy mẫu, b: Vị trí hút dầu vào xilanh để xúc rửa, c: Vị trí xả dầu khỏi xilanh, d: Vị trí hút dầu vào xilanh lấy mẫu, e: Đóng xilanh, tháo khỏi van lấy mẫu. 1: Xilanh, 2: Van chặn, 3: Ống nối PTFE hoặc cao su, 4: Van 3 ngả, 5: Van lấy mẫu của thiết bị, 6: Mặt bích, 7: Bồn chứa dầu xả bỏ.">
-                  <img src="image/qt-hinh2-xilanh-thumb.webp" alt="Hình 2 — các bước lấy mẫu dầu vào xilanh" loading="lazy" />
+                <button type="button" class="qt-img-btn" data-full="assets/image/qt-hinh2-xilanh.webp" data-caption="Hình 2 — a: Vị trí rửa van lấy mẫu, b: Vị trí hút dầu vào xilanh để xúc rửa, c: Vị trí xả dầu khỏi xilanh, d: Vị trí hút dầu vào xilanh lấy mẫu, e: Đóng xilanh, tháo khỏi van lấy mẫu. 1: Xilanh, 2: Van chặn, 3: Ống nối PTFE hoặc cao su, 4: Van 3 ngả, 5: Van lấy mẫu của thiết bị, 6: Mặt bích, 7: Bồn chứa dầu xả bỏ.">
+                  <img src="assets/image/qt-hinh2-xilanh-thumb.webp" alt="Hình 2 — các bước lấy mẫu dầu vào xilanh" loading="lazy" />
                 </button>
                 <figcaption>Hình 2 — Các vị trí thao tác lấy mẫu vào xilanh (a→e)</figcaption>
               </figure>
@@ -1412,8 +1412,8 @@
                   hoặc tách khí hòa tan ra và thoát ra ngoài.</li>
               </ol>
               <figure class="sm-figure">
-                <button type="button" class="qt-img-btn" data-full="image/qt-hinh3-ong-mau.webp" data-caption="Hình 3 — 1: Ống đựng mẫu, 2: Van chặn hoặc kẹp ống, 3: Ống nối, 4: Mặt bích, 5: Van lấy mẫu của thiết bị, 6: Bồn chứa dầu xả bỏ.">
-                  <img src="image/qt-hinh3-ong-mau-thumb.webp" alt="Hình 3 — sơ đồ lấy dầu vào ống đựng mẫu" loading="lazy" />
+                <button type="button" class="qt-img-btn" data-full="assets/image/qt-hinh3-ong-mau.webp" data-caption="Hình 3 — 1: Ống đựng mẫu, 2: Van chặn hoặc kẹp ống, 3: Ống nối, 4: Mặt bích, 5: Van lấy mẫu của thiết bị, 6: Bồn chứa dầu xả bỏ.">
+                  <img src="assets/image/qt-hinh3-ong-mau-thumb.webp" alt="Hình 3 — sơ đồ lấy dầu vào ống đựng mẫu" loading="lazy" />
                 </button>
                 <figcaption>Hình 3 — Sơ đồ lấy dầu vào ống đựng mẫu</figcaption>
               </figure>
@@ -1449,8 +1449,8 @@
               </ol>
               <p class="sm-note">Khử dầu lọt vào xilanh bằng cách ấn piston xả ra.</p>
               <figure class="sm-figure">
-                <button type="button" class="qt-img-btn" data-full="image/qt-hinh4-khi-xilanh.webp" data-caption="Hình 4 — 1: Xilanh, 2: Van chặn, 3: Ống nối, 4: Van 3 ngả, 5: Van lấy mẫu của thiết bị, 6: Ống dẫn khí từ Rơle ga, 7: Bồn chứa dầu xả bỏ.">
-                  <img src="image/qt-hinh4-khi-xilanh-thumb.webp" alt="Hình 4 — sơ đồ lấy mẫu khí vào xilanh" loading="lazy" />
+                <button type="button" class="qt-img-btn" data-full="assets/image/qt-hinh4-khi-xilanh.webp" data-caption="Hình 4 — 1: Xilanh, 2: Van chặn, 3: Ống nối, 4: Van 3 ngả, 5: Van lấy mẫu của thiết bị, 6: Ống dẫn khí từ Rơle ga, 7: Bồn chứa dầu xả bỏ.">
+                  <img src="assets/image/qt-hinh4-khi-xilanh-thumb.webp" alt="Hình 4 — sơ đồ lấy mẫu khí vào xilanh" loading="lazy" />
                 </button>
                 <figcaption>Hình 4 — Sơ đồ lấy mẫu khí vào xilanh</figcaption>
               </figure>
@@ -1474,8 +1474,8 @@
                 <li><strong>Bước 5:</strong> Tháo ống đựng mẫu ra.</li>
               </ol>
               <figure class="sm-figure">
-                <button type="button" class="qt-img-btn" data-full="image/qt-hinh5-khi-ong-mau.webp" data-caption="Hình 5 — 1: Ống đựng mẫu, 2: Van chặn hoặc kẹp ống, 3: Ống nối, 4: Bồn chứa dầu xả bỏ, 5: Van lấy mẫu của thiết bị, 6: Ống dẫn khí từ Rơle ga.">
-                  <img src="image/qt-hinh5-khi-ong-mau-thumb.webp" alt="Hình 5 — sơ đồ lấy mẫu khí vào ống đựng mẫu bằng phương pháp thay thế dầu" loading="lazy" />
+                <button type="button" class="qt-img-btn" data-full="assets/image/qt-hinh5-khi-ong-mau.webp" data-caption="Hình 5 — 1: Ống đựng mẫu, 2: Van chặn hoặc kẹp ống, 3: Ống nối, 4: Bồn chứa dầu xả bỏ, 5: Van lấy mẫu của thiết bị, 6: Ống dẫn khí từ Rơle ga.">
+                  <img src="assets/image/qt-hinh5-khi-ong-mau-thumb.webp" alt="Hình 5 — sơ đồ lấy mẫu khí vào ống đựng mẫu bằng phương pháp thay thế dầu" loading="lazy" />
                 </button>
                 <figcaption>Hình 5 — Lấy mẫu khí vào ống đựng mẫu (phương pháp thay thế dầu)</figcaption>
               </figure>
@@ -1490,38 +1490,38 @@
           to.</p>
         <div class="sm-gallery">
           <figure>
-            <button type="button" class="qt-img-btn" data-full="image/qt-anh-gan-the-nhan.webp" data-caption="Gắn thẻ tên nhãn mẫu">
-              <img src="image/qt-anh-gan-the-nhan-thumb.webp" alt="Gắn thẻ tên nhãn mẫu" loading="lazy" />
+            <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-gan-the-nhan.webp" data-caption="Gắn thẻ tên nhãn mẫu">
+              <img src="assets/image/qt-anh-gan-the-nhan-thumb.webp" alt="Gắn thẻ tên nhãn mẫu" loading="lazy" />
             </button>
             <figcaption>Gắn thẻ tên nhãn mẫu</figcaption>
           </figure>
           <figure>
-            <button type="button" class="qt-img-btn" data-full="image/qt-anh-tach-ong-noi.webp" data-caption="Tách ống nối và van 3 chiều">
-              <img src="image/qt-anh-tach-ong-noi-thumb.webp" alt="Tách ống nối và van 3 chiều" loading="lazy" />
+            <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-tach-ong-noi.webp" data-caption="Tách ống nối và van 3 chiều">
+              <img src="assets/image/qt-anh-tach-ong-noi-thumb.webp" alt="Tách ống nối và van 3 chiều" loading="lazy" />
             </button>
             <figcaption>Tách ống nối và van 3 chiều</figcaption>
           </figure>
           <figure>
-            <button type="button" class="qt-img-btn" data-full="image/qt-anh-treo-the-xilanh.webp" data-caption="Treo thẻ nhãn cho xy ranh mẫu">
-              <img src="image/qt-anh-treo-the-xilanh-thumb.webp" alt="Treo thẻ nhãn cho xy ranh mẫu" loading="lazy" />
+            <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-treo-the-xilanh.webp" data-caption="Treo thẻ nhãn cho xy ranh mẫu">
+              <img src="assets/image/qt-anh-treo-the-xilanh-thumb.webp" alt="Treo thẻ nhãn cho xy ranh mẫu" loading="lazy" />
             </button>
             <figcaption>Treo thẻ nhãn cho xy ranh mẫu</figcaption>
           </figure>
           <figure>
-            <button type="button" class="qt-img-btn" data-full="image/qt-anh-dat-xilanh-ong-baoquan.webp" data-caption="Đặt xy ranh mẫu vào ống bảo quản">
-              <img src="image/qt-anh-dat-xilanh-ong-baoquan-thumb.webp" alt="Đặt xy ranh mẫu vào ống bảo quản" loading="lazy" />
+            <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-dat-xilanh-ong-baoquan.webp" data-caption="Đặt xy ranh mẫu vào ống bảo quản">
+              <img src="assets/image/qt-anh-dat-xilanh-ong-baoquan-thumb.webp" alt="Đặt xy ranh mẫu vào ống bảo quản" loading="lazy" />
             </button>
             <figcaption>Đặt xy ranh mẫu vào ống bảo quản</figcaption>
           </figure>
           <figure>
-            <button type="button" class="qt-img-btn" data-full="image/qt-anh-dat-thung-vanchuyen.webp" data-caption="Đặt ống bảo quản kèm xy ranh mẫu vào thùng vận chuyển">
-              <img src="image/qt-anh-dat-thung-vanchuyen-thumb.webp" alt="Đặt ống bảo quản kèm xy ranh mẫu vào thùng vận chuyển" loading="lazy" />
+            <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-dat-thung-vanchuyen.webp" data-caption="Đặt ống bảo quản kèm xy ranh mẫu vào thùng vận chuyển">
+              <img src="assets/image/qt-anh-dat-thung-vanchuyen-thumb.webp" alt="Đặt ống bảo quản kèm xy ranh mẫu vào thùng vận chuyển" loading="lazy" />
             </button>
             <figcaption>Đặt ống bảo quản kèm xy ranh mẫu vào thùng vận chuyển</figcaption>
           </figure>
           <figure>
-            <button type="button" class="qt-img-btn" data-full="image/qt-anh-dong-goi-thung.webp" data-caption="Đóng gói mẫu vào thùng vận chuyển (Điều 10)">
-              <img src="image/qt-anh-dong-goi-thung-thumb.webp" alt="Đóng gói mẫu vào thùng vận chuyển" loading="lazy" />
+            <button type="button" class="qt-img-btn" data-full="assets/image/qt-anh-dong-goi-thung.webp" data-caption="Đóng gói mẫu vào thùng vận chuyển (Điều 10)">
+              <img src="assets/image/qt-anh-dong-goi-thung-thumb.webp" alt="Đóng gói mẫu vào thùng vận chuyển" loading="lazy" />
             </button>
             <figcaption>Đóng gói thùng vận chuyển mẫu</figcaption>
           </figure>
@@ -2068,25 +2068,25 @@
           tả ở Bước 2 và Bước 5 trên — không phải bảng gộp chung trong các áp phích này.</p>
         <div class="handbook-gallery">
           <div class="handbook-item">
-            <button type="button" class="handbook-thumb" data-full="image/cam-nang-dga.webp"
+            <button type="button" class="handbook-thumb" data-full="assets/image/cam-nang-dga.webp"
               data-caption="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599">
-              <img src="image/cam-nang-dga-thumb.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599" loading="lazy" />
+              <img src="assets/image/cam-nang-dga-thumb.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599" loading="lazy" />
               <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
             </button>
             <p class="handbook-caption">Cẩm nang chẩn đoán DGA theo IEC 60599</p>
           </div>
           <div class="handbook-item">
-            <button type="button" class="handbook-thumb" data-full="image/co-che-hinh-thanh-khi-dga.webp"
+            <button type="button" class="handbook-thumb" data-full="assets/image/co-che-hinh-thanh-khi-dga.webp"
               data-caption="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599 — năng lượng bẻ gãy liên kết hóa học ứng với từng mức sự cố (PD, T1/T2, T3, D1, D2)">
-              <img src="image/co-che-hinh-thanh-khi-dga-thumb.webp" alt="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599" loading="lazy" />
+              <img src="assets/image/co-che-hinh-thanh-khi-dga-thumb.webp" alt="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599" loading="lazy" />
               <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
             </button>
             <p class="handbook-caption">Cơ chế hình thành khí DGA theo mức năng lượng sự cố</p>
           </div>
           <div class="handbook-item">
-            <button type="button" class="handbook-thumb" data-full="image/phan-tich-khi-hoa-tan.webp"
+            <button type="button" class="handbook-thumb" data-full="assets/image/phan-tich-khi-hoa-tan.webp"
               data-caption="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện — khí chỉ thị (H2, C2H2, C2H4, C2H6) và quy trình lấy mẫu khí bằng xilanh chuyên dụng theo IEC 60599/60567, ASTM D3612">
-              <img src="image/phan-tich-khi-hoa-tan-thumb.webp" alt="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện" loading="lazy" />
+              <img src="assets/image/phan-tich-khi-hoa-tan-thumb.webp" alt="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện" loading="lazy" />
               <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
             </button>
             <p class="handbook-caption">Khí chỉ thị DGA &amp; quy trình lấy mẫu khí bằng xilanh</p>
@@ -2369,7 +2369,7 @@
       </div>
 
       <!-- Xuất Biên bản thí nghiệm dầu (thùng chính + OLTC) theo mẫu PTC3 — src/presentation/tabs/ui-oil-bbtn-export.js,
-           src/data/io/mba-oil-bbtn-export.js, template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
+           src/data/io/mba-oil-bbtn-export.js, assets/template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
            không lưu vào cơ sở dữ liệu. -->
       <div class="panel hidden mode-lap" id="oilBbtnExportPanel">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
@@ -2639,7 +2639,7 @@
       </div>
 
       <!-- BBTN 3 pha chung 1 biên bản (mẫu PTC3/BM.14) — đọc PDF hoặc nhập tay, tách thành 3 bản ghi
-           A/B/C, xuất lại theo template/template-bbtn-dau-3pha.docx. Xem src/presentation/tabs/ui-ti-oil-3pha.js. -->
+           A/B/C, xuất lại theo assets/template/template-bbtn-dau-3pha.docx. Xem src/presentation/tabs/ui-ti-oil-3pha.js. -->
       <div class="dga-input-split-layout" id="t3SplitLayout">
         <div class="dga-input-main-col">
           <div class="panel" id="tio3Panel">
@@ -2856,7 +2856,7 @@
       <div class="panel about-panel">
         <div class="about-hero">
           <div class="about-logo">
-            <img src="image/app-icon-192.webp" alt="Icon ứng dụng DGAOil" width="52" height="52" />
+            <img src="assets/image/app-icon-192.webp" alt="Icon ứng dụng DGAOil" width="52" height="52" />
           </div>
           <div>
             <h2>DGAOil</h2>

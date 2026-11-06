@@ -249,7 +249,7 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `src/presentation/components/ui-errors.js` | Xử lý lỗi tập trung (toast lỗi + handler `error`/`unhandledrejection` toàn cục) — nạp sớm, ngay sau `config.js` |
 | `src/presentation/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
 | `app-core.js` | Lõi khởi động app (nạp dữ liệu, gắn sự kiện dùng chung, bố cục tab) |
-| `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `src/data/io/oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `template/template-bbtn-dau-3pha.docx`, giao diện ở `src/presentation/tabs/ui-ti-oil-3pha.js`) |
+| `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `src/data/io/oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `assets/template/template-bbtn-dau-3pha.docx`, giao diện ở `src/presentation/tabs/ui-ti-oil-3pha.js`) |
 | `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
 | `backend/gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
 | `mobile/` | Bản giao diện tối ưu cho điện thoại — dùng chung logic với bản web (xem mục 6 và `mobile/README.md`) |

@@ -2,7 +2,7 @@
    (PDF: BbtnImport.readLines(), src/data/io/bbtn-import.js; DOCX: mbaOilDocxXmlToLines() bên dưới) để TỰ ĐIỀN tab
    "Lý-Hóa dầu" — dùng cho cả nhập biên bản MỚI lẫn nhập lại BBTN LỊCH SỬ để theo dõi xu hướng.
 
-   Mẫu tham chiếu: "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN" của PTC3 (template/Ly-hoa.docx) — 1 biên bản gồm
+   Mẫu tham chiếu: "BIÊN BẢN THÍ NGHIỆM DẦU CÁCH ĐIỆN" của PTC3 (assets/template/Ly-hoa.docx) — 1 biên bản gồm
    2 bảng kết quả: "Dầu cách điện trong thùng dầu chính (main tank)" và "Dầu cách điện trong bộ OLTC".
    - MBA 1 pha (VD 500 kV): "Vị trí lấy mẫu: Thân máy và bộ OLTC pha C" → cả 2 phần là của pha C.
    - MBA 3 pha chung thùng: phần thùng chính 1 cột, phần OLTC có thể tách riêng từng pha A/B/C.

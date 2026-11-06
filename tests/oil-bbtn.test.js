@@ -153,7 +153,7 @@ describe("Template BBTN", () => {
   require("../vendor/docxtemplater/pizzip.min.js");
   const { PizZip } = global.window;
   delete global.window;
-  const buf = fs.readFileSync(path.join(__dirname, "..", "template", "template-bbtn-dau-3pha.docx"));
+  const buf = fs.readFileSync(path.join(__dirname, "..", "assets", "template", "template-bbtn-dau-3pha.docx"));
   const parsed = OilBbtn.parseOilBbtnLines(LINES);
   const form = { ...parsed, manufacturer: "Arteche", equipmentType: TI, ketLuan: "" };
   const evaluation = OilBbtn.evaluateOilBbtn(DGA, { equipmentType: TI, manufacturer: "Arteche", standards: ARTECHE, umKv: "550", phases: parsed.phases });

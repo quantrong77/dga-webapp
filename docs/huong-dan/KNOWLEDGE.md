@@ -465,7 +465,7 @@ Hệ thống tích hợp kết quả đánh giá thành 3 cấp độ:
 ### 6.4. Xuất Báo Cáo & Biên Bản Microsoft Word (.docx)
 - Sử dụng `docxtemplater` kết hợp `pizzip` chạy 100% tại trình duyệt, không cần máy chủ sinh file Word.
 - **Xuất BBTN (.docx):** Điền toàn bộ thông số thí nghiệm vào template chuẩn PTC3/BM.15.
-- **Xuất BBTN Dầu 3 pha (`oil-bbtn.js`):** Gom cả 3 pha A, B, C của tổ TI/TU vào chung một biên bản nghiệm thu duy nhất (`template/template-bbtn-dau-3pha.docx`).
+- **Xuất BBTN Dầu 3 pha (`oil-bbtn.js`):** Gom cả 3 pha A, B, C của tổ TI/TU vào chung một biên bản nghiệm thu duy nhất (`assets/template/template-bbtn-dau-3pha.docx`).
 - **Xuất Báo cáo Phân tích Kỹ thuật (.docx):** Tự động soạn thảo văn bản giải trình kỹ thuật chuyên sâu khi thiết bị rơi vào trạng thái Cảnh báo/Báo động, bao gồm thông số vận hành, diễn giải tỷ số khí, đánh giá Duval và đề xuất xử lý cụ thể.
 
 ---

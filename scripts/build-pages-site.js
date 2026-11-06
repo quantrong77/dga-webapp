@@ -23,7 +23,7 @@ const ROOT_FILES = [
   "config.js",
 ];
 /** Thư mục chép nguyên (trừ file bị loại bởi isExcluded). */
-const ROOT_DIRS = ["src", "vendor", "image", "mobile"];
+const ROOT_DIRS = ["src", "vendor", "assets/image", "mobile"];
 /** Mẫu BBTN app tải bằng fetch(): chỉ các file template-*.docx (không chép BBTN thật / file khóa ~$ của Word). */
 const TEMPLATE_PATTERN = /^template-[\w.-]+\.docx$/;
 
@@ -68,7 +68,7 @@ function requiredPaths(siteDir) {
     if (!fs.existsSync(p)) continue;
     const s = fs.readFileSync(p, "utf8").replace(/<!--[\s\S]*?-->/g, "");
     const baseDir = path.posix.dirname(html) === "." ? "" : path.posix.dirname(html);
-    for (const m of s.matchAll(/<(?:script|link|img|source)\b[^>]*?\s(?:src|href|srcset)="([^"]+)"/gi)) {
+    for (const m of s.matchAll(/<(?:script|link|img|source|button|a)\b[^>]*?\s(?:src|href|srcset|data-full)="([^"]+)"/gi)) {
       addFrom(baseDir, m[1].split(/\s+/)[0]);
     }
   }
@@ -107,9 +107,9 @@ function build(outDir) {
   fs.mkdirSync(out, { recursive: true });
   for (const f of ROOT_FILES) fs.copyFileSync(path.join(ROOT, f), path.join(out, f));
   for (const d of ROOT_DIRS) copyDir(path.join(ROOT, d), path.join(out, d));
-  fs.mkdirSync(path.join(out, "template"), { recursive: true });
-  for (const f of fs.readdirSync(path.join(ROOT, "template"))) {
-    if (TEMPLATE_PATTERN.test(f)) fs.copyFileSync(path.join(ROOT, "template", f), path.join(out, "template", f));
+  fs.mkdirSync(path.join(out, "assets", "template"), { recursive: true });
+  for (const f of fs.readdirSync(path.join(ROOT, "assets", "template"))) {
+    if (TEMPLATE_PATTERN.test(f)) fs.copyFileSync(path.join(ROOT, "assets", "template", f), path.join(out, "assets", "template", f));
   }
   // Pages: không xử lý Jekyll (thư mục/file bắt đầu bằng "_" vẫn được phục vụ)
   fs.writeFileSync(path.join(out, ".nojekyll"), "");

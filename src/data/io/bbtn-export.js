@@ -1,6 +1,6 @@
 /* bbtn-export.js — Xuất Biên bản thí nghiệm (BBTN, .docx) đã điền sẵn số liệu khí hòa
    tan + kết quả đánh giá của lần đo VỪA phân tích (xem "_lastAnalysis" ở ui-dga.js, gán
-   trong onAnalyze()), dựa trên mẫu template/template-bbtn-dga.docx (PTC3/BM.15) đã cài
+   trong onAnalyze()), dựa trên mẫu assets/template/template-bbtn-dga.docx (PTC3/BM.15) đã cài
    sẵn placeholder {tag} — điền bằng docxtemplater (MIT), đóng gói tại
    vendor/docxtemplater/ (xem index.html). Chạy 100% phía client, KHÔNG gửi số liệu lên
    server nào để "điền" — chỉ tải mẫu .docx tĩnh về rồi xử lý ngay trong trình duyệt,
@@ -24,7 +24,7 @@
    {tonghamluongkhi_dg} lấp ô "Tiêu chuẩn"/"Đánh giá" của dòng 11 (Tổng hàm lượng khí)
    vốn để trống hoàn toàn trong mẫu gốc dù Bảng 63 CÓ ngưỡng cụ thể theo cấp điện áp. */
 
-const BBTN_TEMPLATE_URL = "template/template-bbtn-dga.docx";
+const BBTN_TEMPLATE_URL = "assets/template/template-bbtn-dga.docx";
 
 // Tên khí trong dữ liệu app (DGA.GASES) -> tiền tố tag trong mẫu .docx (xem các cột
 // "{xx_kq}"/"{xx_tc}"/"{xx_toc}"/"{xx_dg}" trong bảng KẾT QUẢ THÍ NGHIỆM của mẫu).
@@ -63,7 +63,7 @@ function bbtnBuildKetLuan(a) {
 }
 
 /** Dựng object dữ liệu để docxtemplater điền vào mẫu — key khớp CHÍNH XÁC với tên
- *  placeholder {tag} đã cài trong template/template-bbtn-dga.docx. */
+ *  placeholder {tag} đã cài trong assets/template/template-bbtn-dga.docx. */
 function buildBbtnExportData(a) {
   const m = a.measurement || {};
   const evalByGas = {};

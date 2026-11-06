@@ -27,7 +27,7 @@ describe("build-pages-site", () => {
     ["index.html", "sw.js", "manifest.webmanifest", "config.js", "src/presentation/app-core.js", "mobile/index.html"].forEach((f) =>
       expect(files).toContain(f)
     );
-    expect(files.some((f) => f.startsWith("template/template-") && f.endsWith(".docx"))).toBe(true);
+    expect(files.some((f) => f.startsWith("assets/template/template-") && f.endsWith(".docx"))).toBe(true);
   });
 
   test("không chứa dữ liệu / mã máy chủ / tài liệu nội bộ", () => {
@@ -39,9 +39,9 @@ describe("build-pages-site", () => {
     expect(files.filter((f) => f.endsWith(".gs") || f.endsWith(".sql"))).toEqual([]);
   });
 
-  test("template/ chỉ gồm mẫu template-*.docx (không có BBTN thật)", () => {
+  test("assets/template/ chỉ gồm mẫu template-*.docx (không có BBTN thật)", () => {
     files
-      .filter((f) => f.startsWith("template/"))
+      .filter((f) => f.startsWith("assets/template/"))
       .forEach((f) => expect(path.basename(f)).toMatch(/^template-[\w.-]+\.docx$/));
   });
 
