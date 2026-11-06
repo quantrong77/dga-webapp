@@ -251,6 +251,8 @@ function toggleStandardTypeFields() {
 function toggleOilStandardEquipmentFields() {
   if ($("s_standard_type").value !== "dau") return;
   const isMba = $("s_equipmenttype").value === DGA.EQUIPMENT_TYPES.MBA;
+  // Bảng ngưỡng dầu: cột "Loại bỏ" + dòng tgδ 20°C (.std-instr-only) chỉ dùng cho TI/TU/Sứ xuyên
+  $("stdOilFields").classList.toggle("is-mba", isMba);
   $("s_oil_mba_fields").classList.toggle("hidden", !isMba);
   $("s_oil_instrument_fields").classList.toggle("hidden", isMba);
   $("stdOilFieldsNoteMba").classList.toggle("hidden", !isMba);
@@ -268,11 +270,23 @@ async function refreshStandardsUI() {
     refreshInstrumentOilManufacturerOptions($("tio_equipmenttype").value);
   }
 
+  renderStandardsList();
+}
+
+/** Danh sách tiêu chuẩn (cột trái mục "Tiêu chuẩn"): mỗi tiêu chuẩn 1 dòng gọn — tên NSX + loại + áp dụng, dòng dưới là
+ *  ngưỡng; lọc theo loại (Khí/Dầu) + ô tìm; dòng đang sửa được tô nổi. */
+function renderStandardsList() {
   const tbody = $("standardsTable");
+  if (!tbody) return;
   tbody.innerHTML = "";
+  const filterType = $("stdListFilter") ? $("stdListFilter").value : "";
+  const fold = (t) => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+  const words = fold($("stdListSearch") ? $("stdListSearch").value : "").trim().split(/\s+/).filter(Boolean);
   $("standardsEmpty").classList.toggle("hidden", _allStandards.length > 0);
+  let shown = 0;
   _allStandards.forEach((rec) => {
     const isOil = isOilStandardRecord(rec);
+    if (filterType && filterType !== (isOil ? "dau" : "khi")) return;
     let appliesTo, thresholdText;
     if (isOil) {
       const equipmentType = rec.equipment_type || rec.equipmentType || DGA.EQUIPMENT_TYPES.MBA;
@@ -305,13 +319,21 @@ async function refreshStandardsUI() {
         : "";
       thresholdText = DGA.GASES.map((g) => g + "=" + (limits[g] ?? "—")).join(", ") + condemningText;
     }
+    if (words.length) {
+      const hay = fold([rec.manufacturer, appliesTo, rec.source, isOil ? "dau" : "khi", thresholdText].join(" "));
+      if (!words.every((w) => hay.includes(w))) return;
+    }
+    shown++;
     const tr = document.createElement("tr");
+    if (rec.id && rec.id === _editingStandardId) tr.classList.add("is-editing");
     tr.innerHTML = `
-      <td><strong>${escapeHtml(rec.manufacturer)}</strong></td>
-      <td>${isOil ? '<span class="pill muted">Dầu</span>' : '<span class="pill muted">Khí</span>'}</td>
-      <td>${escapeHtml(appliesTo || "—")}</td>
-      <td style="font-size:12px;">${escapeHtml(thresholdText)}</td>
-      <td>${escapeHtml(rec.source || "—")}</td>
+      <td class="std-list-main">
+        <div class="std-list-name"><strong>${escapeHtml(rec.manufacturer)}</strong>
+          ${isOil ? '<span class="pill muted">Dầu</span>' : '<span class="pill muted">Khí</span>'}
+          <span class="std-list-applies">${escapeHtml(appliesTo || "—")}</span></div>
+        <div class="std-list-thresholds">${escapeHtml(thresholdText)}</div>
+        ${rec.source ? `<div class="std-list-source">Nguồn: ${escapeHtml(rec.source)}</div>` : ""}
+      </td>
       <td class="actions-cell"><div class="btn-row">${canWrite() ? `<button class="btn ghost" data-action="edit" style="padding:5px 10px; font-size:12px;">Sửa</button> <button class="btn danger" data-action="del">Xóa</button>` : ""}</div></td>
     `;
     const editBtn = tr.querySelector('[data-action="edit"]');
@@ -330,6 +352,8 @@ async function refreshStandardsUI() {
     }
     tbody.appendChild(tr);
   });
+  if ($("stdListCount")) $("stdListCount").textContent = _allStandards.length ? `(${_allStandards.length})` : "";
+  if ($("standardsNoMatch")) $("standardsNoMatch").classList.toggle("hidden", !_allStandards.length || shown > 0);
 }
 
 /** Nạp 1 tiêu chuẩn đã có lên form để sửa — bấm "Cập nhật tiêu chuẩn" sẽ ghi đè
@@ -368,7 +392,11 @@ function onEditStandard(rec) {
   $("editingStandardNote").classList.remove("hidden");
   $("btnCancelEditStandard").classList.remove("hidden");
   $("btnSaveStandard").textContent = "Cập nhật tiêu chuẩn";
-  $("s_manufacturer").scrollIntoView({ behavior: "smooth", block: "center" });
+  if ($("stdFormTitle")) $("stdFormTitle").textContent = `Sửa tiêu chuẩn: ${rec.manufacturer || ""}`;
+  renderStandardsList(); // tô dòng đang sửa
+  // Form nằm cạnh danh sách (dính khi cuộn) — chỉ cuộn khi form đang khuất (màn hình hẹp, form xếp dưới danh sách)
+  const formTop = $("s_manufacturer").getBoundingClientRect().top;
+  if (formTop < 0 || formTop > window.innerHeight) $("s_manufacturer").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function resetStandardForm() {
@@ -385,6 +413,8 @@ function resetStandardForm() {
   $("editingStandardNote").classList.add("hidden");
   $("btnCancelEditStandard").classList.add("hidden");
   $("btnSaveStandard").textContent = "Lưu tiêu chuẩn";
+  if ($("stdFormTitle")) $("stdFormTitle").textContent = "Thêm tiêu chuẩn nhà sản xuất";
+  renderStandardsList();
 }
 
 async function onSaveStandard() {

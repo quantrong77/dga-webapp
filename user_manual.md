@@ -36,21 +36,22 @@
 
 | Loại thiết bị | Có nhập DGA | Có nhập thí nghiệm dầu |
 |---|:-:|:-:|
-| MBA / Kháng dầu | ✔ | ✔ (dầu chính + dầu OLTC) |
+| MBA / Kháng dầu | ✔ | ✔ (dầu thùng chính + dầu OLTC, đủ chỉ tiêu lý-hóa) |
 | TI (biến dòng điện) | ✔ | ✔ (cần chọn nhà sản xuất — xem mục 9.3) |
 | TU (biến điện áp) | ✔ | ✔ (cần chọn nhà sản xuất — xem mục 9.3) |
-| Sứ xuyên (Bushing) | ✔ | ✘ (không có thí nghiệm dầu) |
+| Sứ xuyên (Bushing) | ✔ | ✔ (theo tiêu chuẩn nhà sản xuất — xem mục 9.4) |
 | Khác | ✔ | ✘ |
 
-Căn cứ đánh giá: **QĐ 1901/QĐ-EVNNPT** và **IEC 60599:2022**. Khi bạn chưa chọn nhà sản xuất, app tự lấy ngưỡng **chặt hơn** giữa hai nguồn này.
+Căn cứ đánh giá: **QĐ 1901/QĐ-EVNNPT**, **IEC 60599:2022** (khí hòa tan) và **IEC 60422:2024** (dầu — tham khảo song song). Khi bạn chưa chọn nhà sản xuất, app tự lấy ngưỡng **chặt hơn** giữa QĐ1901 và IEC 60599 cho khí hòa tan.
 
 App làm được những việc chính:
 
 - Nhập 7 khí hòa tan → tự tính **TCG**, đánh giá từng khí, chẩn đoán dạng sự cố (**Bảng 66 / Tam giác Duval**), tính tốc độ sinh khí, đưa ra **trạng thái tổng thể** và **khuyến cáo**.
-- Đánh giá độ ẩm, tgδ, điện áp chọc thủng của dầu.
+- Đánh giá **lý-hóa dầu**: chỉ tiêu cơ bản (điện áp chọc thủng, tgδ 90°C, hàm lượng nước) và bổ sung theo QĐ1901 (trị số axit, chớp cháy, tạp chất cơ học, đếm hạt, điện trở suất, 2-furfural, màu sắc, độ ổn định ôxi hóa…), kèm tham chiếu IEC 60422:2024.
 - Lưu lịch sử, so sánh giữa các lần đo, vẽ xu hướng và dự báo.
 - Tự động liệt kê các thiết bị đang ở mức **Cảnh báo / Báo động**.
-- Tự đọc số liệu từ **Biên bản thí nghiệm PDF**, và xuất lại thành **BBTN / Báo cáo kỹ thuật (.docx)**.
+- Tự đọc số liệu từ **Biên bản thí nghiệm (PDF, Word .docx)** — từng file hoặc **hàng loạt / cả thư mục** — và xuất lại thành **BBTN / Báo cáo kỹ thuật (.docx)**.
+- Mỗi tab nhập liệu chia 2 tab con: **Nhập BBTN cũ** (đưa biên bản đã có vào lưu trữ) và **Lập BBTN** (nhập tay, đánh giá, xuất biên bản; thông số kỹ thuật thiết bị tự điền theo dữ liệu đã lưu).
 
 ---
 
@@ -58,7 +59,7 @@ App làm được những việc chính:
 
 ### 2.1. Mở app
 
-Mở đường link do quản trị viên cung cấp bằng **Chrome, Edge hoặc Safari** (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file `index.html` bằng trình duyệt (hoặc qua máy chủ cục bộ `npm start` tại `http://localhost:8080`).
+Mở đường link do quản trị viên cung cấp bằng **Chrome, Edge hoặc Safari** (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file `index.html` bằng trình duyệt (hoặc qua máy chủ cục bộ `npm start` — mặc định `http://localhost:8080`, đổi cổng bằng biến môi trường `PORT`).
 
 Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 
@@ -113,7 +114,7 @@ Giao diện được phân bố khoa học thành hai khu vực điều hướng
 | **Phản hồi** | Gửi góp ý cho ứng dụng |
 | **Quản trị** | Quản lý người dùng, Cấu hình (Tiêu chuẩn & Quy định), Bản sao Supabase — **chỉ Admin** mới thấy |
 
-> **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định 13 bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
+> **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
 
 ### 3.2. Giao diện sáng hoặc tối
 
@@ -130,7 +131,8 @@ Khi bạn cuộn màn hình xuống phía dưới để đọc kết quả phân
 ### 3.5. Các thao tác dùng chung
 
 - **Ô Trạm / Thiết bị:** vừa **gõ để tìm**, vừa **bấm ▼ để chọn** trong danh sách đã có. Bạn cũng có thể **gõ tên mới** (không bắt buộc phải chọn từ danh sách).
-- **Khung kéo thả file (Dropzone):** Cả khung kéo thả 1 file BBTN (PDF) và khung kéo thả hàng loạt nhiều file PDF đều được tăng chiều cao rộng rãi và có hiệu ứng viền sáng (focus border) nổi bật khi bạn rê file vào, giúp thao tác kéo thả dễ dàng và chuẩn xác.
+- **Khung "Nhập BBTN" (tab con Nhập BBTN cũ):** nằm trên form nhập liệu, gồm **2 ô kéo thả ngang hàng, cùng kích thước** — ô trái nhận **1 biên bản** (đọc vào form để đối chiếu rồi lưu), ô phải nhận **nhiều biên bản hoặc cả thư mục** (nút **Chọn cả thư mục…**). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.
+- **Tab con "Nhập BBTN cũ" / "Lập BBTN":** có ở tab **Khí hòa tan** và **Lý-Hóa dầu**, dùng **chung một form** (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.
 - **Biểu tượng "i":** bấm để xem giải thích chi tiết; đóng bằng **×** hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.
 - **Thông báo nhanh (toast)** hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), **màu đỏ khi có lỗi hoặc thiếu thông tin** (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.
 - Khi thấy **"Vui lòng chờ! Đang nạp dữ liệu…"**, hãy chờ danh sách Trạm/Thiết bị và lịch sử tải xong.
@@ -164,7 +166,7 @@ Hai tab con dùng **chung một form** — đổi tab con không mất số li�
 | **Lần đo** | Tự gợi ý số thứ tự kế tiếp theo nhóm Trạm + Thiết bị + Pha; sửa được nếu cần |
 | **Ngày lấy mẫu** | Ngày lấy mẫu dầu |
 | **Ghi chú** | Không bắt buộc |
-| **Biên bản thí nghiệm (PDF)** | Không bắt buộc — xem [mục 6](#6-nhập-nhanh-từ-biên-bản-thí-nghiệm-pdf-và-ảnh-tấm-nhãn) |
+| **Biên bản thí nghiệm (PDF)** | Không bắt buộc — chọn ở ô trái khung **Nhập BBTN** (phía trên form, tab con Nhập BBTN cũ), xem [mục 6](#6-nhập-nhanh-từ-biên-bản-thí-nghiệm-pdf-và-ảnh-tấm-nhãn) |
 
 > **Mẹo:** Để tránh app coi là hai thiết bị khác nhau, hãy **gõ tên Trạm và Thiết bị thống nhất** (nên chọn từ danh sách gợi ý thay vì gõ lại). Tốc độ sinh khí và xu hướng được tính theo nhóm **Trạm + Thiết bị + Pha**.
 
@@ -188,7 +190,7 @@ Hai khối này **không ảnh hưởng đánh giá**, chỉ để điền sẵn
 - **Thông tin thí nghiệm bổ sung:** ngày thí nghiệm, lý do thí nghiệm, nhiệt độ và độ ẩm môi trường (dùng cho BBTN).
 - **Thông số kỹ thuật thiết bị:** kiểu máy, năm sản xuất, năm đưa vào vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu cách điện, hiện trạng vận hành (dùng cho Báo cáo phân tích kỹ thuật).
 
-> Thông số kỹ thuật lưu **theo từng lần đo**. Nếu muốn báo cáo có đủ thông số, hãy điền (hoặc để nguyên nếu chưa xóa form) ở mỗi lần đo.
+> Thông số kỹ thuật lưu **theo từng lần đo**. Ở tab con **Lập BBTN**, chọn Trạm + Thiết bị đã có dữ liệu thì app **tự điền** các ô thông số còn trống từ lần lưu gần nhất (xem đầu mục 4); thiết bị mới thì nhập tay hoặc lấy từ file PDF/Word cũ qua ô **"Nhập thông số kỹ thuật từ file"**.
 
 ### Bước 6 — Bấm "Phân tích & Lưu"
 
@@ -295,6 +297,8 @@ Sau khi bấm **Phân tích & Lưu**, ở đầu khối **"2. Kết quả đánh
 | **Xuất BBTN (docx)** | Điền sẵn vào mẫu Biên bản thí nghiệm **PTC3/BM.15**: trạm, vị trí lắp đặt, hãng SX, ngày lấy/thí nghiệm mẫu, lý do, điều kiện môi trường, 7 khí, TCG, tốc độ sinh khí (%/tháng), N2/O2, Tổng hàm lượng khí hòa tan, kết luận | Luôn có |
 | **Xuất báo cáo phân tích kỹ thuật (docx)** | Thông số thiết bị, kết quả thí nghiệm, 3 tỷ số khí, chẩn đoán bất thường, đề xuất hướng xử lý | Chỉ hiện khi trạng thái **khác "Bình thường"** |
 
+Hai nút này nằm ở tab con **Lập BBTN** (riêng nút Báo cáo phân tích kỹ thuật hiện ở cả 2 tab con). Tab **Lý-Hóa dầu** có thêm **Xuất BBTN lý-hóa dầu** (thùng chính + OLTC) và **Xuất BBTN dầu 3 pha** TI/TU/Sứ xuyên — xem mục 9.
+
 **Cách dùng:** bấm nút → file .docx được tải về → **mở bằng Word** để bổ sung các mục chưa có sẵn (hãng SX, số chế tạo, chữ ký…) rồi mới ban hành.
 
 - Trường nào bạn để trống, file Word sẽ bỏ trống dòng đó (app không tự suy diễn).
@@ -305,7 +309,17 @@ Sau khi bấm **Phân tích & Lưu**, ở đầu khối **"2. Kết quả đánh
 
 ## 9. Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)
 
-Ba chỉ tiêu được đánh giá: **Độ ẩm dầu (ppm)**, **Tổn hao điện môi tgδ ở 90°C (%)**, **Điện áp chọc thủng (kV)**.
+Với dầu MBA/Kháng dầu và OLTC, bảng kết quả chia theo nhóm chỉ tiêu (chỉ nhập những chỉ tiêu có trong biên bản, ô để trống = không thí nghiệm):
+
+| Nhóm | Chỉ tiêu | Căn cứ |
+|---|---|---|
+| **Cơ bản** | Điện áp chọc thủng, tgδ ở 90°C, hàm lượng nước (độ ẩm) | QĐ1901 Bảng 54 / 55 / 58 |
+| **Bổ sung QĐ1901** | Trị số axit, chớp cháy cốc kín, tạp chất cơ học (quan sát bằng mắt / hàm lượng), số hạt > 6 μm và > 14 μm, điện trở suất 90°C, 2-furfural, màu sắc (ISO 2049) | QĐ1901 Điều 48–56 |
+| **Độ ổn định ôxi hóa** (khi pha trộn dầu) | Cặn, trị số axit và tgδ sau ôxi hóa | QĐ1901 Bảng 60–62 |
+| **Chỉ có ở IEC 60422** | Ngoại quan, sức căng bề mặt, lưu huỳnh ăn mòn, PCB, cặn, bùn, chất ức chế, chất thụ động | IEC 60422:2024 |
+| **Khác** | Axit – kiềm hòa tan trong dầu | ghi trên BBTN PTC3 |
+
+Kết quả có 2 khối: **đánh giá theo QĐ1901** (Đạt / Không đạt / Chưa đủ dữ liệu từng chỉ tiêu, kèm căn cứ) và **tham khảo IEC 60422:2024** (Bảng 3 dầu mới, Bảng 5 dầu vận hành — so với biên Tốt / Kém: Đạt / Cảnh báo (giữa 2 biên) / Không đạt), không ảnh hưởng kết luận theo QĐ1901.
 
 Đầu tab, chọn **Loại thiết bị** — chỉ khối nhập liệu phù hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản ghi).
 
@@ -313,7 +327,12 @@ Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: **Nhập BB
 
 ### 9.1. Dầu MBA/Kháng dầu (dầu chính)
 
-Điền: **Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú**, rồi nhập 3 kết quả và bấm **Đánh giá & Lưu**.
+Điền: **Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú**, (tùy chọn) **Loại dầu (chất ức chế)** và **Phương pháp thử ôxi hóa**, rồi nhập kết quả và bấm **Đánh giá & Lưu**.
+
+- **Thông số kỹ thuật thiết bị** (hãng sản xuất, năm sản xuất, điện áp định mức, công suất, số chế tạo, năm vận hành, loại dầu): khối riêng trong form, **lưu kèm bản ghi** và dùng khi xuất BBTN. Ở **Lập BBTN**, chọn lại thiết bị đã lưu thì app tự điền các ô này.
+- **Đọc từ BBTN (PDF hoặc Word .docx):** kéo thả vào ô trái khung **Nhập BBTN** (tab con Nhập BBTN cũ). App đọc thông tin chung, **thùng dầu chính và OLTC**, nhận MBA **1 pha** (vị trí lấy mẫu ghi 1 pha) hoặc **3 pha** (bảng có 3 cột Pha A/B/C, hoặc OLTC tách bảng con từng pha), chữ "Không thấy / Không có / Không ăn mòn". Biên bản Word được hiển thị bản xem nhanh ở **khung đối chiếu** bên cạnh form. Biên bản có cả phần OLTC thì bấm **Đánh giá & Lưu cả biên bản** để lưu cùng lúc thùng chính + OLTC (chung 1 file đính kèm).
+- **Nhiều BBTN / cả thư mục:** ô phải khung Nhập BBTN — xem cuối mục 7.
+- **Xuất BBTN lý-hóa dầu (docx):** ở **Lập BBTN**, sau khi **Đánh giá & Lưu**, khối **"Xuất Biên bản thí nghiệm dầu cách điện"** gom phần thùng chính và OLTC **cùng thiết bị, cùng ngày lấy mẫu** vào 1 biên bản theo mẫu PTC3. Điền vị trí lấy mẫu, lý do thí nghiệm, nhiệt độ / độ ẩm môi trường; **kết luận** do app tự viết (sửa được, bấm **Viết lại tự động** để viết lại) rồi bấm **Xuất BBTN (docx)**.
 
 - **Điểm lấy mẫu:** *Thùng dầu chung 3 pha* (1 mẫu đại diện) hoặc *Thùng dầu riêng từng pha* (MBA/Kháng 3 pha rời, thường ở 500 kV) — khi đó chọn thêm **Pha A/B/C** và nhập riêng từng pha. Bấm **"i"** để xem giải thích.
 - **Trạng thái dầu:** *Dầu mới (sau lắp đặt/sau sửa chữa)* hoặc *Dầu vận hành*.
@@ -322,7 +341,10 @@ Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: **Nhập BB
 
 ### 9.2. Dầu OLTC (bộ đổi nấc có tải)
 
-Cùng 3 chỉ tiêu, theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành) hoặc Bảng 58 (dầu mới lắp). Điểm lấy mẫu: *Điểm cuối trung tính* (3 pha dùng chung) hoặc *Pha riêng*.
+Theo **Điều 37, Bảng 49 QĐ1901** (dầu vận hành); dầu OLTC mới đánh giá như dầu thùng chính. Điểm lấy mẫu: *Điểm cuối trung tính* (3 pha dùng chung) hoặc *Pha riêng*.
+
+- Ô **"Kế thừa thông tin chung của dầu MBA chính"** (mặc định đang tick): OLTC dùng luôn Trạm, Thiết bị, Cấp điện áp, Trạng thái dầu, Nhà sản xuất, Ngày lấy mẫu, Ghi chú của form dầu MBA chính — các ô này được ẩn, chỉ hiện 1 dòng tóm tắt. Bỏ tick để nhập riêng cho OLTC.
+- Phần OLTC được đưa vào cùng BBTN lý-hóa với thùng chính khi cùng thiết bị, cùng ngày lấy mẫu.
 
 ### 9.3. Dầu TI / TU / Sứ xuyên
 
@@ -394,7 +416,7 @@ Bảng kết quả gồm: giá trị trước, sau, chênh lệch (Δ), **tốc 
 
 ## 11. Theo dõi thiết bị bất thường (tab Cảnh báo)
 
-Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.
+Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.
 
 - **Thống kê nhanh:** tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.
 - **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.
@@ -444,15 +466,17 @@ Cho phép đặt ngưỡng riêng cho từng hãng, áp dụng thay cho ngưỡn
 
 - **Khí hòa tan (DGA):** ngưỡng tuyệt đối từng khí, **ngưỡng loại bỏ**, khoảng tốc độ tăng riêng.
 - **Dầu cách điện MBA/Kháng dầu:** thay cho Bảng 54/55/58 (theo cấp điện áp + trạng thái dầu).
-- **Dầu cách điện TI/TU:** **bắt buộc** cấu hình (2 tầng Bình thường/Loại bỏ) vì QĐ1901 không có bảng mặc định.
+- **Dầu cách điện TI/TU/Sứ xuyên:** **bắt buộc** cấu hình (2 tầng Bình thường/Loại bỏ) vì QĐ1901 không có bảng mặc định.
 
-Các bước: chọn/nhập thông tin hãng và loại tiêu chuẩn → điền ngưỡng → bấm **Lưu tiêu chuẩn** (hoặc **Hủy**). Danh sách tiêu chuẩn đã cấu hình hiện bên dưới, có thể **xem lại / sửa / xóa**.
+Màn hình chia 2 cột: **bên trái** là danh sách tiêu chuẩn đã cấu hình (tìm theo tên nhà sản xuất, lọc Khí / Dầu; bấm **Sửa** để nạp lên form, dòng đang sửa được tô nổi; **Xóa**), **bên phải** là form thêm/sửa. Các bước: bấm **+ Thêm tiêu chuẩn** (hoặc **Sửa** 1 dòng) → chọn loại tiêu chuẩn, hãng, loại thiết bị → điền ngưỡng ở bảng (mỗi dòng 1 khí / 1 hạng mục dầu, cột **Ngưỡng tuyệt đối/bình thường** và **Ngưỡng loại bỏ**) → bấm **Lưu tiêu chuẩn** (hoặc **Hủy**). Với dầu MBA/Kháng dầu, cột Loại bỏ và dòng tgδ 20°C tự ẩn (chỉ dùng cho TI/TU/Sứ xuyên).
 
-**Quy tắc áp dụng:** nếu thiết bị/thí nghiệm không chọn nhà sản xuất, hoặc hãng chưa có cấu hình khớp, app dùng tiêu chuẩn mặc định QĐ1901/IEC. Riêng dầu TI/TU sẽ báo *"Chưa có tiêu chuẩn nhà sản xuất"*.
+**Quy tắc áp dụng:** nếu thiết bị/thí nghiệm không chọn nhà sản xuất, hoặc hãng chưa có cấu hình khớp, app dùng tiêu chuẩn mặc định QĐ1901/IEC. Riêng dầu TI/TU/Sứ xuyên sẽ báo *"Chưa có tiêu chuẩn nhà sản xuất"*.
 
-### 13.2. Mục "Quy định" — 13 bảng ngưỡng số học
+### 13.2. Mục "Quy định" — các bảng ngưỡng số học
 
-Cho phép chỉnh **13 bảng ngưỡng đơn giản** trích từ QĐ1901/IEC 60599:2022 (ví dụ: MBA/Kháng dầu — Khí hòa tan; Dầu MBA — Điện áp chọc thủng; tgδ ở 90°C; Hàm lượng nước; Dầu OLTC — Độ ẩm & điện áp chọc thủng…).
+Cho phép chỉnh **các bảng ngưỡng đơn giản** trích từ QĐ1901/IEC 60599:2022/IEC 60422:2024 (ví dụ: MBA/Kháng dầu — Khí hòa tan; Dầu MBA — Điện áp chọc thủng; tgδ ở 90°C; Hàm lượng nước; Dầu OLTC — Độ ẩm & điện áp chọc thủng…) và tên văn bản/điều khoản hiển thị.
+
+Màn hình chia 2 cột: **bên trái** là danh sách bảng theo nhóm (Khí hòa tan / Lý-hóa dầu / Tên văn bản) có ô **tìm kiếm** (gõ "Bảng 55", "Duval", "OLTC"…) và lọc **Chỉ bảng đã tùy chỉnh**; **bên phải** chỉ hiện bảng đang chọn, nút **Lưu bảng này / Khôi phục mặc định** luôn ở đầu bảng. Bảng có thay đổi chưa lưu được đánh dấu **●** ở danh sách và nhãn **Chưa lưu** — chuyển qua bảng khác không mất số đang sửa; lưu 1 bảng không ảnh hưởng các bảng đang sửa dở khác.
 
 - Sửa số liệu + nguồn tham chiếu → bấm **Lưu bảng này** (dùng khi quy định được cập nhật, không cần sửa code).
 - **Khôi phục mặc định:** trả bảng về đúng số liệu gốc tích hợp sẵn.
@@ -499,12 +523,12 @@ Các góp ý đã gửi được hiển thị (mới nhất ở trên) để m�
 | Quyền hạn | Viewer | User | Admin |
 |---|:-:|:-:|:-:|
 | Xem toàn bộ dữ liệu (Khí DGA, Dầu, Lịch sử, Cảnh báo, Xu hướng) | ✔ | ✔ | ✔ |
-| Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU | ✘ | ✔ | ✔ |
+| Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU/Sứ xuyên | ✘ | ✔ | ✔ |
 | Sửa bản ghi đo khí / thí nghiệm dầu đã lưu | ✘ | Chỉ bản ghi **do mình nhập** | Mọi bản ghi |
 | Xóa bản ghi dữ liệu | ✘ | ✘ | ✔ |
 | Gửi ý kiến phản hồi kèm ảnh minh họa | ✔ | ✔ | ✔ |
 | Cấu hình Tiêu chuẩn theo nhà sản xuất | ✘ | ✘ (chỉ xem khi tra cứu) | ✔ (Thêm, Sửa, Xóa) |
-| Chỉnh sửa 13 bảng Quy định số học QĐ1901/IEC | ✘ | ✘ (chỉ xem bảng) | ✔ (Lưu bảng, Khôi phục) |
+| Chỉnh sửa các bảng Quy định số học QĐ1901/IEC | ✘ | ✘ (chỉ xem bảng) | ✔ (Lưu bảng, Khôi phục) |
 | Quản lý người dùng (tạo tài khoản, đổi vai trò, đặt lại mật khẩu, xóa) | ✘ | ✘ | ✔ |
 | Đồng bộ dữ liệu sang Bản sao Supabase | ✘ | ✘ | ✔ |
 
@@ -533,17 +557,18 @@ Subtab này tích hợp toàn bộ các công cụ quản lý thông số kỹ t
 
 - **Mục Tiêu chuẩn (theo Nhà sản xuất):**
   - Cấu hình ngưỡng riêng cho từng hãng chế tạo thay cho ngưỡng mặc định chung.
-  - Hỗ trợ cả 2 nhóm: *Khí hòa tan (DGA)* và *Dầu cách điện (MBA, OLTC, TI/TU)*.
-  - Cung cấp cấu hình **Ngưỡng loại bỏ (condemning limit)** cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU.
+  - Hỗ trợ cả 2 nhóm: *Khí hòa tan (DGA)* và *Dầu cách điện (MBA, OLTC, TI/TU/Sứ xuyên)*.
+  - Màn hình 2 cột: danh sách tiêu chuẩn bên trái (tìm, lọc Khí/Dầu, **+ Thêm tiêu chuẩn**), form thêm/sửa bên phải.
+  - Cung cấp cấu hình **Ngưỡng loại bỏ (condemning limit)** cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU/Sứ xuyên.
   - Cho phép tra cứu, chỉnh sửa hoặc xóa các tiêu chuẩn hãng đã thiết lập (xem chi tiết tại [mục 13](#13-cấu-hình-tiêu-chuẩn-theo-nhà-sản-xuất-và-bảng-quy-định-trong-quản-trị--cấu-hình)).
-- **Mục Quy định (13 bảng ngưỡng số học):**
-  - Chỉnh sửa trực tiếp 13 bảng ngưỡng số học trích từ QĐ1901/EVNNPT và IEC 60599:2022.
+- **Mục Quy định (các bảng ngưỡng số học):**
+  - Chỉnh sửa trực tiếp các bảng ngưỡng số học trích từ QĐ1901/EVNNPT, IEC 60599:2022 và IEC 60422:2024 — chọn bảng ở danh sách bên trái (có tìm kiếm), sửa ở bên phải.
   - Khi ngành điện hoặc tiêu chuẩn quốc tế có đợt cập nhật ngưỡng số học mới, Admin chỉ cần sửa số trên giao diện và bấm **"Lưu bảng này"** — hệ thống sẽ lập tức áp dụng ngưỡng mới cho toàn bộ tính toán mà không cần lập trình viên phải sửa code hay cập nhật phiên bản web.
   - Có nút **"Khôi phục mặc định"** để hoàn tác về đúng số liệu gốc ban đầu nếu cần.
 
 #### 3. Subtab "Bản sao Supabase" (Sao lưu & Đồng bộ dự phòng)
 
-Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính:
+Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính. Tính năng này **chỉ bật khi Admin đã khai báo khóa Supabase** trong Script properties của Apps Script; để trống thì app chỉ lưu vào Google Sheets và subtab này báo *chưa cấu hình* (hiện đơn vị tạm không dùng Supabase).
 
 - **Tự động sao chép song song (Mirroring):** Mọi thao tác thêm mới, chỉnh sửa, xóa dữ liệu (kết quả đo DGA, thí nghiệm dầu, danh sách trạm, tiêu chuẩn hãng, bảng quy định, ý kiến phản hồi) khi lưu vào Google Sheets đều được hệ thống tự động ghi một bản sao sang cơ sở dữ liệu Supabase (PostgreSQL).
 - **Kiểm tra trạng thái kết nối:** Hiển thị trực quan tình trạng sẵn sàng của đường truyền kết nối đến Supabase.
@@ -559,7 +584,7 @@ Thư mục `mobile/` chứa bản giao diện tối ưu cho điện thoại (m�
 
 **Cùng số liệu, cùng kết luận:** bản di động dùng **chính bộ logic đánh giá của bản web** (file `mobile/dga-logic.js` được sinh tự động từ logic web, không sửa tay), nên ngưỡng QĐ1901/IEC 60599:2022, chẩn đoán Bảng 66/Table A.10 (sứ xuyên), Tam giác Duval, trạng thái tổng thể và đánh giá dầu đều giống hệt. **Cấu hình quy định** do Admin chỉnh ở bản web cũng được bản di động tự áp dụng khi mở app.
 
-Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu chuẩn** (Admin ghi được, người dùng thường chỉ xem) và **Quản trị** (chỉ Admin). Các phần **chỉ có trên bản web**: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN. Chi tiết xem `mobile/README.md`.
+Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu chuẩn** (Admin ghi được, người dùng thường chỉ xem) và **Quản trị** (chỉ Admin). Các phần **chỉ có trên bản web**: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem `mobile/README.md`.
 
 ---
 
@@ -580,8 +605,20 @@ Chờ dòng *"Vui lòng chờ! Đang nạp dữ liệu…"* biến mất. Nếu 
 **Tốc độ sinh khí không hiện.**
 Cần có **lần đo trước** của cùng **Trạm + Thiết bị + Pha**. Kiểm tra tên Trạm/Thiết bị và Pha đã trùng khớp với lần đo trước chưa.
 
-**Không lưu được thí nghiệm dầu TI/TU.**
-Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu TI/TU đủ 2 tầng. Nhờ Admin cấu hình ở **Quản trị → Cấu hình → Tiêu chuẩn**.
+**Không lưu được thí nghiệm dầu TI/TU/Sứ xuyên.**
+Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu cho đúng loại thiết bị (TI, TU hoặc Sứ xuyên). Nhờ Admin cấu hình ở **Quản trị → Cấu hình → Tiêu chuẩn**.
+
+**Không thấy ô kéo thả đọc BBTN.**
+Ô đọc BBTN (1 file và nhiều file) nằm ở tab con **Nhập BBTN cũ**. Ở tab con **Lập BBTN** chỉ có ô **"Nhập thông số kỹ thuật từ file"** (chỉ lấy thông số thiết bị, không đọc số liệu đo).
+
+**Thông số kỹ thuật không tự điền.**
+Chỉ tự điền ở tab con **Lập BBTN**, khi đã có Trạm + Thiết bị **khớp đúng** với dữ liệu đã lưu, và chỉ điền vào ô còn trống. Nếu tên thiết bị có ở nhiều trạm, hãy chọn Trạm trước.
+
+**Bảng "Số liệu đã lưu" trống.**
+Bảng chỉ hiện dữ liệu của **đúng Trạm + Thiết bị đang nhập ở form**. Nhập/chọn thiết bị, hoặc xem toàn bộ ở tab **Lịch sử đo**.
+
+**Nhập hàng loạt báo "Đã có biên bản thiết bị này cùng ngày".**
+Thiết bị đã có biên bản cùng ngày lấy mẫu (cùng pha) — dòng đó mặc định không chọn để tránh ghi đè. Tick chọn nếu bạn muốn thay bằng số liệu mới.
 
 **Không thấy nút "Xuất báo cáo phân tích kỹ thuật".**
 Nút này chỉ hiện khi trạng thái tổng thể **khác "Bình thường"**.
@@ -589,8 +626,8 @@ Nút này chỉ hiện khi trạng thái tổng thể **khác "Bình thường"*
 **Không thấy nút Xuất BBTN/báo cáo sau khi mở lại một lần đo cũ.**
 Các nút xuất nằm trong khối kết quả, chỉ hiện sau khi phân tích. Bấm **Phân tích & Lưu** (hoặc **Cập nhật & Lưu** khi sửa) để hiện.
 
-**Đọc PDF không ra số liệu / ra sai.**
-Biên bản có thể dùng mẫu khác PTC3/BM.15, hoặc là bản scan mờ. Nhập tay các ô còn thiếu; luôn kiểm tra lại trước khi lưu.
+**Đọc PDF / Word không ra số liệu / ra sai.**
+Biên bản có thể dùng mẫu khác mẫu PTC3 (khí hòa tan PTC3/BM.15; dầu cách điện, dầu 3 pha PTC3/BM.14), hoặc là bản scan mờ. Nhập tay các ô còn thiếu; luôn đối chiếu với khung BBTN bên cạnh trước khi lưu.
 
 **Tôi lỡ nhập sai số liệu đã lưu.**
 Vào **Lịch sử đo** → sửa bản ghi đó (mục 10.3). Nếu bạn là User và bản ghi không phải của bạn, nhờ Admin sửa. Lịch sử chỉnh sửa luôn được ghi lại.

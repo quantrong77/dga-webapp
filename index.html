@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v29-batchfix") {
+          if (k !== "dga-offline-v30-cfglayout") {
             caches.delete(k);
           }
         });
@@ -2926,7 +2926,7 @@
           <tr>
           <td>MBA / Kháng dầu</td>
           <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔ (dầu chính + dầu OLTC)</td>
+          <td style="text-align: center;">✔ (dầu thùng chính + dầu OLTC, đủ chỉ tiêu lý-hóa)</td>
           </tr>
           <tr>
           <td>TI (biến dòng điện)</td>
@@ -2941,7 +2941,7 @@
           <tr>
           <td>Sứ xuyên (Bushing)</td>
           <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✘ (không có thí nghiệm dầu)</td>
+          <td style="text-align: center;">✔ (theo tiêu chuẩn nhà sản xuất — xem mục 9.4)</td>
           </tr>
           <tr>
           <td>Khác</td>
@@ -2950,14 +2950,15 @@
           </tr>
           </tbody>
           </table></div>
-          <p>Căn cứ đánh giá: <strong>QĐ 1901/QĐ-EVNNPT</strong> và <strong>IEC 60599:2022</strong>. Khi bạn chưa chọn nhà sản xuất, app tự lấy ngưỡng <strong>chặt hơn</strong> giữa hai nguồn này.</p>
+          <p>Căn cứ đánh giá: <strong>QĐ 1901/QĐ-EVNNPT</strong>, <strong>IEC 60599:2022</strong> (khí hòa tan) và <strong>IEC 60422:2024</strong> (dầu — tham khảo song song). Khi bạn chưa chọn nhà sản xuất, app tự lấy ngưỡng <strong>chặt hơn</strong> giữa QĐ1901 và IEC 60599 cho khí hòa tan.</p>
           <p>App làm được những việc chính:</p>
           <ul class="rec-list">
           <li>Nhập 7 khí hòa tan → tự tính <strong>TCG</strong>, đánh giá từng khí, chẩn đoán dạng sự cố (<strong>Bảng 66 / Tam giác Duval</strong>), tính tốc độ sinh khí, đưa ra <strong>trạng thái tổng thể</strong> và <strong>khuyến cáo</strong>.</li>
-          <li>Đánh giá độ ẩm, tgδ, điện áp chọc thủng của dầu.</li>
+          <li>Đánh giá <strong>lý-hóa dầu</strong>: chỉ tiêu cơ bản (điện áp chọc thủng, tgδ 90°C, hàm lượng nước) và bổ sung theo QĐ1901 (trị số axit, chớp cháy, tạp chất cơ học, đếm hạt, điện trở suất, 2-furfural, màu sắc, độ ổn định ôxi hóa…), kèm tham chiếu IEC 60422:2024.</li>
           <li>Lưu lịch sử, so sánh giữa các lần đo, vẽ xu hướng và dự báo.</li>
           <li>Tự động liệt kê các thiết bị đang ở mức <strong>Cảnh báo / Báo động</strong>.</li>
-          <li>Tự đọc số liệu từ <strong>Biên bản thí nghiệm PDF</strong>, và xuất lại thành <strong>BBTN / Báo cáo kỹ thuật (.docx)</strong>.</li>
+          <li>Tự đọc số liệu từ <strong>Biên bản thí nghiệm (PDF, Word .docx)</strong> — từng file hoặc <strong>hàng loạt / cả thư mục</strong> — và xuất lại thành <strong>BBTN / Báo cáo kỹ thuật (.docx)</strong>.</li>
+          <li>Mỗi tab nhập liệu chia 2 tab con: <strong>Nhập BBTN cũ</strong> (đưa biên bản đã có vào lưu trữ) và <strong>Lập BBTN</strong> (nhập tay, đánh giá, xuất biên bản; thông số kỹ thuật thiết bị tự điền theo dữ liệu đã lưu).</li>
           </ul>
 
           </div>
@@ -2966,7 +2967,7 @@
           <summary>2. Bắt đầu: mở app và đăng nhập<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
           <h3>2.1. Mở app</h3>
-          <p>Mở đường link do quản trị viên cung cấp bằng <strong>Chrome, Edge hoặc Safari</strong> (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file <code>index.html</code> bằng trình duyệt (hoặc qua máy chủ cục bộ <code>npm start</code> tại <code>http://localhost:8080</code>).</p>
+          <p>Mở đường link do quản trị viên cung cấp bằng <strong>Chrome, Edge hoặc Safari</strong> (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file <code>index.html</code> bằng trình duyệt (hoặc qua máy chủ cục bộ <code>npm start</code> — mặc định <code>http://localhost:8080</code>, đổi cổng bằng biến môi trường <code>PORT</code>).</p>
           <p>Góc trên bên trái có <strong>huy hiệu trạng thái lưu trữ</strong>:</p>
           <div class="table-scroll"><table>
           <thead>
@@ -3068,7 +3069,7 @@
           </tr>
           </tbody>
           </table></div>
-          <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định 13 bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
+          <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
           <h3>3.2. Giao diện sáng hoặc tối</h3>
           <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải để đổi giao diện. Giao diện tối dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành.</p>
           <h3>3.3. Thanh tab ngang hoặc dọc</h3>
@@ -3078,7 +3079,8 @@
           <h3>3.5. Các thao tác dùng chung</h3>
           <ul class="rec-list">
           <li><strong>Ô Trạm / Thiết bị:</strong> vừa <strong>gõ để tìm</strong>, vừa <strong>bấm ▼ để chọn</strong> trong danh sách đã có. Bạn cũng có thể <strong>gõ tên mới</strong> (không bắt buộc phải chọn từ danh sách).</li>
-          <li><strong>Khung kéo thả file (Dropzone):</strong> Cả khung kéo thả 1 file BBTN (PDF) và khung kéo thả hàng loạt nhiều file PDF đều được tăng chiều cao rộng rãi và có hiệu ứng viền sáng (focus border) nổi bật khi bạn rê file vào, giúp thao tác kéo thả dễ dàng và chuẩn xác.</li>
+          <li><strong>Khung "Nhập BBTN" (tab con Nhập BBTN cũ):</strong> nằm trên form nhập liệu, gồm <strong>2 ô kéo thả ngang hàng, cùng kích thước</strong> — ô trái nhận <strong>1 biên bản</strong> (đọc vào form để đối chiếu rồi lưu), ô phải nhận <strong>nhiều biên bản hoặc cả thư mục</strong> (nút <strong>Chọn cả thư mục…</strong>). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.</li>
+          <li><strong>Tab con "Nhập BBTN cũ" / "Lập BBTN":</strong> có ở tab <strong>Khí hòa tan</strong> và <strong>Lý-Hóa dầu</strong>, dùng <strong>chung một form</strong> (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.</li>
           <li><strong>Biểu tượng "i":</strong> bấm để xem giải thích chi tiết; đóng bằng <strong>×</strong> hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.</li>
           <li><strong>Thông báo nhanh (toast)</strong> hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), <strong>màu đỏ khi có lỗi hoặc thiếu thông tin</strong> (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.</li>
           <li>Khi thấy <strong>"Vui lòng chờ! Đang nạp dữ liệu…"</strong>, hãy chờ danh sách Trạm/Thiết bị và lịch sử tải xong.</li>
@@ -3141,7 +3143,7 @@
           </tr>
           <tr>
           <td><strong>Biên bản thí nghiệm (PDF)</strong></td>
-          <td>Không bắt buộc — xem mục 6</td>
+          <td>Không bắt buộc — chọn ở ô trái khung <strong>Nhập BBTN</strong> (phía trên form, tab con Nhập BBTN cũ), xem mục 6</td>
           </tr>
           </tbody>
           </table></div>
@@ -3161,7 +3163,7 @@
           <li><strong>Thông tin thí nghiệm bổ sung:</strong> ngày thí nghiệm, lý do thí nghiệm, nhiệt độ và độ ẩm môi trường (dùng cho BBTN).</li>
           <li><strong>Thông số kỹ thuật thiết bị:</strong> kiểu máy, năm sản xuất, năm đưa vào vận hành, điện áp định mức, số chế tạo, loại dầu, kết cấu cách điện, hiện trạng vận hành (dùng cho Báo cáo phân tích kỹ thuật).</li>
           </ul>
-          <p class="sm-note">Thông số kỹ thuật lưu <strong>theo từng lần đo</strong>. Nếu muốn báo cáo có đủ thông số, hãy điền (hoặc để nguyên nếu chưa xóa form) ở mỗi lần đo.</p>
+          <p class="sm-note">Thông số kỹ thuật lưu <strong>theo từng lần đo</strong>. Ở tab con <strong>Lập BBTN</strong>, chọn Trạm + Thiết bị đã có dữ liệu thì app <strong>tự điền</strong> các ô thông số còn trống từ lần lưu gần nhất (xem đầu mục 4); thiết bị mới thì nhập tay hoặc lấy từ file PDF/Word cũ qua ô <strong>"Nhập thông số kỹ thuật từ file"</strong>.</p>
           <h3>Bước 6 — Bấm "Phân tích &amp; Lưu"</h3>
           <ul class="rec-list">
           <li>Kết quả hiện ngay bên dưới ở khối <strong>"2. Kết quả đánh giá"</strong>, đồng thời lần đo được <strong>lưu</strong> vào database.</li>
@@ -3326,6 +3328,7 @@
           </tr>
           </tbody>
           </table></div>
+          <p>Hai nút này nằm ở tab con <strong>Lập BBTN</strong> (riêng nút Báo cáo phân tích kỹ thuật hiện ở cả 2 tab con). Tab <strong>Lý-Hóa dầu</strong> có thêm <strong>Xuất BBTN lý-hóa dầu</strong> (thùng chính + OLTC) và <strong>Xuất BBTN dầu 3 pha</strong> TI/TU/Sứ xuyên — xem mục 9.</p>
           <p><strong>Cách dùng:</strong> bấm nút → file .docx được tải về → <strong>mở bằng Word</strong> để bổ sung các mục chưa có sẵn (hãng SX, số chế tạo, chữ ký…) rồi mới ban hành.</p>
           <ul class="rec-list">
           <li>Trường nào bạn để trống, file Word sẽ bỏ trống dòng đó (app không tự suy diễn).</li>
@@ -3338,11 +3341,54 @@
         <details class="mm-node">
           <summary>9. Thí nghiệm dầu cách điện (tab Lý-Hóa dầu)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
-          <p>Ba chỉ tiêu được đánh giá: <strong>Độ ẩm dầu (ppm)</strong>, <strong>Tổn hao điện môi tgδ ở 90°C (%)</strong>, <strong>Điện áp chọc thủng (kV)</strong>.</p>
+          <p>Với dầu MBA/Kháng dầu và OLTC, bảng kết quả chia theo nhóm chỉ tiêu (chỉ nhập những chỉ tiêu có trong biên bản, ô để trống = không thí nghiệm):</p>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Nhóm</th>
+          <th>Chỉ tiêu</th>
+          <th>Căn cứ</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>Cơ bản</strong></td>
+          <td>Điện áp chọc thủng, tgδ ở 90°C, hàm lượng nước (độ ẩm)</td>
+          <td>QĐ1901 Bảng 54 / 55 / 58</td>
+          </tr>
+          <tr>
+          <td><strong>Bổ sung QĐ1901</strong></td>
+          <td>Trị số axit, chớp cháy cốc kín, tạp chất cơ học (quan sát bằng mắt / hàm lượng), số hạt &gt; 6 μm và &gt; 14 μm, điện trở suất 90°C, 2-furfural, màu sắc (ISO 2049)</td>
+          <td>QĐ1901 Điều 48–56</td>
+          </tr>
+          <tr>
+          <td><strong>Độ ổn định ôxi hóa</strong> (khi pha trộn dầu)</td>
+          <td>Cặn, trị số axit và tgδ sau ôxi hóa</td>
+          <td>QĐ1901 Bảng 60–62</td>
+          </tr>
+          <tr>
+          <td><strong>Chỉ có ở IEC 60422</strong></td>
+          <td>Ngoại quan, sức căng bề mặt, lưu huỳnh ăn mòn, PCB, cặn, bùn, chất ức chế, chất thụ động</td>
+          <td>IEC 60422:2024</td>
+          </tr>
+          <tr>
+          <td><strong>Khác</strong></td>
+          <td>Axit – kiềm hòa tan trong dầu</td>
+          <td>ghi trên BBTN PTC3</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p>Kết quả có 2 khối: <strong>đánh giá theo QĐ1901</strong> (Đạt / Không đạt / Chưa đủ dữ liệu từng chỉ tiêu, kèm căn cứ) và <strong>tham khảo IEC 60422:2024</strong> (Bảng 3 dầu mới, Bảng 5 dầu vận hành — so với biên Tốt / Kém: Đạt / Cảnh báo (giữa 2 biên) / Không đạt), không ảnh hưởng kết luận theo QĐ1901.</p>
           <p>Đầu tab, chọn <strong>Loại thiết bị</strong> — chỉ khối nhập liệu phù hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản ghi).</p>
           <p>Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: <strong>Nhập BBTN cũ</strong> (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá &amp; Lưu cả biên bản", bảng <strong>Số liệu đã lưu</strong> của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và <strong>Lập BBTN</strong> (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Ở Lập BBTN, thông số kỹ thuật thiết bị (hãng sản xuất, năm sản xuất, điện áp định mức, công suất, số chế tạo, năm vận hành, loại dầu — khối <strong>Thông số kỹ thuật thiết bị</strong> của form dầu MBA, lưu kèm bản ghi) được tự điền khi chọn lại thiết bị đã lưu, hoặc lấy từ file PDF/Word cũ, giống tab Khí hòa tan. Toàn bộ dữ liệu của mọi thiết bị xem ở tab <strong>Lịch sử đo</strong>.</p>
           <h3>9.1. Dầu MBA/Kháng dầu (dầu chính)</h3>
-          <p>Điền: <strong>Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú</strong>, rồi nhập 3 kết quả và bấm <strong>Đánh giá &amp; Lưu</strong>.</p>
+          <p>Điền: <strong>Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú</strong>, (tùy chọn) <strong>Loại dầu (chất ức chế)</strong> và <strong>Phương pháp thử ôxi hóa</strong>, rồi nhập kết quả và bấm <strong>Đánh giá &amp; Lưu</strong>.</p>
+          <ul class="rec-list">
+          <li><strong>Thông số kỹ thuật thiết bị</strong> (hãng sản xuất, năm sản xuất, điện áp định mức, công suất, số chế tạo, năm vận hành, loại dầu): khối riêng trong form, <strong>lưu kèm bản ghi</strong> và dùng khi xuất BBTN. Ở <strong>Lập BBTN</strong>, chọn lại thiết bị đã lưu thì app tự điền các ô này.</li>
+          <li><strong>Đọc từ BBTN (PDF hoặc Word .docx):</strong> kéo thả vào ô trái khung <strong>Nhập BBTN</strong> (tab con Nhập BBTN cũ). App đọc thông tin chung, <strong>thùng dầu chính và OLTC</strong>, nhận MBA <strong>1 pha</strong> (vị trí lấy mẫu ghi 1 pha) hoặc <strong>3 pha</strong> (bảng có 3 cột Pha A/B/C, hoặc OLTC tách bảng con từng pha), chữ "Không thấy / Không có / Không ăn mòn". Biên bản Word được hiển thị bản xem nhanh ở <strong>khung đối chiếu</strong> bên cạnh form. Biên bản có cả phần OLTC thì bấm <strong>Đánh giá &amp; Lưu cả biên bản</strong> để lưu cùng lúc thùng chính + OLTC (chung 1 file đính kèm).</li>
+          <li><strong>Nhiều BBTN / cả thư mục:</strong> ô phải khung Nhập BBTN — xem cuối mục 7.</li>
+          <li><strong>Xuất BBTN lý-hóa dầu (docx):</strong> ở <strong>Lập BBTN</strong>, sau khi <strong>Đánh giá &amp; Lưu</strong>, khối <strong>"Xuất Biên bản thí nghiệm dầu cách điện"</strong> gom phần thùng chính và OLTC <strong>cùng thiết bị, cùng ngày lấy mẫu</strong> vào 1 biên bản theo mẫu PTC3. Điền vị trí lấy mẫu, lý do thí nghiệm, nhiệt độ / độ ẩm môi trường; <strong>kết luận</strong> do app tự viết (sửa được, bấm <strong>Viết lại tự động</strong> để viết lại) rồi bấm <strong>Xuất BBTN (docx)</strong>.</li>
+          </ul>
           <ul class="rec-list">
           <li><strong>Điểm lấy mẫu:</strong> <em>Thùng dầu chung 3 pha</em> (1 mẫu đại diện) hoặc <em>Thùng dầu riêng từng pha</em> (MBA/Kháng 3 pha rời, thường ở 500 kV) — khi đó chọn thêm <strong>Pha A/B/C</strong> và nhập riêng từng pha. Bấm <strong>"i"</strong> để xem giải thích.</li>
           <li><strong>Trạng thái dầu:</strong> <em>Dầu mới (sau lắp đặt/sau sửa chữa)</em> hoặc <em>Dầu vận hành</em>.</li>
@@ -3350,7 +3396,11 @@
           <li>Ngưỡng theo <strong>Bảng 58 / 55 / 54 QĐ1901</strong> (Điều 50 / 47 / 46). Nếu chọn nhà sản xuất đã cấu hình tiêu chuẩn dầu, ngưỡng hãng được ưu tiên.</li>
           </ul>
           <h3>9.2. Dầu OLTC (bộ đổi nấc có tải)</h3>
-          <p>Cùng 3 chỉ tiêu, theo <strong>Điều 37, Bảng 49 QĐ1901</strong> (dầu vận hành) hoặc Bảng 58 (dầu mới lắp). Điểm lấy mẫu: <em>Điểm cuối trung tính</em> (3 pha dùng chung) hoặc <em>Pha riêng</em>.</p>
+          <p>Theo <strong>Điều 37, Bảng 49 QĐ1901</strong> (dầu vận hành); dầu OLTC mới đánh giá như dầu thùng chính. Điểm lấy mẫu: <em>Điểm cuối trung tính</em> (3 pha dùng chung) hoặc <em>Pha riêng</em>.</p>
+          <ul class="rec-list">
+          <li>Ô <strong>"Kế thừa thông tin chung của dầu MBA chính"</strong> (mặc định đang tick): OLTC dùng luôn Trạm, Thiết bị, Cấp điện áp, Trạng thái dầu, Nhà sản xuất, Ngày lấy mẫu, Ghi chú của form dầu MBA chính — các ô này được ẩn, chỉ hiện 1 dòng tóm tắt. Bỏ tick để nhập riêng cho OLTC.</li>
+          <li>Phần OLTC được đưa vào cùng BBTN lý-hóa với thùng chính khi cùng thiết bị, cùng ngày lấy mẫu.</li>
+          </ul>
           <h3>9.3. Dầu TI / TU / Sứ xuyên</h3>
           <p>Chọn <strong>Loại thiết bị</strong> là TI, TU hoặc <strong>Sứ xuyên (Bushing)</strong> — cả 3 dùng chung khối nhập dầu này.</p>
           <p><strong>QĐ1901 không có bảng ngưỡng mặc định cho dầu TI/TU/Sứ xuyên</strong> (chỉ dẫn chiếu "theo quy định nhà sản xuất"). Vì vậy:</p>
@@ -3409,7 +3459,7 @@
         <details class="mm-node">
           <summary>11. Theo dõi thiết bị bất thường (tab Cảnh báo)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
-          <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) và liệt kê các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.</p>
+          <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.</p>
           <ul class="rec-list">
           <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.</li>
           <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.</li>
@@ -3455,12 +3505,13 @@
           <ul class="rec-list">
           <li><strong>Khí hòa tan (DGA):</strong> ngưỡng tuyệt đối từng khí, <strong>ngưỡng loại bỏ</strong>, khoảng tốc độ tăng riêng.</li>
           <li><strong>Dầu cách điện MBA/Kháng dầu:</strong> thay cho Bảng 54/55/58 (theo cấp điện áp + trạng thái dầu).</li>
-          <li><strong>Dầu cách điện TI/TU:</strong> <strong>bắt buộc</strong> cấu hình (2 tầng Bình thường/Loại bỏ) vì QĐ1901 không có bảng mặc định.</li>
+          <li><strong>Dầu cách điện TI/TU/Sứ xuyên:</strong> <strong>bắt buộc</strong> cấu hình (2 tầng Bình thường/Loại bỏ) vì QĐ1901 không có bảng mặc định.</li>
           </ul>
-          <p>Các bước: chọn/nhập thông tin hãng và loại tiêu chuẩn → điền ngưỡng → bấm <strong>Lưu tiêu chuẩn</strong> (hoặc <strong>Hủy</strong>). Danh sách tiêu chuẩn đã cấu hình hiện bên dưới, có thể <strong>xem lại / sửa / xóa</strong>.</p>
-          <p><strong>Quy tắc áp dụng:</strong> nếu thiết bị/thí nghiệm không chọn nhà sản xuất, hoặc hãng chưa có cấu hình khớp, app dùng tiêu chuẩn mặc định QĐ1901/IEC. Riêng dầu TI/TU sẽ báo <em>"Chưa có tiêu chuẩn nhà sản xuất"</em>.</p>
-          <h3>13.2. Mục "Quy định" — 13 bảng ngưỡng số học</h3>
-          <p>Cho phép chỉnh <strong>13 bảng ngưỡng đơn giản</strong> trích từ QĐ1901/IEC 60599:2022 (ví dụ: MBA/Kháng dầu — Khí hòa tan; Dầu MBA — Điện áp chọc thủng; tgδ ở 90°C; Hàm lượng nước; Dầu OLTC — Độ ẩm &amp; điện áp chọc thủng…).</p>
+          <p>Màn hình chia 2 cột: <strong>bên trái</strong> là danh sách tiêu chuẩn đã cấu hình (tìm theo tên nhà sản xuất, lọc Khí / Dầu; bấm <strong>Sửa</strong> để nạp lên form, dòng đang sửa được tô nổi; <strong>Xóa</strong>), <strong>bên phải</strong> là form thêm/sửa. Các bước: bấm <strong>+ Thêm tiêu chuẩn</strong> (hoặc <strong>Sửa</strong> 1 dòng) → chọn loại tiêu chuẩn, hãng, loại thiết bị → điền ngưỡng ở bảng (mỗi dòng 1 khí / 1 hạng mục dầu, cột <strong>Ngưỡng tuyệt đối/bình thường</strong> và <strong>Ngưỡng loại bỏ</strong>) → bấm <strong>Lưu tiêu chuẩn</strong> (hoặc <strong>Hủy</strong>). Với dầu MBA/Kháng dầu, cột Loại bỏ và dòng tgδ 20°C tự ẩn (chỉ dùng cho TI/TU/Sứ xuyên).</p>
+          <p><strong>Quy tắc áp dụng:</strong> nếu thiết bị/thí nghiệm không chọn nhà sản xuất, hoặc hãng chưa có cấu hình khớp, app dùng tiêu chuẩn mặc định QĐ1901/IEC. Riêng dầu TI/TU/Sứ xuyên sẽ báo <em>"Chưa có tiêu chuẩn nhà sản xuất"</em>.</p>
+          <h3>13.2. Mục "Quy định" — các bảng ngưỡng số học</h3>
+          <p>Cho phép chỉnh <strong>các bảng ngưỡng đơn giản</strong> trích từ QĐ1901/IEC 60599:2022/IEC 60422:2024 (ví dụ: MBA/Kháng dầu — Khí hòa tan; Dầu MBA — Điện áp chọc thủng; tgδ ở 90°C; Hàm lượng nước; Dầu OLTC — Độ ẩm &amp; điện áp chọc thủng…) và tên văn bản/điều khoản hiển thị.</p>
+          <p>Màn hình chia 2 cột: <strong>bên trái</strong> là danh sách bảng theo nhóm (Khí hòa tan / Lý-hóa dầu / Tên văn bản) có ô <strong>tìm kiếm</strong> (gõ "Bảng 55", "Duval", "OLTC"…) và lọc <strong>Chỉ bảng đã tùy chỉnh</strong>; <strong>bên phải</strong> chỉ hiện bảng đang chọn, nút <strong>Lưu bảng này / Khôi phục mặc định</strong> luôn ở đầu bảng. Bảng có thay đổi chưa lưu được đánh dấu <strong>●</strong> ở danh sách và nhãn <strong>Chưa lưu</strong> — chuyển qua bảng khác không mất số đang sửa; lưu 1 bảng không ảnh hưởng các bảng đang sửa dở khác.</p>
           <ul class="rec-list">
           <li>Sửa số liệu + nguồn tham chiếu → bấm <strong>Lưu bảng này</strong> (dùng khi quy định được cập nhật, không cần sửa code).</li>
           <li><strong>Khôi phục mặc định:</strong> trả bảng về đúng số liệu gốc tích hợp sẵn.</li>
@@ -3523,7 +3574,7 @@
           <td style="text-align: center;">✔</td>
           </tr>
           <tr>
-          <td>Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU</td>
+          <td>Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU/Sứ xuyên</td>
           <td style="text-align: center;">✘</td>
           <td style="text-align: center;">✔</td>
           <td style="text-align: center;">✔</td>
@@ -3553,7 +3604,7 @@
           <td style="text-align: center;">✔ (Thêm, Sửa, Xóa)</td>
           </tr>
           <tr>
-          <td>Chỉnh sửa 13 bảng Quy định số học QĐ1901/IEC</td>
+          <td>Chỉnh sửa các bảng Quy định số học QĐ1901/IEC</td>
           <td style="text-align: center;">✘</td>
           <td style="text-align: center;">✘ (chỉ xem bảng)</td>
           <td style="text-align: center;">✔ (Lưu bảng, Khôi phục)</td>
@@ -3593,16 +3644,17 @@
           <ul class="rec-list">
           <li><strong>Mục Tiêu chuẩn (theo Nhà sản xuất):</strong></li>
           <li>Cấu hình ngưỡng riêng cho từng hãng chế tạo thay cho ngưỡng mặc định chung.</li>
-          <li>Hỗ trợ cả 2 nhóm: <em>Khí hòa tan (DGA)</em> và <em>Dầu cách điện (MBA, OLTC, TI/TU)</em>.</li>
-          <li>Cung cấp cấu hình <strong>Ngưỡng loại bỏ (condemning limit)</strong> cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU.</li>
+          <li>Hỗ trợ cả 2 nhóm: <em>Khí hòa tan (DGA)</em> và <em>Dầu cách điện (MBA, OLTC, TI/TU/Sứ xuyên)</em>.</li>
+          <li>Màn hình 2 cột: danh sách tiêu chuẩn bên trái (tìm, lọc Khí/Dầu, <strong>+ Thêm tiêu chuẩn</strong>), form thêm/sửa bên phải.</li>
+          <li>Cung cấp cấu hình <strong>Ngưỡng loại bỏ (condemning limit)</strong> cho các khí cháy nguy hiểm (H2, C2H2) và tiêu chuẩn 2 tầng (Bình thường / Loại bỏ) bắt buộc cho dầu TI/TU/Sứ xuyên.</li>
           <li>Cho phép tra cứu, chỉnh sửa hoặc xóa các tiêu chuẩn hãng đã thiết lập (xem chi tiết tại mục 13).</li>
-          <li><strong>Mục Quy định (13 bảng ngưỡng số học):</strong></li>
-          <li>Chỉnh sửa trực tiếp 13 bảng ngưỡng số học trích từ QĐ1901/EVNNPT và IEC 60599:2022.</li>
+          <li><strong>Mục Quy định (các bảng ngưỡng số học):</strong></li>
+          <li>Chỉnh sửa trực tiếp các bảng ngưỡng số học trích từ QĐ1901/EVNNPT, IEC 60599:2022 và IEC 60422:2024 — chọn bảng ở danh sách bên trái (có tìm kiếm), sửa ở bên phải.</li>
           <li>Khi ngành điện hoặc tiêu chuẩn quốc tế có đợt cập nhật ngưỡng số học mới, Admin chỉ cần sửa số trên giao diện và bấm <strong>"Lưu bảng này"</strong> — hệ thống sẽ lập tức áp dụng ngưỡng mới cho toàn bộ tính toán mà không cần lập trình viên phải sửa code hay cập nhật phiên bản web.</li>
           <li>Có nút <strong>"Khôi phục mặc định"</strong> để hoàn tác về đúng số liệu gốc ban đầu nếu cần.</li>
           </ul>
           <h4>3. Subtab "Bản sao Supabase" (Sao lưu &amp; Đồng bộ dự phòng)</h4>
-          <p>Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính:</p>
+          <p>Dành cho hệ thống sử dụng Google Sheets làm cơ sở dữ liệu chính. Tính năng này <strong>chỉ bật khi Admin đã khai báo khóa Supabase</strong> trong Script properties của Apps Script; để trống thì app chỉ lưu vào Google Sheets và subtab này báo <em>chưa cấu hình</em> (hiện đơn vị tạm không dùng Supabase).</p>
           <ul class="rec-list">
           <li><strong>Tự động sao chép song song (Mirroring):</strong> Mọi thao tác thêm mới, chỉnh sửa, xóa dữ liệu (kết quả đo DGA, thí nghiệm dầu, danh sách trạm, tiêu chuẩn hãng, bảng quy định, ý kiến phản hồi) khi lưu vào Google Sheets đều được hệ thống tự động ghi một bản sao sang cơ sở dữ liệu Supabase (PostgreSQL).</li>
           <li><strong>Kiểm tra trạng thái kết nối:</strong> Hiển thị trực quan tình trạng sẵn sàng của đường truyền kết nối đến Supabase.</li>
@@ -3618,7 +3670,7 @@
           <div class="sm-body">
           <p>Thư mục <code>mobile/</code> chứa bản giao diện tối ưu cho điện thoại (một cột, thanh điều hướng trên cùng), <strong>dùng chung database và tài khoản</strong> với bản web nếu được cấu hình cùng <code>config.js</code>. Số liệu nhập ở điện thoại xuất hiện ở bản web và ngược lại.</p>
           <p><strong>Cùng số liệu, cùng kết luận:</strong> bản di động dùng <strong>chính bộ logic đánh giá của bản web</strong> (file <code>mobile/dga-logic.js</code> được sinh tự động từ logic web, không sửa tay), nên ngưỡng QĐ1901/IEC 60599:2022, chẩn đoán Bảng 66/Table A.10 (sứ xuyên), Tam giác Duval, trạng thái tổng thể và đánh giá dầu đều giống hệt. <strong>Cấu hình quy định</strong> do Admin chỉnh ở bản web cũng được bản di động tự áp dụng khi mở app.</p>
-          <p>Bản di động gồm các tab: <strong>DGA</strong>, <strong>Dầu</strong>, <strong>Xu hướng</strong>, <strong>Tiêu chuẩn</strong> (Admin ghi được, người dùng thường chỉ xem) và <strong>Quản trị</strong> (chỉ Admin). Các phần <strong>chỉ có trên bản web</strong>: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN. Chi tiết xem <code>mobile/README.md</code>.</p>
+          <p>Bản di động gồm các tab: <strong>DGA</strong>, <strong>Dầu</strong>, <strong>Xu hướng</strong>, <strong>Tiêu chuẩn</strong> (Admin ghi được, người dùng thường chỉ xem) và <strong>Quản trị</strong> (chỉ Admin). Các phần <strong>chỉ có trên bản web</strong>: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem <code>mobile/README.md</code>.</p>
 
           </div>
         </details>
@@ -3630,10 +3682,14 @@
           <p><strong>Mở app thấy trắng/không có dữ liệu cũ.</strong> Kiểm tra huy hiệu trạng thái góc trên bên trái. Nếu đang ở <em>"Chế độ thử nghiệm"</em>, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.</p>
           <p><strong>Không thấy Trạm/Thiết bị trong danh sách gợi ý.</strong> Chờ dòng <em>"Vui lòng chờ! Đang nạp dữ liệu…"</em> biến mất. Nếu thiết bị mới hoàn toàn, cứ <strong>gõ tên mới</strong>.</p>
           <p><strong>Tốc độ sinh khí không hiện.</strong> Cần có <strong>lần đo trước</strong> của cùng <strong>Trạm + Thiết bị + Pha</strong>. Kiểm tra tên Trạm/Thiết bị và Pha đã trùng khớp với lần đo trước chưa.</p>
-          <p><strong>Không lưu được thí nghiệm dầu TI/TU.</strong> Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu TI/TU đủ 2 tầng. Nhờ Admin cấu hình ở <strong>Quản trị → Cấu hình → Tiêu chuẩn</strong>.</p>
+          <p><strong>Không lưu được thí nghiệm dầu TI/TU/Sứ xuyên.</strong> Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu cho đúng loại thiết bị (TI, TU hoặc Sứ xuyên). Nhờ Admin cấu hình ở <strong>Quản trị → Cấu hình → Tiêu chuẩn</strong>.</p>
+          <p><strong>Không thấy ô kéo thả đọc BBTN.</strong> Ô đọc BBTN (1 file và nhiều file) nằm ở tab con <strong>Nhập BBTN cũ</strong>. Ở tab con <strong>Lập BBTN</strong> chỉ có ô <strong>"Nhập thông số kỹ thuật từ file"</strong> (chỉ lấy thông số thiết bị, không đọc số liệu đo).</p>
+          <p><strong>Thông số kỹ thuật không tự điền.</strong> Chỉ tự điền ở tab con <strong>Lập BBTN</strong>, khi đã có Trạm + Thiết bị <strong>khớp đúng</strong> với dữ liệu đã lưu, và chỉ điền vào ô còn trống. Nếu tên thiết bị có ở nhiều trạm, hãy chọn Trạm trước.</p>
+          <p><strong>Bảng "Số liệu đã lưu" trống.</strong> Bảng chỉ hiện dữ liệu của <strong>đúng Trạm + Thiết bị đang nhập ở form</strong>. Nhập/chọn thiết bị, hoặc xem toàn bộ ở tab <strong>Lịch sử đo</strong>.</p>
+          <p><strong>Nhập hàng loạt báo "Đã có biên bản thiết bị này cùng ngày".</strong> Thiết bị đã có biên bản cùng ngày lấy mẫu (cùng pha) — dòng đó mặc định không chọn để tránh ghi đè. Tick chọn nếu bạn muốn thay bằng số liệu mới.</p>
           <p><strong>Không thấy nút "Xuất báo cáo phân tích kỹ thuật".</strong> Nút này chỉ hiện khi trạng thái tổng thể <strong>khác "Bình thường"</strong>.</p>
           <p><strong>Không thấy nút Xuất BBTN/báo cáo sau khi mở lại một lần đo cũ.</strong> Các nút xuất nằm trong khối kết quả, chỉ hiện sau khi phân tích. Bấm <strong>Phân tích &amp; Lưu</strong> (hoặc <strong>Cập nhật &amp; Lưu</strong> khi sửa) để hiện.</p>
-          <p><strong>Đọc PDF không ra số liệu / ra sai.</strong> Biên bản có thể dùng mẫu khác PTC3/BM.15, hoặc là bản scan mờ. Nhập tay các ô còn thiếu; luôn kiểm tra lại trước khi lưu.</p>
+          <p><strong>Đọc PDF / Word không ra số liệu / ra sai.</strong> Biên bản có thể dùng mẫu khác mẫu PTC3 (khí hòa tan PTC3/BM.15; dầu cách điện, dầu 3 pha PTC3/BM.14), hoặc là bản scan mờ. Nhập tay các ô còn thiếu; luôn đối chiếu với khung BBTN bên cạnh trước khi lưu.</p>
           <p><strong>Tôi lỡ nhập sai số liệu đã lưu.</strong> Vào <strong>Lịch sử đo</strong> → sửa bản ghi đó (mục 10.3). Nếu bạn là User và bản ghi không phải của bạn, nhờ Admin sửa. Lịch sử chỉnh sửa luôn được ghi lại.</p>
           <p><strong>Tôi không đăng nhập được.</strong> Kiểm tra email/mật khẩu (tối thiểu 6 ký tự). Nếu quên mật khẩu, liên hệ Admin để được cấp mật khẩu tạm. Nếu báo "tạm khóa", chờ 15 phút rồi thử lại. Nếu dùng Google mà không thấy nút Google, chức năng này chưa được bật ở app của bạn.</p>
           <p><strong>Bản web và bản di động cho kết luận khác nhau với cùng số liệu.</strong> Hai bản dùng chung logic nên kết quả phải giống nhau. Nếu thấy khác, tải lại cứng trang (Ctrl+F5 trên máy tính; xóa dữ liệu trang trên di động) để bỏ bản cũ lưu trong bộ nhớ đệm, rồi kiểm tra Cấu hình quy định/tiêu chuẩn nhà sản xuất đang áp dụng có giống nhau ở hai bản không (cả hai đọc chung từ database). Nếu vẫn lệch, báo Admin.</p>
@@ -3764,8 +3820,30 @@
       </div>
 
       <div class="cauhinh-subpanel" id="cauhinh-tieuchuan" role="tabpanel">
-      <div class="panel">
-        <h2>Tiêu chuẩn theo nhà sản xuất
+      <!-- Bố cục DANH SÁCH | FORM: trái = tiêu chuẩn đã cấu hình (lọc/tìm, bấm Sửa nạp lên form), phải = form thêm/sửa
+           dính khi cuộn — không phải kéo xuống cuối trang mới thấy danh sách. -->
+      <div class="std-layout">
+      <div class="panel std-list-col">
+        <div class="std-list-head">
+          <h2 style="margin:0;">Tiêu chuẩn đã cấu hình <span class="std-count" id="stdListCount"></span></h2>
+          <button type="button" class="btn primary" id="btnNewStandard" style="padding:6px 12px; font-size:12.5px;">+ Thêm tiêu chuẩn</button>
+        </div>
+        <div class="std-list-filters">
+          <input type="search" id="stdListSearch" placeholder="Tìm nhà sản xuất, loại thiết bị..." aria-label="Tìm tiêu chuẩn" />
+          <select id="stdListFilter" aria-label="Lọc theo loại tiêu chuẩn">
+            <option value="">Tất cả</option>
+            <option value="khi">Khí hòa tan</option>
+            <option value="dau">Dầu cách điện</option>
+          </select>
+        </div>
+        <div class="std-list-scroll"><table class="std-list-table">
+          <tbody id="standardsTable"></tbody>
+        </table></div>
+        <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
+        <p class="note hidden" id="standardsNoMatch">Không có tiêu chuẩn nào khớp bộ lọc.</p>
+      </div>
+      <div class="panel std-form-col">
+        <h2><span id="stdFormTitle">Thêm tiêu chuẩn nhà sản xuất</span>
           <button type="button" class="info-icon-btn" aria-controls="tieuchuan_info" aria-expanded="false" aria-label="Giải thích Tiêu chuẩn theo nhà sản xuất" title="Giải thích Tiêu chuẩn theo nhà sản xuất">i</button>
         </h2>
         <div class="info-popover hidden" id="tieuchuan_info">
@@ -3807,32 +3885,38 @@
           </label>
         </div>
 
+        <!-- Ngưỡng khí: 1 bảng (dòng = khí, cột = ngưỡng tuyệt đối | ngưỡng loại bỏ) thay cho 2 lưới 7 ô xếp chồng —
+             gọn hơn, khỏi cuộn; id các ô giữ nguyên (ui-standards.js không đổi cách đọc/ghi). -->
         <div id="stdGasFields">
-          <div class="section-title">Ngưỡng tuyệt đối từng khí (ppm)</div>
-          <div class="grid gases">
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_CH4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_C2H6" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_C2H4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_C2H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_CO" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_CO2" type="number" min="0" step="0.01" /></label>
-          </div>
-          <p class="note">Bỏ trống khoảng tốc độ sinh khí nếu muốn dùng Bảng 65 QĐ1901 làm mặc định (khuyến nghị).</p>
-
-          <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — cảnh báo nghiêm trọng nếu vượt)</div>
-          <p class="note">Ngưỡng riêng, nghiêm trọng hơn "ngưỡng tuyệt đối" ở trên — QĐ1901/IEC không quy định mức
-            này, chỉ áp dụng khi chính nhà sản xuất/đơn vị bạn tự đặt ra. Không cần điền đủ 7 khí — để trống khí nào
-            thì khí đó không bị kiểm tra ngưỡng loại bỏ (thường chỉ cần đặt cho H2, C2H2).</p>
-          <div class="grid gases">
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2 <input id="s_loaibo_H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4 <input id="s_loaibo_CH4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6 <input id="s_loaibo_C2H6" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4 <input id="s_loaibo_C2H4" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2 <input id="s_loaibo_C2H2" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO <input id="s_loaibo_CO" type="number" min="0" step="0.01" /></label>
-            <label class="field"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2 <input id="s_loaibo_CO2" type="number" min="0" step="0.01" /></label>
-          </div>
+          <div class="section-title">Ngưỡng khí hòa tan (ppm)</div>
+          <div class="table-scroll"><table class="std-threshold-table">
+            <thead><tr><th>Khí</th><th>Ngưỡng tuyệt đối</th><th class="std-col-reject">Ngưỡng loại bỏ <span class="std-th-note">(tùy chọn)</span></th></tr></thead>
+            <tbody>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>H2</th>
+                <td><input id="s_H2" type="number" min="0" step="0.01" aria-label="H2 — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_H2" type="number" min="0" step="0.01" aria-label="H2 — ngưỡng loại bỏ (ppm)" /></td></tr>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>CH4</th>
+                <td><input id="s_CH4" type="number" min="0" step="0.01" aria-label="CH4 — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_CH4" type="number" min="0" step="0.01" aria-label="CH4 — ngưỡng loại bỏ (ppm)" /></td></tr>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H6</th>
+                <td><input id="s_C2H6" type="number" min="0" step="0.01" aria-label="C2H6 — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_C2H6" type="number" min="0" step="0.01" aria-label="C2H6 — ngưỡng loại bỏ (ppm)" /></td></tr>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H4</th>
+                <td><input id="s_C2H4" type="number" min="0" step="0.01" aria-label="C2H4 — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_C2H4" type="number" min="0" step="0.01" aria-label="C2H4 — ngưỡng loại bỏ (ppm)" /></td></tr>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-flask"></use></svg>C2H2</th>
+                <td><input id="s_C2H2" type="number" min="0" step="0.01" aria-label="C2H2 — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_C2H2" type="number" min="0" step="0.01" aria-label="C2H2 — ngưỡng loại bỏ (ppm)" /></td></tr>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO</th>
+                <td><input id="s_CO" type="number" min="0" step="0.01" aria-label="CO — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_CO" type="number" min="0" step="0.01" aria-label="CO — ngưỡng loại bỏ (ppm)" /></td></tr>
+              <tr><th scope="row"><svg class="gas-icon" aria-hidden="true"><use href="#icon-book"></use></svg>CO2</th>
+                <td><input id="s_CO2" type="number" min="0" step="0.01" aria-label="CO2 — ngưỡng tuyệt đối (ppm)" /></td>
+                <td><input id="s_loaibo_CO2" type="number" min="0" step="0.01" aria-label="CO2 — ngưỡng loại bỏ (ppm)" /></td></tr>
+            </tbody>
+          </table></div>
+          <p class="note">Ngưỡng loại bỏ: nghiêm trọng hơn ngưỡng tuyệt đối, QĐ1901/IEC không quy định — chỉ đặt khi nhà sản xuất/đơn
+            vị tự quy định (thường chỉ H2, C2H2); để trống khí nào thì khí đó không kiểm tra ngưỡng loại bỏ.</p>
         </div>
 
         <div id="stdOilFields" class="hidden">
@@ -3857,31 +3941,29 @@
             </label>
           </div>
           <div class="section-title" id="s_oil_normal_title">Ngưỡng (bỏ trống hạng mục nào nếu không muốn ghi đè QĐ1901)</div>
-          <div class="grid gases">
-            <label class="field">Độ ẩm dầu (ppm) <input id="s_oil_moisture" type="number" min="0" step="0.1" /></label>
-            <label class="field">tgδ ở 90°C (%) <input id="s_oil_tgd90" type="number" min="0" step="0.01" /></label>
-            <label class="field">Điện áp chọc thủng (kV) <input id="s_oil_bdv" type="number" min="0" step="0.1" /></label>
-          </div>
+          <!-- 1 bảng hạng mục x mức ngưỡng (id các ô giữ nguyên). Cột "Loại bỏ", dòng tgδ 20°C và khối U.H.V chỉ dùng cho
+               TI/TU/Sứ xuyên — MBA/Kháng dầu ẩn đi (#stdOilFields.is-mba, toggleOilStandardEquipmentFields()). -->
+          <div class="table-scroll"><table class="std-threshold-table">
+            <thead><tr><th>Hạng mục</th><th>Ngưỡng <span class="std-instr-only">bình thường</span></th><th class="std-instr-only std-col-reject">Ngưỡng loại bỏ</th></tr></thead>
+            <tbody>
+              <tr class="std-oil-row"><th scope="row">Độ ẩm dầu (ppm)</th>
+                <td><input id="s_oil_moisture" type="number" min="0" step="0.1" aria-label="Độ ẩm dầu (ppm) — bình thường" /></td>
+                <td class="std-instr-only"><input id="s_oil_moisture_loaibo" type="number" min="0" step="0.1" aria-label="Độ ẩm dầu (ppm) — loại bỏ" /></td></tr>
+              <tr class="std-oil-row"><th scope="row">tgδ ở 90°C (%)</th>
+                <td><input id="s_oil_tgd90" type="number" min="0" step="0.01" aria-label="tgδ ở 90°C (%) — bình thường" /></td>
+                <td class="std-instr-only"><input id="s_oil_tgd90_loaibo" type="number" min="0" step="0.01" aria-label="tgδ ở 90°C (%) — loại bỏ" /></td></tr>
+              <tr class="std-oil-row"><th scope="row">Điện áp chọc thủng (kV)</th>
+                <td><input id="s_oil_bdv" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) — bình thường" /></td>
+                <td class="std-instr-only"><input id="s_oil_bdv_loaibo" type="number" min="0" step="0.1" aria-label="Điện áp chọc thủng (kV) — loại bỏ" /></td></tr>
+              <tr class="std-oil-row std-instr-only"><th scope="row">tgδ ở 20°C (%) — chỉ TI/TU/Sứ xuyên</th>
+                <td><input id="s_oil_tgd20" type="number" min="0" step="0.01" aria-label="tgδ ở 20°C (%) — chỉ TI/TU/Sứ xuyên — bình thường" /></td>
+                <td class="std-instr-only"><input id="s_oil_tgd20_loaibo" type="number" min="0" step="0.01" aria-label="tgδ ở 20°C (%) — chỉ TI/TU/Sứ xuyên — loại bỏ" /></td></tr>
+            </tbody>
+          </table></div>
           <div id="s_oil_instrument_fields" class="hidden">
-            <div class="section-title" style="color:var(--bad);">Ngưỡng loại bỏ (tùy chọn — mức nghiêm trọng hơn ngưỡng bình thường ở trên)</div>
-            <p class="note">Ví dụ tài liệu Haefely Trench cho TI: tgδ 90°C bình thường &lt; 0,1% / loại bỏ &gt; 0,2% —
-              Điện áp chọc thủng bình thường &gt; 60kV / loại bỏ &lt; 50kV — Độ ẩm bình thường &lt; 10ppm / loại bỏ
-              &gt; 20ppm. Giá trị nằm GIỮA 2 mức sẽ được báo "Cảnh báo" thay vì "Không đạt".</p>
-            <div class="grid gases">
-              <label class="field">Độ ẩm dầu — loại bỏ (ppm) <input id="s_oil_moisture_loaibo" type="number" min="0" step="0.1" /></label>
-              <label class="field">tgδ ở 90°C — loại bỏ (%) <input id="s_oil_tgd90_loaibo" type="number" min="0" step="0.01" /></label>
-              <label class="field">Điện áp chọc thủng — loại bỏ (kV) <input id="s_oil_bdv_loaibo" type="number" min="0" step="0.1" /></label>
-            </div>
-            <div class="section-title">tgδ ở 20°C (tùy chọn — chỉ TI/TU, khác hẳn tgδ 90°C ở trên)</div>
-            <p class="note">Một số nhà sản xuất (VD Arteche) đưa ra ngưỡng riêng đo ở nhiệt độ phòng (20°C) thay vì
-              90°C — bỏ trống nếu tài liệu nhà sản xuất của bạn không có hạng mục này.</p>
-            <div class="grid gases">
-              <label class="field">tgδ ở 20°C — bình thường (%) <input id="s_oil_tgd20" type="number" min="0" step="0.01" /></label>
-              <label class="field">tgδ ở 20°C — loại bỏ (%) <input id="s_oil_tgd20_loaibo" type="number" min="0" step="0.01" /></label>
-            </div>
-            <p class="note">Riêng cho thiết bị U.H.V (tùy chọn, VD Arteche: tài liệu NSX ghi ngưỡng loại bỏ tgδ20°C
-              thấp hơn cho thiết bị U.H.V) — nếu nhập, PHẢI nhập ĐỦ CẢ HAI ô dưới đây; bỏ trống cả hai nếu NSX
-              không có biệt lệ này.</p>
+            <p class="note">Giữa 2 mức (vượt bình thường, chưa vượt loại bỏ) báo "Cảnh báo" thay vì "Không đạt". VD Haefely Trench (TI):
+              tgδ 90°C &lt; 0,1% / &gt; 0,2% · BDV &gt; 60 / &lt; 50 kV · Độ ẩm &lt; 10 / &gt; 20 ppm. tgδ 20°C: chỉ khi NSX có (VD Arteche).</p>
+            <div class="section-title">Ngưỡng loại bỏ tgδ 20°C riêng cho thiết bị U.H.V (tùy chọn — nhập ĐỦ CẢ HAI hoặc để trống cả hai)</div>
             <div class="grid gases">
               <label class="field">tgδ ở 20°C — loại bỏ khi U.H.V (%) <input id="s_oil_tgd20_uhv_loaibo" type="number" min="0" step="0.01" /></label>
               <label class="field">Mốc Um áp dụng U.H.V (kV) <input id="s_oil_tgd20_uhv_um_kv" type="number" min="0" step="1" placeholder="VD: 500" /></label>
@@ -3894,14 +3976,6 @@
           <button class="btn ghost hidden" id="btnCancelEditStandard">Hủy</button>
         </div>
       </div>
-
-      <div class="panel">
-        <h2>Danh sách tiêu chuẩn đã cấu hình</h2>
-        <div class="table-scroll"><table>
-          <thead><tr><th>Nhà sản xuất</th><th>Loại</th><th>Áp dụng</th><th>Ngưỡng</th><th>Nguồn</th><th class="actions-col-header"></th></tr></thead>
-          <tbody id="standardsTable"></tbody>
-        </table></div>
-        <p class="note" id="standardsEmpty">Chưa có tiêu chuẩn nhà sản xuất nào — mọi thiết bị/thí nghiệm dùng QĐ1901/IEC60599 mặc định.</p>
       </div>
       </div>
 

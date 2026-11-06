@@ -512,6 +512,15 @@ async function initApp() {
   // khối trường KHÁC nhau (Cấp điện áp/Trạng thái dầu vs Ngưỡng loại bỏ) — xem
   // toggleOilStandardEquipmentFields() ở ui-standards.js.
   $("s_equipmenttype").addEventListener("change", toggleOilStandardEquipmentFields);
+  // Danh sách tiêu chuẩn (cột trái): lọc/tìm + nút "+ Thêm tiêu chuẩn" (bỏ form đang sửa, bắt đầu tiêu chuẩn mới)
+  if ($("stdListSearch")) $("stdListSearch").addEventListener("input", renderStandardsList);
+  if ($("stdListFilter")) $("stdListFilter").addEventListener("change", renderStandardsList);
+  if ($("btnNewStandard")) {
+    $("btnNewStandard").addEventListener("click", () => {
+      resetStandardForm();
+      $("s_manufacturer").focus();
+    });
+  }
   // Bộ lọc "Trạm biến áp"/"Thiết bị" ở tab "Lịch sử đo" — 2 ô combo tự gõ-tìm
   // (#lichsu_station/#lichsu_device, THAY THẾ ô tìm kiếm tự do #historyFilter cũ) giống
   // hệt kiểu #tr_station/#tr_device ở tab "Xu hướng" (xem lichsuStationOptions()/

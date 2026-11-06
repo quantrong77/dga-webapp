@@ -55,3 +55,160 @@
   align-items: center;
   flex-wrap: wrap;
 }
+
+/* ===== Bố cục DANH SÁCH | NỘI DUNG (renderRegulationConfigUI) — thay cho 34 bảng xếp dọc 1 trang =====
+   Cột trái: danh sách bảng theo nhóm, dính khi cuộn, tự cuộn bên trong. Cột phải: chỉ bảng đang chọn,
+   tiêu đề + nút Lưu/Khôi phục dính trên đầu thẻ. */
+.rc-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.rc-nav {
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 12px);
+  max-height: calc(100vh - var(--header-height, 64px) - 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.rc-nav .rc-search { width: 100%; box-sizing: border-box; }
+.rc-only-custom-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--gray-600);
+}
+.rc-only-custom-label input { width: auto; }
+.rc-nav-list {
+  overflow-y: auto;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius);
+  padding: 6px;
+  background: var(--surface, #fff);
+}
+.rc-nav-group + .rc-nav-group { margin-top: 8px; }
+.rc-nav-group-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--blue-900);
+  padding: 6px 8px 4px;
+  display: flex;
+  justify-content: space-between;
+}
+.rc-nav-count { font-weight: 600; color: var(--gray-500, #6b7280); }
+.rc-nav-cat {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--gray-500, #6b7280);
+  padding: 6px 8px 2px;
+}
+.rc-nav-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  border-radius: var(--radius-md, 6px);
+  padding: 6px 8px;
+  font-size: 12.5px;
+  color: var(--gray-900);
+  cursor: pointer;
+}
+.rc-nav-item:hover { background: var(--surface-sunken, #f3f4f6); }
+.rc-nav-item.active {
+  background: var(--blue-50, #eef2ff);
+  border-color: var(--blue-700);
+  color: var(--blue-900);
+  font-weight: 600;
+}
+.rc-nav-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+.rc-nav-flags { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.rc-nav-flags .pill { font-size: 10px; padding: 1px 6px; }
+.rc-nav-dot { color: var(--bad); font-size: 12px; line-height: 1.35; }
+.rc-detail { min-width: 0; }
+.rc-detail .rc-item { margin-bottom: 0; }
+.rc-item-head {
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 4px);
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+  background: var(--surface, #fff);
+  padding: 4px 0 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.rc-item-title { min-width: 0; flex: 1 1 320px; }
+.rc-item-cat { font-size: 12px; font-weight: 600; color: var(--gray-500, #6b7280); margin-bottom: 2px; }
+.rc-item-head h4 { margin: 0; }
+.rc-item-head .rc-actions { margin-top: 0; }
+@media (max-width: 900px) {
+  .rc-layout { grid-template-columns: minmax(0, 1fr); }
+  .rc-nav { position: static; max-height: none; }
+  .rc-nav-list { max-height: 45vh; }
+}
+
+/* ===== Mục "Tiêu chuẩn": bố cục DANH SÁCH | FORM =====
+   Trái: tiêu chuẩn đã cấu hình (dính khi cuộn, tự cuộn bên trong). Phải: form thêm/sửa. Ngưỡng khí/dầu là bảng
+   (dòng = hạng mục, cột = mức ngưỡng) thay cho nhiều lưới ô xếp chồng. */
+.std-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+.std-layout > .panel { margin: 0; min-width: 0; }
+.std-list-col {
+  position: sticky;
+  top: calc(var(--header-height, 64px) + 12px);
+  max-height: calc(100vh - var(--header-height, 64px) - 28px);
+  display: flex;
+  flex-direction: column;
+}
+.std-list-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.std-count { margin-left: 6px; font-weight: 600; color: var(--gray-500, #6b7280); font-size: 0.85em; }
+.std-list-filters { display: flex; gap: 8px; margin: 10px 0 8px; }
+.std-list-filters input { flex: 1 1 auto; min-width: 0; }
+.std-list-filters select { flex: 0 0 auto; width: auto; }
+.std-list-scroll { overflow-y: auto; min-height: 0; border-top: 1px solid var(--gray-100); }
+.std-list-table { width: 100%; border-collapse: collapse; }
+.std-list-table td { padding: 8px 6px; border-bottom: 1px solid var(--gray-100); vertical-align: top; }
+.std-list-table tr.is-editing td { background: var(--blue-50, #eef2ff); }
+.std-list-table tr.is-editing td:first-child { box-shadow: inset 3px 0 0 var(--blue-700); }
+.std-list-name { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.std-list-applies { font-size: 12px; color: var(--gray-600); }
+.std-list-thresholds { font-size: 11.5px; color: var(--gray-600); margin-top: 3px; line-height: 1.45; word-break: break-word; }
+.std-list-source { font-size: 11px; color: var(--gray-500, #6b7280); margin-top: 2px; }
+.std-list-table .actions-cell { width: 1%; white-space: nowrap; }
+.std-threshold-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.std-threshold-table th, .std-threshold-table td { padding: 5px 8px; border-bottom: 1px solid var(--gray-100); text-align: left; }
+.std-threshold-table thead th { font-size: 12px; color: var(--gray-600); font-weight: 700; }
+.std-threshold-table tbody th { font-weight: 600; white-space: nowrap; width: 1%; }
+.std-threshold-table tbody th .gas-icon { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; }
+.std-threshold-table input { width: 100%; box-sizing: border-box; }
+.std-threshold-table .std-col-reject { color: var(--bad); }
+.std-th-note { font-weight: 400; color: var(--gray-500, #6b7280); }
+#stdOilFields.is-mba .std-instr-only { display: none; }
+@media (max-width: 1000px) {
+  .std-layout { grid-template-columns: minmax(0, 1fr); }
+  .std-list-col { position: static; max-height: none; }
+  .std-list-scroll { max-height: 45vh; }
+}

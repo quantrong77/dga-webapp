@@ -47,7 +47,9 @@ async function refreshRegulationConfigUI() {
     console.warn("Không tải được Cấu hình quy định (có thể backend chưa hỗ trợ regulation_config — dùng mặc định gốc):", err);
   }
   const overriddenKeys = new Set(records.map((r) => r.id));
-  renderRegulationConfigUI(overriddenKeys);
+  _rcOverridden = overriddenKeys;
+  // Đang có bảng sửa dở chưa lưu (mở lại mục "Quy định") → giữ nguyên, không vẽ lại làm mất số đang sửa
+  if (!document.querySelector('#regulationConfigContainer .rc-item[data-dirty="1"]')) renderRegulationConfigUI(overriddenKeys);
   const hint = $("quydinhLoadingHint");
   if (hint) hint.classList.add("hidden");
 }
@@ -89,53 +91,186 @@ function renderRegulationConfigItem(item, overriddenKeys = new Set()) {
   const writable = canWrite();
   return `
     <div class="rc-item" data-config-key="${escapeHtml(item.key)}">
-      <h4>${escapeHtml(item.title)}</h4>
+      <div class="rc-item-head">
+        <div class="rc-item-title">
+          <div class="rc-item-cat">${escapeHtml(item.category)}</div>
+          <h4>${escapeHtml(item.title)}</h4>
+        </div>
+        <div class="rc-actions">
+          <span class="pill ${isCustom ? "warn" : "muted"} rc-status">${isCustom ? "Đã tùy chỉnh" : "Mặc định gốc"}</span>
+          <span class="pill bad rc-dirty hidden">Chưa lưu</span>
+          ${writable ? `
+            <button class="btn primary rc-save" type="button">Lưu bảng này</button>
+            <button class="btn ghost rc-reset" type="button">Khôi phục mặc định</button>
+          ` : ""}
+        </div>
+      </div>
       <label class="field">Tham chiếu nguồn (có thể sửa)
         <input type="text" class="rc-citation" value="${escapeHtml(current.citation || "")}" ${writable ? "" : "disabled"} />
       </label>
       <div class="rc-fields">${fieldsHtml}</div>
-      <div class="rc-actions">
-        <span class="pill ${isCustom ? "warn" : "muted"} rc-status">${isCustom ? "Đã tùy chỉnh" : "Mặc định gốc"}</span>
-        ${writable ? `
-          <button class="btn primary rc-save" type="button">Lưu bảng này</button>
-          <button class="btn ghost rc-reset" type="button">Khôi phục mặc định</button>
-        ` : ""}
-      </div>
     </div>`;
+}
+
+// Bố cục DANH SÁCH | NỘI DUNG (thay cho 34 bảng xếp dọc 1 trang): cột trái liệt kê các bảng theo nhóm (tìm kiếm,
+// lọc "đã tùy chỉnh", dấu "chưa lưu"), cột phải chỉ hiện bảng đang chọn. Mọi thẻ bảng vẫn nằm sẵn trong trang (chỉ
+// ẩn/hiện) nên chuyển qua lại giữa các bảng KHÔNG mất số đang sửa dở; Lưu/Khôi phục chỉ vẽ lại đúng 1 bảng.
+let _rcOverridden = new Set();
+let _rcSelectedKey = "";
+const RC_SELECTED_STORAGE_KEY = "dga_rc_selected_v1";
+
+/** Nhóm lớn cho danh sách bên trái — suy từ category của registry. */
+function regulationTopGroup(item) {
+  const c = String(item.category || "");
+  if (/^Tên văn bản/i.test(c)) return "Tên văn bản, điều khoản (hiển thị)";
+  if (/^Dầu\b/i.test(c)) return "Lý-hóa dầu cách điện";
+  return "Khí hòa tan (DGA)";
+}
+
+function regulationFold(s) {
+  return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
 }
 
 function renderRegulationConfigUI(overriddenKeys = new Set()) {
   const container = $("regulationConfigContainer");
   if (!container) return;
+  _rcOverridden = overriddenKeys;
   const registry = DGA.getRegulationConfigRegistry();
-  const categories = [];
-  const byCategory = new Map();
+  if (!_rcSelectedKey) {
+    try { _rcSelectedKey = sessionStorage.getItem(RC_SELECTED_STORAGE_KEY) || ""; } catch (_) { /* bị chặn lưu trữ */ }
+  }
+  if (!registry.some((it) => it.key === _rcSelectedKey)) _rcSelectedKey = registry.length ? registry[0].key : "";
+
+  // nhóm lớn → category → bảng (giữ thứ tự registry)
+  const groups = [];
+  const byGroup = new Map();
   registry.forEach((item) => {
-    if (!byCategory.has(item.category)) {
-      byCategory.set(item.category, []);
-      categories.push(item.category);
-    }
-    byCategory.get(item.category).push(item);
+    const g = regulationTopGroup(item);
+    if (!byGroup.has(g)) { byGroup.set(g, new Map()); groups.push(g); }
+    const cats = byGroup.get(g);
+    if (!cats.has(item.category)) cats.set(item.category, []);
+    cats.get(item.category).push(item);
   });
 
-  container.innerHTML = categories
-    .map((cat) => {
-      const items = byCategory.get(cat);
-      return `
-        <div class="rc-category">${escapeHtml(cat)}</div>
-        ${items.map((item) => renderRegulationConfigItem(item, overriddenKeys)).join("")}
-      `;
-    })
-    .join("");
+  const navHtml = groups.map((g) => {
+    const cats = byGroup.get(g);
+    const count = Array.from(cats.values()).reduce((n, arr) => n + arr.length, 0);
+    return `
+      <div class="rc-nav-group" data-group="${escapeHtml(g)}">
+        <div class="rc-nav-group-title">${escapeHtml(g)} <span class="rc-nav-count">${count}</span></div>
+        ${Array.from(cats.entries()).map(([cat, items]) => `
+          <div class="rc-nav-cat">${escapeHtml(cat)}</div>
+          ${items.map((it) => `
+            <button type="button" class="rc-nav-item${it.key === _rcSelectedKey ? " active" : ""}" data-key="${escapeHtml(it.key)}"
+              data-search="${escapeHtml(regulationFold([it.title, it.category, it.key, g].join(" ")))}" title="${escapeHtml(it.title)}">
+              <span class="rc-nav-title">${escapeHtml(it.title)}</span>
+              <span class="rc-nav-flags">
+                <span class="rc-nav-dot rc-nav-dirty hidden" title="Có thay đổi chưa lưu">●</span>
+                <span class="pill warn rc-nav-custom${overriddenKeys.has(it.key) ? "" : " hidden"}">Đã tùy chỉnh</span>
+              </span>
+            </button>`).join("")}
+        `).join("")}
+      </div>`;
+  }).join("");
 
-  if (!canWrite()) return;
+  container.innerHTML = `
+    <div class="rc-layout">
+      <aside class="rc-nav" aria-label="Danh sách bảng quy định">
+        <input type="search" class="rc-search" placeholder="Tìm bảng: Bảng 55, Duval, OLTC, IEC 60422..." aria-label="Tìm bảng quy định" />
+        <label class="rc-only-custom-label"><input type="checkbox" class="rc-only-custom" /> Chỉ bảng đã tùy chỉnh
+          (<span class="rc-custom-count">${overriddenKeys.size}</span>)</label>
+        <div class="rc-nav-list">${navHtml}</div>
+        <p class="note rc-nav-empty hidden">Không có bảng nào khớp.</p>
+      </aside>
+      <section class="rc-detail">
+        ${registry.map((item) => renderRegulationConfigItem(item, overriddenKeys)).join("")}
+      </section>
+    </div>`;
+
   container.querySelectorAll(".rc-item").forEach((el) => {
-    const key = el.getAttribute("data-config-key");
-    const saveBtn = el.querySelector(".rc-save");
-    const resetBtn = el.querySelector(".rc-reset");
-    if (saveBtn) saveBtn.addEventListener("click", () => onSaveRegulationItem(key));
-    if (resetBtn) resetBtn.addEventListener("click", () => onResetRegulationItem(key));
+    el.classList.toggle("hidden", el.getAttribute("data-config-key") !== _rcSelectedKey);
+    regulationBindItem(el);
   });
+  container.querySelectorAll(".rc-nav-item").forEach((btn) => {
+    btn.addEventListener("click", () => regulationSelect(btn.getAttribute("data-key")));
+  });
+  const search = container.querySelector(".rc-search");
+  const onlyCustom = container.querySelector(".rc-only-custom");
+  const applyFilter = () => regulationFilterNav(search.value, onlyCustom.checked);
+  search.addEventListener("input", applyFilter);
+  onlyCustom.addEventListener("change", applyFilter);
+}
+
+/** Gắn sự kiện cho 1 thẻ bảng: Lưu/Khôi phục + đánh dấu "chưa lưu" khi sửa ô bất kỳ. */
+function regulationBindItem(el) {
+  const key = el.getAttribute("data-config-key");
+  el.querySelectorAll("input").forEach((inp) => inp.addEventListener("input", () => regulationMarkDirty(key, true)));
+  if (!canWrite()) return;
+  const saveBtn = el.querySelector(".rc-save");
+  const resetBtn = el.querySelector(".rc-reset");
+  if (saveBtn) saveBtn.addEventListener("click", () => onSaveRegulationItem(key));
+  if (resetBtn) resetBtn.addEventListener("click", () => onResetRegulationItem(key));
+}
+
+function regulationMarkDirty(key, dirty) {
+  const item = document.querySelector(`.rc-item[data-config-key="${key}"]`);
+  const nav = document.querySelector(`.rc-nav-item[data-key="${key}"]`);
+  if (item) { item.dataset.dirty = dirty ? "1" : ""; const b = item.querySelector(".rc-dirty"); if (b) b.classList.toggle("hidden", !dirty); }
+  if (nav) { const d = nav.querySelector(".rc-nav-dirty"); if (d) d.classList.toggle("hidden", !dirty); }
+}
+
+function regulationSelect(key) {
+  if (!key) return;
+  _rcSelectedKey = key;
+  try { sessionStorage.setItem(RC_SELECTED_STORAGE_KEY, key); } catch (_) { /* bị chặn lưu trữ */ }
+  document.querySelectorAll("#regulationConfigContainer .rc-item").forEach((el) => el.classList.toggle("hidden", el.getAttribute("data-config-key") !== key));
+  document.querySelectorAll("#regulationConfigContainer .rc-nav-item").forEach((b) => b.classList.toggle("active", b.getAttribute("data-key") === key));
+  const detail = document.querySelector("#regulationConfigContainer .rc-detail");
+  if (detail && detail.getBoundingClientRect().top < 0) detail.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function regulationFilterNav(text, onlyCustom) {
+  const q = regulationFold(text).trim();
+  const words = q ? q.split(/\s+/) : [];
+  let shown = 0;
+  document.querySelectorAll("#regulationConfigContainer .rc-nav-group").forEach((g) => {
+    let groupShown = 0;
+    g.querySelectorAll(".rc-nav-item").forEach((b) => {
+      const okText = words.every((w) => b.getAttribute("data-search").includes(w));
+      const okCustom = !onlyCustom || _rcOverridden.has(b.getAttribute("data-key"));
+      const on = okText && okCustom;
+      b.classList.toggle("hidden", !on);
+      if (on) groupShown++;
+    });
+    // ẩn tiêu đề nhóm con không còn bảng nào
+    g.querySelectorAll(".rc-nav-cat").forEach((cat) => {
+      let n = cat.nextElementSibling;
+      let any = false;
+      while (n && n.classList.contains("rc-nav-item")) { if (!n.classList.contains("hidden")) any = true; n = n.nextElementSibling; }
+      cat.classList.toggle("hidden", !any);
+    });
+    g.classList.toggle("hidden", groupShown === 0);
+    shown += groupShown;
+  });
+  const empty = document.querySelector("#regulationConfigContainer .rc-nav-empty");
+  if (empty) empty.classList.toggle("hidden", shown > 0);
+}
+
+/** Vẽ lại ĐÚNG 1 bảng sau khi Lưu/Khôi phục (giữ nguyên số đang sửa dở ở các bảng khác). */
+function regulationRerenderItem(key) {
+  const item = DGA.getRegulationConfigRegistry().find((it) => it.key === key);
+  const old = document.querySelector(`.rc-item[data-config-key="${key}"]`);
+  if (!item || !old) return;
+  const wrap = document.createElement("div");
+  wrap.innerHTML = renderRegulationConfigItem(item, _rcOverridden).trim();
+  const el = wrap.firstElementChild;
+  el.classList.toggle("hidden", key !== _rcSelectedKey);
+  old.replaceWith(el);
+  regulationBindItem(el);
+  const nav = document.querySelector(`.rc-nav-item[data-key="${key}"] .rc-nav-custom`);
+  if (nav) nav.classList.toggle("hidden", !_rcOverridden.has(key));
+  const cnt = document.querySelector("#regulationConfigContainer .rc-custom-count");
+  if (cnt) cnt.textContent = String(_rcOverridden.size);
 }
 
 /** Kiểm tra hợp lý số liệu SAU KHI đã đọc từ form (âm/khoảng thấp>khoảng cao) — chỉ
@@ -209,7 +344,9 @@ async function onSaveRegulationItem(key) {
   try {
     await Storage.saveRegulationConfig({ id: key, citation, values: valuesObj });
     DGA.applyRegulationConfigOverride(key, { citation, values: valuesObj });
-    await refreshRegulationConfigUI();
+    _rcOverridden.add(key);
+    regulationRerenderItem(key);
+    if (typeof document !== "undefined") document.dispatchEvent(new Event("dga:regulationchange"));
     showToast(`Đã lưu cấu hình cho "${item.title}".`);
   } catch (err) {
     notifyError(storageErrorMessage(err));
@@ -224,7 +361,9 @@ async function onResetRegulationItem(key) {
   try {
     await Storage.deleteRegulationConfig(key);
     DGA.resetRegulationConfigItem(key);
-    await refreshRegulationConfigUI();
+    _rcOverridden.delete(key);
+    regulationRerenderItem(key);
+    if (typeof document !== "undefined") document.dispatchEvent(new Event("dga:regulationchange"));
   } catch (err) {
     notifyError(storageErrorMessage(err));
   }
