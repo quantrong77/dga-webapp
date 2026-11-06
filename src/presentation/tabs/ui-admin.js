@@ -133,6 +133,14 @@ function showTempPasswordModal(email, tempPassword, title) {
 // ---------------------------------------------------------------------
 async function refreshSupabaseSyncUI() {
   const statusEl = $("sbSyncStatus");
+  // Bản sao Supabase do Code.gs (Google Sheets) ghi — máy chủ nội bộ không có action supabaseSyncStatus, gọi sẽ
+  // nhận HTTP 400 trong console (lỗi #1, BUGS_FOUND.md). Ngoài chế độ gsheet: không gọi, báo "không áp dụng".
+  if (typeof Storage === "undefined" || Storage.mode !== "gsheet") {
+    $("btnSyncSupabase").disabled = true;
+    $("sbSyncErrorsWrap").classList.add("hidden");
+    statusEl.textContent = "Không áp dụng — bản sao Supabase chỉ có khi dùng Google Sheets làm database (chế độ online).";
+    return;
+  }
   try {
     const st = await Auth.supabaseSyncStatus();
     $("btnSyncSupabase").disabled = !st.enabled;
