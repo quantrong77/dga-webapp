@@ -292,7 +292,7 @@ input:disabled, select:disabled, textarea:disabled {
   background: var(--blue-100);
 }
 
-/* Chỉ báo xoay "Đang lưu..." ở giữa cạnh trên màn hình (ui/ui-busy.js), nổi trên cả modal và toast. */
+/* Chỉ báo xoay "Đang lưu..." ở giữa cạnh trên màn hình (src/presentation/components/ui-busy.js), nổi trên cả modal và toast. */
 .busy-indicator {
   position: fixed;
   top: 14px;

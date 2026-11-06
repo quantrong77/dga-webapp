@@ -2614,7 +2614,7 @@ function forecastGasTrend(history, forecastYears, limit) {
 // ===== src/domain/dga-logic-regulation-config.js =====
 /* dga-logic-regulation-config.js — Phần 6/6 của dga-logic.js sau khi tách theo miền
    (xem dga-logic.js). Đăng ký + đọc/ghi đè các bảng ngưỡng "đơn giản" có thể cấu hình
-   qua tab "Cấu hình" — mục "Quy định" (ui/ui-regulation-config.js), KHÔNG bao gồm
+   qua tab "Cấu hình" — mục "Quy định" (src/presentation/tabs/ui-regulation-config.js), KHÔNG bao gồm
    logic rẽ nhánh (Bảng 66/Table A.10/Tam giác Duval — cố định theo văn bản gốc). Mỗi
    mục registry giữ tham chiếu TRỰC TIẾP tới 1 object hằng số khai báo ở
    dga-logic-core.js — sửa qua applyRegulationConfigOverride() là ghi đè property của
@@ -2624,7 +2624,7 @@ function forecastGasTrend(history, forecastYears, limit) {
 // ---------------------------------------------------------------------------
 // 9) Cấu hình quy định (regulation config) — làm các bảng ngưỡng ĐƠN GIẢN ở trên (không
 //    có logic rẽ nhánh phức tạp) có thể XEM/SỬA qua giao diện (mục "Quy định" trong tab
-//    "Cấu hình", xem ui/ui-regulation-config.js), để khi QĐ1901/IEC 60599 có bản cập nhật trong
+//    "Cấu hình", xem src/presentation/tabs/ui-regulation-config.js), để khi QĐ1901/IEC 60599 có bản cập nhật trong
 //    tương lai, người dùng KHÔNG cần sửa code — chỉ cần sửa số + tham chiếu nguồn qua
 //    giao diện. Từ 11/2026 gồm cả NGƯỠNG SỐ của các logic rẽ nhánh: Bảng 66/Table 1
 //    (diagnoseRatios()), bảng PD/D/T, Table A.10 sứ xuyên (diagnoseBushingRatios()), ranh giới
@@ -2680,7 +2680,7 @@ function getValueAtPath(obj, path) {
 
 /** Ghi giá trị tại 1 "đường dẫn" vào object — TỰ TẠO object rỗng ở các cấp trung gian
  *  còn thiếu (kể cả khi cấp đó hiện là null), dùng để build lại object override đầy đủ
- *  từ giá trị các ô nhập trên form (xem ui/ui-regulation-config.js). */
+ *  từ giá trị các ô nhập trên form (xem src/presentation/tabs/ui-regulation-config.js). */
 function setValueAtPath(obj, path, value) {
   let cur = obj;
   for (let i = 0; i < path.length - 1; i++) {
@@ -2719,7 +2719,7 @@ function voltageStateFields(unit) {
 //     Cơ chế: applyRegulationTerms(text) thay các cụm MẶC ĐỊNH (VD "Bảng 66") bằng giá trị đang
 //     cấu hình (VD "Bảng 70"), 1 lượt duy nhất, khớp đúng ranh giới từ ("Bảng 6" không ăn vào
 //     "Bảng 66"). Chỉ áp dụng các mục ĐÃ ĐỔI khác mặc định -> chưa đổi gì thì văn bản giữ nguyên.
-//     Áp dụng ở: giao diện (ui/ui-terms.js quét toàn trang + nội dung sinh động), file Word xuất ra.
+//     Áp dụng ở: giao diện (src/presentation/components/ui-terms.js quét toàn trang + nội dung sinh động), file Word xuất ra.
 // ---------------------------------------------------------------------------
 const REGULATION_TERMS_DOCS = {
   QD_FULL: "QĐ1901/QĐ-EVNNPT",
@@ -3312,7 +3312,7 @@ function getRegulationConfigCurrentValues(key) {
 // — KHÔNG thay thế, KHÔNG làm thay đổi overallStatus (Bình thường/Cảnh báo/Báo động)
 // hay kết quả Đạt/Không đạt chính thức theo QĐ1901/IEC. Đây LUÔN LÀ THAM KHẢO BỔ SUNG —
 // không được dùng để tự ý kết luận thay cho các bảng/ngưỡng chính thức (xem ghi chú ở
-// evaluatePeerAnomaly() và cách renderPeerAnomaly() ở ui/ui-dga.js hiển thị rõ nhãn này).
+// evaluatePeerAnomaly() và cách renderPeerAnomaly() ở src/presentation/tabs/ui-dga.js hiển thị rõ nhãn này).
 //
 // Ý tưởng: với 1 lần đo cụ thể, tìm các LẦN ĐO KHÁC (của thiết bị này hoặc thiết bị
 // khác, đã lưu trong Lịch sử đo) CÙNG NHÓM — ưu tiên cùng loại thiết bị + cùng cấp điện
@@ -3553,7 +3553,7 @@ function peerIsolationForestScore(targetVectorLog, peerVectorsLog, seed) {
 }
 
 // ---------------------------------------------------------------------------
-// Hàm chính — gọi ở ui/ui-dga.js NGAY SAU khi đã có `all` (Storage.listMeasurements(),
+// Hàm chính — gọi ở src/presentation/tabs/ui-dga.js NGAY SAU khi đã có `all` (Storage.listMeasurements(),
 // vốn đã phải gọi sẵn cho bước "tốc độ sinh khí" ở trên) nên KHÔNG tốn thêm 1 lần gọi
 // mạng nào. `measurement` là object đang chuẩn bị lưu (đã có equipment_type/dien_ap_dm/
 // manufacturer/id), `gases` là object khóa CHỮ HOA (H2, CH4...) đã đọc từ form.
@@ -3620,14 +3620,14 @@ function evaluatePeerAnomaly(measurement, gases, allRecords) {
 // trong TOÀN BỘ Lịch sử đo — CỦA THIẾT BỊ NÀY HOẶC THIẾT BỊ KHÁC, KHÔNG giới hạn cùng
 // loại/cấp điện áp/hãng sản xuất như đề xuất #2 (dga-logic-peer.js) — những lần đo có
 // VECTOR 7 KHÍ gần giống nhất (cosine similarity), rồi hiện lại kết luận/chẩn đoán CỦA
-// CHÍNH lần đo đó (tính lại tại chỗ ở ui/ui-dga.js bằng ĐÚNG logic đánh giá hiện có,
+// CHÍNH lần đo đó (tính lại tại chỗ ở src/presentation/tabs/ui-dga.js bằng ĐÚNG logic đánh giá hiện có,
 // theo tiêu chuẩn áp dụng cho CHÍNH thiết bị/hãng của lần đo đó — KHÔNG lưu sẵn 1 "kết
 // luận" tĩnh nào, vì kết luận là hàm xác định của số liệu khí + tiêu chuẩn áp dụng, tính
 // lại luôn ĐÚNG và không sợ lệch nếu sau này tiêu chuẩn/logic đánh giá được cập nhật).
 //
 // File này CHỈ làm phần "tìm ca tương tự" (thuần toán học, không phụ thuộc lớp UI nào,
 // kiểm thử được qua Node — cùng nguyên tắc tách file như dga-logic-peer.js) — phần
-// "tính lại kết luận của ca tìm được" do ui/ui-dga.js đảm nhiệm bằng cách gọi lại
+// "tính lại kết luận của ca tìm được" do src/presentation/tabs/ui-dga.js đảm nhiệm bằng cách gọi lại
 // DGA.resolveStandard/DGA.evaluateAbsolute/DGA.overallVerdict/DGA.diagnoseGasFault
 // giống HỆT cách đã làm với "lần đo liền trước" (biến `prior`) — không viết trùng logic.
 

@@ -114,7 +114,7 @@ async function exportTechReportDocx(analysis) {
   const zip = new window.PizZip(buf);
   const doc = new Ctor(zip, { paragraphLoop: true, linebreaks: true });
   const data = buildTechReportData(analysis);
-  // Tên văn bản/điều/bảng đã cấu hình (ui/ui-terms.js) — áp cho nội dung điền vào báo cáo
+  // Tên văn bản/điều/bảng đã cấu hình (src/presentation/components/ui-terms.js) — áp cho nội dung điền vào báo cáo
   doc.render(typeof applyRegulationTermsDeep === "function" ? applyRegulationTermsDeep(data) : data);
   const blob = doc.getZip().generate({
     type: "blob",

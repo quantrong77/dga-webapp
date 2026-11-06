@@ -1,4 +1,4 @@
-/* ui/ui-dga-workflow.js — Lưu đồ "Quy trình nghiệp vụ đánh giá DGA" (tab Quy trình > Đánh giá DGA).
+/* src/presentation/tabs/ui-dga-workflow.js — Lưu đồ "Quy trình nghiệp vụ đánh giá DGA" (tab Quy trình > Đánh giá DGA).
  *
  * Số hóa lưu đồ đánh giá khí hòa tan của Điều 54 QĐ1901 (mục 3: khoảng điển hình Bảng 64 -> tốc độ
  * tăng Bảng 65 -> kiểm tra nhiễm khí OLTC -> tỷ số khí Bảng 66/Duval) kết hợp lưu đồ Hình 1 (mục 9)

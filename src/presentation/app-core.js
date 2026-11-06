@@ -664,14 +664,14 @@ async function initApp() {
 }
 
 // ---------------------------------------------------------------------
-/* Combo box và popover thông tin đã được tách sang ui/ui-combobox.js */
+/* Combo box và popover thông tin đã được tách sang src/presentation/components/ui-combobox.js */
 
 
 
 /** Khóa localStorage lưu lựa chọn bố cục thanh tab (xem setupTabLayoutToggle() ngay
  *  dưới) — SỞ THÍCH GIAO DIỆN riêng của trình duyệt đang dùng, không phải dữ liệu
  *  nghiệp vụ, nên KHÔNG lưu qua Storage (gsheet/Supabase) như measurements. */
-/* Bố cục tab và sidebar collapse đã được tách sang ui/ui-layout.js */
+/* Bố cục tab và sidebar collapse đã được tách sang src/presentation/components/ui-layout.js */
 
 
 
@@ -884,7 +884,7 @@ function setupLichSuViewToggle() {
 
 
 
-/* Các bộ điều khiển kéo-thả dropzone đã được tách sang ui/ui-dropzone.js */
+/* Các bộ điều khiển kéo-thả dropzone đã được tách sang src/presentation/components/ui-dropzone.js */
 
 
 
@@ -893,12 +893,12 @@ function toggleMbaSubtypeField() {
   $("f_mbasubtype_wrap").classList.toggle("hidden", !isMba);
 }
 
-/* Sticky header, tab navigation và subtabs đã được tách sang ui/ui-layout.js */
+/* Sticky header, tab navigation và subtabs đã được tách sang src/presentation/components/ui-layout.js */
 
 
 
 
-/* Tiện ích DOM, format và diff trường đã được tách sang ui/ui-utils.js */
+/* Tiện ích DOM, format và diff trường đã được tách sang src/presentation/components/ui-utils.js */
 
 
 

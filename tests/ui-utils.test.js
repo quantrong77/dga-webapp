@@ -1,5 +1,5 @@
 /**
- * Unit Test Suite for ui/ui-utils.js
+ * Unit Test Suite for src/presentation/components/ui-utils.js
  * Senior QA Engineer & Test Automation Specialist
  * Structure: AAA (Arrange - Act - Assert)
  * Coverage: XSS prevention, SSRF/protocol injection, negative validation, diff tracking, edge cases
@@ -10,7 +10,7 @@ const path = require("path");
 const vm = require("vm");
 
 function createUiUtilsContext() {
-  const code = fs.readFileSync(path.join(__dirname, "../ui/ui-utils.js"), "utf8");
+  const code = fs.readFileSync(path.join(__dirname, "../src/presentation/components/ui-utils.js"), "utf8");
   const notifyErrorMock = jest.fn();
   const alertMock = jest.fn();
   const domMock = jest.fn((id) => ({

@@ -5,7 +5,7 @@
 // import/export nên mọi tên bên dưới là kiểu toàn cục, dùng được trong JSDoc: `@param {GasReading} gases`.
 //
 // Tên trường khớp đúng cấu trúc dữ liệu đang dùng ở logic/ (KHÔNG phải tên cột lưu trữ dạng snake_case
-// như equipment_type/thiet_bi của bản ghi trong database — phần đó do ui/*.js và storage.js chuyển đổi).
+// như equipment_type/thiet_bi của bản ghi trong database — phần đó do src/presentation/*.js và storage.js chuyển đổi).
 
 /** Hàm lượng 7 khí hòa tan (ppm). Giá trị có thể là chuỗi từ ô nhập — logic ép kiểu bằng num(). */
 interface GasReading {
@@ -37,7 +37,7 @@ interface LogicMeasurement {
   instrumentSubtype?: string | null;
 }
 
-/** Tiêu chuẩn riêng của nhà sản xuất (khí hòa tan) — xem toManufacturerStandardsForLogic() ở ui/ui-standards.js. */
+/** Tiêu chuẩn riêng của nhà sản xuất (khí hòa tan) — xem toManufacturerStandardsForLogic() ở src/presentation/tabs/ui-standards.js. */
 interface ManufacturerGasStandard {
   manufacturer: string;
   equipmentType: string;

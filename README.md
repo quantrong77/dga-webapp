@@ -246,10 +246,10 @@ trình duyệt nạp và không bắt buộc phải có để chạy app.
 | `src/domain/dga-logic-*.js` | Toàn bộ công thức đánh giá DGA, tách theo miền: `core` (hằng số/bảng ngưỡng dùng chung), `gas` (TCG, Bảng 66, Table A.10, Duval, Bảng 65/63, khuyến cáo, trạng thái tổng thể), `oil`/`instrument-oil` (dầu MBA/OLTC/TI-TU), `forecast` (dự báo xu hướng), `regulation-config` (cơ chế "Cấu hình quy định"), `peer` (so sánh nhóm thiết bị tương tự), `case` (ca tương tự). Không phụ thuộc DOM — nạp và test được trong Node |
 | `src/domain/dga-logic.js` | File **lắp ráp**: gom 8 file `src/domain/*.js` thành object `DGA` (trình duyệt: `window.DGA`; Node: `module.exports`, dùng để test) |
 | `src/data/storage.js`, `src/data/drivers/` | Lớp lưu trữ — tự chuyển giữa Google Sheets, Supabase, và localStorage |
-| `ui/ui-errors.js` | Xử lý lỗi tập trung (toast lỗi + handler `error`/`unhandledrejection` toàn cục) — nạp sớm, ngay sau `config.js` |
-| `ui/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
+| `src/presentation/components/ui-errors.js` | Xử lý lỗi tập trung (toast lỗi + handler `error`/`unhandledrejection` toàn cục) — nạp sớm, ngay sau `config.js` |
+| `src/presentation/ui-*.js` | Nối giao diện từng tab với `DGA`/`Storage`/`Auth` (đăng nhập, DGA, dầu, lịch sử, xu hướng, cảnh báo, tiêu chuẩn, cấu hình quy định, quản trị, phản hồi, hướng dẫn) |
 | `app-core.js` | Lõi khởi động app (nạp dữ liệu, gắn sự kiện dùng chung, bố cục tab) |
-| `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `src/data/io/oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `template/template-bbtn-dau-3pha.docx`, giao diện ở `ui/ui-ti-oil-3pha.js`) |
+| `src/data/io/*.js` | Đọc số liệu từ BBTN (PDF)/nhãn thiết bị (ảnh), xuất BBTN và Báo cáo phân tích kỹ thuật (.docx). `src/data/io/oil-bbtn.js`: BBTN dầu 3 pha chung 1 biên bản (điền `template/template-bbtn-dau-3pha.docx`, giao diện ở `src/presentation/tabs/ui-ti-oil-3pha.js`) |
 | `supabase-schema.sql` | Script tạo bảng + bật Row Level Security trên Supabase |
 | `gsheet/Code.gs` | Script Google Apps Script — dán vào Apps Script Editor của Google Sheet để biến Sheet thành database |
 | `mobile/` | Bản giao diện tối ưu cho điện thoại — dùng chung logic với bản web (xem mục 6 và `mobile/README.md`) |
@@ -330,7 +330,7 @@ kiểm thử tự động ở thư mục `tests/` (~250 test, chạy dưới 3 g
 - Tốc độ sinh khí (Bảng 65), Bảng 63 và tỷ lệ bổ sung (Điều 54), trạng thái tổng thể.
 - Dầu MBA/OLTC/TI-TU, dự báo xu hướng, cơ chế "Cấu hình quy định".
 - So sánh với nhóm thiết bị tương tự (z-score + Isolation Forest) và ca tương tự (cosine similarity).
-- Xử lý lỗi tập trung (`ui/ui-errors.js`).
+- Xử lý lỗi tập trung (`src/presentation/components/ui-errors.js`).
 - Các bất biến trên nhiều tổ hợp khí ngẫu nhiên (seed cố định, tái lập được).
 - **Thứ tự nạp `<script>` và namespace toàn cục** của cả `index.html` lẫn `mobile/index.html`
   (`tests/load-order.test.js`) — bắt sớm việc 2 file khai báo trùng 1 tên hoặc thiếu file tham chiếu.

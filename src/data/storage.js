@@ -263,7 +263,7 @@ const Storage = {
   },
 
   // -------------------------------------------------------------------
-  // "Cấu hình quy định" (tab riêng, xem ui/ui-regulation-config.js) — cho phép Admin
+  // "Cấu hình quy định" (tab riêng, xem src/presentation/tabs/ui-regulation-config.js) — cho phép Admin
   // sửa số liệu/tham chiếu nguồn của các bảng ngưỡng ĐƠN GIẢN trong dga-logic.js (mục 9,
   // REGULATION_CONFIG_REGISTRY) mà KHÔNG cần sửa code, đáp ứng khi QĐ1901/IEC 60599 có
   // bản cập nhật trong tương lai. Mỗi bản ghi ứng với ĐÚNG 1 bảng (id = key trong

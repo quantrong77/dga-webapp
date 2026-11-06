@@ -1,8 +1,8 @@
-/* Lưu đồ "Quy trình nghiệp vụ đánh giá DGA" (ui/ui-dga-workflow.js) — dựng được SVG, đủ các nhánh
+/* Lưu đồ "Quy trình nghiệp vụ đánh giá DGA" (src/presentation/tabs/ui-dga-workflow.js) — dựng được SVG, đủ các nhánh
  * của Điều 54 QĐ1901 / IEC 60599, mọi mũi tên đều chạm 1 khối (không mũi tên lơ lửng). */
 const fs = require("fs");
 const path = require("path");
-const W = require("../ui/ui-dga-workflow");
+const W = require("../src/presentation/tabs/ui-dga-workflow");
 
 const byId = Object.fromEntries(W.WF_NODES.map((n) => [n.id, n]));
 const text = W.WF_NODES.map((n) => n.lines.join(" ")).join(" ");
@@ -45,7 +45,7 @@ test("SVG dựng ra không có NaN, có chỉ số dưới cho công thức khí
 test("index.html có khung lưu đồ và nạp script/CSS", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   expect(html).toContain('id="dgaWorkflowSvg"');
-  expect(html).toContain('<script src="ui/ui-dga-workflow.js"></script>');
+  expect(html).toContain('<script src="src/presentation/tabs/ui-dga-workflow.js"></script>');
   expect(html).toContain('href="css/style-dga-workflow.css"');
 });
 

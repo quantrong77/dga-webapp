@@ -1,4 +1,4 @@
-/* ui/ui-utils.js — Tiện ích định dạng, kiểm tra tính hợp lệ và xử lý chuỗi hiển thị HTML. */
+/* src/presentation/components/ui-utils.js — Tiện ích định dạng, kiểm tra tính hợp lệ và xử lý chuỗi hiển thị HTML. */
 
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

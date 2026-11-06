@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v33-data") {
+          if (k !== "dga-offline-v34-presentation") {
             caches.delete(k);
           }
         });
@@ -66,7 +66,7 @@
   </script>
 </head>
 <body>
-  <script src="early-layout.js"></script>
+  <script src="src/presentation/early-layout.js"></script>
   <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
        ẩn, tham chiếu bằng <use href="#icon-..."> để không lặp lại mã SVG nhiều nơi. -->
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
@@ -80,7 +80,7 @@
       <symbol id="icon-shield" viewBox="0 0 24 24"><path d="M12 2.5l7.5 3.2v5.6c0 5-3.2 8.6-7.5 10.2-4.3-1.6-7.5-5.2-7.5-10.2V5.7L12 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 12L20 3M17 6l2.5 2.5M14 9l2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-eye" viewBox="0 0 24 24"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
-      <!-- Nút thao tác dạng icon trong bảng (Sửa / Xóa / BBTN 3 pha) — xem rowActionBtn() ở ui/ui-utils.js -->
+      <!-- Nút thao tác dạng icon trong bảng (Sửa / Xóa / BBTN 3 pha) — xem rowActionBtn() ở src/presentation/components/ui-utils.js -->
       <symbol id="icon-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 3.5h4M6 7l1 13h10l1-13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v5.5M14 11v5.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-layers" viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5L12 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M3 12l9 4.5 9-4.5M3 16.5L12 21l9-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -192,7 +192,7 @@
 
   <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <!-- Chỉ báo xoay khi đang lưu/xóa/tải dữ liệu — xem ui/ui-busy.js. -->
+  <!-- Chỉ báo xoay khi đang lưu/xóa/tải dữ liệu — xem src/presentation/components/ui-busy.js. -->
   <div id="busyIndicator" class="busy-indicator hidden" role="status" aria-live="polite">
     <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg>
     <span id="busyIndicatorText">Đang lưu...</span>
@@ -339,7 +339,7 @@
         </div>
       </div>
 
-      <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (ui/ui-input-subtabs.js): form nhập liệu là MỘT form
+      <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (src/presentation/components/ui-input-subtabs.js): form nhập liệu là MỘT form
            dùng chung; tab con chỉ ẩn/hiện các khối .mode-import (đọc BBTN, nhập hàng loạt, Số liệu đã lưu) và .mode-lap
            (xuất BBTN docx) — CSS theo data-input-mode trên <section>, xem style-nav-layout.css. -->
       <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu khí hòa tan">
@@ -446,7 +446,7 @@
       <!-- Tab con "Lập BBTN": tiện ích chỉ lấy thông số kỹ thuật từ file — cùng VỊ TRÍ với khung "Nhập BBTN" ở trên. -->
       <div class="panel mode-lap spec-import-panel">
         <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
-             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+             không đính kèm file) — src/presentation/tabs/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
         <div class="file-dropzone spec-dropzone mode-lap" id="fSpecDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="fSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> thiết bị từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
@@ -593,7 +593,7 @@
              chế tạo/Năm sản xuất/Điện áp định mức/Loại dầu + Nhà sản xuất ở khối phía
              trên). KHÔNG có mẫu nhãn chung (mỗi hãng trình bày khác nhau) nên độ tin cậy
              THẤP HƠN đọc BBTN — luôn cần xem lại toàn bộ, xem onNameplateFileSelected()
-             ở ui/ui-dga.js. Cùng cơ chế kéo-thả với ô BBTN ở trên, xem
+             ở src/presentation/tabs/ui-dga.js. Cùng cơ chế kéo-thả với ô BBTN ở trên, xem
              setupNameplateDropzone() ở app-core.js. -->
         <label class="field field-wide" style="margin-bottom:14px;">
           <svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
@@ -992,7 +992,7 @@
          dầu TI-TU) và liệt kê những thiết bị đang ở mức Cảnh báo/Báo động — tái dùng
          NGUYÊN các hàm đánh giá đã có ở tab "DGA"/"Dầu cách điện" (DGA.computeOverallStatus()/
          DGA.evaluateOilTest()/DGA.evaluateOltcOilTest()/DGA.evaluateInstrumentOilTest()),
-         xem ui/ui-alerts.js. -->
+         xem src/presentation/tabs/ui-alerts.js. -->
     <section id="tab-canhbao" class="tab-panel hidden">
       <div class="panel">
         <div class="toolbar">
@@ -1729,7 +1729,7 @@
         </div>
       </div>
 
-      <!-- Biểu đồ chẩn đoán Điều 54 QĐ1901 — vẽ bởi ui/ui-dieu54-charts.js (3D, xoay được, theo giao diện sáng/tối) -->
+      <!-- Biểu đồ chẩn đoán Điều 54 QĐ1901 — vẽ bởi src/presentation/tabs/ui-dieu54-charts.js (3D, xoay được, theo giao diện sáng/tối) -->
       <div class="panel" id="dieu54ChartsPanel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Biểu đồ chẩn đoán khí hòa tan — Điều 54 QĐ1901</h2>
         <p class="note">Xác định tính chất khiếm khuyết MBA theo biểu đồ 1, biểu đồ 2 của tỷ số hàm lượng khí và biểu đồ 3 — tam
@@ -2134,7 +2134,7 @@
         </div>
       </div>
 
-      <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (ui/ui-input-subtabs.js): form nhập liệu là MỘT form
+      <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (src/presentation/components/ui-input-subtabs.js): form nhập liệu là MỘT form
            dùng chung; tab con chỉ ẩn/hiện các khối .mode-import (đọc BBTN, nhập hàng loạt, Số liệu đã lưu) và .mode-lap
            (xuất BBTN docx) — CSS theo data-input-mode trên <section>, xem style-nav-layout.css. -->
       <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu lý-hóa dầu">
@@ -2196,7 +2196,7 @@
           chọn từng file rồi bấm "Đánh giá &amp; Lưu cả biên bản". <strong>Trạm / Thiết bị</strong> lấy theo form bên dưới nếu đã
           nhập (dùng chung cho cả đợt), để trống thì lấy theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ
           tiêu đọc riêng từng file. Phù hợp khi nhập bổ sung nhiều BBTN lịch sử để theo dõi xu hướng.</p>
-        <!-- webkitdirectory: chọn cả thư mục (Chrome/Edge/Safari) — xem createOilBatch(), ui/ui-oil-batch-import.js -->
+        <!-- webkitdirectory: chọn cả thư mục (Chrome/Edge/Safari) — xem createOilBatch(), src/presentation/tabs/ui-oil-batch-import.js -->
         <input id="oBatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
         <p class="note hidden" id="oBatchSkippedNote"></p>
         <div id="oBatchPreviewWrap" class="hidden" style="margin-top:16px;">
@@ -2220,7 +2220,7 @@
 
       <div class="panel mode-lap spec-import-panel">
         <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
-             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+             không đính kèm file) — src/presentation/tabs/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
         <div class="file-dropzone spec-dropzone mode-lap" id="oSpecDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="oSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> máy biến áp từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
@@ -2316,7 +2316,7 @@
         </div>
 
         <!-- Thông số kỹ thuật thiết bị — lưu kèm bản ghi dầu MBA (cột device_info, JSON) để lần sau chọn lại thiết bị
-             là tự điền (tab con Lập BBTN, ui/ui-device-specs.js); dùng khi xuất BBTN (ui/ui-oil-bbtn-export.js). -->
+             là tự điền (tab con Lập BBTN, src/presentation/tabs/ui-device-specs.js); dùng khi xuất BBTN (src/presentation/tabs/ui-oil-bbtn-export.js). -->
         <div class="section-title">Thông số kỹ thuật thiết bị (tùy chọn — lưu kèm thiết bị, dùng khi xuất BBTN)</div>
         <div class="grid">
           <label class="field">Hãng sản xuất<input id="ob_hangsx" type="text" placeholder="(không bắt buộc)" /></label>
@@ -2368,7 +2368,7 @@
         </table></div>
       </div>
 
-      <!-- Xuất Biên bản thí nghiệm dầu (thùng chính + OLTC) theo mẫu PTC3 — ui/ui-oil-bbtn-export.js,
+      <!-- Xuất Biên bản thí nghiệm dầu (thùng chính + OLTC) theo mẫu PTC3 — src/presentation/tabs/ui-oil-bbtn-export.js,
            src/data/io/mba-oil-bbtn-export.js, template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
            không lưu vào cơ sở dữ liệu. -->
       <div class="panel hidden mode-lap" id="oilBbtnExportPanel">
@@ -2534,7 +2534,7 @@
     </div><!-- /.dga-input-main-col -->
 
     <!-- Khung đối chiếu BBTN dầu MBA (PDF hiển thị trực tiếp; .docx chuyển sang HTML để xem —
-         MbaOilBbtn.mbaOilDocxXmlToHtml()) — showOilPreview()/hideOilPreview() ở ui/ui-oil.js. -->
+         MbaOilBbtn.mbaOilDocxXmlToHtml()) — showOilPreview()/hideOilPreview() ở src/presentation/tabs/ui-oil.js. -->
     <aside class="bbtn-preview-col hidden" id="oPreviewCol" aria-label="Khung đối chiếu Biên bản thí nghiệm dầu MBA">
       <div class="bbtn-preview-panel">
         <div class="bbtn-preview-header">
@@ -2628,7 +2628,7 @@
 
       <div class="panel mode-lap spec-import-panel">
         <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
-             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+             không đính kèm file) — src/presentation/tabs/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
         <div class="file-dropzone spec-dropzone mode-lap" id="t3SpecDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="t3SpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> TI/TU/Sứ xuyên từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
@@ -2639,7 +2639,7 @@
       </div>
 
       <!-- BBTN 3 pha chung 1 biên bản (mẫu PTC3/BM.14) — đọc PDF hoặc nhập tay, tách thành 3 bản ghi
-           A/B/C, xuất lại theo template/template-bbtn-dau-3pha.docx. Xem ui/ui-ti-oil-3pha.js. -->
+           A/B/C, xuất lại theo template/template-bbtn-dau-3pha.docx. Xem src/presentation/tabs/ui-ti-oil-3pha.js. -->
       <div class="dga-input-split-layout" id="t3SplitLayout">
         <div class="dga-input-main-col">
           <div class="panel" id="tio3Panel">
@@ -4097,8 +4097,8 @@
   <script src="vendor/docxtemplater/pizzip.min.js"></script>
   <script src="vendor/docxtemplater/docxtemplater.min.js"></script>
   <script src="config.js"></script>
-  <!-- Xử lý lỗi tập trung (toast lỗi + handler error/unhandledrejection) — nạp SỚM để bắt cả lỗi lúc khởi động, xem ui/ui-errors.js -->
-  <script src="ui/ui-errors.js"></script>
+  <!-- Xử lý lỗi tập trung (toast lỗi + handler error/unhandledrejection) — nạp SỚM để bắt cả lỗi lúc khởi động, xem src/presentation/components/ui-errors.js -->
+  <script src="src/presentation/components/ui-errors.js"></script>
   <!-- dga-logic.js (lớp logic nghiệp vụ) đã được tách thành 8 file theo miền, nạp bằng
        <script> thường (KHÔNG phải module) NGAY TRƯỚC dga-logic.js bên dưới — chia sẻ
        chung 1 scope toàn cục giống hệt các file ui-*.js. dga-logic-core.js là "hub" mà
@@ -4128,41 +4128,41 @@
        file này KHÔNG dùng ES module — chúng chia sẻ chung 1 scope toàn cục giống hệt
        như khi còn 1 file (xem ghi chú kiến trúc ở đầu ui-auth.js) — nên thứ tự nạp
        không quan trọng, TRỪ app-core.js phải nạp SAU CÙNG (xem ghi chú trong file đó). -->
-  <script src="ui/ui-auth.js"></script>
+  <script src="src/presentation/tabs/ui-auth.js"></script>
   <!-- Presentation Tier: UI Components & Common Utilities -->
-  <script src="ui/ui-utils.js"></script>
-  <script src="ui/ui-terms.js"></script>
-  <script src="ui/ui-combobox.js"></script>
-  <script src="ui/ui-dropzone.js"></script>
-  <script src="ui/ui-layout.js"></script>
-  <script src="ui/ui-busy.js"></script>
-  <script src="ui/ui-theme.js"></script>
-  <script src="ui/ui-guides.js"></script>
-  <script src="ui/ui-dieu54-charts.js"></script>
-  <script src="ui/ui-dga-workflow.js"></script>
-  <script src="ui/ui-dga.js"></script>
+  <script src="src/presentation/components/ui-utils.js"></script>
+  <script src="src/presentation/components/ui-terms.js"></script>
+  <script src="src/presentation/components/ui-combobox.js"></script>
+  <script src="src/presentation/components/ui-dropzone.js"></script>
+  <script src="src/presentation/components/ui-layout.js"></script>
+  <script src="src/presentation/components/ui-busy.js"></script>
+  <script src="src/presentation/components/ui-theme.js"></script>
+  <script src="src/presentation/tabs/ui-guides.js"></script>
+  <script src="src/presentation/tabs/ui-dieu54-charts.js"></script>
+  <script src="src/presentation/tabs/ui-dga-workflow.js"></script>
+  <script src="src/presentation/tabs/ui-dga.js"></script>
   <script src="src/data/io/bbtn-export.js"></script>
   <script src="src/data/io/mba-oil-bbtn.js"></script>
   <script src="src/data/io/mba-oil-bbtn-export.js"></script>
   <script src="src/data/io/device-specs.js"></script>
   <script src="src/data/io/oil-bbtn.js"></script>
   <script src="src/data/io/tech-report-export.js"></script>
-  <script src="ui/ui-batch-import.js"></script>
-  <script src="ui/ui-standards.js"></script>
-  <script src="ui/ui-regulation-config.js"></script>
-  <script src="ui/ui-admin.js"></script>
-  <script src="ui/ui-oil.js"></script>
-  <script src="ui/ui-oltc.js"></script>
-  <script src="ui/ui-oil-bbtn-export.js"></script>
-  <script src="ui/ui-oil-batch-import.js"></script>
-  <script src="ui/ui-ti-oil.js"></script>
-  <script src="ui/ui-ti-oil-3pha.js"></script>
-  <script src="ui/ui-history.js"></script>
-  <script src="ui/ui-input-subtabs.js"></script>
-  <script src="ui/ui-device-specs.js"></script>
-  <script src="ui/ui-trend.js"></script>
-  <script src="ui/ui-alerts.js"></script>
-  <script src="ui/ui-feedback.js"></script>
-  <script src="app-core.js"></script>
+  <script src="src/presentation/tabs/ui-batch-import.js"></script>
+  <script src="src/presentation/tabs/ui-standards.js"></script>
+  <script src="src/presentation/tabs/ui-regulation-config.js"></script>
+  <script src="src/presentation/tabs/ui-admin.js"></script>
+  <script src="src/presentation/tabs/ui-oil.js"></script>
+  <script src="src/presentation/tabs/ui-oltc.js"></script>
+  <script src="src/presentation/tabs/ui-oil-bbtn-export.js"></script>
+  <script src="src/presentation/tabs/ui-oil-batch-import.js"></script>
+  <script src="src/presentation/tabs/ui-ti-oil.js"></script>
+  <script src="src/presentation/tabs/ui-ti-oil-3pha.js"></script>
+  <script src="src/presentation/tabs/ui-history.js"></script>
+  <script src="src/presentation/components/ui-input-subtabs.js"></script>
+  <script src="src/presentation/tabs/ui-device-specs.js"></script>
+  <script src="src/presentation/tabs/ui-trend.js"></script>
+  <script src="src/presentation/tabs/ui-alerts.js"></script>
+  <script src="src/presentation/tabs/ui-feedback.js"></script>
+  <script src="src/presentation/app-core.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 /* css/style-dieu54-charts.css — Biểu đồ chẩn đoán Điều 54 QĐ1901 (tab "Quy trình"), vẽ bởi
-   ui/ui-dieu54-charts.js. Màu nền/chữ/viền theo biến giao diện (css/style-base.css) nên tự đổi
+   src/presentation/tabs/ui-dieu54-charts.js. Màu nền/chữ/viền theo biến giao diện (css/style-base.css) nên tự đổi
    theo chế độ sáng/tối; màu các vùng lỗi do JS đặt theo cùng giao diện. */
 
 .d54-grid {

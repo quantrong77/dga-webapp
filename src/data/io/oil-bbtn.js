@@ -4,7 +4,7 @@
    và dựng dữ liệu điền template/template-bbtn-dau-3pha.docx.
 
    Toàn bộ là hàm thuần (không đụng DOM/mạng) để kiểm thử được bằng Jest
-   (tests/oil-bbtn.test.js). Giao diện nằm ở ui/ui-ti-oil-3pha.js; việc đọc PDF thành dòng
+   (tests/oil-bbtn.test.js). Giao diện nằm ở src/presentation/tabs/ui-ti-oil-3pha.js; việc đọc PDF thành dòng
    nằm ở BbtnImport.readLines() (src/data/io/bbtn-import.js). */
 
 const OIL_BBTN_PHASES = ["A", "B", "C"];

@@ -6,14 +6,14 @@
 // trong TOÀN BỘ Lịch sử đo — CỦA THIẾT BỊ NÀY HOẶC THIẾT BỊ KHÁC, KHÔNG giới hạn cùng
 // loại/cấp điện áp/hãng sản xuất như đề xuất #2 (dga-logic-peer.js) — những lần đo có
 // VECTOR 7 KHÍ gần giống nhất (cosine similarity), rồi hiện lại kết luận/chẩn đoán CỦA
-// CHÍNH lần đo đó (tính lại tại chỗ ở ui/ui-dga.js bằng ĐÚNG logic đánh giá hiện có,
+// CHÍNH lần đo đó (tính lại tại chỗ ở src/presentation/tabs/ui-dga.js bằng ĐÚNG logic đánh giá hiện có,
 // theo tiêu chuẩn áp dụng cho CHÍNH thiết bị/hãng của lần đo đó — KHÔNG lưu sẵn 1 "kết
 // luận" tĩnh nào, vì kết luận là hàm xác định của số liệu khí + tiêu chuẩn áp dụng, tính
 // lại luôn ĐÚNG và không sợ lệch nếu sau này tiêu chuẩn/logic đánh giá được cập nhật).
 //
 // File này CHỈ làm phần "tìm ca tương tự" (thuần toán học, không phụ thuộc lớp UI nào,
 // kiểm thử được qua Node — cùng nguyên tắc tách file như dga-logic-peer.js) — phần
-// "tính lại kết luận của ca tìm được" do ui/ui-dga.js đảm nhiệm bằng cách gọi lại
+// "tính lại kết luận của ca tìm được" do src/presentation/tabs/ui-dga.js đảm nhiệm bằng cách gọi lại
 // DGA.resolveStandard/DGA.evaluateAbsolute/DGA.overallVerdict/DGA.diagnoseGasFault
 // giống HỆT cách đã làm với "lần đo liền trước" (biến `prior`) — không viết trùng logic.
 

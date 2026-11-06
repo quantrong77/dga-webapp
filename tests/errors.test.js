@@ -1,6 +1,6 @@
-// Xử lý lỗi tập trung (ui/ui-errors.js): toast lỗi, chống lặp, handler toàn cục, dự phòng.
+// Xử lý lỗi tập trung (src/presentation/components/ui-errors.js): toast lỗi, chống lặp, handler toàn cục, dự phòng.
 // File là script trình duyệt nhưng có nhánh module.exports nên nạp được trong Node; window/showToast giả lập.
-const errors = require("../ui/ui-errors.js");
+const errors = require("../src/presentation/components/ui-errors.js");
 
 let now;
 beforeEach(() => {

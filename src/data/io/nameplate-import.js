@@ -164,7 +164,7 @@ function guessLoaiDau(combined) {
 // LUÔN trả kèm (kể cả khi không trích được trường nào) để giao diện hiện toàn bộ chữ đã
 // đọc được, cho người dùng tự đối chiếu/copy tay phần OCR đọc sai hoặc dò theo mẫu nhãn
 // hãng không nằm trong danh sách nhãn thường gặp ở trên — xem onNameplateFileSelected()
-// ở ui/ui-dga.js. onProgress (tuỳ chọn) nhận các sự kiện tiến trình OCR dạng { status,
+// ở src/presentation/tabs/ui-dga.js. onProgress (tuỳ chọn) nhận các sự kiện tiến trình OCR dạng { status,
 // progress } (progress từ 0 đến 1) để hiển thị "Đang nhận diện chữ...".
 // ---------------------------------------------------------------------------
 async function extract(file, onProgress) {

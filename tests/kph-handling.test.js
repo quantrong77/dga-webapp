@@ -523,12 +523,12 @@ describe("BbtnImport.extractGasValues — Ô 'Kết quả' để TRỐNG = KPH, 
 });
 
 describe("Form nhập tab Khí hòa tan — ô khí để TRỐNG được hiểu là KPH", () => {
-  const dgaSrc = fs.readFileSync(path.join(__dirname, "..", "ui", "ui-dga.js"), "utf8");
+  const dgaSrc = fs.readFileSync(path.join(__dirname, "..", "src", "presentation", "tabs", "ui-dga.js"), "utf8");
   test("onAnalyze(): ô trống -> gases = 0 và đánh dấu kphGases", () => {
     expect(dgaSrc).toMatch(/raw === ""\) \{[\s\S]{0,300}?gases\[g\] = 0;\s*kphGases\[g\] = true;/);
   });
   test("thông báo ô trống nói rõ là KPH, không dùng alert() chặn màn hình", () => {
-    const utils = fs.readFileSync(path.join(__dirname, "..", "ui", "ui-utils.js"), "utf8");
+    const utils = fs.readFileSync(path.join(__dirname, "..", "src", "presentation", "components", "ui-utils.js"), "utf8");
     const fn = utils.slice(utils.indexOf("function warnIfEmptyMainGas"), utils.indexOf("function warnIfEmptyMainGas") + 600);
     expect(fn).toContain("KPH");
     expect(fn).not.toMatch(/\balert\(/);

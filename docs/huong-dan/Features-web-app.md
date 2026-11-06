@@ -307,15 +307,15 @@ Thanh Header được cố định ở mép trên màn hình (Sticky Header) v�
 | **Bố cục & Phong cách** | `css/style-*.css` (8 file) | Hệ thống Refactoring UI tokens, CSS Grid sidebar, Split layout đối chiếu PDF, Dark mode |
 | **Khởi động Giao diện** | `early-layout.js` | Áp dụng theme và bố cục sidebar sớm trước khi vẽ trang để chống giật nháy |
 | **Điều phối Chính** | `app-core.js` | Khởi tạo ứng dụng, kết nối sự kiện giao diện, vòng đời ứng dụng |
-| **Phân hệ Giao diện** | `ui/ui-dga.js` | Điều khiển form DGA, khung đối chiếu song song Split View, đọc BBTN |
-| | `ui/ui-ti-oil-3pha.js` | Điều khiển form BBTN dầu 3 pha TI/TU, khung đối chiếu 3 pha |
-| | `ui/ui-oil.js`, `ui-oltc.js`, `ui-ti-oil.js` | Điều khiển các form thí nghiệm dầu MBA, OLTC, TI/TU đơn lẻ |
-| | `ui/ui-layout.js` | Quản lý chuyển đổi Sidebar ngang/dọc, thu gọn/mở rộng sidebar, sticky header |
-| | `ui/ui-history.js` | Bảng nhật ký lịch sử đo, log chỉnh sửa, so sánh tốc độ sinh khí |
-| | `ui/ui-trend.js` | Biểu đồ diễn biến Chart.js, dự báo xu hướng tương lai Holt/OLS |
-| | `ui/ui-alerts.js` | Bảng điều khiển cảnh báo thiết bị bất thường, xuất Excel |
-| | `ui/ui-admin.js`, `ui-standards.js` | Quản lý người dùng, tiêu chuẩn hãng sản xuất, quy định 13 bảng ngưỡng |
-| | `ui/ui-errors.js`, `ui-busy.js` | Bắt lỗi toàn cục, hiển thị Toast thông báo và chỉ báo bận |
+| **Phân hệ Giao diện** | `src/presentation/tabs/ui-dga.js` | Điều khiển form DGA, khung đối chiếu song song Split View, đọc BBTN |
+| | `src/presentation/tabs/ui-ti-oil-3pha.js` | Điều khiển form BBTN dầu 3 pha TI/TU, khung đối chiếu 3 pha |
+| | `src/presentation/tabs/ui-oil.js`, `ui-oltc.js`, `ui-ti-oil.js` | Điều khiển các form thí nghiệm dầu MBA, OLTC, TI/TU đơn lẻ |
+| | `src/presentation/components/ui-layout.js` | Quản lý chuyển đổi Sidebar ngang/dọc, thu gọn/mở rộng sidebar, sticky header |
+| | `src/presentation/tabs/ui-history.js` | Bảng nhật ký lịch sử đo, log chỉnh sửa, so sánh tốc độ sinh khí |
+| | `src/presentation/tabs/ui-trend.js` | Biểu đồ diễn biến Chart.js, dự báo xu hướng tương lai Holt/OLS |
+| | `src/presentation/tabs/ui-alerts.js` | Bảng điều khiển cảnh báo thiết bị bất thường, xuất Excel |
+| | `src/presentation/tabs/ui-admin.js`, `ui-standards.js` | Quản lý người dùng, tiêu chuẩn hãng sản xuất, quy định 13 bảng ngưỡng |
+| | `src/presentation/components/ui-errors.js`, `ui-busy.js` | Bắt lỗi toàn cục, hiển thị Toast thông báo và chỉ báo bận |
 | **Logic Nghiệp vụ** | `src/domain/dga-logic-*.js` (9 file) | Động cơ chẩn đoán DGA, ngưỡng QĐ1901/IEC, Duval 1, Isolation Forest, Bảng 54/55/58 |
 | **Tầng Dữ liệu** | `src/data/drivers/storage-*.js` (5 file) | Lớp trừu tượng Google Sheets API, Supabase, LocalStorage, Outbox Sync ngoại tuyến |
 | **Ngoại tuyến** | `sw.js` | Service Worker cache v4, PWA offline, bắt sự kiện fetch |

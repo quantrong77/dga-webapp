@@ -1,4 +1,4 @@
-/* ui/ui-combobox.js — Combo box tìm kiếm tiếng Việt không dấu và popover thông tin trợ giúp. */
+/* src/presentation/components/ui-combobox.js — Combo box tìm kiếm tiếng Việt không dấu và popover thông tin trợ giúp. */
 
 function normalizeSearch(s) {
   return (s || "")

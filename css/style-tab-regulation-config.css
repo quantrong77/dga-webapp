@@ -1,7 +1,7 @@
 /* style-tab-regulation-config.css — Phần 8/8 của style.css. Tab "Cấu hình" — mục "Quy
-   định" (ui/ui-regulation-config.js): mỗi bảng ngưỡng render thành 1 khối .rc-category. */
+   định" (src/presentation/tabs/ui-regulation-config.js): mỗi bảng ngưỡng render thành 1 khối .rc-category. */
 
-/* Tab "Cấu hình quy định" (ui/ui-regulation-config.js) — mỗi bảng ngưỡng render thành 1
+/* Tab "Cấu hình quy định" (src/presentation/tabs/ui-regulation-config.js) — mỗi bảng ngưỡng render thành 1
    "thẻ" con (.rc-item) bên trong panel, nhóm theo loại thiết bị/bối cảnh (.rc-category). */
 .rc-category {
   font-size: 13px;

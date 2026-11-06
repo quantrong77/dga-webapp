@@ -5,7 +5,7 @@
      2. deviceSpecsFromHeader(): thông số đọc được từ phần thông tin chung của 1 file BBTN/biên bản cũ
         (MbaOilBbtn.parseMbaOilBbtnLines().header, src/data/io/mba-oil-bbtn.js) — dùng cho tiện ích "Nhập thông số kỹ
         thuật từ file" (chỉ lấy thông số, không đọc số liệu đo).
-   Khóa thông số chuẩn (DEVICE_SPEC_KEYS) độc lập với id ô nhập của từng form (ánh xạ ở ui/ui-device-specs.js).
+   Khóa thông số chuẩn (DEVICE_SPEC_KEYS) độc lập với id ô nhập của từng form (ánh xạ ở src/presentation/tabs/ui-device-specs.js).
    Hàm thuần — kiểm thử bằng Jest (tests/device-specs.test.js). */
 
 const DEVICE_SPEC_KEYS = [

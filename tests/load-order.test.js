@@ -38,30 +38,30 @@ describe("index.html (web) — thứ tự nạp", () => {
   const order = scripts.map((s) => s.rel);
   const idx = (rel) => order.indexOf(rel);
 
-  test("ui/ui-errors.js nạp SỚM (trước src/domain/) để bắt cả lỗi lúc khởi động", () => {
-    expect(idx("ui/ui-errors.js")).toBeGreaterThanOrEqual(0);
-    expect(idx("ui/ui-errors.js")).toBeLessThan(idx("src/domain/dga-logic-core.js"));
+  test("src/presentation/components/ui-errors.js nạp SỚM (trước src/domain/) để bắt cả lỗi lúc khởi động", () => {
+    expect(idx("src/presentation/components/ui-errors.js")).toBeGreaterThanOrEqual(0);
+    expect(idx("src/presentation/components/ui-errors.js")).toBeLessThan(idx("src/domain/dga-logic-core.js"));
   });
   test("src/domain/dga-logic-core.js là file logic đầu tiên; dga-logic.js (lắp ráp) nạp SAU mọi file logic", () => {
     const logicFiles = order.filter((f) => f.startsWith("src/domain/") && f !== "src/domain/dga-logic.js");
     expect(logicFiles[0]).toBe("src/domain/dga-logic-core.js");
     logicFiles.forEach((f) => expect(idx("src/domain/dga-logic.js")).toBeGreaterThan(idx(f)));
   });
-  test("config.js → logic → src/data/storage.js → ui/* → app-core.js (app-core.js cuối cùng)", () => {
+  test("config.js → logic → src/data/storage.js → src/presentation/* → app-core.js (app-core.js cuối cùng)", () => {
     expect(idx("config.js")).toBeLessThan(idx("src/domain/dga-logic.js"));
     expect(idx("src/domain/dga-logic.js")).toBeLessThan(idx("src/data/storage.js"));
-    order.filter((f) => f.startsWith("ui/") && f !== "ui/ui-errors.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("src/data/storage.js")));
-    expect(order[order.length - 1]).toBe("app-core.js");
+    order.filter((f) => f.startsWith("src/presentation/") && f !== "src/presentation/components/ui-errors.js" && f !== "src/presentation/early-layout.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("src/data/storage.js")));
+    expect(order[order.length - 1]).toBe("src/presentation/app-core.js");
   });
-  test("ui/ui-auth.js (định nghĩa showToast) nạp trước các ui/* khác dùng nó", () => {
-    order.filter((f) => f.startsWith("ui/") && !["ui/ui-errors.js", "ui/ui-auth.js"].includes(f)).forEach((f) => {
-      expect(idx("ui/ui-auth.js")).toBeLessThan(idx(f));
+  test("src/presentation/tabs/ui-auth.js (định nghĩa showToast) nạp trước các ui/* khác dùng nó", () => {
+    order.filter((f) => /^src\/presentation\/(components|tabs)\//.test(f) && !["src/presentation/components/ui-errors.js", "src/presentation/tabs/ui-auth.js"].includes(f)).forEach((f) => {
+      expect(idx("src/presentation/tabs/ui-auth.js")).toBeLessThan(idx(f));
     });
   });
-  test("không bỏ sót file: mọi file trong src/domain/, src/data/, ui/ đều được index.html tham chiếu", () => {
+  test("không bỏ sót file: mọi file trong src/ đều được index.html tham chiếu", () => {
     const referenced = new Set(order);
     const missing = [];
-    ["src/domain", "src/data", "src/data/drivers", "src/data/io", "ui"].forEach((dir) => {
+    ["src/domain", "src/data", "src/data/drivers", "src/data/io", "src/presentation", "src/presentation/components", "src/presentation/tabs"].forEach((dir) => {
       fs.readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(".js")).forEach((f) => {
         if (!referenced.has(`${dir}/${f}`)) missing.push(`${dir}/${f}`);
       });

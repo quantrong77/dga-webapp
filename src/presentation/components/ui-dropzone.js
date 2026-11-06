@@ -1,4 +1,4 @@
-/* ui/ui-dropzone.js — Điều khiển vùng kéo-thả (Drag & Drop) và tải file PDF/Ảnh. */
+/* src/presentation/components/ui-dropzone.js — Điều khiển vùng kéo-thả (Drag & Drop) và tải file PDF/Ảnh. */
 
 /** Gắn sự kiện kéo-thả (drag & drop) cho ô chọn BBTN (PDF) ở tab "DGA" — #bbtnDropzone */
 function setupBbtnDropzone() {

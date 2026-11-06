@@ -40,7 +40,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.work
 // dùng chặn CDN hoặc chạy offline. Đây là hướng đọc DỰ PHÒNG (chỉ chạy khi đọc trực
 // tiếp thất bại) và kết quả kém tin cậy hơn đọc trực tiếp từ lớp text thật của PDF, nên
 // mọi kết quả qua OCR đều được đánh dấu viaOCR=true để giao diện nhắc người dùng kiểm
-// tra kỹ hơn — xem onBbtnFileSelected() ở ui/ui-dga.js.
+// tra kỹ hơn — xem onBbtnFileSelected() ở src/presentation/tabs/ui-dga.js.
 // Bản ESM của Tesseract.js chỉ có 1 export mặc định (gói nguyên module.exports kiểu
 // CommonJS gốc thành 1 object) — không có named export createWorker/OEM riêng.
 import Tesseract from "../../../vendor/tesseract/tesseract.esm.min.js";
@@ -648,7 +648,7 @@ function extractYearAfterLabel(fullText, labelRe) {
 //    doAm, gases, matchedCount, viaOCR } — mọi trường có thể null nếu không nhận diện
 //    được. viaOCR=true nghĩa là dữ liệu đến từ đường dự phòng OCR (file không có lớp
 //    text thật, ví dụ ảnh scan/chụp) — độ tin cậy thấp hơn đọc trực tiếp, người gọi
-//    (ui/ui-dga.js, bbtn-batch-import.js) nên nhắc người dùng kiểm tra kỹ hơn.
+//    (src/presentation/tabs/ui-dga.js, bbtn-batch-import.js) nên nhắc người dùng kiểm tra kỹ hơn.
 //    onProgress (tuỳ chọn) nhận các sự kiện tiến trình OCR dạng { status, progress }
 //    (progress từ 0 đến 1) để hiển thị "Đang nhận diện chữ..." — chỉ được gọi khi thật
 //    sự có chạy OCR (file đọc trực tiếp được thì không có gì để báo tiến trình).

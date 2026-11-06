@@ -269,7 +269,7 @@ create table if not exists feedback (
 );
 
 -- "Cấu hình quy định" (tab riêng trên web app, tách khỏi manufacturer_standards ở trên —
--- xem ui/ui-regulation-config.js + dga-logic.js mục 9, REGULATION_CONFIG_REGISTRY). Mỗi
+-- xem src/presentation/tabs/ui-regulation-config.js + dga-logic.js mục 9, REGULATION_CONFIG_REGISTRY). Mỗi
 -- dòng ứng với ĐÚNG 1 bảng ngưỡng gốc QĐ1901/IEC 60599 (id = key trong registry, VD
 -- 'BANG64_MBA') — cho phép Admin sửa số + tham chiếu nguồn khi 2 quy định này có bản
 -- cập nhật trong tương lai, KHÔNG cần sửa code. "values_json" lưu dạng TEXT (không phải

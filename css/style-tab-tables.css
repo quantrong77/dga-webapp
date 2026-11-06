@@ -356,7 +356,7 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
 /* =====================================================================
    Cột "Thao tác" dạng ICON (tab Cảnh báo + các bảng Lịch sử đo/dầu)
    - Nút vuông chỉ có icon (Xem / Sửa / Xóa / Xu hướng / BBTN 3 pha), xếp thành 1 CỘT dọc
-     (.actions-stack, xem rowActionsHtml() ở ui/ui-utils.js) để cột hẹp, bảng gọn hơn.
+     (.actions-stack, xem rowActionsHtml() ở src/presentation/components/ui-utils.js) để cột hẹp, bảng gọn hơn.
    - Tooltip (data-tooltip) mô tả hành động khi trỏ chuột/focus bàn phím, hiện BÊN TRÁI nút:
      cột Thao tác là cột cuối, khung bảng cuộn ngang (overflow-x) sẽ cắt mất tooltip nếu hiện
      sang phải.

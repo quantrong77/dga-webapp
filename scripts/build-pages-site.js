@@ -21,11 +21,9 @@ const ROOT_FILES = [
   "manifest.webmanifest",
   "sw.js",
   "config.js",
-  "early-layout.js",
-  "app-core.js",
 ];
 /** Thư mục chép nguyên (trừ file bị loại bởi isExcluded). */
-const ROOT_DIRS = ["src", "css", "ui", "vendor", "image", "mobile"];
+const ROOT_DIRS = ["src", "css", "vendor", "image", "mobile"];
 /** Mẫu BBTN app tải bằng fetch(): chỉ các file template-*.docx (không chép BBTN thật / file khóa ~$ của Word). */
 const TEMPLATE_PATTERN = /^template-[\w.-]+\.docx$/;
 

@@ -1,4 +1,4 @@
-/* ui/ui-dieu54-charts.js — Vẽ lại các biểu đồ chẩn đoán của Điều 54 QĐ1901 (tab "Quy trình"):
+/* src/presentation/tabs/ui-dieu54-charts.js — Vẽ lại các biểu đồ chẩn đoán của Điều 54 QĐ1901 (tab "Quy trình"):
  *   - Biểu đồ 1: tỷ số hàm lượng khí, 2 mặt phẳng (CH4/H2 – C2H2/C2H4 và C2H4/C2H6 – C2H2/C2H4)
  *   - Biểu đồ 2: tỷ số hàm lượng khí dạng không gian 3 trục
  *   - Biểu đồ 3: tam giác Duval 1 (vùng lỗi theo Bảng 67) + Ví dụ xác định điểm (CH4 50%, C2H4 30%, C2H2 20%)
@@ -161,7 +161,7 @@ function d54FormatTick(v) {
 // ---------------------------------------------------------------------------
 function d54Logic() {
   if (typeof window !== "undefined" && window.DGA) return window.DGA;
-  if (typeof require === "function") return require("../src/domain/dga-logic");
+  if (typeof require === "function") return require("../../domain/dga-logic");
   return null;
 }
 function d54Table1() {

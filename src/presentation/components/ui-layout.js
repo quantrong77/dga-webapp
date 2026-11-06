@@ -1,4 +1,4 @@
-/* ui/ui-layout.js — Quản lý chuyển đổi bố cục tab (ngang / dọc sidebar), header sticky và subtabs. */
+/* src/presentation/components/ui-layout.js — Quản lý chuyển đổi bố cục tab (ngang / dọc sidebar), header sticky và subtabs. */
 
 const TAB_LAYOUT_STORAGE_KEY = "dga_tab_layout";
 

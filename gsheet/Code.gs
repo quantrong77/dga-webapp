@@ -71,7 +71,7 @@
 const SHEET_MEASUREMENTS = "measurements";
 const SHEET_STANDARDS = "manufacturer_standards";
 const SHEET_STATIONS = "stations";
-// "Cấu hình quy định" (tab riêng trên web app, xem ui/ui-regulation-config.js +
+// "Cấu hình quy định" (tab riêng trên web app, xem src/presentation/tabs/ui-regulation-config.js +
 // dga-logic.js mục 9, REGULATION_CONFIG_REGISTRY) — mỗi dòng ứng với ĐÚNG 1 bảng ngưỡng
 // (id = key trong registry, VD "BANG64_MBA"), khác STANDARD_HEADERS (nhiều dòng tự do
 // theo nhà sản xuất). "values_json" là CHUỖI JSON (không phải object) vì Google Sheets

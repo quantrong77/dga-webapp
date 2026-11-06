@@ -52,11 +52,11 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
 
     loadScript("src/data/drivers/storage-core.js");
     loadScript("src/data/drivers/storage-auth.js");
-    loadScript("ui/ui-utils.js");
-    loadScript("ui/ui-standards.js");
-    loadScript("ui/ui-auth.js");
-    loadScript("ui/ui-history.js");
-    loadScript("ui/ui-alerts.js");
+    loadScript("src/presentation/components/ui-utils.js");
+    loadScript("src/presentation/tabs/ui-standards.js");
+    loadScript("src/presentation/tabs/ui-auth.js");
+    loadScript("src/presentation/tabs/ui-history.js");
+    loadScript("src/presentation/tabs/ui-alerts.js");
 
     ctx.setMeasurements = (arr) => {
       ctx.__tempM = arr;
@@ -246,10 +246,10 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
 
   test("7. Nút 'Xem' luôn xuất hiện trong các bảng lịch sử đo (kể cả khi không có file đính kèm)", () => {
     const fs = require("fs");
-    const histContent = fs.readFileSync("ui/ui-history.js", "utf8");
-    const oilContent = fs.readFileSync("ui/ui-oil.js", "utf8");
-    const oltcContent = fs.readFileSync("ui/ui-oltc.js", "utf8");
-    const tioContent = fs.readFileSync("ui/ui-ti-oil.js", "utf8");
+    const histContent = fs.readFileSync("src/presentation/tabs/ui-history.js", "utf8");
+    const oilContent = fs.readFileSync("src/presentation/tabs/ui-oil.js", "utf8");
+    const oltcContent = fs.readFileSync("src/presentation/tabs/ui-oltc.js", "utf8");
+    const tioContent = fs.readFileSync("src/presentation/tabs/ui-ti-oil.js", "utf8");
 
     // Nút Xem (icon "eye") luôn được vẽ — KHÔNG nằm trong điều kiện rec.bbtn_url
     expect(histContent).toMatch(/rowActionBtn\("viewbbtn", "eye"/);
@@ -261,7 +261,7 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
 
   test("8. Bảng Cảnh báo (ui-alerts.js) có nút 'Xem' trên từng dòng cảnh báo", () => {
     const fs = require("fs");
-    const alertsContent = fs.readFileSync("ui/ui-alerts.js", "utf8");
+    const alertsContent = fs.readFileSync("src/presentation/tabs/ui-alerts.js", "utf8");
     expect(alertsContent).toMatch(/rowActionBtn\("view", "eye"/);
     expect(alertsContent).toMatch(/onViewMeasurement\(a\.record\)/);
   });
@@ -276,7 +276,7 @@ describe("Tab Cảnh báo: Rà soát và cập nhật sau khi hiệu chỉnh s�
 
   test("10. Không còn nút chữ Xem/Sửa/Xóa trong cột Thao tác; mỗi nút có icon + tooltip + aria-label", () => {
     const fs = require("fs");
-    for (const f of ["ui/ui-alerts.js", "ui/ui-history.js", "ui/ui-oil.js", "ui/ui-oltc.js", "ui/ui-ti-oil.js"]) {
+    for (const f of ["src/presentation/tabs/ui-alerts.js", "src/presentation/tabs/ui-history.js", "src/presentation/tabs/ui-oil.js", "src/presentation/tabs/ui-oltc.js", "src/presentation/tabs/ui-ti-oil.js"]) {
       const src = fs.readFileSync(f, "utf8");
       expect(src).not.toMatch(/>\s*(?:Xem|Sửa|Xóa|BBTN 3 pha)\s*<\/button>/);
       expect(src).toMatch(/rowActionsHtml\(\[/);
@@ -333,7 +333,7 @@ describe("Tab Cảnh báo: lọc theo Thiết bị thuộc Trạm", () => {
     };
     ctx2.window = ctx2; ctx2.global = ctx2;
     vm.createContext(ctx2);
-    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "src/presentation/components/ui-utils.js", "src/presentation/tabs/ui-standards.js", "src/presentation/tabs/ui-auth.js", "src/presentation/tabs/ui-history.js", "src/presentation/tabs/ui-alerts.js"]
       .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), ctx2));
     const bad = { equipment_type: "MBA", pha: "chung3pha", sample_date: "2026-10-01", lan_do: 1, h2: 500, ch4: 10, c2h6: 10, c2h4: 10, c2h2: 0, co: 200, co2: 1500 };
     ctx2.__m = [
@@ -375,7 +375,7 @@ describe("Tab Cảnh báo: tỷ lệ bổ sung Điều 54 (O2/N2, CO2/CO) cho MB
     };
     c.window = c; c.global = c;
     vm.createContext(c);
-    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "src/presentation/components/ui-utils.js", "src/presentation/tabs/ui-standards.js", "src/presentation/tabs/ui-auth.js", "src/presentation/tabs/ui-history.js", "src/presentation/tabs/ui-alerts.js"]
       .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), c));
   });
   const run = (recs) => {
@@ -470,7 +470,7 @@ describe("Tab Cảnh báo: lọc Loại cảnh báo + nhận biết cảnh báo 
     };
     c.window = c; c.global = c;
     vm.createContext(c);
-    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "ui/ui-utils.js", "ui/ui-standards.js", "ui/ui-auth.js", "ui/ui-history.js", "ui/ui-alerts.js"]
+    ["src/data/drivers/storage-core.js", "src/data/drivers/storage-auth.js", "src/presentation/components/ui-utils.js", "src/presentation/tabs/ui-standards.js", "src/presentation/tabs/ui-auth.js", "src/presentation/tabs/ui-history.js", "src/presentation/tabs/ui-alerts.js"]
       .forEach((f) => vm.runInContext(fs.readFileSync(path.join(__dirname, "..", f), "utf8"), c));
   });
   const run = (recs) => {

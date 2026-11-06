@@ -7,7 +7,7 @@
 // — KHÔNG thay thế, KHÔNG làm thay đổi overallStatus (Bình thường/Cảnh báo/Báo động)
 // hay kết quả Đạt/Không đạt chính thức theo QĐ1901/IEC. Đây LUÔN LÀ THAM KHẢO BỔ SUNG —
 // không được dùng để tự ý kết luận thay cho các bảng/ngưỡng chính thức (xem ghi chú ở
-// evaluatePeerAnomaly() và cách renderPeerAnomaly() ở ui/ui-dga.js hiển thị rõ nhãn này).
+// evaluatePeerAnomaly() và cách renderPeerAnomaly() ở src/presentation/tabs/ui-dga.js hiển thị rõ nhãn này).
 //
 // Ý tưởng: với 1 lần đo cụ thể, tìm các LẦN ĐO KHÁC (của thiết bị này hoặc thiết bị
 // khác, đã lưu trong Lịch sử đo) CÙNG NHÓM — ưu tiên cùng loại thiết bị + cùng cấp điện
@@ -248,7 +248,7 @@ function peerIsolationForestScore(targetVectorLog, peerVectorsLog, seed) {
 }
 
 // ---------------------------------------------------------------------------
-// Hàm chính — gọi ở ui/ui-dga.js NGAY SAU khi đã có `all` (Storage.listMeasurements(),
+// Hàm chính — gọi ở src/presentation/tabs/ui-dga.js NGAY SAU khi đã có `all` (Storage.listMeasurements(),
 // vốn đã phải gọi sẵn cho bước "tốc độ sinh khí" ở trên) nên KHÔNG tốn thêm 1 lần gọi
 // mạng nào. `measurement` là object đang chuẩn bị lưu (đã có equipment_type/dien_ap_dm/
 // manufacturer/id), `gases` là object khóa CHỮ HOA (H2, CH4...) đã đọc từ form.

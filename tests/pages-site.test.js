@@ -24,7 +24,7 @@ afterAll(() => fs.rmSync(out, { recursive: true, force: true }));
 
 describe("build-pages-site", () => {
   test("có đủ file khởi động app", () => {
-    ["index.html", "sw.js", "manifest.webmanifest", "config.js", "app-core.js", "mobile/index.html"].forEach((f) =>
+    ["index.html", "sw.js", "manifest.webmanifest", "config.js", "src/presentation/app-core.js", "mobile/index.html"].forEach((f) =>
       expect(files).toContain(f)
     );
     expect(files.some((f) => f.startsWith("template/template-") && f.endsWith(".docx"))).toBe(true);

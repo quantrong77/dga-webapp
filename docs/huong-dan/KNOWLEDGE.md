@@ -143,7 +143,7 @@ flowchart TD
         CSS["css/*.css"]
         Early["early-layout.js"]
         UICore["app-core.js (App Init, Routing, Layout)"]
-        UIControllers["ui/ui-*.js (DGA, Oil, Alerts, Trend, History, Auth...)"]
+        UIControllers["src/presentation/ui-*.js (DGA, Oil, Alerts, Trend, History, Auth...)"]
     end
 
     subgraph Logic_Layer["Tầng Nghiệp Vụ Thuần Túy (Core Logic - 0% DOM)"]
