@@ -196,6 +196,7 @@
   --gray-600: var(--text-secondary);
   --gray-700: #cbd5e1; /* chữ phụ đậm hơn --text-secondary (ghi chú quy trình, chú thích ảnh, chữ ô kéo thả) */
   --gray-900: var(--text-primary);
+  --table-stripe: var(--surface-page); /* hàng chẵn: tối hơn nền bảng 1 bậc, cùng màu ô Thao tác hàng chẵn */
 
   --ok: #4ade80;
   --ok-bg: #052e16;
