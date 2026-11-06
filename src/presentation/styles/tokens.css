@@ -70,7 +70,7 @@
   --border-strong: #cbd5e1;
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-tertiary: #94a3b8;
+  --text-tertiary: #5b6779; /* ≥5.1:1 trên mọi nền sáng (WCAG AA; trước #94a3b8 chỉ 2.3–2.6:1) */
 
   /* Thương hiệu EVNNPT: navy làm màu chủ đạo */
   --evn-navy: #1b2470;
@@ -186,7 +186,8 @@
   --border-strong: #3b488e;
   --text-primary: #f8fafc;
   --text-secondary: #94a3b8;
-  --text-tertiary: #64748b;
+  --text-tertiary: #94a3b8; /* = chữ phụ: màu tối hơn không đạt 4.5:1 trên nền hàng rê chuột #252e63 */
+  --gray-500: #94a3b8; /* chữ chú thích (mục Quy định…): #6b7280 chỉ 3.4:1 trên nền tối */
 
   --blue-900: #d5dbff;
   --blue-800: #bfc8ff;
