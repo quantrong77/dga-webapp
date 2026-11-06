@@ -205,7 +205,7 @@ graph TD
 
 - **Tab Hướng dẫn sử dụng tích hợp:**
   - Gồm 19 chuyên đề accordion chi tiết từ cơ bản đến nâng cao (đăng nhập, nhập liệu, đối chiếu BBTN, đọc kết quả, cấu hình, xử lý sự cố...).
-  - Được biên dịch tự động từ file chuẩn `user_manual.md` qua công cụ build, đảm bảo tính đồng bộ tuyệt đối giữa tài liệu và ứng dụng.
+  - Được biên dịch tự động từ file chuẩn `docs/huong-dan/user_manual.md` qua công cụ build, đảm bảo tính đồng bộ tuyệt đối giữa tài liệu và ứng dụng.
 - **Tab Giới thiệu:**
   - Thông tin phiên bản, bản quyền, mục tiêu dự án và đầu mối hỗ trợ kỹ thuật.
 
@@ -322,5 +322,5 @@ Thanh Header được cố định ở mép trên màn hình (Sticky Header) v�
 | **Xử lý Biên bản** | `bbtn/bbtn-import.js`, `nameplate-import.js` | Đọc text PDF (PDF.js) và nhận diện ảnh scan/tấm nhãn bằng OCR (Tesseract.js) |
 | | `bbtn/bbtn-export.js`, `oil-bbtn.js` | Điền số liệu vào file mẫu Word (.docx) qua Docxtemplater |
 | **Bản Di động** | `mobile/` | Phiên bản PWA tối ưu cho màn hình cảm ứng di động, dùng chung logic DGA core |
-| **Tài liệu Hướng dẫn** | `user_manual.md` | Sách hướng dẫn sử dụng chi tiết 19 mục dành cho người dùng cuối |
-| **Danh mục Tính năng** | `Features-web-app.md` | *(Tài liệu này)* Báo cáo mô tả toàn diện tính năng và kiến trúc dự án |
+| **Tài liệu Hướng dẫn** | `docs/huong-dan/user_manual.md` | Sách hướng dẫn sử dụng chi tiết 19 mục dành cho người dùng cuối |
+| **Danh mục Tính năng** | `docs/huong-dan/Features-web-app.md` | *(Tài liệu này)* Báo cáo mô tả toàn diện tính năng và kiến trúc dự án |

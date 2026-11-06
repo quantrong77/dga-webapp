@@ -1,7 +1,7 @@
 # Hướng dẫn sử dụng — Ứng dụng "Đánh giá Dầu cách điện" (DGA)
 
 > Tài liệu dành cho **người dùng cuối** (kỹ sư thí nghiệm, cán bộ theo dõi thiết bị). Nội dung đi theo từng công việc cụ thể: nhập số liệu, đọc kết quả, xem cảnh báo, xuất biên bản…
-> Muốn cài đặt/triển khai app → xem `README.md`. Muốn tra danh sách đầy đủ tính năng → xem `Features-web-app.md`.
+> Muốn cài đặt/triển khai app → xem `README.md`. Muốn tra danh sách đầy đủ tính năng → xem `docs/huong-dan/Features-web-app.md`.
 > Nội dung này cũng có sẵn ngay trong app ở tab **Hướng dẫn** (chia theo từng mục, bấm để mở/thu gọn).
 
 ---

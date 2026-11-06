@@ -260,7 +260,7 @@ dga-webapp/
 │
 ├── scripts/                   # CÔNG CỤ TỰ ĐỘNG DÀNH CHO DEVELOPER
 │   ├── sync-mobile.js         # Ghép nối logic/dga-logic-*.js thành mobile/dga-logic.js
-│   └── build-user-guide.js    # Dựng mã HTML tab Hướng dẫn trong index.html từ user_manual.md (Pandoc)
+│   └── build-user-guide.js    # Dựng mã HTML tab Hướng dẫn trong index.html từ docs/huong-dan/user_manual.md (Pandoc)
 │
 ├── tests/                     # 15 BỘ UNIT TEST JEST (~300 TESTS)
 │   ├── diagnosis.test.js      # Kiểm thử Bảng 66, Table A.10, Duval 1
@@ -281,8 +281,13 @@ dga-webapp/
 │
 ├── template/                  # MẪU WORD BIÊN BẢN THÍ NGHIỆM (.DOCX)
 │   └── template-bbtn-dau-3pha.docx
-├── user_manual.md             # Nguồn sự thật duy nhất của cẩm nang hướng dẫn sử dụng
-└── Features-web-app.md        # Danh sách tính năng chi tiết theo từng màn hình
+└── docs/                      # TÀI LIỆU (không được trình duyệt nạp, không deploy)
+    ├── huong-dan/             # user_manual.md (nguồn duy nhất của tab Hướng dẫn), KNOWLEDGE.md (tài liệu này),
+    │                          # Features-web-app.md (danh sách tính năng theo từng màn hình)
+    ├── quy-dinh/              # QD1901.md, Dieu54_QD1901.md
+    ├── spec/                  # đặc tả thiết kế theo module
+    ├── assets/                # ảnh gốc dung lượng lớn (app dùng bản .webp trong image/)
+    └── refactor/              # mốc chuẩn, ghi chú bảo mật, lỗi phát hiện khi tái cấu trúc
 ```
 
 ---
@@ -497,8 +502,8 @@ npm test                 # Chạy toàn bộ 15 test suites kiểm thử tự đ
 npm run typecheck        # Chạy kiểm tra kiểu tĩnh (tsc --noEmit --checkJs)
 npm run sync-mobile      # ĐỒNG BỘ: Ghép logic/ của web sang mobile/dga-logic.js
 npm run sync-mobile:check # Kiểm tra xem bản mobile có bị lệch so với web hay không
-npm run build-guide      # Dựng lại tab Hướng dẫn trong index.html từ user_manual.md (cần pandoc)
-npm run build-guide:check # Kiểm tra tab Hướng dẫn có khớp tài liệu gốc user_manual.md
+npm run build-guide      # Dựng lại tab Hướng dẫn trong index.html từ docs/huong-dan/user_manual.md (cần pandoc)
+npm run build-guide:check # Kiểm tra tab Hướng dẫn có khớp tài liệu gốc docs/huong-dan/user_manual.md
 ```
 
 ### 8.2. Bộ Kiểm Thử Tự Động (Jest Suites)
@@ -520,7 +525,7 @@ Bộ test nằm tại thư mục `tests/` với hơn 300 test cases thực hiệ
 5. Thực hiện `git commit` cả file ở `logic/` lẫn `mobile/dga-logic.js`.
 
 ### 8.4. Quy trình Cập Nhật Tài Liệu Hướng Dẫn
-1. Sửa đổi nội dung tại file gốc [user_manual.md](file:///c:/Users/quant/Documents/Antigravity/dga-webapp/user_manual.md).
+1. Sửa đổi nội dung tại file gốc [user_manual.md](./user_manual.md).
 2. Chạy lệnh: `npm run build-guide` (yêu cầu máy có cài Pandoc). Script sẽ tự động chuyển đổi markdown thành HTML và chèn vào đúng vị trí giữa hai cờ `<!-- USER-GUIDE:BEGIN -->` và `<!-- USER-GUIDE:END -->` trong `index.html`.
 
 ---
@@ -554,5 +559,5 @@ Bộ test nằm tại thư mục `tests/` với hơn 300 test cases thực hiệ
 
 ---
 
-> **Ghi chú bảo trì:** Mọi thay đổi lớn về mặt kiến trúc hoặc tiêu chuẩn quy định cần được cập nhật ngay vào tài liệu này và [Features-web-app.md](file:///c:/Users/quant/Documents/Antigravity/dga-webapp/Features-web-app.md) để duy trì tính nhất quán tri thức cho toàn bộ dự án.
+> **Ghi chú bảo trì:** Mọi thay đổi lớn về mặt kiến trúc hoặc tiêu chuẩn quy định cần được cập nhật ngay vào tài liệu này và [Features-web-app.md](./Features-web-app.md) để duy trì tính nhất quán tri thức cho toàn bộ dự án.
 
