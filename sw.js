@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v46-fix-sync-static";
+const CACHE_NAME = "dga-offline-v47-sw-register";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -38,6 +38,7 @@ const PRECACHE_ASSETS = [
   "./assets/image/favicon-32.png",
   "./assets/image/favicon-16.png",
   "./assets/image/apple-touch-icon.png",
+  "./assets/image/app-icon-192.webp",
   "./src/domain/dga-logic-core.js",
   "./src/domain/dga-logic-gas.js",
   "./src/domain/dga-logic-oil.js",
@@ -91,6 +92,11 @@ const PRECACHE_ASSETS = [
   "./vendor/supabase/supabase.js",
   "./vendor/chartjs/chart.umd.min.js",
   "./vendor/xlsx/xlsx.full.min.js",
+  // bbtn-import.js / nameplate-import.js (ES module) import tĩnh 2 file này — thiếu thì 2 module không nạp được
+  // khi mất mạng. Worker nặng (pdf.worker ~1,3 MB, lõi OCR ~3,9 MB + dữ liệu ngôn ngữ) chỉ tải khi đọc PDF → để
+  // runtime cache (network-first bên dưới) lưu lại sau lần dùng đầu lúc có mạng.
+  "./vendor/pdfjs/pdf.min.js",
+  "./vendor/tesseract/tesseract.esm.min.js",
 ];
 
 self.addEventListener("install", (event) => {
@@ -145,7 +151,8 @@ self.addEventListener("fetch", (event) => {
   // Đối với điều hướng trang (Navigation / index.html)
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req).catch(() => caches.match("./index.html") || caches.match("./"))
+      // caches.match() trả Promise (luôn "truthy") nên "a || b" cũ không bao giờ thử "./" — nối bằng .then.
+      fetch(req).catch(() => caches.match("./index.html").then((res) => res || caches.match("./")))
     );
     return;
   }

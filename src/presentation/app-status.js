@@ -86,14 +86,19 @@ function markStorageBadgeDisconnected(err, isAdminOrNoAuth) {
   }
 }
 
+// Gọi từ initApp() — tức SAU khi đăng nhập, lúc sự kiện "load" thường đã xảy ra từ lâu. Trước đây chỉ gắn trình
+// nghe "load" nên Service Worker không bao giờ được đăng ký (lỗi #2, BUGS_FOUND.md) → mất mạng thì tải lại trang
+// không mở được app. Nay: trang đã tải xong thì đăng ký ngay, chưa xong mới chờ "load".
 function registerServiceWorker() {
-  if (typeof window !== "undefined" && "serviceWorker" in navigator && window.location.protocol.startsWith("http")) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch((err) => {
-        console.warn("Không đăng ký được Service Worker:", err);
-      });
+  if (typeof window === "undefined" || typeof navigator === "undefined") return;
+  if (!("serviceWorker" in navigator) || !window.location.protocol.startsWith("http")) return;
+  const doRegister = () => {
+    navigator.serviceWorker.register("./sw.js").catch((err) => {
+      console.warn("Không đăng ký được Service Worker:", err);
     });
-  }
+  };
+  if (document.readyState === "complete") doRegister();
+  else window.addEventListener("load", doRegister, { once: true });
 }
 
 function setupAutoSyncUI() {

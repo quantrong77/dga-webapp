@@ -48,8 +48,9 @@ Tính năng:
 - **BBTN dầu 3 pha TI/TU (PTC3/BM.14)**: Nhập PDF hoặc nhập tay chung 1 biên bản cho 3 pha A, B, C; tự tách 3 bản ghi độc lập; đánh giá theo 2 tầng ngưỡng NSX; đối chiếu cột "Trên BBTN" và xuất lại Word.
 - **Kiến trúc 3 lớp** (giao diện → dữ liệu → nghiệp vụ, xem mục 4) và **hàng đợi offline**: thao tác lưu lúc mất
   kết nối được giữ trong trình duyệt và tự gửi lên máy chủ khi có mạng lại (cả chế độ máy chủ nội bộ lẫn Google
-  Sheets). Lưu ý: Service Worker hiện chưa được đăng ký nên **tải lại trang lúc mất mạng chưa chạy được**
-  (`docs/refactor/BUGS_FOUND.md` lỗi #2).
+  Sheets). Service Worker (`sw.js`) lưu sẵn file giao diện sau lần đăng nhập đầu, nên tải lại trang lúc mất mạng
+  vẫn mở được app (chạy qua `http://`, không áp dụng khi mở `file://`). Đọc BBTN PDF lúc mất mạng cần đã dùng ít
+  nhất 1 lần lúc có mạng.
 - *Xem tài liệu chi tiết toàn bộ tính năng và tiện ích tại [docs/huong-dan/Features-web-app.md](./docs/huong-dan/Features-web-app.md).*
 
 > **Lưu ý về nguồn dữ liệu IEC**: các bảng Annex A (A.2, A.6, A.9) và bảng ranh

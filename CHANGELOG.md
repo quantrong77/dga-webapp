@@ -26,6 +26,9 @@ Chi tiết: [`docs/refactor/TEST_REPORT.md`](./docs/refactor/TEST_REPORT.md).
   Nay hàng đợi gửi thật; thao tác không nhận ra được giữ lại và báo lỗi thay vì âm thầm bỏ (lỗi #5).
 - Giao diện tối: hàng chẵn của bảng có nền xám sáng, chữ trắng gần như không đọc được (lỗi #6).
 - Biến CSS `--gray-700` được dùng nhưng chưa khai báo (lỗi #7).
+- **Mở app khi mất mạng:** Service Worker trước đây không bao giờ được đăng ký (chỉ chờ sự kiện `load` đã qua từ
+  trước khi đăng nhập) → tải lại trang lúc mất mạng không mở được. Nay đăng ký ngay sau đăng nhập; precache thêm 2
+  thư viện mà module đọc BBTN PDF / tấm nhãn cần (lỗi #2).
 
 ### Cấu trúc thư mục
 
@@ -66,7 +69,6 @@ Chi tiết: [`docs/refactor/TEST_REPORT.md`](./docs/refactor/TEST_REPORT.md).
 
 ### Còn tồn tại (có từ trước tái cấu trúc, chưa sửa — [`docs/refactor/BUGS_FOUND.md`](./docs/refactor/BUGS_FOUND.md))
 
-- #2: Service Worker không được đăng ký → tải lại trang lúc mất mạng không chạy.
 - #8: mở bằng `file://` không nạp được 2 module đọc BBTN PDF / tấm nhãn.
 - #1: tab Quản trị (on-premise) gọi `supabaseSyncStatus` → HTTP 400 trong console.
 - #3: đọc BBTN khí hòa tan của TI: 2 ô "Điện áp định mức", "Hãng sản xuất" lẫn nội dung dòng khác.

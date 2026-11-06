@@ -37,6 +37,15 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   (hoặc gọi `registerServiceWorker()` từ đầu trang, trước màn hình đăng nhập). Sau khi sửa phải tăng tên cache trong
   `sw.js` và kiểm tra kịch bản D.9 (tắt mạng → tải lại trang).
 - **Ghi chú:** Bước 7 của kế hoạch (kiểm thử offline bằng Service Worker) sẽ không đạt nếu chưa sửa lỗi này.
+- **ĐÃ SỬA** (nhánh `fix/service-worker`): `registerServiceWorker()` (`src/presentation/app-status.js`) đăng ký ngay
+  nếu `document.readyState === "complete"`, ngược lại chờ `load` (một lần). Kèm theo: `sw.js` precache thêm
+  `vendor/pdfjs/pdf.min.js`, `vendor/tesseract/tesseract.esm.min.js` (2 module đọc BBTN PDF / tấm nhãn import tĩnh — thiếu
+  thì không nạp được khi mất mạng) và `assets/image/app-icon-192.webp`; sửa nhánh dự phòng điều hướng offline
+  (`caches.match(a) || caches.match(b)` — Promise luôn truthy nên không bao giờ thử `./`). Cache `v47-sw-register`.
+  Test `tests/service-worker-register.test.js` (8 test). Kiểm trên trình duyệt (on-premise): sau đăng nhập SW
+  `activated`, 87 mục trong cache; tắt mạng → tải lại trang → app mở, vẫn đăng nhập, badge "Chạy offline…", 0 lỗi JS,
+  0 file tĩnh tải hỏng. **Giới hạn:** đọc BBTN PDF / OCR lúc mất mạng chỉ chạy nếu đã dùng ít nhất 1 lần lúc có mạng
+  (worker pdf.js ~1,3 MB, lõi OCR ~3,9 MB + dữ liệu ngôn ngữ không precache, được lưu khi dùng lần đầu).
 
 ## #3. Đọc BBTN khí hòa tan của TI: ô "Điện áp định mức" và "Hãng sản xuất" lẫn nội dung dòng khác
 
