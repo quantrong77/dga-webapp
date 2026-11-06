@@ -24,8 +24,9 @@
   <link rel="manifest" href="manifest.webmanifest" />
   <!-- style.css (2031 dòng) đã được tách thành 8 file theo tab/khu vực trong src/presentation/styles/, giữ
        NGUYÊN thứ tự các đoạn như file gốc (chỉ cắt, không đảo) nên thứ tự cascade CSS
-       không đổi. style-base.css chứa các biến :root (--blue-900, --radius...) dùng
+       không đổi. tokens.css chứa các biến :root (--blue-900, --radius...) dùng
        chung nên phải nạp ĐẦU TIÊN. -->
+  <link rel="stylesheet" href="src/presentation/styles/tokens.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-base.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-auth.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-nav-layout.css" />
@@ -57,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v42-regex") {
+          if (k !== "dga-offline-v43-tokens") {
             caches.delete(k);
           }
         });
