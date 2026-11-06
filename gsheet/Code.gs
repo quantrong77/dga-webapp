@@ -195,6 +195,9 @@ const OILTEST_HEADERS = [
   "bbtn_url", "bbtn_name",
   // Axit – kiềm hòa tan (chỉ tiêu ghi trên BBTN PTC3) — thêm ở CUỐI.
   "acid_base_soluble",
+  // Thông số kỹ thuật thiết bị (chuỗi JSON: hang_sx, nam_sx, dien_ap_dm, cong_suat, so_che_tao, nam_van_hanh,
+  // loai_dau) — web app tự điền lại khi chọn đúng thiết bị ở tab con "Lập BBTN". Thêm ở CUỐI.
+  "device_info",
 ];
 
 // Thí nghiệm dầu khoang điều áp dưới tải (OLTC) — Điều 37/Bảng 49. Sheet TÁCH RIÊNG

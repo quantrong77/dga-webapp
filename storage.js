@@ -574,7 +574,12 @@ const Storage = {
         return record;
       }
       try {
-        const { data, error } = await sb().from("oil_tests").insert(record).select();
+        let { data, error } = await sb().from("oil_tests").insert(record).select();
+        if (error && "device_info" in record && /device_info/.test(String(error.message || ""))) {
+          // Bảng chưa có cột device_info (chưa chạy supabase/mirror-setup.sql) — vẫn lưu được số liệu thí nghiệm
+          const { device_info, ...rest } = record;
+          ({ data, error } = await sb().from("oil_tests").insert(rest).select());
+        }
         if (error) throw error;
         return data && data[0] ? data[0] : record;
       } catch (err) {

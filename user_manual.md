@@ -144,6 +144,8 @@ Dưới ô **Loại thiết bị** có 2 tab con (cách tổ chức giống hệ
 - **Nhập BBTN cũ** — kéo thả BBTN (PDF) để tự điền form và đối chiếu ở khung bên cạnh, nhập hàng loạt nhiều BBTN của cùng 1 thiết bị, và bảng **Số liệu đã lưu** ở cuối trang: các lần đo đã lưu của đúng Trạm/Thiết bị đang nhập ở form (có nút Xem/Sửa/Xóa như tab Lịch sử đo).
 - **Lập BBTN** — nhập tay số liệu mới, bấm **Phân tích & Lưu** rồi **Xuất BBTN (docx)** / báo cáo phân tích kỹ thuật ở khối kết quả.
 
+Ở **Lập BBTN**, chọn **Trạm** và **Thiết bị**: nếu thiết bị đã có dữ liệu lưu trước đây (lần đo khí hòa tan, thí nghiệm dầu), app **tự điền thông số kỹ thuật** (kiểu máy, năm sản xuất, điện áp định mức, số chế tạo, loại dầu...) vào các ô **còn trống** và ghi rõ lấy từ lần lưu nào — ô bạn đã gõ không bị ghi đè; đổi sang thiết bị khác thì các ô app tự điền được thay theo thiết bị mới. Thiết bị mới thì nhập tay, hoặc kéo thả file PDF/Word cũ (BBTN, lý lịch thiết bị) vào ô **"Nhập thông số kỹ thuật từ file"** — app chỉ lấy thông số kỹ thuật, không đọc số liệu đo và không đính kèm file. Nếu còn file BBTN đã chọn ở tab Nhập BBTN cũ, Lập BBTN hiện dòng **"Biên bản đính kèm khi lưu"** kèm nút Bỏ file.
+
 Hai tab con dùng **chung một form** — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con **Nhập BBTN cũ**.
 
 ### Bước 1 — Chọn loại thiết bị
@@ -305,7 +307,7 @@ Ba chỉ tiêu được đánh giá: **Độ ẩm dầu (ppm)**, **Tổn hao đi
 
 Đầu tab, chọn **Loại thiết bị** — chỉ khối nhập liệu phù hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản ghi).
 
-Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: **Nhập BBTN cũ** (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá & Lưu cả biên bản", bảng **Số liệu đã lưu** của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và **Lập BBTN** (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Toàn bộ dữ liệu của mọi thiết bị xem ở tab **Lịch sử đo**.
+Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: **Nhập BBTN cũ** (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá & Lưu cả biên bản", bảng **Số liệu đã lưu** của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và **Lập BBTN** (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Ở Lập BBTN, thông số kỹ thuật thiết bị (hãng sản xuất, năm sản xuất, điện áp định mức, công suất, số chế tạo, năm vận hành, loại dầu — khối **Thông số kỹ thuật thiết bị** của form dầu MBA, lưu kèm bản ghi) được tự điền khi chọn lại thiết bị đã lưu, hoặc lấy từ file PDF/Word cũ, giống tab Khí hòa tan. Toàn bộ dữ liệu của mọi thiết bị xem ở tab **Lịch sử đo**.
 
 ### 9.1. Dầu MBA/Kháng dầu (dầu chính)
 

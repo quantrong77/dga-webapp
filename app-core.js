@@ -108,6 +108,7 @@ async function initApp() {
   setupCauHinhSubtabs();
   setupQuyTrinhSubtabs();
   if (typeof setupInputSubtabs === "function") setupInputSubtabs();
+  if (typeof setupDeviceSpecs === "function") setupDeviceSpecs();
   setupQuantriSubtabs();
   setupHandbookLightbox();
   setupMindmap();

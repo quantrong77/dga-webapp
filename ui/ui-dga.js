@@ -82,6 +82,7 @@ function resetMeasurementEditState() {
   $("btnAnalyze").textContent = "Phân tích & Lưu";
   $("bbtnImportNote").classList.add("hidden");
   renderBbtnCurrent();
+  if (typeof renderDeviceSpecAttachNotes === "function") renderDeviceSpecAttachNotes();
 }
 
 /** Gợi ý "Lần đo" kế tiếp — chạy khi Trạm/Thiết bị/Pha trên form đổi (xem

@@ -190,6 +190,8 @@ create table if not exists oil_tests (
   bbtn_url text,
   bbtn_name text,
   acid_base_soluble text,
+  -- Thông số kỹ thuật thiết bị (JSON: hang_sx, nam_sx, dien_ap_dm, cong_suat, so_che_tao, nam_van_hanh, loai_dau)
+  device_info text,
   ghi_chu text,
   created_at timestamptz default now()
 );

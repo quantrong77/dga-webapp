@@ -57,7 +57,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v25-inputsubtabs") {
+          if (k !== "dga-offline-v26-devicespecs") {
             caches.delete(k);
           }
         });
@@ -360,6 +360,15 @@
         <div class="dga-input-main-col">
           <div class="panel">
             <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Thông tin lần đo</h2>
+        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
+             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+        <div class="file-dropzone spec-dropzone mode-lap" id="fSpecDropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="fSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> thiết bị từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
+          <input id="f_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        </div>
+        <p class="note spec-note mode-lap hidden" id="f_specNote" role="status"></p>
+        <p class="note attach-note mode-lap hidden" id="f_attachNote"></p>
         <!-- Đang nạp Trạm/Thiết bị từ database (ẩn khi setComboLoading(false), xem
              app-core.js) — tránh cảm giác app bị đứng khi bấm mở gợi ý mà danh sách
              còn rỗng lúc mới vào app. -->
@@ -405,7 +414,7 @@
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="f_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
-          <label class="field field-wide"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Biên bản thí nghiệm (PDF, tùy chọn)
+          <label class="field field-wide mode-import"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>Biên bản thí nghiệm (PDF, tùy chọn)
             <!-- Ô kéo-thả: input file THẬT phủ toàn bộ (opacity:0) để bấm vào bất kỳ
                  đâu trong khung đều mở được hộp thoại chọn file như trước (không cần
                  thêm JS cho việc này) — 3 sự kiện dragenter/dragover/dragleave + drop
@@ -2145,13 +2154,22 @@
           (Bảng 3 dầu mới / Bảng 5 dầu vận hành, gồm cả các chỉ tiêu QĐ1901 không quy định: sức căng bề mặt, PCB, lưu
           huỳnh ăn mòn, cặn/bùn, chất ức chế...). Chỉ nhập những chỉ tiêu có trong biên bản.</p>
 
+        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
+             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+        <div class="file-dropzone spec-dropzone mode-lap" id="oSpecDropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="oSpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> máy biến áp từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
+          <input id="o_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        </div>
+        <p class="note spec-note mode-lap hidden" id="o_specNote" role="status"></p>
+        <p class="note attach-note mode-lap hidden" id="o_attachNote"></p>
         <!-- Đọc BBTN dầu MBA (PDF) để tự điền — xem bbtn/mba-oil-bbtn.js, onOilBbtnFileSelected() (ui-oil.js) -->
-        <div class="file-dropzone" id="oDropzone">
+        <div class="file-dropzone mode-import" id="oDropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="oDropzoneText">Kéo thả file BBTN dầu MBA (PDF hoặc Word .docx — mới hoặc lịch sử) để tự điền, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
           <input id="o_bbtn_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
         </div>
-        <p class="note hidden" id="oImportNote" role="status"></p>
+        <p class="note hidden mode-import" id="oImportNote" role="status"></p>
         <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
         <div style="margin:-4px 0 10px; display:flex; gap:10px; flex-wrap:wrap;">
           <button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button>
@@ -2233,6 +2251,19 @@
           </label>
         </div>
 
+        <!-- Thông số kỹ thuật thiết bị — lưu kèm bản ghi dầu MBA (cột device_info, JSON) để lần sau chọn lại thiết bị
+             là tự điền (tab con Lập BBTN, ui/ui-device-specs.js); dùng khi xuất BBTN (ui/ui-oil-bbtn-export.js). -->
+        <div class="section-title">Thông số kỹ thuật thiết bị (tùy chọn — lưu kèm thiết bị, dùng khi xuất BBTN)</div>
+        <div class="grid">
+          <label class="field">Hãng sản xuất<input id="ob_hangsx" type="text" placeholder="(không bắt buộc)" /></label>
+          <label class="field">Năm sản xuất<input id="ob_namsx" type="text" placeholder="VD: 2019" /></label>
+          <label class="field">Điện áp định mức<input id="ob_dienapdm" type="text" placeholder="VD: (225/√3±8x1,25%)/115/√3/23 (kV)" /></label>
+          <label class="field">Công suất<input id="ob_congsuat" type="text" placeholder="VD: 150/200/250 (MVA)" /></label>
+          <label class="field">Số chế tạo<input id="ob_sochetao" type="text" placeholder="(không bắt buộc)" /></label>
+          <label class="field">Năm vận hành<input id="ob_namvanhanh" type="text" placeholder="VD: 2019" /></label>
+          <label class="field">Loại dầu<input id="ob_loaidau" type="text" placeholder="VD: Nynas Nytro 10XN" /></label>
+        </div>
+
         <div class="section-title">Kết quả thí nghiệm</div>
         <!-- Bảng chỉ tiêu theo nhóm, sinh từ DGA.OIL_PARAM_DEFS — renderOilParamTable() (ui-oil.js):
              1 cột "Kết quả" (thùng dầu chung) hoặc 3 cột Pha A/B/C (thùng dầu riêng từng pha). -->
@@ -2284,17 +2315,10 @@
         <p class="note" id="ob_scope" style="margin-top:6px;"></p>
         <p class="note">Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
           dầu thùng chính và dầu OLTC cùng thiết bị, cùng ngày lấy mẫu chung 1 biên bản. Chỉ các chỉ tiêu đã nhập được đưa vào.
-          Các ô dưới đây chỉ dùng cho biên bản (không lưu); để trống thì biên bản để trống. Mở file trong Word để bổ sung
+          Thông số kỹ thuật thiết bị lấy ở form phía trên; các ô dưới đây chỉ dùng cho biên bản (không lưu), để trống thì biên bản để trống. Mở file trong Word để bổ sung
           số biên bản, thiết bị thí nghiệm và ký trước khi ban hành.</p>
         <div class="grid">
           <label class="field field-wide">Vị trí lấy mẫu<input id="ob_vitrilaymau" type="text" placeholder="VD: Van thùng chính, van OLTC pha A,B,C máy biến áp AT2" /></label>
-          <label class="field">Hãng sản xuất<input id="ob_hangsx" type="text" placeholder="(không bắt buộc)" /></label>
-          <label class="field">Năm sản xuất<input id="ob_namsx" type="text" placeholder="VD: 2019" /></label>
-          <label class="field">Điện áp định mức<input id="ob_dienapdm" type="text" placeholder="VD: (225/√3±8x1,25%)/115/√3/23 (kV)" /></label>
-          <label class="field">Công suất<input id="ob_congsuat" type="text" placeholder="VD: 150/200/250 (MVA)" /></label>
-          <label class="field">Số chế tạo<input id="ob_sochetao" type="text" placeholder="(không bắt buộc)" /></label>
-          <label class="field">Năm vận hành<input id="ob_namvanhanh" type="text" placeholder="VD: 2019" /></label>
-          <label class="field">Loại dầu<input id="ob_loaidau" type="text" placeholder="VD: Nynas Nytro 10XN" /></label>
           <label class="field">Lý do thí nghiệm<input id="ob_lydo" type="text" placeholder="VD: Định kỳ 1 năm" /></label>
           <label class="field">Nhiệt độ môi trường (°C)<input id="ob_nhietdo" type="number" step="0.1" placeholder="VD: 33" /></label>
           <label class="field">Độ ẩm môi trường (%)<input id="ob_doam" type="number" step="0.1" min="0" max="100" placeholder="VD: 68" /></label>
@@ -2486,7 +2510,16 @@
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>BBTN dầu 3 pha (A, B, C chung một biên bản)</h2>
         <p class="note">Tải PDF biên bản để tự điền, hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành 1 bản ghi
           cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
-        <div class="file-dropzone" id="t3Dropzone">
+        <!-- Tab con "Lập BBTN": tiện ích CHỈ lấy THÔNG SỐ KỸ THUẬT thiết bị từ file PDF/Word cũ (không đọc số liệu đo,
+             không đính kèm file) — ui/ui-device-specs.js. Chọn Trạm + Thiết bị đã có dữ liệu thì app tự điền thông số. -->
+        <div class="file-dropzone spec-dropzone mode-lap" id="t3SpecDropzone">
+          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
+          <span class="file-dropzone-text" id="t3SpecDropzoneText">Nhập <strong>thông số kỹ thuật</strong> TI/TU từ file PDF / Word cũ (BBTN, lý lịch thiết bị...) — kéo thả vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span>. Chỉ lấy thông số, không đọc số liệu đo.</span>
+          <input id="t3_spec_file" type="file" accept="application/pdf,.pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
+        </div>
+        <p class="note spec-note mode-lap hidden" id="t3_specNote" role="status"></p>
+        <p class="note attach-note mode-lap hidden" id="t3_attachNote"></p>
+        <div class="file-dropzone mode-import" id="t3Dropzone">
           <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>
           <span class="file-dropzone-text" id="t3DropzoneText">Kéo thả file PDF BBTN 3 pha vào đây, hoặc <span class="file-dropzone-link">bấm để chọn file</span></span>
           <input id="t3_file" type="file" accept="application/pdf,.pdf" />
@@ -2497,7 +2530,7 @@
             <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
           </button>
         </div>
-        <p class="note hidden" id="t3ImportNote" role="status"></p>
+        <p class="note hidden mode-import" id="t3ImportNote" role="status"></p>
         <div class="grid">
           <label class="field">Trạm
             <div class="combo-wrap">
@@ -2644,6 +2677,7 @@
           </label>
         </div>
 
+        <p class="note spec-note mode-lap hidden" id="tio_specNote" role="status"></p>
         <div class="section-title">Kết quả thí nghiệm</div>
         <div class="grid gases">
           <label class="field">Độ ẩm dầu (ppm) <input id="tio_moisture" type="number" min="0" step="0.1" /></label>
@@ -2944,6 +2978,7 @@
           <li><strong>Nhập BBTN cũ</strong> — kéo thả BBTN (PDF) để tự điền form và đối chiếu ở khung bên cạnh, nhập hàng loạt nhiều BBTN của cùng 1 thiết bị, và bảng <strong>Số liệu đã lưu</strong> ở cuối trang: các lần đo đã lưu của đúng Trạm/Thiết bị đang nhập ở form (có nút Xem/Sửa/Xóa như tab Lịch sử đo).</li>
           <li><strong>Lập BBTN</strong> — nhập tay số liệu mới, bấm <strong>Phân tích &amp; Lưu</strong> rồi <strong>Xuất BBTN (docx)</strong> / báo cáo phân tích kỹ thuật ở khối kết quả.</li>
           </ul>
+          <p>Ở <strong>Lập BBTN</strong>, chọn <strong>Trạm</strong> và <strong>Thiết bị</strong>: nếu thiết bị đã có dữ liệu lưu trước đây (lần đo khí hòa tan, thí nghiệm dầu), app <strong>tự điền thông số kỹ thuật</strong> (kiểu máy, năm sản xuất, điện áp định mức, số chế tạo, loại dầu...) vào các ô <strong>còn trống</strong> và ghi rõ lấy từ lần lưu nào — ô bạn đã gõ không bị ghi đè; đổi sang thiết bị khác thì các ô app tự điền được thay theo thiết bị mới. Thiết bị mới thì nhập tay, hoặc kéo thả file PDF/Word cũ (BBTN, lý lịch thiết bị) vào ô <strong>"Nhập thông số kỹ thuật từ file"</strong> — app chỉ lấy thông số kỹ thuật, không đọc số liệu đo và không đính kèm file. Nếu còn file BBTN đã chọn ở tab Nhập BBTN cũ, Lập BBTN hiện dòng <strong>"Biên bản đính kèm khi lưu"</strong> kèm nút Bỏ file.</p>
           <p>Hai tab con dùng <strong>chung một form</strong> — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con <strong>Nhập BBTN cũ</strong>.</p>
           <h3>Bước 1 — Chọn loại thiết bị</h3>
           <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — <strong>hãy chọn đúng</strong>.</p>
@@ -3188,7 +3223,7 @@
           <div class="sm-body">
           <p>Ba chỉ tiêu được đánh giá: <strong>Độ ẩm dầu (ppm)</strong>, <strong>Tổn hao điện môi tgδ ở 90°C (%)</strong>, <strong>Điện áp chọc thủng (kV)</strong>.</p>
           <p>Đầu tab, chọn <strong>Loại thiết bị</strong> — chỉ khối nhập liệu phù hợp được hiện ra (lựa chọn này chỉ để ẩn/hiện, không lưu vào bản ghi).</p>
-          <p>Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: <strong>Nhập BBTN cũ</strong> (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá &amp; Lưu cả biên bản", bảng <strong>Số liệu đã lưu</strong> của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và <strong>Lập BBTN</strong> (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Toàn bộ dữ liệu của mọi thiết bị xem ở tab <strong>Lịch sử đo</strong>.</p>
+          <p>Giống tab Khí hòa tan, tab có 2 tab con dùng chung một form: <strong>Nhập BBTN cũ</strong> (đọc BBTN PDF/Word, khung đối chiếu, "Đánh giá &amp; Lưu cả biên bản", bảng <strong>Số liệu đã lưu</strong> của đúng Trạm/Thiết bị đang nhập — dầu MBA chính, OLTC, TI/TU) và <strong>Lập BBTN</strong> (nhập tay, đánh giá, xuất BBTN lý-hóa / BBTN dầu 3 pha TI/TU dạng docx). Ở Lập BBTN, thông số kỹ thuật thiết bị (hãng sản xuất, năm sản xuất, điện áp định mức, công suất, số chế tạo, năm vận hành, loại dầu — khối <strong>Thông số kỹ thuật thiết bị</strong> của form dầu MBA, lưu kèm bản ghi) được tự điền khi chọn lại thiết bị đã lưu, hoặc lấy từ file PDF/Word cũ, giống tab Khí hòa tan. Toàn bộ dữ liệu của mọi thiết bị xem ở tab <strong>Lịch sử đo</strong>.</p>
           <h3>9.1. Dầu MBA/Kháng dầu (dầu chính)</h3>
           <p>Điền: <strong>Trạm, Thiết bị, Điểm lấy mẫu, Cấp điện áp MBA, Trạng thái dầu, Nhà sản xuất (tùy chọn), Ngày lấy mẫu, Ghi chú</strong>, rồi nhập 3 kết quả và bấm <strong>Đánh giá &amp; Lưu</strong>.</p>
           <ul class="rec-list">
@@ -3916,6 +3951,7 @@
   <script src="bbtn/bbtn-export.js"></script>
   <script src="bbtn/mba-oil-bbtn.js"></script>
   <script src="bbtn/mba-oil-bbtn-export.js"></script>
+  <script src="bbtn/device-specs.js"></script>
   <script src="bbtn/oil-bbtn.js"></script>
   <script src="bbtn/tech-report-export.js"></script>
   <script src="ui/ui-batch-import.js"></script>
@@ -3929,6 +3965,7 @@
   <script src="ui/ui-ti-oil-3pha.js"></script>
   <script src="ui/ui-history.js"></script>
   <script src="ui/ui-input-subtabs.js"></script>
+  <script src="ui/ui-device-specs.js"></script>
   <script src="ui/ui-trend.js"></script>
   <script src="ui/ui-alerts.js"></script>
   <script src="ui/ui-feedback.js"></script>

@@ -29,6 +29,7 @@ function setInputMode(tab, mode, opts) {
     b.classList.toggle("active", on);
     b.setAttribute("aria-selected", on ? "true" : "false");
   });
+  if (typeof renderDeviceSpecAttachNotes === "function") renderDeviceSpecAttachNotes();
   if (opts && opts.persist === false) return;
   const saved = inputModeLoad();
   saved[tab] = mode;
@@ -115,7 +116,10 @@ function debounceSaved(fn, ms) {
   return () => { clearTimeout(t); t = setTimeout(fn, ms); };
 }
 
+let _inputSubtabsBound = false;
 function setupInputSubtabs() {
+  if (_inputSubtabsBound) return; // initApp() có thể chạy lại — không gắn listener 2 lần
+  _inputSubtabsBound = true;
   const saved = inputModeLoad();
   INPUT_MODE_TABS.forEach((tab) => {
     const sec = $("tab-" + tab);
@@ -144,6 +148,7 @@ function setupInputSubtabs() {
 /** Vẽ lại mọi bảng Số liệu đã lưu — gọi sau khi form được điền bằng code (sửa bản ghi, đọc BBTN, xóa form):
  *  gán .value không phát sự kiện input/change nên các listener ở setupInputSubtabs() không tự chạy. */
 function refreshSavedTables() {
+  if (typeof renderDeviceSpecAttachNotes === "function") renderDeviceSpecAttachNotes();
   renderNhapSavedTable();
   renderOilSavedTable();
   renderOltcSavedTable();

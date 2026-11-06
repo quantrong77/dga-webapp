@@ -179,6 +179,7 @@ create table if not exists oil_tests (
   bbtn_url text,
   bbtn_name text,
   acid_base_soluble text,
+  device_info text,
   ghi_chu text,
   created_at timestamptz default now()
 );

@@ -190,6 +190,8 @@ alter table oltc_oil_tests
   add column if not exists bbtn_url text,
   add column if not exists bbtn_name text;
 alter table oil_tests add column if not exists acid_base_soluble text;
+-- Thông số kỹ thuật thiết bị (JSON: hang_sx, nam_sx, dien_ap_dm, cong_suat, so_che_tao, nam_van_hanh, loai_dau).
+alter table oil_tests add column if not exists device_info text;
 -- Thí nghiệm dầu MBA: chỉ tiêu lý-hóa BỔ SUNG (QĐ1901 Điều 48–56, IEC 60422:2024) + BBTN đính kèm.
 alter table oil_tests
   add column if not exists acid_mgkoh numeric,

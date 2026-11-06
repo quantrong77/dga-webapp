@@ -250,14 +250,17 @@ function parseMbaOilBbtnLines(lines) {
     if (!oltc.matched.length) oltc = null;
   }
 
-  const header = { tram: "", thietBi: "", ngay: "", voltageClass: "", oilState: "", phase: "", hangSx: "", serial: "", loaiDau: "", ghiChu: "" };
+  const header = { tram: "", thietBi: "", ngay: "", voltageClass: "", oilState: "", phase: "", hangSx: "", serial: "", loaiDau: "", ghiChu: "",
+    // thông số kỹ thuật thiết bị (dùng cho tiện ích "Nhập thông số kỹ thuật từ file" ở tab Lập BBTN, bbtn/device-specs.js)
+    namSx: "", namVanHanh: "", congSuat: "", dienApDm: "", kieuMay: "" };
   // Giá trị sau nhãn (lấy trên chuỗi GỐC có dấu; cắt ở ô kế tiếp " | "). PDF không có dấu ô: 2 ô cùng hàng
   // nằm chung 1 dòng ("Hãng sản xuất: EEMC Năm sản xuất: 2019") → cắt ở nhãn kế tiếp (chuỗi bỏ dấu cùng độ dài).
   // Ô chỉ ghi "-" / "—" / "/" / "N/A" (không có thông tin) → để trống
-  const NEXT_LBL = /\s(nam san xuat|nam van hanh|ngay (lay mau|thi nghiem|kiem dinh)|cong suat|kieu loai|so che tao|dien ap dinh muc|loai dau|hang san xuat|vi tri lay mau)\s*(\([^)]*\))?\s*:/;
+  const NEXT_LBL = /\s(nam san xuat|nam van hanh|ngay (lay mau|thi nghiem|kiem dinh)|cong suat|kieu loai|kieu may|so che tao|dien ap dinh muc|loai dau|hang san xuat|vi tri lay mau)\s*(\([^)]*\))?\s*:/;
   const valueAfter = (i, m) => {
     const start = m.index + m[0].length;
-    const nx = NEXT_LBL.exec(folded[i].slice(start));
+    // thêm " " phía trước: ô TRỐNG mà dòng PDF nối thẳng sang nhãn kế tiếp ("Điện áp định mức: Công suất: ...")
+    const nx = NEXT_LBL.exec(" " + folded[i].slice(start));
     const v = raw[i].slice(start, nx ? start + nx.index : undefined).split(/\s*\|\s*/)[0].trim();
     return /^([-–—/.]+|n\s*\/\s*a|k\s*\/\s*c)$/i.test(v) ? "" : v;
   };
@@ -276,6 +279,17 @@ function parseMbaOilBbtnLines(lines) {
     if (!header.serial && (m = LBL("so che tao").exec(f))) header.serial = valueAfter(i, m);
     if (!header.loaiDau && (m = LBL("loai dau").exec(f))) header.loaiDau = valueAfter(i, m);
     if (!header.ghiChu && (m = LBL("ghi chu").exec(f))) header.ghiChu = valueAfter(i, m);
+    const year = (v) => ((/\b(19|20)\d{2}\b/.exec(v) || [""])[0]);
+    if (!header.namSx && (m = LBL("nam san xuat|nam che tao|year of manufacture").exec(f))) header.namSx = year(valueAfter(i, m));
+    if (!header.namVanHanh && (m = LBL("nam (dua vao )?van hanh|year of operation").exec(f))) header.namVanHanh = year(valueAfter(i, m));
+    if (!header.congSuat && (m = LBL("cong suat( dinh muc)?|rated power").exec(f))) header.congSuat = valueAfter(i, m);
+    if (!header.kieuMay && (m = LBL("kieu may|kieu loai").exec(f))) header.kieuMay = valueAfter(i, m);
+    if (!header.dienApDm && (m = LBL("dien ap dinh muc|rated voltage").exec(f))) {
+      // PDF: giá trị rơi xuống dòng sau ("... Công suất ...: 150/200/250 (MVA)" rồi "(225/√3±8x1,25%)/115/√3/23 (kV)")
+      let v = valueAfter(i, m);
+      if (!v && i + 1 < folded.length && /^[\s(]*\d[^:]*kv/.test(folded[i + 1])) v = raw[i + 1].trim();
+      header.dienApDm = v;
+    }
     // "Thân máy và bộ OLTC pha C" → MBA 1 pha, pha C. "van OLTC pha A,B,C" → cả 3 pha (không gán 1 pha).
     if (!header.phase && /vi tri lay mau/.test(f)) {
       const ph = /pha\s*([abc])\b(?!\s*(?:[,;&/]|va\b|and\b)\s*[abc]\b)/.exec(f);

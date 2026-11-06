@@ -149,6 +149,29 @@ function toggleOilMembraneField() {
 // pha cùng biên bản (cùng bbtn_group_id, hoặc cùng thiết bị + ngày lấy mẫu).
 let _editingOilRecords = {};
 
+// Ô thông số kỹ thuật thiết bị ở form dầu MBA ↔ khóa trong cột device_info (bbtn/device-specs.js OIL_DEVICE_INFO_KEYS)
+const OIL_DEVICE_INFO_IDS = {
+  hang_sx: "ob_hangsx", nam_sx: "ob_namsx", dien_ap_dm: "ob_dienapdm", cong_suat: "ob_congsuat",
+  so_che_tao: "ob_sochetao", nam_van_hanh: "ob_namvanhanh", loai_dau: "ob_loaidau",
+};
+function oilDeviceInfoRead() {
+  const o = {};
+  Object.entries(OIL_DEVICE_INFO_IDS).forEach(([k, id]) => { const v = $(id) ? $(id).value.trim() : ""; if (v) o[k] = v; });
+  return Object.keys(o).length ? JSON.stringify(o) : "";
+}
+/** Điền khối thông số kỹ thuật từ device_info đã lưu (chuỗi JSON / object); null → xóa trống. */
+function oilDeviceInfoFill(info) {
+  let o = {};
+  if (info) { try { o = typeof info === "string" ? JSON.parse(info) : info; } catch (_) { o = {}; } }
+  Object.entries(OIL_DEVICE_INFO_IDS).forEach(([k, id]) => {
+    if (!$(id)) return;
+    $(id).value = o && o[k] !== undefined && o[k] !== null ? String(o[k]) : "";
+    delete $(id).dataset.auto;
+    delete $(id).dataset.specAuto;
+    delete $(id).dataset.exportAuto;
+  });
+}
+
 function clearOilForm() {
   ["o_tram", "o_thietbi", "o_ghichu"].forEach((id) => ($(id).value = ""));
   $("o_membrane").checked = false;
@@ -156,6 +179,7 @@ function clearOilForm() {
   $("o_inhibited").value = "";
   $("o_oxmethod").value = "";
   $("o_samplepoint").value = "chung";
+  oilDeviceInfoFill(null);
   oilBbtnClearImport();
   $("oImportNote").classList.add("hidden");
   $("o_phase_wrap").classList.add("hidden");
@@ -201,6 +225,7 @@ function onEditOilTest(rec) {
   $("o_oxmethod").value = rec.ox_method || "";
   $("o_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   $("o_ghichu").value = rec.ghi_chu || "";
+  oilDeviceInfoFill(rec.device_info);
   renderOilParamTable(false);
   _editingOilRecords = {};
   group.forEach((r) => {
@@ -250,6 +275,8 @@ async function onAnalyzeOil() {
     ghi_chu: $("o_ghichu").value.trim(),
     oil_inhibited: $("o_inhibited").value || "",
     ox_method: $("o_oxmethod").value || "",
+    // Thông số kỹ thuật thiết bị (khối "Thông số kỹ thuật thiết bị" ở form) — chuỗi JSON, "" khi không nhập gì
+    device_info: oilDeviceInfoRead(),
   };
   if (!header.thiet_bi || !header.sample_date) {
     notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
@@ -518,6 +545,7 @@ function oilBbtnClearImport() {
   // Giữ khung đối chiếu đang mở (người dùng tự ẩn khi xong); chỉ ẩn nút bật lại khi không còn file
   if ($("oPreviewCol") && $("oPreviewCol").classList.contains("hidden")) hideOilPreview();
   if ($("btnSaveOilBbtnAll")) $("btnSaveOilBbtnAll").classList.add("hidden");
+  if (typeof renderDeviceSpecAttachNotes === "function") renderDeviceSpecAttachNotes();
 }
 
 function oilRenderFileLabel() {
@@ -534,12 +562,20 @@ function oilRenderFileLabel() {
 /** Điền form THÙNG CHÍNH từ kết quả MbaOilBbtn.parseMbaOilBbtnLines() — chỉ ghi đè ô ĐỌC ĐƯỢC. */
 function oilFillFromParsed(parsed) {
   const h = parsed.header || {};
+  // Biên bản của thiết bị KHÁC thiết bị đang ở form → bỏ thông số kỹ thuật cũ (không lưu nhầm sang thiết bị mới)
+  const norm = (v) => String(v || "").trim();
+  if ((h.thietBi && norm(h.thietBi) !== norm($("o_thietbi").value)) || (h.tram && norm(h.tram) !== norm($("o_tram").value))) {
+    oilDeviceInfoFill(null);
+  }
   if (h.tram) $("o_tram").value = h.tram;
   if (h.thietBi) $("o_thietbi").value = h.thietBi;
   if (h.ngay) $("o_ngay").value = h.ngay;
   if (h.voltageClass) { $("o_voltage_class").value = h.voltageClass; toggleOilMembraneField(); }
   if (h.oilState) $("o_oilstate").value = h.oilState;
   if (h.ghiChu && !$("o_ghichu").value.trim()) $("o_ghichu").value = h.ghiChu;
+  // Thông số kỹ thuật ghi trên biên bản — chỉ ghi đè ô đọc được
+  const hs = { hang_sx: h.hangSx, nam_sx: h.namSx, dien_ap_dm: h.dienApDm, cong_suat: h.congSuat, so_che_tao: h.serial, nam_van_hanh: h.namVanHanh, loai_dau: h.loaiDau };
+  Object.entries(hs).forEach(([k, v]) => { if (v && $(OIL_DEVICE_INFO_IDS[k])) $(OIL_DEVICE_INFO_IDS[k]).value = v; });
   // MBA 1 pha (biên bản ghi 1 pha cụ thể) hoặc bảng có 3 cột pha → thùng dầu riêng từng pha
   $("o_samplepoint").value = h.phase || parsed.threePhase ? "pharieng" : "chung";
   renderOilParamTable(false);

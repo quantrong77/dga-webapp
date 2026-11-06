@@ -1,9 +1,10 @@
 /* ui-oil-bbtn-export.js — Khối "Xuất Biên bản thí nghiệm (docx)" ở tab "Lý-Hóa dầu" (MBA/Kháng dầu): gom
    kết quả VỪA đánh giá của form dầu thùng chính (onAnalyzeOil, ui-oil.js) và form dầu OLTC
    (onAnalyzeOltcOil, ui-oltc.js) — cùng thiết bị + ngày lấy mẫu thì xuất chung 1 biên bản — rồi điền mẫu
-   PTC3 qua bbtn/mba-oil-bbtn-export.js. Các ô thông tin biên bản (hãng SX, số chế tạo, lý do thí nghiệm,
-   điều kiện môi trường, kết luận...) chỉ dùng khi xuất, KHÔNG lưu vào cơ sở dữ liệu; app điền gợi ý từ BBTN
-   vừa đọc hoặc thông số thiết bị đã nhập ở tab DGA (cùng trạm + thiết bị), người dùng sửa được. */
+   PTC3 qua bbtn/mba-oil-bbtn-export.js. 7 ô THÔNG SỐ KỸ THUẬT (hãng SX, năm SX, ĐA định mức, công suất, số chế tạo,
+   năm vận hành, loại dầu — OIL_DEVICE_INFO_IDS, ui-oil.js) nằm ở form dầu MBA và LƯU kèm bản ghi (device_info);
+   các ô còn lại (vị trí lấy mẫu, lý do thí nghiệm, điều kiện môi trường, kết luận) chỉ dùng khi xuất, KHÔNG lưu.
+   App gợi ý từ BBTN vừa đọc hoặc lần đo DGA cùng trạm + thiết bị, người dùng sửa được. */
 
 let _oilBbtnExport = { main: null, oltc: null, key: "" };
 let _oilBbtnLastHeader = null; // header đọc từ file BBTN gần nhất (mba-oil-bbtn.js), để gợi ý điền
@@ -51,10 +52,19 @@ function oilBbtnExportInput(parts) {
 /** Gợi ý thông tin biên bản: BBTN vừa đọc (cùng thiết bị) → lần đo DGA mới nhất cùng trạm + thiết bị. */
 function oilBbtnPrefill(parts) {
   const h = parts.header;
+  const specIds = typeof OIL_DEVICE_INFO_IDS !== "undefined" ? Object.values(OIL_DEVICE_INFO_IDS) : [];
   const set = (id, v) => {
     const el = $(id);
+    if (!el || v === null || v === undefined || String(v).trim() === "") return;
+    if (specIds.includes(id)) {
+      // ô thông số kỹ thuật (lưu kèm bản ghi): chỉ ô trống / ô đang giữ đúng giá trị khối này đã gợi ý.
+      // Đánh dấu riêng exportAuto (= giá trị đã ghi) — deviceSpecIsAuto() (ui-device-specs.js) cũng coi là "tự điền".
+      const auto = el.dataset.exportAuto !== undefined && el.value === el.dataset.exportAuto;
+      if (!el.value.trim() || auto) { el.value = String(v); el.dataset.exportAuto = String(v); }
+      return;
+    }
     // Ô trống hoặc ô app tự điền trước đó (người dùng chưa sửa) thì điền/cập nhật lại
-    if (el && (!el.value.trim() || el.dataset.auto === "1") && v !== null && v !== undefined && String(v).trim() !== "") { el.value = String(v); el.dataset.auto = "1"; }
+    if (!el.value.trim() || el.dataset.auto === "1") { el.value = String(v); el.dataset.auto = "1"; }
   };
   const fileH = _oilBbtnLastHeader && oilBbtnSameReport({ thiet_bi: _oilBbtnLastHeader.thietBi, sample_date: _oilBbtnLastHeader.ngay }, h)
     ? _oilBbtnLastHeader : null;
@@ -103,7 +113,20 @@ function oilBbtnExportRender() {
   const key = [String(parts.header.tram || "").trim(), String(parts.header.thiet_bi || "").trim(), DGA.formatSampleDate(parts.header.sample_date)].join("|");
   if (key !== _oilBbtnExport.key) {
     // Thiết bị/biên bản khác → bỏ thông tin đã điền cho biên bản trước
-    Object.values(OIL_BBTN_EXPORT_FIELDS).concat("ob_ketluan").forEach((id) => { if ($(id)) { $(id).value = ""; delete $(id).dataset.auto; } });
+    const specIds = typeof OIL_DEVICE_INFO_IDS !== "undefined" ? Object.values(OIL_DEVICE_INFO_IDS) : [];
+    Object.values(OIL_BBTN_EXPORT_FIELDS).concat("ob_ketluan").forEach((id) => {
+      const el = $(id);
+      if (!el) return;
+      if (specIds.includes(id)) {
+        // ô thông số thuộc form: chỉ bỏ giá trị khối này đã gợi ý cho biên bản trước; giữ giá trị người dùng nhập và
+        // giá trị tự điền theo thiết bị (specAuto, ui-device-specs.js)
+        if (el.dataset.exportAuto !== undefined && el.value === el.dataset.exportAuto) el.value = "";
+        delete el.dataset.exportAuto;
+        return;
+      }
+      el.value = "";
+      delete el.dataset.auto;
+    });
     _oilBbtnExport.key = key;
   }
   oilBbtnPrefill(parts);
