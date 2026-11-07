@@ -492,9 +492,68 @@ function mustChangePassword(user) {
   return String((user && user.must_change_password) || "") === "1";
 }
 
-function hashPassword(password, salt) {
-  const digestBytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + "|" + password);
-  return digestBytes.map((b) => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
+// Băm mật khẩu: PBKDF2-HMAC-SHA256, lưu trong cột password_hash dạng tự mô tả "pbkdf2_sha256$<số vòng>$<64 hex>"
+// (salt vẫn ở cột password_salt — KHÔNG thêm cột). Trước đây: SHA-256 MỘT vòng của "salt|mật khẩu" (64 hex), dò
+// rất nhanh nếu lộ sheet users. Bản cũ vẫn đăng nhập được (verifyPassword) và được băm lại ngay khi đăng nhập
+// thành công. Cùng định dạng với backend/onpremise/auth.js (máy chủ nội bộ dùng 600 000 vòng) — số vòng đọc từ
+// chính chuỗi băm nên 2 bên kiểm được mật khẩu của nhau.
+// Apps Script không có PBKDF2 sẵn: mỗi vòng là 1 lần gọi Utilities.computeHmacSha256Signature → số vòng phải nhỏ
+// hơn nhiều so với Node. Đo trên Apps Script thật bằng benchmarkPasswordHash() (chạy tay trong trình soạn thảo)
+// rồi chỉnh PASSWORD_HASH_ITERATIONS sao cho 1 lần băm ~0,5–1 s; người dùng sẽ được băm lại khi đăng nhập.
+const PASSWORD_HASH_PREFIX = "pbkdf2_sha256";
+const PASSWORD_HASH_ITERATIONS = 10000;
+const PASSWORD_HASH_MAX_ITERATIONS = 1000000; // chuỗi băm sửa tay với số vòng khổng lồ → coi là sai (tránh treo)
+
+function bytesToHex(bytes) {
+  return bytes.map((b) => ("0" + (b & 0xff).toString(16)).slice(-2)).join("");
+}
+
+function legacySha256Password(password, salt) {
+  return bytesToHex(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + "|" + password));
+}
+
+/** PBKDF2-HMAC-SHA256, 1 khối 32 byte (RFC 8018): U1 = HMAC(P, S‖INT(1)), Ui = HMAC(P, Ui-1), T = U1 ⊕ … ⊕ Uc. */
+function pbkdf2Sha256Hex(password, salt, iterations) {
+  const key = Utilities.newBlob(String(password)).getBytes();
+  let u = Utilities.computeHmacSha256Signature(Utilities.newBlob(String(salt)).getBytes().concat([0, 0, 0, 1]), key);
+  const t = u.slice();
+  for (let i = 1; i < iterations; i++) {
+    u = Utilities.computeHmacSha256Signature(u, key);
+    for (let j = 0; j < t.length; j++) t[j] ^= u[j];
+  }
+  return bytesToHex(t);
+}
+
+function hashPassword(password, salt, iterations) {
+  const n = iterations || PASSWORD_HASH_ITERATIONS;
+  return PASSWORD_HASH_PREFIX + "$" + n + "$" + pbkdf2Sha256Hex(password, salt, n);
+}
+
+/** true nếu mật khẩu khớp chuỗi băm đã lưu (dạng PBKDF2 mới hoặc SHA-256 một vòng cũ). */
+function verifyPassword(password, salt, stored) {
+  if (!stored) return false;
+  const parts = String(stored).split("$");
+  if (parts[0] === PASSWORD_HASH_PREFIX) {
+    const n = Number(parts[1]);
+    if (parts.length !== 3 || !Number.isInteger(n) || n < 1 || n > PASSWORD_HASH_MAX_ITERATIONS) return false;
+    return hashPassword(password, salt, n) === String(stored);
+  }
+  return legacySha256Password(password, salt) === String(stored);
+}
+
+/** Cần băm lại sang dạng mới không (dạng cũ). Không băm lại chuỗi PBKDF2 có số vòng khác (VD tạo ở máy chủ nội bộ
+ *  600 000 vòng) — số vòng lớn hơn vẫn an toàn hơn, chỉ chậm hơn khi kiểm. */
+function passwordNeedsRehash(stored) {
+  return String(stored || "").split("$")[0] !== PASSWORD_HASH_PREFIX;
+}
+
+/** Chạy tay trong trình soạn thảo Apps Script (Run → benchmarkPasswordHash) để chọn PASSWORD_HASH_ITERATIONS. */
+function benchmarkPasswordHash() {
+  const t0 = Date.now();
+  hashPassword("thu-mat-khau", "0123456789abcdef", PASSWORD_HASH_ITERATIONS);
+  const ms = Date.now() - t0;
+  Logger.log(PASSWORD_HASH_ITERATIONS + " vòng: " + ms + " ms (mục tiêu ~500–1000 ms)");
+  return ms;
 }
 
 function findUserByEmail(email) {
@@ -556,12 +615,18 @@ function actionLogin(body) {
   const throttled = checkLoginThrottle(email);
   if (throttled) return { error: throttled };
   const user = findUserByEmail(email);
-  if (!user || !user.password_hash || hashPassword(password, user.password_salt) !== user.password_hash) {
+  if (!user || !user.password_hash || !verifyPassword(password, user.password_salt, user.password_hash)) {
     recordFailedLogin(email);
     return { error: "Email hoặc mật khẩu không đúng." };
   }
   clearFailedLogins(email);
-  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { last_login: new Date().toISOString() }));
+  const loginPatch = { last_login: new Date().toISOString() };
+  if (passwordNeedsRehash(user.password_hash)) {
+    // Nâng cấp dần: băm lại bằng PBKDF2 lúc biết mật khẩu đúng (salt mới), không bắt người dùng đặt lại.
+    loginPatch.password_salt = randomHex(16);
+    loginPatch.password_hash = hashPassword(password, loginPatch.password_salt);
+  }
+  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, loginPatch));
   return Object.assign(createSession(email, user.role), { mustChangePassword: mustChangePassword(user) });
 }
 
@@ -778,7 +843,7 @@ function actionChangePassword(token, body) {
   const newPassword = String(body.newPassword || "");
   const throttled = checkLoginThrottle(user.email);
   if (throttled) return { error: throttled };
-  if (!user.password_hash || hashPassword(oldPassword, user.password_salt) !== user.password_hash) {
+  if (!user.password_hash || !verifyPassword(oldPassword, user.password_salt, user.password_hash)) {
     recordFailedLogin(user.email);
     return { error: "Mật khẩu hiện tại không đúng." };
   }

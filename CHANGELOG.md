@@ -20,6 +20,10 @@ Chi tiết: [`docs/refactor/TEST_REPORT.md`](./docs/refactor/TEST_REPORT.md).
   đăng nhập), `.git/`, mã máy chủ (lỗi #4).
 - Lịch sử git trên GitHub **vẫn còn** các bản `database.json` cũ — xem [`docs/refactor/SECURITY_NOTE.md`](./docs/refactor/SECURITY_NOTE.md).
 
+- Mật khẩu băm bằng **PBKDF2-HMAC-SHA256** (máy chủ nội bộ 600 000 vòng, Google Sheets 10 000 vòng) thay cho SHA-256
+  một vòng. Tài khoản cũ đăng nhập bình thường và được băm lại tự động; không thêm cột. Sau khi nâng cấp không chạy
+  lại được bản cũ (bản cũ không đọc được hash mới). Google Sheets: phải deploy lại `Code.gs`.
+
 ### Sửa lỗi
 
 - **Mất dữ liệu ở chế độ máy chủ nội bộ:** thao tác lưu lúc mất mạng bị xóa khỏi hàng đợi mà không gửi lên máy chủ.

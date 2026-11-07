@@ -128,6 +128,56 @@ describe("2. On-Premise Authentication & RBAC (backend/onpremise/auth.js)", () =
   });
 });
 
+describe("2b. Băm mật khẩu PBKDF2 (auth.js) — đổi từ SHA-256 một vòng", () => {
+  const crypto = require("crypto");
+  beforeAll(() => db.init());
+
+  test("đăng ký → password_hash dạng pbkdf2_sha256$600000$<64 hex>", () => {
+    const email = "pbkdf2_new_" + Date.now() + "@vidu.com";
+    expect(auth.register(email, "matkhau123").token).toBeTruthy();
+    const u = auth.findUserByEmail(email);
+    expect(u.password_hash).toMatch(new RegExp("^pbkdf2_sha256\\$" + auth.PBKDF2_ITERATIONS + "\\$[0-9a-f]{64}$"));
+    expect(auth.login(email, "matkhau123").token).toBeTruthy();
+    expect(auth.login(email, "matkhau12").error).toBeTruthy();
+  });
+
+  test("tài khoản cũ SHA-256 một vòng: đăng nhập được, được băm lại (salt mới); sai mật khẩu không đổi gì", () => {
+    const email = "pbkdf2_legacy_" + Date.now() + "@vidu.com";
+    auth.register(email, "tam-thoi-1");
+    const u = auth.findUserByEmail(email);
+    const salt = "00112233445566778899aabbccddeeff";
+    const legacy = crypto.createHash("sha256").update(salt + "|matkhaucu1").digest("hex");
+    db.upsert("users", { id: u.id, salt, password_hash: legacy });
+
+    expect(auth.login(email, "sai").error).toBeTruthy();
+    expect(auth.findUserByEmail(email).password_hash).toBe(legacy);
+
+    expect(auth.login(email, "matkhaucu1").token).toBeTruthy();
+    const after = auth.findUserByEmail(email);
+    expect(after.password_hash).toMatch(/^pbkdf2_sha256\$/);
+    expect(after.salt).not.toBe(salt);
+    expect(auth.login(email, "matkhaucu1").token).toBeTruthy();
+  });
+
+  test("đổi mật khẩu kiểm được mật khẩu cũ dạng SHA-256 cũ", () => {
+    const email = "pbkdf2_change_" + Date.now() + "@vidu.com";
+    const reg = auth.register(email, "tam-thoi-1");
+    const u = auth.findUserByEmail(email);
+    const salt = "ffeeddccbbaa99887766554433221100";
+    db.upsert("users", { id: u.id, salt, password_hash: crypto.createHash("sha256").update(salt + "|matkhaucu1").digest("hex") });
+    expect(auth.changePassword(reg.token, "sai", "matkhaumoi1").error).toBeTruthy();
+    expect(auth.changePassword(reg.token, "matkhaucu1", "matkhaumoi1").ok).toBe(true);
+    expect(auth.findUserByEmail(email).password_hash).toMatch(/^pbkdf2_sha256\$/);
+    expect(auth.login(email, "matkhaumoi1").token).toBeTruthy();
+  });
+
+  test("needsRehash: dạng cũ / số vòng thấp hơn → true; dạng hiện tại → false", () => {
+    expect(auth.needsRehash("a".repeat(64))).toBe(true);
+    expect(auth.needsRehash("pbkdf2_sha256$10000$" + "0".repeat(64))).toBe(true);
+    expect(auth.needsRehash(auth.hashPassword("x", "s"))).toBe(false);
+  });
+});
+
 describe("3. API Endpoints & File Uploads (backend/onpremise/api.js)", () => {
   let sessionToken = null;
 

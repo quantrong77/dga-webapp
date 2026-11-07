@@ -14,11 +14,47 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-function hashPassword(password, salt) {
-  return crypto
-    .createHash("sha256")
-    .update(`${salt}|${password}`)
-    .digest("hex");
+// Băm mật khẩu: PBKDF2-HMAC-SHA256, lưu ngay trong cột password_hash dạng tự mô tả
+//   "pbkdf2_sha256$<số vòng>$<64 hex>"   (salt vẫn ở cột salt như cũ — không thêm cột, không đổi cấu trúc dữ liệu).
+// Trước đây: SHA-256 MỘT vòng của "salt|mật khẩu" (64 hex) — ai có bản database.json dò mật khẩu rất nhanh. Bản cũ
+// vẫn đăng nhập được (verifyPassword) và được băm lại sang dạng mới ngay khi đăng nhập/đổi mật khẩu thành công.
+// Cùng định dạng với backend/gsheet/Code.gs (Code.gs dùng số vòng nhỏ hơn vì Apps Script chậm) — số vòng đọc từ
+// chính chuỗi băm nên 2 bên kiểm được mật khẩu của nhau.
+const PBKDF2_PREFIX = "pbkdf2_sha256";
+const PBKDF2_ITERATIONS = 600000; // OWASP 2023 cho PBKDF2-HMAC-SHA256; ~0,3 s/lần trên máy văn phòng
+const PBKDF2_MAX_ITERATIONS = 5000000; // chặn chuỗi băm bị sửa tay với số vòng khổng lồ (treo máy chủ)
+
+function legacySha256(password, salt) {
+  return crypto.createHash("sha256").update(`${salt}|${password}`).digest("hex");
+}
+
+function hashPassword(password, salt, iterations = PBKDF2_ITERATIONS) {
+  const dk = crypto.pbkdf2Sync(String(password), String(salt), iterations, 32, "sha256").toString("hex");
+  return `${PBKDF2_PREFIX}$${iterations}$${dk}`;
+}
+
+function safeEqualHex(a, b) {
+  const ba = Buffer.from(String(a));
+  const bb = Buffer.from(String(b));
+  return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
+}
+
+/** true nếu mật khẩu khớp chuỗi băm đã lưu (dạng mới hoặc SHA-256 một vòng cũ). */
+function verifyPassword(password, salt, stored) {
+  if (!stored || typeof stored !== "string") return false;
+  const parts = stored.split("$");
+  if (parts[0] === PBKDF2_PREFIX) {
+    const iterations = Number(parts[1]);
+    if (parts.length !== 3 || !Number.isInteger(iterations) || iterations < 1 || iterations > PBKDF2_MAX_ITERATIONS) return false;
+    return safeEqualHex(hashPassword(password, salt, iterations), stored);
+  }
+  return safeEqualHex(legacySha256(password, salt), stored);
+}
+
+/** Chuỗi băm cần băm lại sang dạng/số vòng hiện tại không (dạng cũ, hoặc số vòng thấp hơn). */
+function needsRehash(stored) {
+  const parts = String(stored || "").split("$");
+  return parts[0] !== PBKDF2_PREFIX || Number(parts[1]) < PBKDF2_ITERATIONS;
 }
 
 function generateRandomHex(bytes = 16) {
@@ -145,15 +181,20 @@ function login(email, password) {
     return { error: "Email hoặc mật khẩu không chính xác." };
   }
 
-  const computedHash = hashPassword(password, user.salt);
-  if (computedHash !== user.password_hash) {
+  if (!verifyPassword(password, user.salt, user.password_hash)) {
     recordFailedLogin(norm);
     return { error: "Email hoặc mật khẩu không chính xác." };
   }
 
   clearFailedLogins(norm);
   const now = new Date().toISOString();
-  db.upsert("users", { id: user.id, last_login: now });
+  const patch = { id: user.id, last_login: now };
+  if (needsRehash(user.password_hash)) {
+    // Nâng cấp dần: băm lại bằng PBKDF2 ngay lúc biết mật khẩu đúng (salt mới), không bắt người dùng đặt lại.
+    patch.salt = generateRandomHex(16);
+    patch.password_hash = hashPassword(password, patch.salt);
+  }
+  db.upsert("users", patch);
 
   const session = createSession(user);
   return {
@@ -205,8 +246,7 @@ function changePassword(token, oldPassword, newPassword) {
   if (!user) return { error: "Không tìm thấy người dùng." };
 
   if (user.password_hash) {
-    const checkHash = hashPassword(oldPassword, user.salt);
-    if (checkHash !== user.password_hash) {
+    if (!verifyPassword(oldPassword, user.salt, user.password_hash)) {
       return { error: "Mật khẩu hiện tại không đúng." };
     }
   }
@@ -319,6 +359,10 @@ function deleteUser(adminToken, targetEmail) {
 }
 
 module.exports = {
+  hashPassword,
+  verifyPassword,
+  needsRehash,
+  PBKDF2_ITERATIONS,
   initDefaultAdmin,
   findUserByEmail,
   requireSession,

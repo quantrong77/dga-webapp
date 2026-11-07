@@ -26,6 +26,10 @@ dùng được nếu máy chủ on-premise truy cập được từ ngoài.
 **Mức rủi ro của `password_hash`:** băm bằng SHA-256 một vòng, có salt (`server/auth.js:17`). Kiểu băm này rất nhanh,
 nên ai có hash + salt thì dò được mật khẩu yếu chỉ trong vài phút.
 
+> **Cập nhật (nhánh `fix/bam-mat-khau`):** đã đổi sang PBKDF2-HMAC-SHA256 (máy chủ nội bộ 600 000 vòng, Code.gs
+> 10 000 vòng). Hash cũ được băm lại khi người dùng đăng nhập đúng. **Nhưng các hash SHA-256 cũ đã nằm trong lịch
+> sử git vẫn dò được như trước** — việc đổi cách băm không thay cho việc đổi mật khẩu các tài khoản thật.
+
 **Rủi ro liên quan:** mật khẩu Admin mặc định `admin123456` được **in ra ngay trên màn hình đăng nhập**
 (`index.html:159`, cả trên Pages) và trong `chay_dga_offline.bat`. Tài khoản `admin@ptc3.evnnpt.vn` trong file lộ vẫn
 dùng mật khẩu này (đăng nhập được trên máy phát triển).
@@ -91,5 +95,5 @@ Hệ quả cần biết trước khi chạy:
 4. Nên làm (thay đổi hành vi, làm thành bước riêng, không lẫn vào refactor):
    - bỏ dòng hiện mật khẩu mặc định trên màn hình đăng nhập;
    - bắt đổi mật khẩu Admin mặc định ở lần đăng nhập đầu (cờ `must_change_password` đã có sẵn);
-   - chuyển băm mật khẩu sang PBKDF2 hoặc scrypt (`crypto.scryptSync`), có cơ chế nâng cấp hash cũ khi người dùng
-     đăng nhập.
+   - ~~chuyển băm mật khẩu sang PBKDF2 hoặc scrypt, có cơ chế nâng cấp hash cũ khi người dùng đăng nhập~~ — đã làm
+     (PBKDF2-HMAC-SHA256, nhánh `fix/bam-mat-khau`).

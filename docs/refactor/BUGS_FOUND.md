@@ -97,6 +97,15 @@ dự án quyết định sửa riêng (commit `fix(...)` tách biệt) hay để
   `/node_modules/…`, `/docs/…`, `/README.md`, `/package.json`, `/src/%2e%2e/data/database.json`, BBTN thật trong
   `assets/template/` → 404; app 10 tab không lỗi / không 404. **Máy chủ đang chạy phải khởi động lại** mới có hiệu lực.
   Lịch sử git trên GitHub vẫn còn các bản `database.json` cũ (xem `SECURITY_NOTE.md`).
+- **Bổ sung** (nhánh `fix/bam-mat-khau`): mật khẩu băm bằng PBKDF2-HMAC-SHA256 thay cho SHA-256 một vòng, ở cả
+  `backend/onpremise/auth.js` (600 000 vòng, ~0,3 s/lần) và `backend/gsheet/Code.gs` (10 000 vòng, tự cài PBKDF2 bằng
+  `Utilities.computeHmacSha256Signature`). Lưu trong cột `password_hash` cũ dạng `pbkdf2_sha256$<vòng>$<hex>` — không
+  thêm cột. Hash cũ vẫn đăng nhập được và được băm lại (salt mới) khi đăng nhập / đổi mật khẩu đúng. Test: 5 test trong
+  `tests/gsheet-code.test.js` (có so PBKDF2 tự cài với `crypto.pbkdf2Sync`, 2 backend kiểm được hash của nhau), 4 test
+  trong `tests/local-server-storage.test.js`. Kiểm trên trình duyệt (bản sao database, 190 tài khoản hash cũ): sai mật
+  khẩu → hash giữ nguyên; đúng → vào app, hash admin thành `pbkdf2_sha256$600000$…`; đăng nhập lại vẫn được.
+  **Không quay lại được:** code cũ không đọc được hash mới (tài khoản đã nâng cấp sẽ không đăng nhập được nếu chạy lại
+  bản cũ).
 
 ## #5. Chế độ on-premise: thao tác lưu lúc mất mạng bị "đồng bộ" mà không gửi lên máy chủ
 

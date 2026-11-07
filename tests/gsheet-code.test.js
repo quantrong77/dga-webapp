@@ -14,6 +14,7 @@ const crypto = require("crypto");
 
 const SOURCE_PATH = path.join(__dirname, "..", "backend", "gsheet", "Code.gs");
 const SOURCE = fs.readFileSync(SOURCE_PATH, "utf8");
+const toJavaBytes = (buf) => Array.from(buf, (x) => (x > 127 ? x - 256 : x));
 
 /** Dựng 1 "Google Sheet" giả trong bộ nhớ — rows[0] là hàng tiêu đề, rows[i>=1] là dữ liệu.
  *  Chỉ cài đặt đúng tập API Code.gs thực sự dùng (xem liệt kê trong ghi chú đầu file test). */
@@ -106,7 +107,13 @@ function createSandbox(overrides, env) {
       computeDigest: (_algo, str) => Array.from(crypto.createHash("sha256").update(str).digest()),
       getUuid: () => { uuidCounter += 1; return "test-uuid-" + uuidCounter; },
       base64Decode: (s) => Buffer.from(s, "base64"),
-      newBlob: (bytes, mimeType, name) => ({ bytes, mimeType, name }),
+      // Byte[] của Apps Script là byte có dấu (-128..127) như Java.
+      newBlob: (bytes, mimeType, name) => ({
+        bytes, mimeType, name,
+        getBytes: () => (typeof bytes === "string" ? toJavaBytes(Buffer.from(bytes, "utf8")) : bytes),
+      }),
+      computeHmacSha256Signature: (value, key) =>
+        toJavaBytes(crypto.createHmac("sha256", Buffer.from(key.map((x) => x & 0xff))).update(Buffer.from(value.map((x) => x & 0xff))).digest()),
       formatDate: (date) => date.toISOString().slice(0, 10),
     },
     Session: { getScriptTimeZone: () => "Asia/Ho_Chi_Minh" },
@@ -560,5 +567,59 @@ describe("Bản sao song song trên Supabase (mirror từ Code.gs)", () => {
     const { ctx } = createSandbox(null, SB_ENV);
     const admin = registerUser(ctx, "quantrong77@gmail.com");
     expect(callGet(ctx, "supabaseSyncStatus", { token: admin.token })).toMatchObject({ enabled: true, url: "https://abc.supabase.co" });
+  });
+});
+
+describe("Băm mật khẩu PBKDF2 (đổi từ SHA-256 một vòng)", () => {
+  const onprem = require("../backend/onpremise/auth.js");
+  const idx = (k) => USER_HEADERS_COPY.indexOf(k);
+
+  test("tài khoản mới lưu dạng pbkdf2_sha256$<vòng>$<64 hex>, đăng nhập được, sai mật khẩu bị từ chối", () => {
+    const { ctx, sheets } = createSandbox();
+    registerUser(ctx, "a@vidu.com", "matkhau123");
+    const row = sheets.get("users")._rows[1];
+    expect(row[idx("password_hash")]).toMatch(/^pbkdf2_sha256\$\d+\$[0-9a-f]{64}$/);
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhau123" }).token).toBeTruthy();
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhau124" }).error).toMatch(/không đúng/);
+  });
+
+  test("tài khoản cũ (SHA-256 một vòng) vẫn đăng nhập được và được băm lại sang PBKDF2 (salt mới)", () => {
+    const { ctx, sheets } = createSandbox();
+    registerUser(ctx, "a@vidu.com", "matkhau123");
+    const row = sheets.get("users")._rows[1];
+    const legacySalt = "00112233445566778899aabbccddeeff";
+    row[idx("password_salt")] = legacySalt;
+    row[idx("password_hash")] = crypto.createHash("sha256").update(legacySalt + "|matkhau123").digest("hex");
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "sai-mat-khau" }).error).toMatch(/không đúng/);
+    expect(row[idx("password_hash")]).toMatch(/^[0-9a-f]{64}$/); // sai mật khẩu: không đụng tới
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhau123" }).token).toBeTruthy();
+    const upgraded = sheets.get("users")._rows[1];
+    expect(upgraded[idx("password_hash")]).toMatch(/^pbkdf2_sha256\$/);
+    expect(upgraded[idx("password_salt")]).not.toBe(legacySalt);
+    expect(callPost(ctx, "login", { email: "a@vidu.com", password: "matkhau123" }).token).toBeTruthy();
+  });
+
+  test("PBKDF2 tự cài trong Code.gs khớp crypto.pbkdf2Sync của Node (RFC 8018)", () => {
+    const { ctx } = createSandbox();
+    for (const [pw, salt, n] of [["matkhau123", "a1b2c3", 1], ["Mật khẩu có dấu ✓", "0f0e0d0c", 2], ["x", "s", 1000]]) {
+      expect(ctx.pbkdf2Sha256Hex(pw, salt, n)).toBe(crypto.pbkdf2Sync(pw, salt, n, 32, "sha256").toString("hex"));
+    }
+  });
+
+  test("Code.gs và máy chủ nội bộ kiểm được chuỗi băm của nhau (cùng định dạng)", () => {
+    const { ctx } = createSandbox();
+    const fromGas = ctx.hashPassword("matkhau123", "abcd", 50);
+    expect(onprem.verifyPassword("matkhau123", "abcd", fromGas)).toBe(true);
+    const fromNode = onprem.hashPassword("matkhau123", "abcd", 60);
+    expect(ctx.verifyPassword("matkhau123", "abcd", fromNode)).toBe(true);
+    expect(ctx.verifyPassword("matkhau12", "abcd", fromNode)).toBe(false);
+  });
+
+  test("chuỗi băm hỏng / số vòng bất thường → coi là sai, không treo", () => {
+    const { ctx } = createSandbox();
+    for (const bad of ["pbkdf2_sha256$0$00", "pbkdf2_sha256$abc$00", "pbkdf2_sha256$99999999999$00", "pbkdf2_sha256$10", ""]) {
+      expect(ctx.verifyPassword("x", "s", bad)).toBe(false);
+      expect(onprem.verifyPassword("x", "s", bad)).toBe(false);
+    }
   });
 });
