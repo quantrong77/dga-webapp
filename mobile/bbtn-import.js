@@ -359,6 +359,7 @@ function knownGasLimitValues(gasId) {
 
 function extractGasValues(lines) {
   const values = {};
+  const rowInfo = {}; // khí lấy số theo bước 4 (số đầu tiên) — dùng cho resolveBareLimitColumn()
 
   // 1. Giới hạn phạm vi quét vào vùng bảng "KẾT QUẢ THÍ NGHIỆM" nếu tìm thấy tiêu đề bảng.
   // Điều này tránh bắt nhầm số thứ tự/số mẫu ở bảng "CÁC HẠNG MỤC ĐÃ THÍ NGHIỆM" ở trang 1
@@ -489,12 +490,65 @@ function extractGasValues(lines) {
 
       if (nums && nums.length) {
         found = parseFloat(nums[0].replace(",", "."));
+        rowInfo[gas.id] = {
+          count: nums.length,
+          pass: hasVerdict && !GAS_FAIL_VERDICT_RE.test(foldedRest),
+          hasLimitToken,
+        };
         break;
       }
     }
     if (found !== null && found !== undefined) values[gas.id] = found;
   }
+  resolveBareLimitColumn(values, rowInfo, searchLines);
   return values;
+}
+
+const TCG_GAS_IDS = ["H2", "CH4", "C2H6", "C2H4", "C2H2", "CO"];
+
+/** Giá trị "Tổng lượng khí cháy" (TCG) in trong bảng kết quả, null nếu không có. Mẫu NPTS/BM.15 ngắt dòng:
+ *  "Tổng lượng khí cháy" / "10 511.535 0-500 Không đạt" — bỏ số thứ tự đầu dòng rồi lấy số đầu tiên. */
+function extractPrintedTcg(lines) {
+  for (let k = 0; k < lines.length; k++) {
+    const f = stripVnDiacritics(lines[k]);
+    const m = f.match(/Tong\s*(?:luong|ham\s*luong)?\s*khi\s*chay(?:\s*hoa\s*tan)?|Total\s*combustible\s*gas(?:es)?/i);
+    if (!m) continue;
+    const cands = [f.slice(m.index + m[0].length), ...(k + 1 < lines.length ? [stripVnDiacritics(lines[k + 1])] : [])];
+    for (const c of cands) {
+      const t = c.replace(/^[\s:()A-Za-z]*\(?TCG\)?/i, "").replace(/^\s*\d{1,2}\s+(?=\d)/, "").replace(/[<≤>≥]=?\s*[\d.,]+/g, "");
+      const n = t.match(/-?\d+(?:[.,]\d+)?/);
+      if (n) return parseFloat(n[0].replace(",", "."));
+    }
+  }
+  return null;
+}
+
+/**
+ * Ô "Kết quả" TRỐNG ở bảng có cột "Tiêu chuẩn" in SỐ TRẦN (không có "<"), vd mẫu NPTS/BM.15 năm 2022:
+ * "3 Ethan C2H6 100 Đạt" — số 100 là Tiêu chuẩn, không phải kết quả (khí không phát hiện). Ứng viên: khí cháy
+ * có ĐÚNG 1 số, Đánh giá đạt, không có "<". Quyết định:
+ *  - có TCG in trên biên bản: tổng các khí cháy KHÔNG kể ứng viên khớp TCG (sai lệch ≤ 1%) còn tính cả ứng viên
+ *    thì không khớp → ứng viên là KPH; tính cả ứng viên mới khớp → giữ nguyên số;
+ *  - không có TCG: ≥ 2 khí khác trong bảng có ≥ 2 số (kết quả + tiêu chuẩn) và số của ứng viên là số nguyên
+ *    → coi là Tiêu chuẩn → KPH.
+ */
+function resolveBareLimitColumn(values, rowInfo, lines) {
+  const cands = TCG_GAS_IDS.filter((g) => {
+    const r = rowInfo[g];
+    return r && r.count === 1 && r.pass && !r.hasLimitToken && typeof values[g] === "number";
+  });
+  if (!cands.length) return;
+  const num = (g) => (typeof values[g] === "number" ? values[g] : 0);
+  const tcg = extractPrintedTcg(lines);
+  if (tcg !== null && tcg > 0) {
+    const without = TCG_GAS_IDS.filter((g) => !cands.includes(g)).reduce((s, g) => s + num(g), 0);
+    const withAll = without + cands.reduce((s, g) => s + num(g), 0);
+    const tol = Math.max(0.01 * tcg, 0.05);
+    if (Math.abs(without - tcg) <= tol && Math.abs(withAll - tcg) > tol) cands.forEach((g) => { values[g] = "KPH"; });
+    return;
+  }
+  const others = Object.keys(rowInfo).filter((g) => !cands.includes(g) && rowInfo[g].count >= 2 && rowInfo[g].pass);
+  if (others.length >= 2) cands.filter((g) => Number.isInteger(values[g])).forEach((g) => { values[g] = "KPH"; });
 }
 
 // ---------------------------------------------------------------------------

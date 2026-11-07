@@ -577,3 +577,53 @@ describe("BbtnImport — ngưỡng tiêu chuẩn NSX qua hàm cung cấp", () =>
     expect(sb.extractGasValues(lines).H2).toBe(777);
   });
 });
+
+// Mẫu NPTS/BM.15 (2022): cột "Tiêu chuẩn" in SỐ TRẦN, ô "Kết quả" của khí không phát hiện để TRỐNG →
+// dòng chỉ còn số Tiêu chuẩn ("3 Ethan C2H6 100 Đạt"). Trước đây đọc nhầm 100/150/150 thành kết quả đo.
+// Thứ tự dòng theo đúng pdf.js đọc từ BBTN thật (số liệu đã đổi).
+describe("BbtnImport.extractGasValues — cột Tiêu chuẩn số trần, ô Kết quả trống (NPTS/BM.15)", () => {
+  const table = (tcgLine) => [
+    "KẾT QUẢ THÍ NGHIỆM",
+    "(TESTING RESULTS)",
+    "Hạng mục phân tích Đơn vị Kết quả Tiêu chuẩn Tốc độ sinh khí Đánh giá",
+    "TT",
+    "(Test items) (Unit) (Result) (Limits) (%/tháng) (Estimate)",
+    "1 Hydrogen H2 8.5 250 -20.1 Đạt",
+    "2 Methane CH4 3.2 100 -21.4 Đạt",
+    "3 Ethan C2H6 100 Đạt",
+    "4 Ethylen C2H4 150 Đạt",
+    "5 Acetylen C2H2 150 Đạt",
+    "6 CarbonMonoxit CO 120.3 1000 -22.0 Đạt",
+    "ppm",
+    "7 Carbondioxit CO2 250.6 10000 -25.5 Đạt",
+    "8 Nitơ N2 3600.2 -20.0",
+    "9 Oxy O2 1050.4 50.1",
+    ...tcgLine,
+    "Tổng hàm lượng khí",
+    "11",
+    "(Total gas)",
+  ];
+
+  test("TCG in trên biên bản = H2 + CH4 + CO → C2H6/C2H4/C2H2 là KPH, các khí khác giữ nguyên", () => {
+    const res = extractGasValues(table(["Tổng lượng khí cháy", "10 132 0-500 -21.7 Đạt", "(Total combustible gases)"]));
+    expect(res).toEqual({ H2: 8.5, CH4: 3.2, C2H6: "KPH", C2H4: "KPH", C2H2: "KPH", CO: 120.3, CO2: 250.6, N2: 3600.2, O2: 1050.4 });
+  });
+
+  test("TCG chỉ khớp khi CỘNG cả số đó → đó là kết quả đo thật, giữ nguyên", () => {
+    const res = extractGasValues(table(["Tổng lượng khí cháy", "10 532 0-500 Không đạt", "(Total combustible gases)"]));
+    expect(res.C2H6).toBe(100);
+    expect(res.C2H4).toBe(150);
+    expect(res.C2H2).toBe(150);
+  });
+
+  test("không có dòng TCG: các khí khác có cả kết quả + tiêu chuẩn → số nguyên đứng một mình là Tiêu chuẩn → KPH", () => {
+    const res = extractGasValues(table([]));
+    expect(res).toMatchObject({ C2H6: "KPH", C2H4: "KPH", C2H2: "KPH", H2: 8.5, CO: 120.3 });
+  });
+
+  test("biên bản có ghi 0 trong ô Kết quả (mẫu 2023) vẫn đọc 0", () => {
+    const lines = table(["Tổng lượng khí cháy", "10 132 0-500 2.6 Đạt"]).map((l) =>
+      l.replace("C2H6 100 Đạt", "C2H6 0 100 Đạt").replace("C2H4 150 Đạt", "C2H4 0 150 Đạt").replace("C2H2 150 Đạt", "C2H2 0 150 Đạt"));
+    expect(extractGasValues(lines)).toMatchObject({ C2H6: 0, C2H4: 0, C2H2: 0 });
+  });
+});
