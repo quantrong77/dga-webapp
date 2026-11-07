@@ -1,5 +1,6 @@
 // Dự báo xu hướng theo mô hình thống kê chuẩn: OLS (kiểm định t, khoảng dự báo 95%), độ dốc Sen +
-// kiểm định Mann–Kendall (toàn chuỗi và giai đoạn gần đây). Giá trị tham chiếu tính bằng SciPy 1.18
+// kiểm định Mann–Kendall (toàn chuỗi và giai đoạn gần đây), tốc độ 2 lần đo gần nhất (Bảng 65); phát
+// hiện khí giảm đột ngột (nghi lọc/thay dầu) và cắt chuỗi số liệu từ lần xử lý dầu gần nhất. Giá trị tham chiếu tính bằng SciPy 1.18
 // (scipy.stats.linregress / theilslopes / t.ppf / norm.cdf) trên cùng chuỗi số liệu.
 const { DGA } = require("./helpers");
 
@@ -115,6 +116,50 @@ describe("recentWindowStart — cửa sổ giai đoạn gần đây (3 năm, t�
   });
 });
 
+describe("latestPairSlope — tốc độ 2 lần đo gần nhất (Bảng 65)", () => {
+  test("lấy 2 lần đo cuối có ngày khác nhau", () => {
+    expect(DGA.latestPairSlope([{ x: 0, y: 0 }, { x: 10, y: 5 }, { x: 20, y: 25 }])).toBeCloseTo(2);
+    expect(DGA.latestPairSlope([{ x: 0, y: 0 }, { x: 10, y: 5 }, { x: 10, y: 7 }])).toBeCloseTo(0.7);
+    expect(DGA.latestPairSlope([{ x: 1, y: 0 }, { x: 1, y: 5 }])).toBeNull();
+  });
+});
+
+describe("khí giảm đột ngột — nghi lọc/thay dầu", () => {
+  const before = { H2: 40, CH4: 30, C2H6: 20, C2H4: 10, C2H2: 0, CO: 300, CO2: 2500 };
+  test("lọc dầu: TDCG giảm ≥ 50% và ≥ 2 khí cùng giảm ≥ 50% → phát hiện (khóa chữ thường cũng đọc được)", () => {
+    const d = DGA.detectGasDrop(before, { h2: 3, ch4: 2, c2h6: 1, c2h4: 1, c2h2: "KPH", co: 30, co2: 400 });
+    expect(d.prevTdcg).toBe(400);
+    expect(d.tdcg).toBe(37);
+    expect(d.dropPct).toBeCloseTo(90.75, 6);
+    expect(d.gases).toEqual(["H2", "CH4", "C2H6", "C2H4", "CO", "CO2"]);
+  });
+  test("giảm < 50%, TDCG lần trước < 30 ppm, hay chỉ 1 khí giảm → không hỏi", () => {
+    expect(DGA.detectGasDrop(before, { ...before, CO: 200, H2: 25 })).toBeNull();
+    expect(DGA.detectGasDrop({ H2: 10, CO: 15 }, { H2: 1, CO: 2 })).toBeNull();
+    expect(DGA.detectGasDrop({ H2: 2, CO: 100, CO2: 3 }, { H2: 2, CO: 10, CO2: 3 })).toBeNull();
+  });
+  const recs = [
+    { id: "a", sample_date: "2022-01-10", ...before },
+    { id: "c", sample_date: "2024-01-10", H2: 5, CO: 40, CO2: 500, xu_ly_dau: "loc_dau" },
+    { id: "b", sample_date: "2023-01-10", ...before, CO: 320 },
+    { id: "d", sample_date: "2025-01-10", H2: 6, CO: 60, CO2: 600 },
+  ];
+  test("findGasDrops quét chuỗi (không cần sắp sẵn), kèm trạng thái xác nhận", () => {
+    const out = DGA.findGasDrops(recs, (r) => r);
+    expect(out).toHaveLength(1);
+    expect(out[0].record.id).toBe("c");
+    expect(out[0].prev.id).toBe("b");
+    expect(out[0].status).toBe("loc_dau");
+  });
+  test("lastOilTreatmentDate: lần lọc/thay dầu GẦN NHẤT; 'khong' không tính", () => {
+    expect(DGA.lastOilTreatmentDate(recs)).toBe(new Date("2024-01-10").toISOString());
+    const more = [...recs, { sample_date: "2025-06-01", xu_ly_dau: "khong" }, { sample_date: "2023-06-01", xu_ly_dau: "thay_dau" }];
+    expect(DGA.lastOilTreatmentDate(more)).toBe(new Date("2024-01-10").toISOString());
+    expect(DGA.lastOilTreatmentDate([{ sample_date: "2024-01-10", xu_ly_dau: "khong" }])).toBeNull();
+    expect(DGA.OIL_TREATMENT_LABELS).toEqual({ loc_dau: "Lọc dầu", thay_dau: "Thay dầu", khong: "Không xử lý dầu" });
+  });
+});
+
 describe("forecastGasTrend", () => {
   const dateOf = (days) => new Date(Date.UTC(2020, 0, 1) + days * 86400000).toISOString().slice(0, 10);
   const hist = REF.map((p) => ({ date: dateOf(p.x), value: p.y }));
@@ -142,6 +187,22 @@ describe("forecastGasTrend", () => {
     expect(f.methods.sen.forecastValue).toBeCloseTo(21.25 + (1 / 60) * xh, 6);
     expect(f.methods.sen.interval.lower).toBeCloseTo(0.01375 * 365.25, 6);
     expect(f.trend.direction).toBe("increasing");
+    expect(f.methods.latest.ratePerYear).toBeCloseTo(((47 - 40) / 160) * 365.25, 6);
+    expect(f.methods.latest.forecastValue).toBeCloseTo(47 + (7 / 160) * 3 * 365.25, 6);
+    expect(f.methods.latest.significant).toBeNull();
+    expect(f.sinceDate).toBeNull();
+    expect(f.nBefore).toBe(0);
+  });
+  test("sau lọc/thay dầu (sinceDate): chỉ dùng các lần đo từ mốc đó", () => {
+    const since = new Date(dateOf(900)).toISOString();
+    const f = DGA.forecastGasTrend(hist, 3, null, { sinceDate: since });
+    expect(f.n).toBe(4);
+    expect(f.nBefore).toBe(6);
+    expect(f.sinceDate).toBe(since);
+    const r = DGA.linearRegression(REF.slice(6).map((p) => ({ x: p.x - 900, y: p.y })));
+    expect(f.methods.ols.ratePerYear).toBeCloseTo(r.slope * 365.25, 9);
+    const one = DGA.forecastGasTrend(hist, 3, null, { sinceDate: dateOf(1460) });
+    expect(one).toMatchObject({ ok: false, reason: "not_enough_data", n: 1, nBefore: 9 });
   });
   test("giai đoạn gần đây = Sen + Mann–Kendall trên cửa sổ; tốc độ phù hợp toàn chuỗi", () => {
     const f = DGA.forecastGasTrend(hist, 3, null);
@@ -170,7 +231,7 @@ describe("forecastGasTrend", () => {
   test("nồng độ dự báo không âm: giảm mạnh => cắt tại 0, clamped = true, cận dưới KDB ≥ 0", () => {
     const down = [40, 30, 22, 12, 5].map((v, i) => ({ date: dateOf(i * 365), value: v }));
     const f = DGA.forecastGasTrend(down, 5, null);
-    ["ols", "sen"].forEach((k) => {
+    ["ols", "sen", "latest"].forEach((k) => {
       expect(f.methods[k].forecastValue).toBe(0);
       expect(f.methods[k].clamped).toBe(true);
     });

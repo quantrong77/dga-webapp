@@ -125,6 +125,11 @@ const MEASUREMENT_HEADERS = [
   // xem diffTrackedGasFields() ở app-core.js phía web app. Cả 3 để trống nếu bản ghi chưa
   // từng bị sửa số liệu kể từ lúc nhập lần đầu.
   "edited_fields", "edited_at", "edit_log",
+  // Xử lý dầu (lọc/thay) thực hiện GIỮA lần đo liền trước và lần đo này — thêm ở CUỐI (xem lưu ý
+  // ngay trên). "loc_dau" | "thay_dau" | "khong" (người dùng đã xác nhận KHÔNG xử lý dầu) | rỗng
+  // (chưa xác nhận). Web app hỏi khi khí giảm đột ngột (detectGasDrop() ở dga-logic-forecast.js);
+  // dự báo xu hướng chỉ dùng số liệu từ lần xử lý dầu gần nhất. Bản ghi cũ để trống.
+  "xu_ly_dau",
 ];
 
 // QUAN TRỌNG: mọi cột MỚI phải thêm vào CUỐI mảng này, KHÔNG bao giờ chèn giữa —

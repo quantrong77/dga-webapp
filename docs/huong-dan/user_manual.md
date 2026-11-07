@@ -166,6 +166,7 @@ Hai tab con dùng **chung một form** — đổi tab con không mất số li�
 | **Lần đo** | Tự gợi ý số thứ tự kế tiếp theo nhóm Trạm + Thiết bị + Pha; sửa được nếu cần |
 | **Ngày lấy mẫu** | Ngày lấy mẫu dầu |
 | **Ghi chú** | Không bắt buộc |
+| **Xử lý dầu trước lần đo này** | Không bắt buộc: **Lọc dầu** / **Thay dầu** / **Không xử lý dầu** giữa lần đo trước và lần đo này. Nếu khí giảm đột ngột so với lần đo trước mà ô này để trống, sau khi lưu app sẽ hỏi xác nhận (xem mục 12.3) |
 | **Biên bản thí nghiệm (PDF)** | Không bắt buộc — chọn ở ô trái khung **Nhập BBTN** (phía trên form, tab con Nhập BBTN cũ), xem [mục 6](#6-nhập-nhanh-từ-biên-bản-thí-nghiệm-pdf-và-ảnh-tấm-nhãn) |
 
 > **Mẹo:** Để tránh app coi là hai thiết bị khác nhau, hãy **gõ tên Trạm và Thiết bị thống nhất** (nên chọn từ danh sách gợi ý thay vì gõ lại). Tốc độ sinh khí và xu hướng được tính theo nhóm **Trạm + Thiết bị + Pha**.
@@ -444,18 +445,29 @@ Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu
 ### 12.2. Dự báo xu hướng
 
 - Tick **"Hiện dự báo xu hướng tương lai"** (app nhớ lựa chọn) và đặt **Số năm dự báo** (1–30).
-- Với mỗi khí trong 7 khí chính, bảng hiển thị 3 phương pháp thống kê:
+- Với mỗi khí trong 7 khí chính, bảng hiển thị 4 phương pháp:
   - **Hồi quy tuyến tính OLS**: tốc độ thay đổi, giá trị dự báo kèm **khoảng dự báo 95%**, **R²** và **p-value** kiểm định độ dốc.
   - **Độ dốc Sen + kiểm định Mann–Kendall**: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm **khoảng tin cậy 95% của tốc độ**. Đường nét đứt trên đồ thị dùng phương pháp này.
   - **Độ dốc Sen + Mann–Kendall — giai đoạn gần đây**: cùng phương pháp nhưng chỉ dùng các lần đo trong **3 năm gần nhất**, tối thiểu **5 lần đo** gần nhất (nếu 3 năm có ít hơn 5 lần đo thì lấy thêm lần đo cũ hơn). Dòng này chỉ hiện khi chuỗi số liệu dài hơn cửa sổ, và giúp phát hiện tốc độ sinh khí đang thay đổi mà xu hướng toàn chuỗi phản ứng chậm.
 - Cột **Khí** ghi kết luận xu hướng theo Mann–Kendall: **Tăng** / **Giảm** (khi p < 0,05), **Chưa phát hiện xu hướng có ý nghĩa thống kê**, hoặc **Chưa đủ lần đo** (cần ≥ 4). Khi có giai đoạn gần đây, cột này còn so sánh tốc độ gần đây với khoảng tin cậy 95% của tốc độ toàn chuỗi: **tăng nhanh hơn** / **chậm hơn** (nằm ngoài khoảng) hoặc **phù hợp**.
-- Tốc độ giữa 2 lần đo liền kề (Bảng 65) là chỉ số chẩn đoán, không dùng để ngoại suy dự báo — xem chức năng **So sánh tốc độ gia tăng khí giữa 2 lần đo** ở tab Lịch sử.
+  - **Tốc độ 2 lần đo gần nhất**: đúng cách tính tốc độ tăng của Bảng 65, để tự động đối chiếu. Chỉ dùng 2 điểm, không có kiểm định thống kê, nên không dùng để kết luận xu hướng.
 - Dự báo lấy từ **đường đã khớp**, không neo vào một lần đo đơn lẻ; nồng độ dự báo **không âm** (cắt tại 0).
 - **Thời điểm dự kiến chạm ngưỡng** chỉ là cảnh báo khi xu hướng tăng **có ý nghĩa thống kê**; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.
 - Cần **tối thiểu 2 lần đo** mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.
 - Chỉ dự báo mốc chạm ngưỡng cho **7 khí chính**.
 
 > ⚠ Dự báo giả định tốc độ sinh khí **không đổi** — chỉ mang tính tham khảo thống kê, không thay thế đánh giá tổng hợp.
+
+### 12.3. Lọc dầu / thay dầu
+
+Lọc hoặc thay dầu làm nồng độ khí hòa tan giảm đột ngột, nên số liệu trước đó không còn phản ánh tình trạng hiện tại của thiết bị.
+
+- App coi một lần đo là **khí giảm đột ngột** khi so với lần đo liền trước (cùng thiết bị, cùng pha): tổng khí cháy **TDCG** (H2, CH4, C2H6, C2H4, C2H2, CO) giảm **≥ 50%**, TDCG lần trước **≥ 30 ppm**, và có **ít nhất 2 khí** (mỗi khí lần trước ≥ 5 ppm) cùng giảm ≥ 50%.
+- Khi đó app hỏi **"Giữa 2 lần đo này có lọc dầu hoặc thay dầu không?"** với 3 lựa chọn: **Đã lọc dầu**, **Đã thay dầu**, **Không xử lý dầu**. Câu hỏi hiện ở khối kết quả tab DGA ngay sau khi lưu, và ở tab **Xu hướng** cho mọi lần đo chưa xác nhận (kể cả số liệu nhập hàng loạt hoặc đọc từ BBTN).
+- Đã chọn **Lọc dầu** hoặc **Thay dầu**: dự báo xu hướng chỉ dùng các lần đo **từ lần đo này trở đi**. Bảng dự báo ghi rõ mốc bắt đầu và số lần đo cũ đã bỏ. Đồ thị vẫn hiện đầy đủ số liệu đã đo.
+- Chọn **Không xử lý dầu**: chuỗi số liệu giữ nguyên, app không hỏi lại lần đo đó.
+- Các lần xử lý dầu đã ghi nhận được liệt kê ở tab Xu hướng, kèm nút **Đổi** để bỏ xác nhận. Cũng có thể chọn trực tiếp ở ô **Xử lý dầu trước lần đo này** khi nhập hoặc sửa lần đo.
+- Chỉ **Admin** hoặc **người đã nhập lần đo** mới xác nhận được.
 
 ---
 

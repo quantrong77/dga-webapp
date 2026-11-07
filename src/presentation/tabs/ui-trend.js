@@ -232,6 +232,7 @@ function onTrendDeviceChange() {
   }
 
   renderTrendPhaseFilter(gasRecords, oilRecords, oltcRecords);
+  renderTrendOilTreatment(gasRecords);
   renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords);
   renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords);
   renderTrendChart(gasRecords, oilRecords, oltcRecords);
@@ -432,6 +433,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
           points: trendPoints(recs, (r) => gasValueOf(r, def.field)),
           gasField,
           gasLabel: def.label,
+          sinceDate: DGA.lastOilTreatmentDate(recs),
         });
       });
       return;
@@ -464,6 +466,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       points: trendPoints(recordsBySource[source], valueOf),
       gasField,
       gasLabel: def.label,
+      sinceDate: source === "gas" ? DGA.lastOilTreatmentDate(gasRecords) : null,
     });
   });
 
@@ -534,7 +537,8 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       if (!spec.gasField) return;
       const limit = standard ? standard.limits[spec.gasField] : null;
       const history = spec.points.map((p) => ({ date: new Date(p.x), value: p.y }));
-      const forecast = DGA.forecastGasTrend(history, forecastYears, limit);
+      // Đã xác nhận lọc/thay dầu: chỉ dự báo trên số liệu từ lần xử lý dầu gần nhất (spec.sinceDate).
+      const forecast = DGA.forecastGasTrend(history, forecastYears, limit, { sinceDate: spec.sinceDate });
       forecastRows.push({ label: spec.label, gasLabel: spec.gasLabel, forecast });
       // Chỉ vẽ 1 đường nét đứt trên đồ thị cho mỗi khí — dùng đường Sen (bền với lần đo bất
       // thường, đi cùng kiểm định Mann–Kendall), thiếu thì OLS — từ giá trị của mô hình tại lần
@@ -625,6 +629,8 @@ function trendForecastMethodRowHtml(method, key, { forecastYears, gasCellHtml, r
   let statHtml;
   if (key === "ols") {
     statHtml = `R² = ${num(method.r2, 3)}` + (method.pValue === null ? "" : `<br />p (độ dốc) ${fmtP(method.pValue)}`);
+  } else if (key === "latest") {
+    statHtml = `<span class="note">Không kiểm định (2 điểm) — đối chiếu Bảng 65</span>`;
   } else {
     statHtml = method.pValue === null ? "Mann–Kendall: cần ≥ 4 lần đo" : `Mann–Kendall p ${fmtP(method.pValue)}`;
     if (method.interval) statHtml += `<br /><span class="note">KTC 95% tốc độ: ${num(method.interval.lower)} – ${num(method.interval.upper)} ppm/năm</span>`;
@@ -656,9 +662,9 @@ function trendForecastMethodRowHtml(method, key, { forecastYears, gasCellHtml, r
   </tr>`;
 }
 
-/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody): mỗi khí chính đang chọn chiếm tối đa 3 dòng (OLS, Sen +
- *  Mann–Kendall toàn chuỗi, Sen + Mann–Kendall giai đoạn gần đây — xem forecastGasTrend() ở
- *  dga-logic-forecast.js). Cột "Khí" gộp rowspan, kèm giá trị gần nhất, ngưỡng, kết luận xu hướng
+/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody): mỗi khí chính đang chọn chiếm tối đa 4 dòng (OLS, Sen +
+ *  Mann–Kendall toàn chuỗi, Sen + Mann–Kendall giai đoạn gần đây, tốc độ 2 lần đo gần nhất — xem
+ *  forecastGasTrend() ở dga-logic-forecast.js). Cột "Khí" gộp rowspan, kèm giá trị gần nhất, ngưỡng, kết luận xu hướng
  *  Mann–Kendall và so sánh tốc độ giai đoạn gần với toàn chuỗi. Ẩn khối khi không có dòng. */
 function renderTrendForecastTable(forecastRows, forecastYears) {
   const wrap = $("trForecastWrap");
@@ -681,16 +687,22 @@ function renderTrendForecastTable(forecastRows, forecastYears) {
     slower: '<span class="pill ok">Giai đoạn gần tăng CHẬM hơn toàn chuỗi (ngoài KTC 95%)</span>',
     consistent: '<span class="pill muted">Tốc độ giai đoạn gần phù hợp toàn chuỗi</span>',
   };
+  const fmtDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
+  const sinceNote = (f) => (f.sinceDate
+    ? `<br /><span class="pill warn" style="margin-top:4px;">Từ ${fmtDate(f.sinceDate)} (sau lọc/thay dầu)` +
+      `${f.nBefore ? ` — bỏ ${f.nBefore} lần đo trước` : ""}</span>`
+    : "");
   const rowsHtml = forecastRows.map(({ label, forecast }) => {
     if (!forecast.ok) {
       const reasonText = forecast.reason === "not_enough_data"
-        ? `Chưa đủ dữ liệu (cần ≥ 2 lần đo, hiện có ${forecast.n})`
+        ? `Chưa đủ dữ liệu (cần ≥ 2 lần đo${forecast.sinceDate ? " sau lần lọc/thay dầu" : ""}, hiện có ${forecast.n})`
         : "Không tính được (các lần đo cùng 1 ngày)";
-      return `<tr><td>${escapeHtml(label)}</td><td colspan="5" class="pill muted">${reasonText}</td></tr>`;
+      return `<tr><td>${escapeHtml(label)}${sinceNote(forecast)}</td><td colspan="5" class="pill muted">${reasonText}</td></tr>`;
     }
-    const keys = ["ols", "sen", "recent"].filter((k) => forecast.methods[k]);
+    const keys = ["ols", "sen", "recent", "latest"].filter((k) => forecast.methods[k]);
     const gasHeaderCell = `<td rowspan="${keys.length}">${escapeHtml(label)}<br /><span class="pill muted" ` +
       `style="margin-top:4px;">Gần nhất: ${forecast.lastValue} ppm • Ngưỡng: ${forecast.limit === null ? "—" : forecast.limit + " ppm"}</span>` +
+      sinceNote(forecast) +
       `<br />${trendText[forecast.trend.direction]}` +
       (forecast.rateChange ? `<br />${rateChangeText[forecast.rateChange]}` : "") + "</td>";
     return keys.map((key, i) => trendForecastMethodRowHtml(forecast.methods[key], key, {
@@ -701,4 +713,106 @@ function renderTrendForecastTable(forecastRows, forecastYears) {
   }).join("");
 
   $("trForecastBody").innerHTML = rowsHtml;
+}
+
+// ---------------------------------------------------------------------------
+// Lọc / thay dầu: lần đo có khí giảm đột ngột so với lần liền trước (DGA.findGasDrops()) được hỏi xác
+// nhận; kết quả lưu ở trường xu_ly_dau của CHÍNH lần đo đó ("loc_dau" | "thay_dau" | "khong"). Dự báo
+// xu hướng chỉ dùng số liệu từ lần xử lý dầu gần nhất (DGA.lastOilTreatmentDate()). Dùng chung cho tab
+// Xu hướng (renderTrendOilTreatment()) và khối kết quả tab DGA sau khi lưu (ui-dga.js).
+// ---------------------------------------------------------------------------
+
+/** HTML khối hỏi xác nhận cho 1 lần đo giảm đột ngột. phaseLabel: "" nếu thiết bị chỉ có 1 pha. */
+function oilTreatmentPromptHtml(item, phaseLabel) {
+  const fmtDate = (d) => new Date(d).toLocaleDateString("vi-VN");
+  const num = (v) => (Math.round(v * 10) / 10).toString().replace(".", ",");
+  const d = item.drop;
+  const buttons = canEditRecord(item.record)
+    ? ["loc_dau", "thay_dau", "khong"].map((v) =>
+      `<button type="button" class="btn sm ${v === "khong" ? "ghost" : "primary"}" data-oil-treat-id="${escapeHtml(item.record.id)}" ` +
+      `data-oil-treat-value="${v}">${v === "khong" ? "Không xử lý dầu" : "Đã " + DGA.OIL_TREATMENT_LABELS[v].toLowerCase()}</button>`).join(" ")
+    : `<span class="note">Chỉ Admin hoặc người đã nhập lần đo này mới xác nhận được.</span>`;
+  return `<div class="status-banner status-alert" style="margin-bottom:12px;">
+    <strong>Khí giảm đột ngột</strong> — lần đo ${fmtDate(item.record.sample_date)}${phaseLabel ? " (" + escapeHtml(phaseLabel) + ")" : ""}:
+    tổng khí cháy TDCG giảm ${num(d.dropPct)}% so với lần đo ${fmtDate(item.prev.sample_date)}
+    (${num(d.prevTdcg)} → ${num(d.tdcg)} ppm; ${d.gases.join(", ")} cùng giảm ≥ 50%).
+    <br />Giữa 2 lần đo này có <strong>lọc dầu</strong> hoặc <strong>thay dầu</strong> không? Nếu có, dự báo xu hướng sẽ chỉ
+    dùng số liệu từ lần đo này trở đi.
+    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">${buttons}</div>
+  </div>`;
+}
+
+/** Gắn sự kiện cho các nút [data-oil-treat-id] trong container. */
+function bindOilTreatmentButtons(container) {
+  container.querySelectorAll("button[data-oil-treat-id]").forEach((btn) => {
+    btn.addEventListener("click", () => setOilTreatment(btn.dataset.oilTreatId, btn.dataset.oilTreatValue, btn));
+  });
+}
+
+/** Lưu xu_ly_dau cho 1 lần đo (upsert nguyên bản ghi — quyền sửa kiểm lại ở máy chủ), rồi vẽ lại. */
+async function setOilTreatment(id, value, btn) {
+  const rec = _allMeasurements.find((r) => r.id === id);
+  if (!rec) return;
+  if (btn) btn.disabled = true;
+  try {
+    await Storage.addMeasurement({ ...rec, xu_ly_dau: value });
+    await refreshHistoryUI();
+    const dgaPrompt = $("dgaOilTreatPrompt");
+    if (dgaPrompt) { dgaPrompt.innerHTML = ""; dgaPrompt.classList.add("hidden"); }
+    if ($("tr_device") && $("tr_device").value) onTrendDeviceChange();
+    let msg = "Đã bỏ xác nhận xử lý dầu của lần đo này.";
+    if (value === "khong") msg = "Đã ghi nhận: không xử lý dầu — chuỗi số liệu giữ nguyên.";
+    else if (DGA.OIL_TREATMENT_LABELS[value]) {
+      msg = `Đã ghi nhận: ${DGA.OIL_TREATMENT_LABELS[value].toLowerCase()} — dự báo dùng số liệu từ lần đo này.`;
+    }
+    showToast(msg);
+  } catch (err) {
+    if (btn) btn.disabled = false;
+    notifyError("Không lưu được xác nhận xử lý dầu: " + storageErrorMessage(err));
+  }
+}
+
+/** Nhóm bản ghi khí theo pha ("" = không ghi pha). */
+function trendGasRecordsByPhase(gasRecords) {
+  const groups = new Map();
+  gasRecords.forEach((r) => {
+    const p = (r.pha || "").trim();
+    if (!groups.has(p)) groups.set(p, []);
+    groups.get(p).push(r);
+  });
+  return groups;
+}
+
+/** Tab Xu hướng: hỏi xác nhận các lần giảm đột ngột chưa xác nhận + liệt kê các lần xử lý dầu đã ghi nhận. */
+function renderTrendOilTreatment(gasRecords) {
+  const wrap = $("trOilTreatWrap");
+  if (!wrap) return;
+  const groups = trendGasRecordsByPhase(gasRecords);
+  const multiPhase = groups.size >= 2;
+  const fmtDate = (d) => new Date(d).toLocaleDateString("vi-VN");
+  const prompts = [];
+  const confirmed = [];
+  groups.forEach((recs, pha) => {
+    const phaseLabel = multiPhase && pha ? DGA.phaLabelWithPrefix(pha) : "";
+    DGA.findGasDrops(recs, recordGases).forEach((item) => {
+      if (!item.status) prompts.push(oilTreatmentPromptHtml(item, phaseLabel));
+    });
+    recs.filter((r) => r.xu_ly_dau && DGA.OIL_TREATMENT_LABELS[r.xu_ly_dau]).forEach((r) => {
+      const change = canEditRecord(r)
+        ? ` <button type="button" class="btn sm ghost" data-oil-treat-id="${escapeHtml(r.id)}" data-oil-treat-value="">Đổi</button>`
+        : "";
+      confirmed.push(`<li>${DGA.OIL_TREATMENT_LABELS[r.xu_ly_dau]} trước lần đo ${fmtDate(r.sample_date)}` +
+        `${phaseLabel ? " (" + escapeHtml(phaseLabel) + ")" : ""}${change}</li>`);
+    });
+  });
+  if (prompts.length === 0 && confirmed.length === 0) {
+    wrap.innerHTML = "";
+    wrap.classList.add("hidden");
+    return;
+  }
+  wrap.innerHTML = prompts.join("") + (confirmed.length
+    ? `<div class="note" style="margin-bottom:12px;"><strong>Xử lý dầu đã ghi nhận</strong> (dự báo chỉ dùng số liệu từ lần lọc/thay dầu gần nhất):<ul style="margin:4px 0 0 18px;">${confirmed.join("")}</ul></div>`
+    : "");
+  wrap.classList.remove("hidden");
+  bindOilTreatmentButtons(wrap);
 }

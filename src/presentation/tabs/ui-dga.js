@@ -46,6 +46,7 @@ const BBTN_EXTRA_FIELD_IDS = ["f_ngaythinghiem", "f_lydothinghiem", "f_nhietdo",
 function clearForm() {
   hideBbtnPreview();
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
+  if ($("f_xulydau")) $("f_xulydau").value = "";
   TECH_SPEC_FIELD_IDS.forEach((id) => ($(id).value = ""));
   BBTN_EXTRA_FIELD_IDS.forEach((id) => ($(id).value = ""));
   // Checkbox "Ngăn OLTC (thông dầu/khí với thùng chính?)" — về mặc định KHÔNG tick.
@@ -644,6 +645,7 @@ function onEditMeasurement(rec) {
   // không format lại, <input type="date"> sẽ hiện TRỐNG vì giá trị sai định dạng.
   $("f_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   $("f_ghichu").value = rec.ghi_chu || "";
+  if ($("f_xulydau")) $("f_xulydau").value = rec.xu_ly_dau || "";
   $("f_kieumay").value = rec.kieu_may || "";
   $("f_namsx").value = rec.nam_sx || "";
   $("f_namvanhanh").value = rec.nam_van_hanh || "";
@@ -703,6 +705,7 @@ function onViewMeasurement(rec) {
   if ($("f_landocount")) $("f_landocount").value = rec.lan_do ?? 1;
   if ($("f_ngay")) $("f_ngay").value = DGA.formatSampleDate(rec.sample_date) || "";
   if ($("f_ghichu")) $("f_ghichu").value = rec.ghi_chu || "";
+  if ($("f_xulydau")) $("f_xulydau").value = rec.xu_ly_dau || "";
   if ($("f_kieumay")) $("f_kieumay").value = rec.kieu_may || "";
   if ($("f_namsx")) $("f_namsx").value = rec.nam_sx || "";
   if ($("f_namvanhanh")) $("f_namvanhanh").value = rec.nam_van_hanh || "";
@@ -945,6 +948,8 @@ async function onAnalyze() {
     lan_do: Number($("f_landocount").value) || 1,
     sample_date: $("f_ngay").value,
     ghi_chu: $("f_ghichu").value.trim(),
+    // Xử lý dầu GIỮA lần đo trước và lần đo này — xem OIL_TREATMENT_LABELS (dga-logic-forecast.js).
+    xu_ly_dau: ($("f_xulydau") && $("f_xulydau").value) || "",
     // Thông số kỹ thuật thiết bị (tùy chọn) — xem TECH_SPEC_FIELD_IDS ở clearForm().
     kieu_may: $("f_kieumay").value.trim(),
     nam_sx: $("f_namsx").value ? Number($("f_namsx").value) : null,
@@ -1148,6 +1153,8 @@ async function onAnalyze() {
   //    đang SỬA 1 bản ghi có sẵn (_editingMeasurementId), server chỉ chấp nhận nếu là
   //    Admin hoặc đúng người đã nhập bản ghi đó (prepareOwnedRecord() ở Code.gs) — lỗi
   //    nếu có sẽ hiện nguyên văn ở khối catch bên dưới.
+  const oilPrompt = $("dgaOilTreatPrompt");
+  if (oilPrompt) { oilPrompt.innerHTML = ""; oilPrompt.classList.add("hidden"); }
   if (!canSaveEntry()) return;
   const wasEditing = !!_editingMeasurementId;
 
@@ -1189,6 +1196,15 @@ async function onAnalyze() {
     // đúng với bản ghi vừa lưu (_allMeasurements đã có sẵn qua refreshHistoryUI() ở trên).
     updateLanDoSuggestion();
     if (wasEditing) showToast("Đã cập nhật lần đo.");
+    // Khí giảm đột ngột so với lần đo liền trước mà chưa ghi nhận xử lý dầu → hỏi xác nhận lọc/thay
+    // dầu (lưu vào xu_ly_dau của lần đo vừa lưu, xem setOilTreatment() ở ui-trend.js).
+    const drop = prior && !measurement.xu_ly_dau ? DGA.detectGasDrop(recordGases(prior), gases) : null;
+    if (drop && oilPrompt) {
+      const saved = _allMeasurements.find((r) => r.id === measurement.id) || measurement;
+      oilPrompt.innerHTML = oilTreatmentPromptHtml({ record: saved, prev: prior, drop }, "");
+      oilPrompt.classList.remove("hidden");
+      bindOilTreatmentButtons(oilPrompt);
+    }
   } catch (err) {
     notifyError("Đã hiển thị kết quả đánh giá, nhưng LƯU THẤT BẠI: " + storageErrorMessage(err));
   }

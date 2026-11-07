@@ -2408,9 +2408,13 @@ function oilOverallFromRows(rows) {
          đều, ít điểm, có điểm bất thường (Sen 1968; Mann 1945; Kendall 1975; Gilbert 1987);
      (3) Độ dốc Sen + Mann–Kendall trên GIAI ĐOẠN GẦN ĐÂY (cửa sổ: các lần đo trong
          FORECAST_RECENT_YEARS năm gần nhất, nhưng tối thiểu FORECAST_RECENT_MIN_N lần đo) — phát hiện
-         tốc độ sinh khí đang thay đổi mà độ dốc toàn chuỗi phản ứng chậm. Tốc độ giữa 2 lần đo liền kề
-         (Bảng 65 Điều 54 QĐ1901) là chỉ số CHẨN ĐOÁN, không dùng để ngoại suy: chỉ 2 điểm nên sai số đo
-         khuếch đại theo 1/Δt và không có kiểm định — xem tab Lịch sử (So sánh 2 lần đo).
+         tốc độ sinh khí đang thay đổi mà độ dốc toàn chuỗi phản ứng chậm;
+     (4) Tốc độ giữa 2 lần đo gần nhất — đúng cách tính tốc độ tăng của Bảng 65 Điều 54 QĐ1901, giữ để
+         tự động đối chiếu nghiệp vụ. Chỉ 2 điểm nên sai số đo khuếch đại theo 1/Δt và không có kiểm
+         định — dùng tham chiếu, không dùng để kết luận xu hướng.
+   Lọc/thay dầu làm nồng độ khí giảm đột ngột và "đặt lại" chuỗi số liệu: detectGasDrop() phát hiện lần
+   đo giảm mạnh để hỏi người dùng xác nhận (trường xu_ly_dau của lần đo); forecastGasTrend() nhận
+   options.sinceDate để chỉ dùng số liệu từ lần xử lý dầu gần nhất.
    Hoàn toàn độc lập — không phụ thuộc dga-logic-core.js hay module nào khác. */
 
 // ---------------------------------------------------------------------------
@@ -2673,39 +2677,129 @@ function recentWindowStart(points, years = FORECAST_RECENT_YEARS, minN = FORECAS
   return Math.max(0, Math.min(start, n - minN));
 }
 
+// ---------------------------- (4) Tốc độ 2 lần đo gần nhất --------------------
+/** Tốc độ (đơn vị y / đơn vị x) giữa 2 lần đo gần nhất có thời điểm khác nhau — cách tính tốc độ tăng
+ *  của Bảng 65 QĐ1901. Null nếu không có 2 thời điểm khác nhau. points ĐÃ sắp tăng dần theo x. */
+function latestPairSlope(points) {
+  const last = points[points.length - 1];
+  for (let i = points.length - 2; i >= 0; i--) {
+    const dx = last.x - points[i].x;
+    if (dx !== 0) return (last.y - points[i].y) / dx;
+  }
+  return null;
+}
+
+// ---------------------------- Lọc / thay dầu ---------------------------------
+/** Giá trị trường xu_ly_dau của 1 lần đo: xử lý dầu thực hiện GIỮA lần đo liền trước và lần đo này.
+ *  "khong" = người dùng đã xác nhận KHÔNG xử lý dầu (giảm do nguyên nhân khác) — không hỏi lại. */
+const OIL_TREATMENT_LABELS = { loc_dau: "Lọc dầu", thay_dau: "Thay dầu", khong: "Không xử lý dầu" };
+/** Lần đo coi là "giảm đột ngột" khi TDCG (6 khí cháy) giảm ≥ 50% so với lần đo liền trước, TDCG lần
+ *  trước ≥ 30 ppm (tránh dao động quanh giới hạn phát hiện) và ≥ 2 khí (trong 7 khí, mỗi khí lần trước
+ *  ≥ 5 ppm) cùng giảm ≥ 50% — lọc/thay dầu khử đồng thời các khí hòa tan, sai số đo 1 khí thì không. */
+const OIL_DROP_RATIO = 0.5;
+const OIL_DROP_MIN_PREV_TDCG = 30;
+const OIL_DROP_MIN_PREV_GAS = 5;
+const OIL_DROP_MIN_GASES = 2;
+const OIL_DROP_TDCG_GASES = ["H2", "CH4", "C2H6", "C2H4", "C2H2", "CO"];
+const OIL_DROP_ALL_GASES = [...OIL_DROP_TDCG_GASES, "CO2"];
+
+function oilDropGasValue(gases, g) {
+  if (!gases) return 0;
+  const v = parseFloat(gases[g] !== undefined ? gases[g] : gases[g.toLowerCase()]);
+  return Number.isFinite(v) ? v : 0;
+}
+
+/**
+ * So sánh 2 lần đo liền kề (khí dạng {H2: …} hoặc {h2: …}; KPH/rỗng = 0).
+ * @returns {null | {prevTdcg: number, tdcg: number, dropPct: number, gases: string[]}} null nếu không
+ *   phải "giảm đột ngột".
+ */
+function detectGasDrop(prevGases, currGases) {
+  const sum = (gs) => OIL_DROP_TDCG_GASES.reduce((t, g) => t + oilDropGasValue(gs, g), 0);
+  const prevTdcg = sum(prevGases);
+  const tdcg = sum(currGases);
+  if (prevTdcg < OIL_DROP_MIN_PREV_TDCG || tdcg > prevTdcg * (1 - OIL_DROP_RATIO)) return null;
+  const dropped = OIL_DROP_ALL_GASES.filter((g) => {
+    const a = oilDropGasValue(prevGases, g);
+    return a >= OIL_DROP_MIN_PREV_GAS && oilDropGasValue(currGases, g) <= a * (1 - OIL_DROP_RATIO);
+  });
+  if (dropped.length < OIL_DROP_MIN_GASES) return null;
+  return { prevTdcg, tdcg, dropPct: (1 - tdcg / prevTdcg) * 100, gases: dropped };
+}
+
+/**
+ * Quét 1 chuỗi lần đo của CÙNG thiết bị + pha: mọi lần đo giảm đột ngột so với lần liền trước.
+ * @param {Array<any>} records bản ghi có sample_date, xu_ly_dau (không cần sắp sẵn)
+ * @param {(r: any) => object} gasesOf lấy khí của 1 bản ghi
+ * @returns {Array<{record: any, prev: any, drop: object, status: string}>} status = xu_ly_dau
+ *   ("" = chưa xác nhận)
+ */
+function findGasDrops(records, gasesOf) {
+  const sorted = (records || [])
+    .filter((r) => r && r.sample_date && !Number.isNaN(new Date(r.sample_date).getTime()))
+    .slice()
+    .sort((a, b) => new Date(a.sample_date).getTime() - new Date(b.sample_date).getTime());
+  const out = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const drop = detectGasDrop(gasesOf(sorted[i - 1]), gasesOf(sorted[i]));
+    if (drop) out.push({ record: sorted[i], prev: sorted[i - 1], drop, status: sorted[i].xu_ly_dau || "" });
+  }
+  return out;
+}
+
+/** Ngày lấy mẫu của lần đo SAU lần xử lý dầu (lọc/thay) gần nhất trong chuỗi — mốc bắt đầu chuỗi
+ *  số liệu dùng để dự báo. Null nếu chưa từng xác nhận xử lý dầu. */
+function lastOilTreatmentDate(records) {
+  let best = null;
+  (records || []).forEach((r) => {
+    if (!r || (r.xu_ly_dau !== "loc_dau" && r.xu_ly_dau !== "thay_dau")) return;
+    const t = new Date(r.sample_date).getTime();
+    if (Number.isFinite(t) && (best === null || t > best)) best = t;
+  });
+  return best === null ? null : new Date(best).toISOString();
+}
+
 const FORECAST_METHOD_LABELS = {
   ols: "Hồi quy tuyến tính OLS (khoảng dự báo 95%)",
   sen: "Độ dốc Sen + kiểm định Mann–Kendall",
   recent: "Độ dốc Sen + Mann–Kendall — giai đoạn gần đây",
+  latest: "Tốc độ 2 lần đo gần nhất (cách tính Bảng 65)",
 };
 
 /**
- * Dự báo xu hướng 1 thông số (khí) theo 3 phương pháp (FORECAST_METHOD_LABELS); "recent" chỉ có khi
+ * Dự báo xu hướng 1 thông số (khí) theo 4 phương pháp (FORECAST_METHOD_LABELS); "recent" chỉ có khi
  * cửa sổ gần đây ngắn hơn cả chuỗi.
  * @param {Array<{date: string|Date, value: number|string|null|undefined}>} history (không cần sắp sẵn;
  *   điểm rỗng/không phải số/ngày sai bị loại)
  * @param {number} forecastYears số năm ngoại suy (vd 3)
  * @param {number|null} limit ngưỡng đang áp dụng (null nếu không có)
+ * @param {{sinceDate?: string|Date|null}} [options] sinceDate: bỏ các lần đo TRƯỚC ngày này (mốc sau
+ *   lọc/thay dầu, xem lastOilTreatmentDate()); kết quả có sinceDate (ISO|null) và nBefore (số lần đo bị bỏ)
  * @returns {object} { ok:false, reason, n } hoặc
- *   { ok:true, n, lastValue, lastDate, limit, trend (kết quả Mann–Kendall), methods:{ols, sen, recent},
+ *   { ok:true, n, lastValue, lastDate, limit, trend (kết quả Mann–Kendall), methods:{ols, sen, recent, latest},
  *     recentWindow: {n, fromDate} | null, rateChange: "faster"|"slower"|"consistent"|null (tốc độ giai đoạn
  *     gần so với KTC 95% tốc độ Sen toàn chuỗi; null khi thiếu "recent" hoặc KTC) }
  *   — mỗi method (null nếu không tính được): { label, ratePerYear, fittedAtLast (giá trị của mô hình tại
  *   lần đo gần nhất — điểm đầu đường dự báo trên đồ thị), forecastValue (≥ 0), clamped,
  *   forecastDate, interval ({lower, upper} — OLS: khoảng dự báo 95% của giá trị; Sen: khoảng tin
  *   cậy 95% của tốc độ ppm/năm; null nếu không tính được), r2 (chỉ OLS), pValue (OLS: kiểm định t
- *   độ dốc; Sen/recent: Mann–Kendall), significant (p < α; null khi n < 4), crossing }
+ *   độ dốc; Sen/recent: Mann–Kendall; latest: null), significant (p < α; null khi n < 4 và với
+ *   latest), crossing }
  *   crossing: null (không có ngưỡng) | {status:"already_exceeded"} | {status:"not_increasing"} |
  *   {status:"predicted", date, withinHorizon, yearsFromLast, significant}.
  */
-function forecastGasTrend(history, forecastYears, limit) {
-  const pts = (history || [])
+function forecastGasTrend(history, forecastYears, limit, options = {}) {
+  const all = (history || [])
     .filter((h) => h && h.value !== null && h.value !== undefined && h.value !== "" && h.date)
     .map((h) => ({ date: new Date(h.date), value: Number(h.value) }))
     .filter((h) => Number.isFinite(h.value) && !Number.isNaN(h.date.getTime()))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const sinceT = options && options.sinceDate ? new Date(options.sinceDate).getTime() : NaN;
+  const since = Number.isFinite(sinceT) ? new Date(sinceT).toISOString() : null;
+  const pts = since ? all.filter((p) => p.date.getTime() >= sinceT) : all;
+  const nBefore = all.length - pts.length;
 
-  if (pts.length < 2) return { ok: false, reason: "not_enough_data", n: pts.length };
+  if (pts.length < 2) return { ok: false, reason: "not_enough_data", n: pts.length, sinceDate: since, nBefore };
 
   const t0 = pts[0].date.getTime();
   const xy = pts.map((p) => ({ x: (p.date.getTime() - t0) / FORECAST_MS_PER_DAY, y: p.value }));
@@ -2718,12 +2812,14 @@ function forecastGasTrend(history, forecastYears, limit) {
   const ols = linearRegression(xy);
   const mk = mannKendallTest(xy);
   const sen = senSlopeEstimate(xy, mk.varS);
-  if (!ols && !sen) return { ok: false, reason: "same_date", n: pts.length };
+  const latest = latestPairSlope(xy);
+  if (!ols && !sen && latest === null) return { ok: false, reason: "same_date", n: pts.length, sinceDate: since, nBefore };
 
   const hasLimit = limit !== null && limit !== undefined && Number.isFinite(Number(limit));
   const limitNum = hasLimit ? Number(limit) : null;
 
-  // Thời điểm đạt ngưỡng theo 1 ĐƯỜNG y = a + b·x (đường khớp của OLS/Sen). Đã vượt ngưỡng xét theo GIÁ TRỊ ĐO THỰC TẾ gần nhất.
+  // Thời điểm đạt ngưỡng theo 1 ĐƯỜNG y = a + b·x (đường khớp của OLS/Sen, hoặc đường đi qua lần
+  // đo gần nhất của phương pháp "latest"). Đã vượt ngưỡng xét theo GIÁ TRỊ ĐO THỰC TẾ gần nhất.
   function crossingFor(a, b, significant) {
     if (!hasLimit) return null;
     if (lastPoint.value >= limitNum) return { status: "already_exceeded" };
@@ -2739,7 +2835,7 @@ function forecastGasTrend(history, forecastYears, limit) {
   }
   const clamp0 = (v) => (v < 0 ? 0 : v);
 
-  const methods = { ols: null, sen: null, recent: null };
+  const methods = { ols: null, sen: null, recent: null, latest: null };
   if (ols) {
     const raw = ols.intercept + ols.slope * horizonX;
     const pi = olsPredictionInterval(ols, horizonX);
@@ -2796,6 +2892,23 @@ function forecastGasTrend(history, forecastYears, limit) {
     }
   }
 
+  if (latest !== null) {
+    const raw = lastPoint.value + latest * horizonDays;
+    methods.latest = {
+      label: FORECAST_METHOD_LABELS.latest,
+      ratePerYear: latest * FORECAST_DAYS_PER_YEAR,
+      fittedAtLast: lastPoint.value,
+      forecastValue: clamp0(raw),
+      clamped: raw < 0,
+      forecastDate,
+      interval: null,
+      r2: null,
+      pValue: null,
+      significant: null,
+      crossing: crossingFor(lastPoint.value - latest * lastX, latest, null),
+    };
+  }
+
   return {
     ok: true,
     n: pts.length,
@@ -2806,6 +2919,8 @@ function forecastGasTrend(history, forecastYears, limit) {
     methods,
     recentWindow,
     rateChange,
+    sinceDate: since,
+    nBefore,
   };
 }
 
@@ -4027,7 +4142,8 @@ if (typeof module !== "undefined" && module.exports) {
       BANG59_ACID, DIEU51_FLASH, BANG56_MECH, BANG57_PARTICLES, DIEU55_FURFURAL, BANG70_RESISTIVITY, BANG60_62_OXIDATION,
       IEC60422_2024_TABLE3_NEW, IEC60422_2024_TABLE5_EXTRA,
       OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
-      linearRegression, olsPredictionInterval, theilSenSlope, senSlopeEstimate, mannKendallTest, recentWindowStart,
+      linearRegression, olsPredictionInterval, theilSenSlope, senSlopeEstimate, mannKendallTest, recentWindowStart, latestPairSlope,
+      OIL_TREATMENT_LABELS, detectGasDrop, findGasDrops, lastOilTreatmentDate,
       normalCdf, normalQuantile, studentTCdf, studentTQuantile, FORECAST_ALPHA, FORECAST_RECENT_YEARS, FORECAST_RECENT_MIN_N, FORECAST_METHOD_LABELS, forecastGasTrend,
       REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
       resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive, applyRegulationTermsDeep,
@@ -4073,7 +4189,8 @@ if (typeof module !== "undefined" && module.exports) {
       BANG59_ACID, DIEU51_FLASH, BANG56_MECH, BANG57_PARTICLES, DIEU55_FURFURAL, BANG70_RESISTIVITY, BANG60_62_OXIDATION,
       IEC60422_2024_TABLE3_NEW, IEC60422_2024_TABLE5_EXTRA,
     OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
-    linearRegression, olsPredictionInterval, theilSenSlope, senSlopeEstimate, mannKendallTest, recentWindowStart,
+    linearRegression, olsPredictionInterval, theilSenSlope, senSlopeEstimate, mannKendallTest, recentWindowStart, latestPairSlope,
+      OIL_TREATMENT_LABELS, detectGasDrop, findGasDrops, lastOilTreatmentDate,
       normalCdf, normalQuantile, studentTCdf, studentTQuantile, FORECAST_ALPHA, FORECAST_RECENT_YEARS, FORECAST_RECENT_MIN_N, FORECAST_METHOD_LABELS, forecastGasTrend,
     REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
     resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive, applyRegulationTermsDeep,

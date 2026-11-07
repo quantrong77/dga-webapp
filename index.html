@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v50-du-bao-gan-day") {
+          if (k !== "dga-offline-v51-loc-dau") {
             caches.delete(k);
           }
         });
@@ -508,6 +508,16 @@
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Ghi chú
             <input id="f_ghichu" type="text" placeholder="(không bắt buộc)" />
           </label>
+          <!-- Xử lý dầu GIỮA lần đo trước và lần đo này (trường xu_ly_dau) — dự báo xu hướng chỉ dùng số
+               liệu từ lần xử lý dầu gần nhất. App tự hỏi khi khí giảm đột ngột (oilTreatmentPromptHtml(), ui-trend.js). -->
+          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-note"></use></svg>Xử lý dầu trước lần đo này
+            <select id="f_xulydau">
+              <option value="">(chưa xác nhận)</option>
+              <option value="loc_dau">Lọc dầu</option>
+              <option value="thay_dau">Thay dầu</option>
+              <option value="khong">Không xử lý dầu</option>
+            </select>
+          </label>
         </div>
 
         <div class="section-title">Hàm lượng khí hòa tan (ppm)</div>
@@ -695,6 +705,9 @@
         </div>
 
         <div id="condemnBanner" class="condemn-banner hidden"></div>
+
+        <!-- Hỏi xác nhận lọc/thay dầu khi lần đo vừa lưu giảm đột ngột so với lần trước (ui-dga.js) -->
+        <div id="dgaOilTreatPrompt" class="hidden"></div>
 
         <div class="stat-row">
           <div class="stat-card"><div class="label">Tổng khí cháy (TCG)</div><div class="value" id="r_tcg">—</div><div class="note hidden" id="r_tcgRateNote" style="margin-top:4px;"></div></div>
@@ -1152,6 +1165,9 @@
           <div class="trend-checks" id="trParamsOltc"></div>
         </div>
 
+        <!-- Các lần đo khí giảm đột ngột (nghi lọc/thay dầu) — renderTrendOilTreatment(), ui-trend.js -->
+        <div id="trOilTreatWrap" class="hidden"></div>
+
         <div class="trend-chart-wrap">
           <canvas id="trendChart"></canvas>
         </div>
@@ -1167,12 +1183,13 @@
 
         <div id="trForecastWrap" class="hidden" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--gray-300);">
           <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Dự báo xu hướng</h2>
-          <p class="note">Ba phương pháp thống kê chuẩn, dự báo từ đường đã khớp (không neo vào 1 lần đo đơn lẻ):
+          <p class="note">Bốn phương pháp, dự báo từ đường đã khớp (không neo vào 1 lần đo đơn lẻ):
             <strong>hồi quy tuyến tính OLS</strong> kèm khoảng dự báo 95% và kiểm định t cho độ dốc;
             <strong>độ dốc Sen + kiểm định Mann–Kendall</strong> (phi tham số, ít bị ảnh hưởng bởi lần đo bất thường —
-            dùng cho đường nét đứt trên đồ thị); và <strong>Sen + Mann–Kendall trên giai đoạn gần đây</strong> (các lần đo
-            trong 3 năm gần nhất, tối thiểu 5 lần đo) để phát hiện tốc độ sinh khí đang thay đổi. Tốc độ giữa 2 lần đo
-            (Bảng 65) là chỉ số chẩn đoán, xem ở tab Lịch sử. Xu hướng chỉ được coi là có thật khi kiểm định có ý nghĩa thống kê (p &lt; 0,05); Mann–Kendall cần
+            dùng cho đường nét đứt trên đồ thị); <strong>Sen + Mann–Kendall trên giai đoạn gần đây</strong> (các lần đo
+            trong 3 năm gần nhất, tối thiểu 5 lần đo) để phát hiện tốc độ sinh khí đang thay đổi; và <strong>tốc độ giữa 2
+            lần đo gần nhất</strong> được tính để đối chiếu tự động Bảng 65 (chỉ 2 điểm, không kiểm định — không dùng để kết luận xu hướng).
+            Khi đã xác nhận <strong>lọc/thay dầu</strong>, dự báo chỉ dùng các lần đo từ sau lần xử lý dầu gần nhất. Xu hướng chỉ được coi là có thật khi kiểm định có ý nghĩa thống kê (p &lt; 0,05); Mann–Kendall cần
             tối thiểu 4 lần đo. Nồng độ dự báo không âm. <strong>Chỉ mang tính tham khảo thống kê</strong>, giả định tốc độ
             sinh khí không đổi — KHÔNG thay thế nguyên tắc đánh giá tổng hợp tại Điều 3 QĐ1901. Chỉ dự báo mốc đạt ngưỡng cho
             7 khí chính (so với ngưỡng tuyệt đối đang áp dụng cho thiết bị).</p>
@@ -3145,6 +3162,10 @@
           <td>Không bắt buộc</td>
           </tr>
           <tr>
+          <td><strong>Xử lý dầu trước lần đo này</strong></td>
+          <td>Không bắt buộc: <strong>Lọc dầu</strong> / <strong>Thay dầu</strong> / <strong>Không xử lý dầu</strong> giữa lần đo trước và lần đo này. Nếu khí giảm đột ngột so với lần đo trước mà ô này để trống, sau khi lưu app sẽ hỏi xác nhận (xem mục 12.3)</td>
+          </tr>
+          <tr>
           <td><strong>Biên bản thí nghiệm (PDF)</strong></td>
           <td>Không bắt buộc — chọn ở ô trái khung <strong>Nhập BBTN</strong> (phía trên form, tab con Nhập BBTN cũ), xem mục 6</td>
           </tr>
@@ -3489,18 +3510,28 @@
           <h3>12.2. Dự báo xu hướng</h3>
           <ul class="rec-list">
           <li>Tick <strong>"Hiện dự báo xu hướng tương lai"</strong> (app nhớ lựa chọn) và đặt <strong>Số năm dự báo</strong> (1–30).</li>
-          <li>Với mỗi khí trong 7 khí chính, bảng hiển thị 3 phương pháp thống kê:</li>
+          <li>Với mỗi khí trong 7 khí chính, bảng hiển thị 4 phương pháp:</li>
           <li><strong>Hồi quy tuyến tính OLS</strong>: tốc độ thay đổi, giá trị dự báo kèm <strong>khoảng dự báo 95%</strong>, <strong>R²</strong> và <strong>p-value</strong> kiểm định độ dốc.</li>
           <li><strong>Độ dốc Sen + kiểm định Mann–Kendall</strong>: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm <strong>khoảng tin cậy 95% của tốc độ</strong>. Đường nét đứt trên đồ thị dùng phương pháp này.</li>
           <li><strong>Độ dốc Sen + Mann–Kendall — giai đoạn gần đây</strong>: cùng phương pháp nhưng chỉ dùng các lần đo trong <strong>3 năm gần nhất</strong>, tối thiểu <strong>5 lần đo</strong> gần nhất (nếu 3 năm có ít hơn 5 lần đo thì lấy thêm lần đo cũ hơn). Dòng này chỉ hiện khi chuỗi số liệu dài hơn cửa sổ, và giúp phát hiện tốc độ sinh khí đang thay đổi mà xu hướng toàn chuỗi phản ứng chậm.</li>
           <li>Cột <strong>Khí</strong> ghi kết luận xu hướng theo Mann–Kendall: <strong>Tăng</strong> / <strong>Giảm</strong> (khi p &lt; 0,05), <strong>Chưa phát hiện xu hướng có ý nghĩa thống kê</strong>, hoặc <strong>Chưa đủ lần đo</strong> (cần ≥ 4). Khi có giai đoạn gần đây, cột này còn so sánh tốc độ gần đây với khoảng tin cậy 95% của tốc độ toàn chuỗi: <strong>tăng nhanh hơn</strong> / <strong>chậm hơn</strong> (nằm ngoài khoảng) hoặc <strong>phù hợp</strong>.</li>
-          <li>Tốc độ giữa 2 lần đo liền kề (Bảng 65) là chỉ số chẩn đoán, không dùng để ngoại suy dự báo — xem chức năng <strong>So sánh tốc độ gia tăng khí giữa 2 lần đo</strong> ở tab Lịch sử.</li>
+          <li><strong>Tốc độ 2 lần đo gần nhất</strong>: đúng cách tính tốc độ tăng của Bảng 65, để tự động đối chiếu. Chỉ dùng 2 điểm, không có kiểm định thống kê, nên không dùng để kết luận xu hướng.</li>
           <li>Dự báo lấy từ <strong>đường đã khớp</strong>, không neo vào một lần đo đơn lẻ; nồng độ dự báo <strong>không âm</strong> (cắt tại 0).</li>
           <li><strong>Thời điểm dự kiến chạm ngưỡng</strong> chỉ là cảnh báo khi xu hướng tăng <strong>có ý nghĩa thống kê</strong>; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.</li>
           <li>Cần <strong>tối thiểu 2 lần đo</strong> mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.</li>
           <li>Chỉ dự báo mốc chạm ngưỡng cho <strong>7 khí chính</strong>.</li>
           </ul>
           <p class="sm-note">⚠ Dự báo giả định tốc độ sinh khí <strong>không đổi</strong> — chỉ mang tính tham khảo thống kê, không thay thế đánh giá tổng hợp.</p>
+          <h3>12.3. Lọc dầu / thay dầu</h3>
+          <p>Lọc hoặc thay dầu làm nồng độ khí hòa tan giảm đột ngột, nên số liệu trước đó không còn phản ánh tình trạng hiện tại của thiết bị.</p>
+          <ul class="rec-list">
+          <li>App coi một lần đo là <strong>khí giảm đột ngột</strong> khi so với lần đo liền trước (cùng thiết bị, cùng pha): tổng khí cháy <strong>TDCG</strong> (H2, CH4, C2H6, C2H4, C2H2, CO) giảm <strong>≥ 50%</strong>, TDCG lần trước <strong>≥ 30 ppm</strong>, và có <strong>ít nhất 2 khí</strong> (mỗi khí lần trước ≥ 5 ppm) cùng giảm ≥ 50%.</li>
+          <li>Khi đó app hỏi <strong>"Giữa 2 lần đo này có lọc dầu hoặc thay dầu không?"</strong> với 3 lựa chọn: <strong>Đã lọc dầu</strong>, <strong>Đã thay dầu</strong>, <strong>Không xử lý dầu</strong>. Câu hỏi hiện ở khối kết quả tab DGA ngay sau khi lưu, và ở tab <strong>Xu hướng</strong> cho mọi lần đo chưa xác nhận (kể cả số liệu nhập hàng loạt hoặc đọc từ BBTN).</li>
+          <li>Đã chọn <strong>Lọc dầu</strong> hoặc <strong>Thay dầu</strong>: dự báo xu hướng chỉ dùng các lần đo <strong>từ lần đo này trở đi</strong>. Bảng dự báo ghi rõ mốc bắt đầu và số lần đo cũ đã bỏ. Đồ thị vẫn hiện đầy đủ số liệu đã đo.</li>
+          <li>Chọn <strong>Không xử lý dầu</strong>: chuỗi số liệu giữ nguyên, app không hỏi lại lần đo đó.</li>
+          <li>Các lần xử lý dầu đã ghi nhận được liệt kê ở tab Xu hướng, kèm nút <strong>Đổi</strong> để bỏ xác nhận. Cũng có thể chọn trực tiếp ở ô <strong>Xử lý dầu trước lần đo này</strong> khi nhập hoặc sửa lần đo.</li>
+          <li>Chỉ <strong>Admin</strong> hoặc <strong>người đã nhập lần đo</strong> mới xác nhận được.</li>
+          </ul>
 
           </div>
         </details>

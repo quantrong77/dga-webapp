@@ -95,6 +95,7 @@ alter table measurements
   add column if not exists edited_fields text,
   add column if not exists edited_at timestamptz,
   add column if not exists edit_log text,
+  add column if not exists xu_ly_dau text,
   add column if not exists created_at timestamptz;
 alter table stations
   add column if not exists ma_tram text,

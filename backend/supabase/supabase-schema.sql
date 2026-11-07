@@ -121,6 +121,9 @@ create table if not exists measurements (
   edited_fields text,
   edited_at timestamptz,
   edit_log text,
+  -- Xử lý dầu GIỮA lần đo liền trước và lần đo này: 'loc_dau' | 'thay_dau' | 'khong' | NULL (chưa
+  -- xác nhận). Dự báo xu hướng chỉ dùng số liệu từ lần xử lý dầu gần nhất.
+  xu_ly_dau text,
   created_at timestamptz default now()
 );
 
@@ -381,6 +384,10 @@ create table if not exists regulation_config (
 -- alter table measurements add column if not exists edited_fields text;
 -- alter table measurements add column if not exists edited_at timestamptz;
 -- alter table measurements add column if not exists edit_log text;
+
+-- Nếu bạn đã tạo bảng measurements từ trước (chưa có cột xu_ly_dau — xác nhận lọc/thay dầu giữa
+-- 2 lần đo), chạy dòng sau để nâng cấp (an toàn, không ảnh hưởng dữ liệu cũ):
+-- alter table measurements add column if not exists xu_ly_dau text;
 
 -- Nếu bạn đã tạo bảng oil_tests từ trước (chưa có cột oil_sample_point/phase — tính
 -- năng phân biệt MBA/Kháng dùng 1 thùng dầu CHUNG 3 pha hay 3 pha RỜI, mỗi pha 1 thùng
