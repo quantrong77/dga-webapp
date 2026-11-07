@@ -688,6 +688,8 @@ function renderTrendForecastTable(forecastRows, forecastYears) {
     consistent: '<span class="pill muted">Tốc độ giai đoạn gần phù hợp toàn chuỗi</span>',
   };
   const fmtDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
+  // Dấu thập phân kiểu Việt Nam (23,649 — không phải 23.649, dễ đọc thành hai mươi ba nghìn).
+  const fmtPpm = (v) => Number(v).toLocaleString("vi-VN", { maximumFractionDigits: 3 });
   const sinceNote = (f) => (f.sinceDate
     ? `<br /><span class="pill warn" style="margin-top:4px;">Từ ${fmtDate(f.sinceDate)} (sau lọc/thay dầu)` +
       `${f.nBefore ? ` — bỏ ${f.nBefore} lần đo trước` : ""}</span>`
@@ -701,7 +703,7 @@ function renderTrendForecastTable(forecastRows, forecastYears) {
     }
     const keys = ["ols", "sen", "recent", "latest"].filter((k) => forecast.methods[k]);
     const gasHeaderCell = `<td rowspan="${keys.length}">${escapeHtml(label)}<br /><span class="pill muted" ` +
-      `style="margin-top:4px;">Gần nhất: ${forecast.lastValue} ppm • Ngưỡng: ${forecast.limit === null ? "—" : forecast.limit + " ppm"}</span>` +
+      `style="margin-top:4px;">Gần nhất: ${fmtPpm(forecast.lastValue)} ppm • Ngưỡng: ${forecast.limit === null ? "—" : fmtPpm(forecast.limit) + " ppm"}</span>` +
       sinceNote(forecast) +
       `<br />${trendText[forecast.trend.direction]}` +
       (forecast.rateChange ? `<br />${rateChangeText[forecast.rateChange]}` : "") + "</td>";
