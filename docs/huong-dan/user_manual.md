@@ -441,11 +441,17 @@ Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu
 
 > Nếu không có mạng hoặc thư viện vẽ đồ thị (Chart.js) tải lỗi, đồ thị sẽ ẩn kèm thông báo — kiểm tra kết nối và tải lại trang. Các bảng số liệu và bảng dự báo vẫn dùng được.
 
-### 12.2. Dự báo xu hướng (ngoại suy tuyến tính)
+### 12.2. Dự báo xu hướng
 
 - Tick **"Hiện dự báo xu hướng tương lai"** (app nhớ lựa chọn) và đặt **Số năm dự báo** (1–30).
-- Với mỗi khí trong 7 khí chính, bảng hiển thị kết quả của **3 thuật toán độc lập** (hồi quy OLS, Theil-Sen, trung bình liền kề) và một dòng **Trung bình 3 thuật toán**: tốc độ thay đổi, giá trị dự báo, **R²** và **thời điểm dự kiến chạm ngưỡng** (nếu xu hướng đang tăng).
-- Cần **tối thiểu 2 lần đo** mỗi khí; nên có **≥ 4 lần đo** để đáng tin (R² càng gần 1 càng tốt).
+- Với mỗi khí trong 7 khí chính, bảng hiển thị 3 phương pháp thống kê:
+  - **Hồi quy tuyến tính OLS**: tốc độ thay đổi, giá trị dự báo kèm **khoảng dự báo 95%**, **R²** và **p-value** kiểm định độ dốc.
+  - **Độ dốc Sen + kiểm định Mann–Kendall**: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm **khoảng tin cậy 95% của tốc độ**. Đường nét đứt trên đồ thị dùng phương pháp này.
+  - **Tốc độ 2 lần đo gần nhất**: đúng cách tính tốc độ tăng của Bảng 65, để tham chiếu.
+- Cột **Khí** ghi kết luận xu hướng theo Mann–Kendall: **Tăng** / **Giảm** (khi p < 0,05), **Chưa phát hiện xu hướng có ý nghĩa thống kê**, hoặc **Chưa đủ lần đo** (cần ≥ 4).
+- Dự báo lấy từ **đường đã khớp**, không neo vào một lần đo đơn lẻ; nồng độ dự báo **không âm** (cắt tại 0).
+- **Thời điểm dự kiến chạm ngưỡng** chỉ là cảnh báo khi xu hướng tăng **có ý nghĩa thống kê**; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.
+- Cần **tối thiểu 2 lần đo** mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.
 - Chỉ dự báo mốc chạm ngưỡng cho **7 khí chính**.
 
 > ⚠ Dự báo giả định tốc độ sinh khí **không đổi** — chỉ mang tính tham khảo thống kê, không thay thế đánh giá tổng hợp.

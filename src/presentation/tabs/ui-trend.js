@@ -536,19 +536,19 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       const history = spec.points.map((p) => ({ date: new Date(p.x), value: p.y }));
       const forecast = DGA.forecastGasTrend(history, forecastYears, limit);
       forecastRows.push({ label: spec.label, gasLabel: spec.gasLabel, forecast });
-      // Chỉ vẽ 1 đường nét đứt trên đồ thị — dùng kết quả "Trung bình 3 thuật toán"
-      // (methods.average) làm đại diện, để đồ thị không bị rối khi có nhiều khí/pha đang
-      // chọn cùng lúc. Chi tiết đầy đủ của TỪNG thuật toán (OLS/Theil-Sen/liền kề) xem ở
-      // bảng "Dự báo xu hướng" bên dưới (renderTrendForecastTable()).
-      if (!forecast.ok || !forecast.methods.average) return;
-      const avg = forecast.methods.average;
+      // Chỉ vẽ 1 đường nét đứt trên đồ thị cho mỗi khí — dùng đường Sen (bền với lần đo bất
+      // thường, đi cùng kiểm định Mann–Kendall), thiếu thì OLS — từ giá trị của mô hình tại lần
+      // đo gần nhất tới giá trị dự báo (đã cắt tại 0). Chi tiết từng phương pháp, khoảng dự báo
+      // và p-value xem ở bảng "Dự báo xu hướng" (renderTrendForecastTable()).
+      const rep = forecast.ok ? (forecast.methods.sen || forecast.methods.ols) : null;
+      if (!rep) return;
       const lastPoint = spec.points[spec.points.length - 1];
       const { color } = trendSeriesStyle(spec.label);
       datasets.push({
-        label: `${spec.label} — dự báo (TB 3 thuật toán)`,
+        label: `${spec.label} — dự báo (${rep === forecast.methods.sen ? "Sen" : "OLS"})`,
         data: [
-          { x: lastPoint.x, y: lastPoint.y },
-          { x: new Date(avg.forecastDate).getTime(), y: avg.forecastValue },
+          { x: lastPoint.x, y: rep.fittedAtLast },
+          { x: new Date(rep.forecastDate).getTime(), y: rep.forecastValue },
         ],
         borderColor: color,
         backgroundColor: color,
@@ -581,6 +581,9 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     if (!usedAxes.has(id)) return;
     scales[id] = {
       type: "linear",
+      // Mọi thông số vẽ ở tab này (nồng độ khí ppm, chỉ tiêu dầu) đều không âm — cố định trục từ 0
+      // để Chart.js không tự mở rộng xuống giá trị âm vô nghĩa.
+      min: 0,
       position: cfg.position,
       title: { display: true, text: cfg.title },
       grid: { drawOnChartArea: firstAxis },
@@ -608,50 +611,55 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
   });
 }
 
-/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody) bên dưới đồ thị — 1 dòng cho mỗi đường
- *  khí (trong 7 khí chính) đang chọn trên đồ thị, xem forecastGasTrend()/renderTrendChart()
- *  ở trên. Ẩn hẳn khối #trForecastWrap khi không có dòng nào (không có khí chính nào
- *  đang chọn) để đỡ hiện 1 bảng trống gây rối mắt. */
-/** Render 1 dòng <tr> cho 1 THUẬT TOÁN của 1 khí (dùng chung cho cả 3 thuật toán lẫn
- *  dòng "Trung bình") — tách riêng khỏi renderTrendForecastTable() vì cấu trúc lặp lại
- *  y hệt nhau, chỉ khác dữ liệu vào. isAverage=true tô đậm dòng để nổi bật kết quả tổng
- *  hợp so với 3 dòng thuật toán riêng lẻ phía trên nó. gasCellHtml=null nghĩa là dòng này
- *  KHÔNG mở đầu 1 khí mới (rowspan gộp từ dòng đầu tiên của khí đó — xem forecastYears ở
- *  renderTrendForecastTable()). */
-function trendForecastMethodRowHtml(method, { forecastYears, gasCellHtml, isAverage }) {
+/** Render 1 dòng <tr> cho 1 PHƯƠNG PHÁP dự báo của 1 khí. gasCellHtml=null nghĩa là dòng này không
+ *  mở đầu 1 khí mới (cột "Khí" gộp bằng rowspan từ dòng đầu). */
+function trendForecastMethodRowHtml(method, key, { forecastYears, gasCellHtml }) {
   const fmtDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
-  const rateText = `${method.ratePerYear >= 0 ? "+" : ""}${method.ratePerYear.toFixed(2)} ppm/năm`;
-  const r2Text = method.r2 === null ? "—" : method.r2.toFixed(3);
+  const fmtP = (p) => (p < 0.001 ? "< 0,001" : "= " + p.toFixed(3).replace(".", ","));
+  const num = (v, d = 2) => v.toFixed(d).replace(".", ",");
+  const rateText = `${method.ratePerYear >= 0 ? "+" : ""}${num(method.ratePerYear)} ppm/năm`;
+  let forecastText = `${num(method.forecastValue, 1)} ppm${method.clamped ? " (cắt tại 0)" : ""}`;
+  if (key === "ols" && method.interval) {
+    forecastText += `<br /><span class="note">KDB 95%: ${num(method.interval.lower, 1)} – ${num(method.interval.upper, 1)} ppm</span>`;
+  }
+  let statHtml;
+  if (key === "ols") {
+    statHtml = `R² = ${num(method.r2, 3)}` + (method.pValue === null ? "" : `<br />p (độ dốc) ${fmtP(method.pValue)}`);
+  } else if (key === "sen") {
+    statHtml = method.pValue === null ? "Mann–Kendall: cần ≥ 4 lần đo" : `Mann–Kendall p ${fmtP(method.pValue)}`;
+    if (method.interval) statHtml += `<br /><span class="note">KTC 95% tốc độ: ${num(method.interval.lower)} – ${num(method.interval.upper)} ppm/năm</span>`;
+  } else {
+    statHtml = `<span class="note">Không kiểm định (2 điểm)</span>`;
+  }
+  if (method.significant === true) statHtml += ` <span class="pill ok">có ý nghĩa</span>`;
+  else if (method.significant === false) statHtml += ` <span class="pill muted">chưa có ý nghĩa</span>`;
   let crossingHtml = `<span class="pill muted">Không có ngưỡng để so sánh</span>`;
-  if (method.crossing) {
-    if (method.crossing.status === "already_exceeded") {
+  const c = method.crossing;
+  if (c) {
+    if (c.status === "already_exceeded") {
       crossingHtml = `<span class="pill bad">Đã vượt ngưỡng ở lần đo gần nhất</span>`;
-    } else if (method.crossing.status === "not_increasing") {
+    } else if (c.status === "not_increasing") {
       crossingHtml = `<span class="pill ok">Ổn định/giảm — không dự báo vượt ngưỡng</span>`;
     } else {
-      const withinNote = method.crossing.withinHorizon ? "" : ` (ngoài ${forecastYears} năm đã chọn)`;
-      crossingHtml = `<span class="pill ${method.crossing.yearsFromLast <= forecastYears ? "bad" : "warn"}">` +
-        `~${fmtDate(method.crossing.date)} (còn ~${method.crossing.yearsFromLast.toFixed(1)} năm)${withinNote}</span>`;
+      const withinNote = c.withinHorizon ? "" : ` (ngoài ${forecastYears} năm đã chọn)`;
+      const sigNote = c.significant === false ? " — xu hướng tăng chưa có ý nghĩa thống kê" : "";
+      const cls = c.significant === false ? "muted" : c.yearsFromLast <= forecastYears ? "bad" : "warn";
+      crossingHtml = `<span class="pill ${cls}">~${fmtDate(c.date)} (còn ~${num(c.yearsFromLast, 1)} năm)${withinNote}${sigNote}</span>`;
     }
   }
-  return `<tr${isAverage ? ' style="background:var(--gray-50); font-weight:600;"' : ""}>
+  return `<tr>
     ${gasCellHtml !== null ? gasCellHtml : ""}
     <td>${escapeHtml(method.label)}</td>
     <td>${rateText}</td>
-    <td>${method.forecastValue.toFixed(1)} ppm</td>
-    <td>${r2Text}</td>
+    <td>${forecastText}</td>
+    <td>${statHtml}</td>
     <td>${crossingHtml}</td>
   </tr>`;
 }
 
-/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody) bên dưới đồ thị — mỗi khí (trong 7 khí
- *  chính) đang chọn trên đồ thị chiếm 4 dòng: 3 dòng ứng với 3 thuật toán độc lập (OLS,
- *  Theil-Sen, trung bình liền kề — xem forecastGasTrend()/FORECAST_METHOD_LABELS ở
- *  dga-logic.js) rồi 1 dòng "Trung bình 3 thuật toán" tô đậm để dễ so sánh nhanh — cột
- *  "Khí" và "Giá trị gần nhất" dùng rowspan gộp chung cho cả nhóm 4 dòng vì đó là dữ liệu
- *  ĐO ĐƯỢC, giống nhau cho mọi thuật toán, chỉ có "Tốc độ"/"Dự báo"/"R²"/"Đạt ngưỡng" là
- *  khác nhau theo thuật toán. Ẩn hẳn khối #trForecastWrap khi không có dòng nào (không có
- *  khí chính nào đang chọn) để đỡ hiện 1 bảng trống gây rối mắt. */
+/** Vẽ bảng "Dự báo xu hướng" (#trForecastBody): mỗi khí chính đang chọn chiếm tối đa 3 dòng (OLS, Sen +
+ *  Mann–Kendall, 2 lần đo gần nhất — xem forecastGasTrend() ở dga-logic-forecast.js). Cột "Khí" gộp
+ *  rowspan, kèm giá trị gần nhất, ngưỡng và kết luận xu hướng Mann–Kendall. Ẩn khối khi không có dòng. */
 function renderTrendForecastTable(forecastRows, forecastYears) {
   const wrap = $("trForecastWrap");
   if (!wrap) return;
@@ -662,25 +670,27 @@ function renderTrendForecastTable(forecastRows, forecastYears) {
   wrap.classList.remove("hidden");
   $("trForecastYearsLabel").textContent = forecastYears;
 
+  const trendText = {
+    increasing: '<span class="pill bad">Xu hướng TĂNG (Mann–Kendall, p &lt; 0,05)</span>',
+    decreasing: '<span class="pill ok">Xu hướng GIẢM (Mann–Kendall, p &lt; 0,05)</span>',
+    none: '<span class="pill muted">Chưa phát hiện xu hướng có ý nghĩa thống kê</span>',
+    insufficient: '<span class="pill muted">Chưa đủ lần đo để kiểm định xu hướng (cần ≥ 4)</span>',
+  };
   const rowsHtml = forecastRows.map(({ label, forecast }) => {
     if (!forecast.ok) {
       const reasonText = forecast.reason === "not_enough_data"
         ? `Chưa đủ dữ liệu (cần ≥ 2 lần đo, hiện có ${forecast.n})`
         : "Không tính được (các lần đo cùng 1 ngày)";
-      return `<tr><td>${escapeHtml(label)}</td><td colspan="4" class="pill muted">${reasonText}</td></tr>`;
+      return `<tr><td>${escapeHtml(label)}</td><td colspan="5" class="pill muted">${reasonText}</td></tr>`;
     }
-    const methodKeys = ["ols", "theilsen", "consecutive", "average"];
-    const gasHeaderCell = `<td rowspan="${methodKeys.length}">${escapeHtml(label)}<br /><span class="pill muted" ` +
-      `style="margin-top:4px;">Gần nhất: ${forecast.lastValue} ppm • Ngưỡng: ${forecast.limit === null ? "—" : forecast.limit + " ppm"}</span></td>`;
-    return methodKeys.map((key, i) => {
-      const method = forecast.methods[key];
-      if (!method) return "";
-      return trendForecastMethodRowHtml(method, {
-        forecastYears,
-        gasCellHtml: i === 0 ? gasHeaderCell : null,
-        isAverage: key === "average",
-      });
-    }).join("");
+    const keys = ["ols", "sen", "latest"].filter((k) => forecast.methods[k]);
+    const gasHeaderCell = `<td rowspan="${keys.length}">${escapeHtml(label)}<br /><span class="pill muted" ` +
+      `style="margin-top:4px;">Gần nhất: ${forecast.lastValue} ppm • Ngưỡng: ${forecast.limit === null ? "—" : forecast.limit + " ppm"}</span>` +
+      `<br />${trendText[forecast.trend.direction]}</td>`;
+    return keys.map((key, i) => trendForecastMethodRowHtml(forecast.methods[key], key, {
+      forecastYears,
+      gasCellHtml: i === 0 ? gasHeaderCell : null,
+    })).join("");
   }).join("");
 
   $("trForecastBody").innerHTML = rowsHtml;

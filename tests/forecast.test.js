@@ -1,112 +1,166 @@
-// Dự báo xu hướng: OLS, Theil–Sen, trung bình liền kề, ngoại suy và mốc chạm ngưỡng.
+// Dự báo xu hướng theo mô hình thống kê chuẩn: OLS (kiểm định t, khoảng dự báo 95%), độ dốc Sen +
+// kiểm định Mann–Kendall, tốc độ 2 lần đo gần nhất (Bảng 65). Giá trị tham chiếu tính bằng SciPy 1.18
+// (scipy.stats.linregress / theilslopes / t.ppf / norm.cdf) trên cùng chuỗi số liệu.
 const { DGA } = require("./helpers");
 
-describe("linearRegression (OLS)", () => {
-  test("đường thẳng chính xác y = 2x => slope 2, intercept 0, R² = 1", () => {
-    const r = DGA.linearRegression([{ x: 0, y: 0 }, { x: 1, y: 2 }, { x: 2, y: 4 }]);
+// Chuỗi tham chiếu: x = ngày kể từ lần đo đầu, y = ppm (tăng ~6 ppm/năm, có nhiễu)
+const REF = [0, 90, 200, 380, 500, 730, 900, 1100, 1300, 1460].map((x, i) => ({
+  x, y: [20, 24, 23, 30, 29, 35, 33, 41, 40, 47][i],
+}));
+
+describe("hàm phân phối (đối chiếu bảng tra / SciPy)", () => {
+  test.each([
+    [0.975, 1, 12.7062], [0.975, 2, 4.3027], [0.975, 10, 2.2281], [0.975, 30, 2.0423], [0.95, 5, 2.015],
+  ])("t-quantile(%p, df=%i) = %f", (p, df, expected) => {
+    expect(DGA.studentTQuantile(p, df)).toBeCloseTo(expected, 3);
+  });
+  test("Student t CDF và Φ chuẩn tắc", () => {
+    expect(DGA.studentTCdf(2.0, 5)).toBeCloseTo(0.94903, 5);
+    expect(DGA.studentTCdf(-2.0, 5)).toBeCloseTo(0.05097, 5);
+    expect(DGA.normalCdf(1.96)).toBeCloseTo(0.975, 5);
+    expect(DGA.normalCdf(0)).toBeCloseTo(0.5, 7);
+    expect(DGA.normalQuantile(0.975)).toBeCloseTo(1.959964, 5);
+  });
+});
+
+describe("linearRegression (OLS) — khớp scipy.stats.linregress", () => {
+  test("chuỗi tham chiếu: slope, intercept, R², p-value kiểm định t", () => {
+    const r = DGA.linearRegression(REF);
+    expect(r.slope).toBeCloseTo(0.01645139075517334, 12);
+    expect(r.intercept).toBeCloseTo(21.243373757054556, 9);
+    expect(r.r2).toBeCloseTo(0.9456170584010873, 10);
+    expect(r.pSlope).toBeCloseTo(2.445579236215806e-6, 10);
+    expect(r.n).toBe(10);
+  });
+  test("khoảng dự báo 95% sau 3 năm kể từ lần đo cuối", () => {
+    const r = DGA.linearRegression(REF);
+    const pi = DGA.olsPredictionInterval(r, 1460 + 3 * 365.25);
+    expect(pi.lower).toBeCloseTo(55.285834399892536, 6);
+    expect(pi.upper).toBeCloseTo(71.2921969592851, 6);
+  });
+  test("đường thẳng chính xác: R² = 1, p = 0; y không đổi: slope 0, p = 1", () => {
+    const exact = DGA.linearRegression([{ x: 0, y: 0 }, { x: 1, y: 2 }, { x: 2, y: 4 }]);
+    expect(exact.slope).toBeCloseTo(2);
+    expect(exact.r2).toBeCloseTo(1);
+    expect(exact.pSlope).toBe(0);
+    const flat = DGA.linearRegression([{ x: 0, y: 5 }, { x: 1, y: 5 }, { x: 2, y: 5 }]);
+    expect(flat.slope).toBeCloseTo(0);
+    expect(flat.pSlope).toBe(1);
+  });
+  test("2 điểm: có slope nhưng không có sai số chuẩn / khoảng dự báo", () => {
+    const r = DGA.linearRegression([{ x: 0, y: 1 }, { x: 1, y: 3 }]);
     expect(r.slope).toBeCloseTo(2);
-    expect(r.intercept).toBeCloseTo(0);
-    expect(r.r2).toBeCloseTo(1);
-    expect(r.n).toBe(3);
+    expect(r.pSlope).toBeNull();
+    expect(DGA.olsPredictionInterval(r, 5)).toBeNull();
   });
   test("dưới 2 điểm hoặc mọi x giống nhau => null", () => {
     expect(DGA.linearRegression([])).toBeNull();
     expect(DGA.linearRegression([{ x: 1, y: 1 }])).toBeNull();
     expect(DGA.linearRegression([{ x: 1, y: 1 }, { x: 1, y: 5 }])).toBeNull();
   });
-  test("y không đổi => slope 0, R² = 1 (không chia cho 0)", () => {
-    const r = DGA.linearRegression([{ x: 0, y: 5 }, { x: 1, y: 5 }, { x: 2, y: 5 }]);
-    expect(r.slope).toBeCloseTo(0);
-    expect(r.r2).toBe(1);
-  });
-  test("dữ liệu nhiễu => 0 ≤ R² < 1", () => {
-    const r = DGA.linearRegression([{ x: 0, y: 0 }, { x: 1, y: 3 }, { x: 2, y: 1 }, { x: 3, y: 4 }]);
-    expect(r.r2).toBeGreaterThanOrEqual(0);
-    expect(r.r2).toBeLessThan(1);
-  });
 });
 
-describe("theilSenSlope — trung vị độ dốc, bền với điểm ngoại lai", () => {
-  test("có 1 điểm ngoại lai: Theil–Sen vẫn ≈ 1, OLS bị kéo lệch mạnh", () => {
+describe("độ dốc Sen + Mann–Kendall — khớp scipy.stats.theilslopes", () => {
+  test("chuỗi tham chiếu: slope, intercept, KTC 95% của độ dốc", () => {
+    const mk = DGA.mannKendallTest(REF);
+    const s = DGA.senSlopeEstimate(REF, mk.varS);
+    expect(s.slope).toBeCloseTo(0.016666666666666666, 12);
+    expect(s.intercept).toBeCloseTo(21.25, 10);
+    expect(s.lower).toBeCloseTo(0.01375, 12);
+    expect(s.upper).toBeCloseTo(0.02, 12);
+  });
+  test("Mann–Kendall: S = 37, p = 0,00128 (hai phía, hiệu chỉnh liên tục) → xu hướng tăng", () => {
+    const mk = DGA.mannKendallTest(REF);
+    expect(mk.S).toBe(37);
+    expect(mk.p).toBeCloseTo(0.0012821837418053317, 6);
+    expect(mk.direction).toBe("increasing");
+    expect(mk.tau).toBeCloseTo(37 / 45, 10);
+  });
+  test("giá trị trùng: Var(S) trừ phần hiệu chỉnh nhóm trùng", () => {
+    const pts = [1, 2, 2, 2, 3, 4].map((y, x) => ({ x, y }));
+    const n = 6;
+    expect(DGA.mannKendallTest(pts).varS).toBeCloseTo((n * (n - 1) * (2 * n + 5) - 3 * 2 * 11) / 18, 10);
+  });
+  test("dưới 4 điểm => insufficient; chuỗi nhiễu không xu hướng => none", () => {
+    expect(DGA.mannKendallTest([{ x: 0, y: 1 }, { x: 1, y: 2 }, { x: 2, y: 3 }]).direction).toBe("insufficient");
+    const noisy = [5, 7, 4, 6, 5, 7, 4, 6].map((y, x) => ({ x, y }));
+    expect(DGA.mannKendallTest(noisy).direction).toBe("none");
+  });
+  test("bền với điểm ngoại lai: Sen ≈ 1 trong khi OLS bị kéo lệch", () => {
     const pts = [0, 1, 2, 3, 4].map((x, i) => ({ x, y: i === 4 ? 100 : x }));
     expect(DGA.theilSenSlope(pts)).toBeCloseTo(1);
     expect(DGA.linearRegression(pts).slope).toBeGreaterThan(10);
   });
-  test("số cặp chẵn lấy trung bình 2 giá trị giữa; không có cặp x khác nhau => null", () => {
-    expect(DGA.theilSenSlope([{ x: 0, y: 0 }, { x: 1, y: 2 }])).toBeCloseTo(2);
-    expect(DGA.theilSenSlope([{ x: 1, y: 0 }, { x: 1, y: 2 }])).toBeNull();
-    expect(DGA.theilSenSlope([])).toBeNull();
-  });
 });
 
-describe("consecutiveAverageSlope — trung bình tốc độ các đoạn liền kề", () => {
-  test("(0,0) (1,1) (3,5): các đoạn 1 và 2 => trung bình 1,5", () => {
-    expect(DGA.consecutiveAverageSlope([{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 3, y: 5 }])).toBeCloseTo(1.5);
-  });
-  test("dưới 2 điểm hoặc mọi đoạn có dx = 0 => null", () => {
-    expect(DGA.consecutiveAverageSlope([{ x: 0, y: 0 }])).toBeNull();
-    expect(DGA.consecutiveAverageSlope([{ x: 1, y: 0 }, { x: 1, y: 5 }])).toBeNull();
+describe("latestPairSlope — tốc độ 2 lần đo gần nhất (Bảng 65)", () => {
+  test("lấy 2 lần đo cuối có ngày khác nhau", () => {
+    expect(DGA.latestPairSlope([{ x: 0, y: 0 }, { x: 10, y: 5 }, { x: 20, y: 25 }])).toBeCloseTo(2);
+    expect(DGA.latestPairSlope([{ x: 0, y: 0 }, { x: 10, y: 5 }, { x: 10, y: 7 }])).toBeCloseTo(0.7);
+    expect(DGA.latestPairSlope([{ x: 1, y: 0 }, { x: 1, y: 5 }])).toBeNull();
   });
 });
 
 describe("forecastGasTrend", () => {
-  const hist = [
-    { date: "2020-01-01", value: 10 },
-    { date: "2021-01-01", value: 20 },
-    { date: "2022-01-01", value: 30 },
-  ];
+  const dateOf = (days) => new Date(Date.UTC(2020, 0, 1) + days * 86400000).toISOString().slice(0, 10);
+  const hist = REF.map((p) => ({ date: dateOf(p.x), value: p.y }));
 
-  test("dưới 2 điểm hợp lệ => ok:false, not_enough_data", () => {
+  test("dưới 2 điểm hợp lệ => ok:false; mọi lần đo cùng ngày => same_date", () => {
     expect(DGA.forecastGasTrend([], 3, 100)).toMatchObject({ ok: false, reason: "not_enough_data" });
     expect(DGA.forecastGasTrend([{ date: "2020-01-01", value: 1 }], 3, 100)).toMatchObject({ ok: false, n: 1 });
+    expect(DGA.forecastGasTrend([{ date: "2020-01-01", value: 1 }, { date: "2020-01-01", value: 5 }], 3, 100))
+      .toMatchObject({ ok: false, reason: "same_date" });
   });
-  test("bỏ qua điểm rỗng/không phải số/ngày sai", () => {
-    const messy = [...hist, { date: "2023-01-01", value: "" }, { date: "2023-06-01", value: null }, { date: "không phải ngày", value: 5 }, { date: "", value: 5 }];
-    expect(DGA.forecastGasTrend(messy, 3, 100).n).toBe(3);
+  test("bỏ điểm rỗng/không phải số/ngày sai; không cần sắp sẵn", () => {
+    const messy = [hist[3], ...hist.slice(0, 3), ...hist.slice(4), { date: "2030-01-01", value: "" }, { date: "sai", value: 5 }];
+    const f = DGA.forecastGasTrend(messy, 3, null);
+    expect(f.n).toBe(10);
+    expect(f.lastValue).toBe(47);
   });
-  test("mọi lần đo cùng 1 ngày => ok:false (same_date)", () => {
-    const same = [{ date: "2020-01-01", value: 1 }, { date: "2020-01-01", value: 5 }];
-    expect(DGA.forecastGasTrend(same, 3, 100)).toMatchObject({ ok: false, reason: "same_date" });
+  test("dự báo lấy từ ĐƯỜNG ĐÃ KHỚP (không neo vào lần đo cuối) + khoảng dự báo OLS", () => {
+    const f = DGA.forecastGasTrend(hist, 3, null);
+    const r = DGA.linearRegression(REF);
+    const xh = 1460 + 3 * 365.25;
+    expect(f.methods.ols.forecastValue).toBeCloseTo(r.intercept + r.slope * xh, 6);
+    expect(f.methods.ols.fittedAtLast).toBeCloseTo(r.intercept + r.slope * 1460, 6);
+    expect(f.methods.ols.interval.lower).toBeCloseTo(55.285834399892536, 5);
+    expect(f.methods.ols.significant).toBe(true);
+    expect(f.methods.sen.forecastValue).toBeCloseTo(21.25 + (1 / 60) * xh, 6);
+    expect(f.methods.sen.interval.lower).toBeCloseTo(0.01375 * 365.25, 6);
+    expect(f.trend.direction).toBe("increasing");
+    expect(f.methods.latest.ratePerYear).toBeCloseTo(((47 - 40) / 160) * 365.25, 6);
+    expect(f.methods.latest.forecastValue).toBeCloseTo(47 + (7 / 160) * 3 * 365.25, 6);
   });
-  test("không cần sắp sẵn theo ngày — hàm tự sắp", () => {
-    const shuffled = [hist[2], hist[0], hist[1]];
-    const a = DGA.forecastGasTrend(shuffled, 3, 100);
-    const b = DGA.forecastGasTrend(hist, 3, 100);
-    expect(a.methods.ols.ratePerYear).toBeCloseTo(b.methods.ols.ratePerYear);
-    expect(a.lastValue).toBe(30);
-  });
-  test("tăng đều ~10 ppm/năm: cả 3 thuật toán ≈ 10, dự báo sau 1 năm ≈ 40", () => {
-    const f = DGA.forecastGasTrend(hist, 1, null);
-    expect(f.ok).toBe(true);
-    ["ols", "theilsen", "consecutive", "average"].forEach((k) => {
-      expect(f.methods[k].ratePerYear).toBeCloseTo(10, 0);
-      expect(f.methods[k].forecastValue).toBeCloseTo(40, 0);
+  test("nồng độ dự báo không âm: giảm mạnh => cắt tại 0, clamped = true, cận dưới KDB ≥ 0", () => {
+    const down = [40, 30, 22, 12, 5].map((v, i) => ({ date: dateOf(i * 365), value: v }));
+    const f = DGA.forecastGasTrend(down, 5, null);
+    ["ols", "sen", "latest"].forEach((k) => {
+      expect(f.methods[k].forecastValue).toBe(0);
+      expect(f.methods[k].clamped).toBe(true);
     });
-    expect(f.methods.ols.r2).toBeGreaterThan(0.999);
-    expect(f.methods.theilsen.r2).toBeNull();
+    expect(f.methods.ols.interval.lower).toBeGreaterThanOrEqual(0);
   });
-  test("mốc chạm ngưỡng: ngưỡng 50 từ giá trị cuối 30, tốc độ ~10/năm => ~2 năm sau", () => {
-    const f = DGA.forecastGasTrend(hist, 3, 50);
+  test("mốc đạt ngưỡng theo đường khớp; đánh dấu khi xu hướng chưa có ý nghĩa thống kê", () => {
+    const f = DGA.forecastGasTrend(hist, 3, 60);
     const c = f.methods.ols.crossing;
+    const r = DGA.linearRegression(REF);
     expect(c.status).toBe("predicted");
-    expect(c.yearsFromLast).toBeCloseTo(2, 0);
-    expect(c.withinHorizon).toBe(true);
+    expect(c.yearsFromLast).toBeCloseTo(((60 - r.intercept) / r.slope - 1460) / 365.25, 6);
+    expect(c.significant).toBe(true);
+    const noisy = [5, 7, 4, 6, 5, 7, 4, 7].map((v, i) => ({ date: dateOf(i * 200), value: v }));
+    const cn = DGA.forecastGasTrend(noisy, 3, 50).methods.sen.crossing;
+    if (cn.status === "predicted") expect(cn.significant).toBe(false);
   });
-  test("ngưỡng ngoài tầm dự báo => withinHorizon = false", () => {
-    const c = DGA.forecastGasTrend(hist, 1, 50).methods.ols.crossing;
-    expect(c.status).toBe("predicted");
-    expect(c.withinHorizon).toBe(false);
-  });
-  test("đã vượt ngưỡng => already_exceeded (kể cả đúng bằng ngưỡng)", () => {
-    expect(DGA.forecastGasTrend(hist, 3, 25).methods.ols.crossing.status).toBe("already_exceeded");
-    expect(DGA.forecastGasTrend(hist, 3, 30).methods.ols.crossing.status).toBe("already_exceeded");
-  });
-  test("xu hướng không tăng => not_increasing", () => {
-    const down = [{ date: "2020-01-01", value: 30 }, { date: "2021-01-01", value: 20 }, { date: "2022-01-01", value: 10 }];
+  test("đã vượt ngưỡng (theo lần đo thực tế) / không tăng / không có ngưỡng", () => {
+    expect(DGA.forecastGasTrend(hist, 3, 47).methods.ols.crossing.status).toBe("already_exceeded");
+    const down = [30, 20, 10].map((v, i) => ({ date: dateOf(i * 365), value: v }));
     expect(DGA.forecastGasTrend(down, 3, 100).methods.ols.crossing.status).toBe("not_increasing");
-  });
-  test("không có ngưỡng => crossing = null", () => {
     expect(DGA.forecastGasTrend(hist, 3, null).methods.ols.crossing).toBeNull();
     expect(DGA.forecastGasTrend(hist, 3, undefined).limit).toBeNull();
+  });
+  test("ngưỡng ngoài tầm dự báo => withinHorizon = false", () => {
+    const c = DGA.forecastGasTrend(hist, 1, 80).methods.ols.crossing;
+    expect(c.status).toBe("predicted");
+    expect(c.withinHorizon).toBe(false);
   });
 });
