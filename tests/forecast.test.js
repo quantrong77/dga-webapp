@@ -1,5 +1,5 @@
 // Dự báo xu hướng theo mô hình thống kê chuẩn: OLS (kiểm định t, khoảng dự báo 95%), độ dốc Sen +
-// kiểm định Mann–Kendall, tốc độ 2 lần đo gần nhất (Bảng 65). Giá trị tham chiếu tính bằng SciPy 1.18
+// kiểm định Mann–Kendall (toàn chuỗi và giai đoạn gần đây). Giá trị tham chiếu tính bằng SciPy 1.18
 // (scipy.stats.linregress / theilslopes / t.ppf / norm.cdf) trên cùng chuỗi số liệu.
 const { DGA } = require("./helpers");
 
@@ -93,11 +93,25 @@ describe("độ dốc Sen + Mann–Kendall — khớp scipy.stats.theilslopes", 
   });
 });
 
-describe("latestPairSlope — tốc độ 2 lần đo gần nhất (Bảng 65)", () => {
-  test("lấy 2 lần đo cuối có ngày khác nhau", () => {
-    expect(DGA.latestPairSlope([{ x: 0, y: 0 }, { x: 10, y: 5 }, { x: 20, y: 25 }])).toBeCloseTo(2);
-    expect(DGA.latestPairSlope([{ x: 0, y: 0 }, { x: 10, y: 5 }, { x: 10, y: 7 }])).toBeCloseTo(0.7);
-    expect(DGA.latestPairSlope([{ x: 1, y: 0 }, { x: 1, y: 5 }])).toBeNull();
+describe("recentWindowStart — cửa sổ giai đoạn gần đây (3 năm, tối thiểu 5 lần đo)", () => {
+  const Y = 365.25;
+  test("đủ 5 lần đo trong 3 năm → bắt đầu từ lần đo đầu trong 3 năm", () => {
+    const pts = [0, 1, 2, 3, 3.5, 4, 4.5, 5, 5.5, 6].map((t) => ({ x: t * Y, y: 0 }));
+    expect(DGA.recentWindowStart(pts)).toBe(3); // x ≥ 3 năm: 3, 3.5, …, 6 → 7 lần đo
+  });
+  test("3 năm có ít hơn 5 lần đo → lùi để có 5 lần đo gần nhất", () => {
+    const pts = [0, 1, 2, 3, 4, 5, 6].map((t) => ({ x: t * Y, y: 0 }));
+    expect(DGA.recentWindowStart(pts)).toBe(2); // 3 năm chỉ có 4 lần đo (3..6) → lấy 5 lần từ chỉ số 2
+  });
+  test("chuỗi ≤ 5 lần đo → 0 (cửa sổ trùm cả chuỗi)", () => {
+    expect(DGA.recentWindowStart([0, 1, 2, 3, 4].map((t) => ({ x: t * Y, y: 0 })))).toBe(0);
+  });
+  test("n = 5 là cỡ mẫu nhỏ nhất Mann–Kendall có thể đạt p < 0,05", () => {
+    const mono = (n) => DGA.mannKendallTest(Array.from({ length: n }, (_, i) => ({ x: i, y: i }))).p;
+    expect(mono(4)).toBeGreaterThan(0.05);
+    expect(mono(5)).toBeLessThan(0.05);
+    expect(DGA.FORECAST_RECENT_MIN_N).toBe(5);
+    expect(DGA.FORECAST_RECENT_YEARS).toBe(3);
   });
 });
 
@@ -128,13 +142,35 @@ describe("forecastGasTrend", () => {
     expect(f.methods.sen.forecastValue).toBeCloseTo(21.25 + (1 / 60) * xh, 6);
     expect(f.methods.sen.interval.lower).toBeCloseTo(0.01375 * 365.25, 6);
     expect(f.trend.direction).toBe("increasing");
-    expect(f.methods.latest.ratePerYear).toBeCloseTo(((47 - 40) / 160) * 365.25, 6);
-    expect(f.methods.latest.forecastValue).toBeCloseTo(47 + (7 / 160) * 3 * 365.25, 6);
+  });
+  test("giai đoạn gần đây = Sen + Mann–Kendall trên cửa sổ; tốc độ phù hợp toàn chuỗi", () => {
+    const f = DGA.forecastGasTrend(hist, 3, null);
+    // lần đo cuối x = 1460; 3 năm = 1095,75 ngày → x ≥ 364,25: 7 lần đo (380 … 1460)
+    const win = REF.slice(3);
+    expect(f.recentWindow.n).toBe(7);
+    expect(f.recentWindow.fromDate).toBe(new Date(dateOf(380)).toISOString());
+    const mk = DGA.mannKendallTest(win);
+    const s = DGA.senSlopeEstimate(win, mk.varS);
+    expect(f.methods.recent.ratePerYear).toBeCloseTo(s.slope * 365.25, 9);
+    expect(f.methods.recent.pValue).toBeCloseTo(mk.p, 12);
+    expect(f.rateChange).toBe("consistent");
+  });
+  test("tốc độ tăng mạnh gần đây → rateChange = faster; chuỗi ngắn → không có giai đoạn gần", () => {
+    const vals = [10, 11, 10, 12, 11, 12, 13, 12, 20, 28, 37, 46];
+    const acc = vals.map((v, i) => ({ date: dateOf(i * 182), value: v }));
+    const f = DGA.forecastGasTrend(acc, 3, null);
+    expect(f.methods.recent.ratePerYear).toBeGreaterThan(f.methods.sen.interval.upper);
+    expect(f.rateChange).toBe("faster");
+    expect(f.methods.recent.significant).toBe(true);
+    const short = DGA.forecastGasTrend(hist.slice(0, 5), 3, null);
+    expect(short.methods.recent).toBeNull();
+    expect(short.recentWindow).toBeNull();
+    expect(short.rateChange).toBeNull();
   });
   test("nồng độ dự báo không âm: giảm mạnh => cắt tại 0, clamped = true, cận dưới KDB ≥ 0", () => {
     const down = [40, 30, 22, 12, 5].map((v, i) => ({ date: dateOf(i * 365), value: v }));
     const f = DGA.forecastGasTrend(down, 5, null);
-    ["ols", "sen", "latest"].forEach((k) => {
+    ["ols", "sen"].forEach((k) => {
       expect(f.methods[k].forecastValue).toBe(0);
       expect(f.methods[k].clamped).toBe(true);
     });

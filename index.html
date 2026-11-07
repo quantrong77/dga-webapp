@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v49-du-bao-chuan") {
+          if (k !== "dga-offline-v50-du-bao-gan-day") {
             caches.delete(k);
           }
         });
@@ -1170,8 +1170,9 @@
           <p class="note">Ba phương pháp thống kê chuẩn, dự báo từ đường đã khớp (không neo vào 1 lần đo đơn lẻ):
             <strong>hồi quy tuyến tính OLS</strong> kèm khoảng dự báo 95% và kiểm định t cho độ dốc;
             <strong>độ dốc Sen + kiểm định Mann–Kendall</strong> (phi tham số, ít bị ảnh hưởng bởi lần đo bất thường —
-            dùng cho đường nét đứt trên đồ thị); và <strong>tốc độ giữa 2 lần đo gần nhất</strong> (cách tính Bảng 65 QĐ1901)
-            để tham chiếu. Xu hướng chỉ được coi là có thật khi kiểm định có ý nghĩa thống kê (p &lt; 0,05); Mann–Kendall cần
+            dùng cho đường nét đứt trên đồ thị); và <strong>Sen + Mann–Kendall trên giai đoạn gần đây</strong> (các lần đo
+            trong 3 năm gần nhất, tối thiểu 5 lần đo) để phát hiện tốc độ sinh khí đang thay đổi. Tốc độ giữa 2 lần đo
+            (Bảng 65) là chỉ số chẩn đoán, xem ở tab Lịch sử. Xu hướng chỉ được coi là có thật khi kiểm định có ý nghĩa thống kê (p &lt; 0,05); Mann–Kendall cần
             tối thiểu 4 lần đo. Nồng độ dự báo không âm. <strong>Chỉ mang tính tham khảo thống kê</strong>, giả định tốc độ
             sinh khí không đổi — KHÔNG thay thế nguyên tắc đánh giá tổng hợp tại Điều 3 QĐ1901. Chỉ dự báo mốc đạt ngưỡng cho
             7 khí chính (so với ngưỡng tuyệt đối đang áp dụng cho thiết bị).</p>
@@ -3491,8 +3492,9 @@
           <li>Với mỗi khí trong 7 khí chính, bảng hiển thị 3 phương pháp thống kê:</li>
           <li><strong>Hồi quy tuyến tính OLS</strong>: tốc độ thay đổi, giá trị dự báo kèm <strong>khoảng dự báo 95%</strong>, <strong>R²</strong> và <strong>p-value</strong> kiểm định độ dốc.</li>
           <li><strong>Độ dốc Sen + kiểm định Mann–Kendall</strong>: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm <strong>khoảng tin cậy 95% của tốc độ</strong>. Đường nét đứt trên đồ thị dùng phương pháp này.</li>
-          <li><strong>Tốc độ 2 lần đo gần nhất</strong>: đúng cách tính tốc độ tăng của Bảng 65, để tham chiếu.</li>
-          <li>Cột <strong>Khí</strong> ghi kết luận xu hướng theo Mann–Kendall: <strong>Tăng</strong> / <strong>Giảm</strong> (khi p &lt; 0,05), <strong>Chưa phát hiện xu hướng có ý nghĩa thống kê</strong>, hoặc <strong>Chưa đủ lần đo</strong> (cần ≥ 4).</li>
+          <li><strong>Độ dốc Sen + Mann–Kendall — giai đoạn gần đây</strong>: cùng phương pháp nhưng chỉ dùng các lần đo trong <strong>3 năm gần nhất</strong>, tối thiểu <strong>5 lần đo</strong> gần nhất (nếu 3 năm có ít hơn 5 lần đo thì lấy thêm lần đo cũ hơn). Dòng này chỉ hiện khi chuỗi số liệu dài hơn cửa sổ, và giúp phát hiện tốc độ sinh khí đang thay đổi mà xu hướng toàn chuỗi phản ứng chậm.</li>
+          <li>Cột <strong>Khí</strong> ghi kết luận xu hướng theo Mann–Kendall: <strong>Tăng</strong> / <strong>Giảm</strong> (khi p &lt; 0,05), <strong>Chưa phát hiện xu hướng có ý nghĩa thống kê</strong>, hoặc <strong>Chưa đủ lần đo</strong> (cần ≥ 4). Khi có giai đoạn gần đây, cột này còn so sánh tốc độ gần đây với khoảng tin cậy 95% của tốc độ toàn chuỗi: <strong>tăng nhanh hơn</strong> / <strong>chậm hơn</strong> (nằm ngoài khoảng) hoặc <strong>phù hợp</strong>.</li>
+          <li>Tốc độ giữa 2 lần đo liền kề (Bảng 65) là chỉ số chẩn đoán, không dùng để ngoại suy dự báo — xem chức năng <strong>So sánh tốc độ gia tăng khí giữa 2 lần đo</strong> ở tab Lịch sử.</li>
           <li>Dự báo lấy từ <strong>đường đã khớp</strong>, không neo vào một lần đo đơn lẻ; nồng độ dự báo <strong>không âm</strong> (cắt tại 0).</li>
           <li><strong>Thời điểm dự kiến chạm ngưỡng</strong> chỉ là cảnh báo khi xu hướng tăng <strong>có ý nghĩa thống kê</strong>; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.</li>
           <li>Cần <strong>tối thiểu 2 lần đo</strong> mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.</li>

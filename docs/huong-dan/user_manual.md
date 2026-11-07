@@ -447,8 +447,9 @@ Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu
 - Với mỗi khí trong 7 khí chính, bảng hiển thị 3 phương pháp thống kê:
   - **Hồi quy tuyến tính OLS**: tốc độ thay đổi, giá trị dự báo kèm **khoảng dự báo 95%**, **R²** và **p-value** kiểm định độ dốc.
   - **Độ dốc Sen + kiểm định Mann–Kendall**: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm **khoảng tin cậy 95% của tốc độ**. Đường nét đứt trên đồ thị dùng phương pháp này.
-  - **Tốc độ 2 lần đo gần nhất**: đúng cách tính tốc độ tăng của Bảng 65, để tham chiếu.
-- Cột **Khí** ghi kết luận xu hướng theo Mann–Kendall: **Tăng** / **Giảm** (khi p < 0,05), **Chưa phát hiện xu hướng có ý nghĩa thống kê**, hoặc **Chưa đủ lần đo** (cần ≥ 4).
+  - **Độ dốc Sen + Mann–Kendall — giai đoạn gần đây**: cùng phương pháp nhưng chỉ dùng các lần đo trong **3 năm gần nhất**, tối thiểu **5 lần đo** gần nhất (nếu 3 năm có ít hơn 5 lần đo thì lấy thêm lần đo cũ hơn). Dòng này chỉ hiện khi chuỗi số liệu dài hơn cửa sổ, và giúp phát hiện tốc độ sinh khí đang thay đổi mà xu hướng toàn chuỗi phản ứng chậm.
+- Cột **Khí** ghi kết luận xu hướng theo Mann–Kendall: **Tăng** / **Giảm** (khi p < 0,05), **Chưa phát hiện xu hướng có ý nghĩa thống kê**, hoặc **Chưa đủ lần đo** (cần ≥ 4). Khi có giai đoạn gần đây, cột này còn so sánh tốc độ gần đây với khoảng tin cậy 95% của tốc độ toàn chuỗi: **tăng nhanh hơn** / **chậm hơn** (nằm ngoài khoảng) hoặc **phù hợp**.
+- Tốc độ giữa 2 lần đo liền kề (Bảng 65) là chỉ số chẩn đoán, không dùng để ngoại suy dự báo — xem chức năng **So sánh tốc độ gia tăng khí giữa 2 lần đo** ở tab Lịch sử.
 - Dự báo lấy từ **đường đã khớp**, không neo vào một lần đo đơn lẻ; nồng độ dự báo **không âm** (cắt tại 0).
 - **Thời điểm dự kiến chạm ngưỡng** chỉ là cảnh báo khi xu hướng tăng **có ý nghĩa thống kê**; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.
 - Cần **tối thiểu 2 lần đo** mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.

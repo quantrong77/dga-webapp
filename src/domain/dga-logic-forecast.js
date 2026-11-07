@@ -5,8 +5,11 @@
      (2) Ước lượng độ dốc Sen (Theil–Sen) + kiểm định xu hướng Mann–Kendall (phi tham số, có hiệu
          chỉnh giá trị trùng) — cặp phương pháp tiêu chuẩn cho chuỗi số liệu giám sát lấy mẫu không
          đều, ít điểm, có điểm bất thường (Sen 1968; Mann 1945; Kendall 1975; Gilbert 1987);
-     (3) Tốc độ giữa 2 lần đo gần nhất — đúng cách tính tốc độ tăng của Bảng 65 Điều 54 QĐ1901,
-         giữ làm tham chiếu nghiệp vụ.
+     (3) Độ dốc Sen + Mann–Kendall trên GIAI ĐOẠN GẦN ĐÂY (cửa sổ: các lần đo trong
+         FORECAST_RECENT_YEARS năm gần nhất, nhưng tối thiểu FORECAST_RECENT_MIN_N lần đo) — phát hiện
+         tốc độ sinh khí đang thay đổi mà độ dốc toàn chuỗi phản ứng chậm. Tốc độ giữa 2 lần đo liền kề
+         (Bảng 65 Điều 54 QĐ1901) là chỉ số CHẨN ĐOÁN, không dùng để ngoại suy: chỉ 2 điểm nên sai số đo
+         khuếch đại theo 1/Δt và không có kiểm định — xem tab Lịch sử (So sánh 2 lần đo).
    Hoàn toàn độc lập — không phụ thuộc dga-logic-core.js hay module nào khác. */
 
 // ---------------------------------------------------------------------------
@@ -24,7 +27,12 @@
 const FORECAST_MS_PER_DAY = 86400000;
 const FORECAST_DAYS_PER_YEAR = 365.25;
 const FORECAST_ALPHA = 0.05; // mức ý nghĩa 5% (độ tin cậy 95%)
-const FORECAST_MK_MIN_N = 4; // Mann–Kendall: dưới 4 điểm không thể đạt p < 0,05 → "chưa đủ dữ liệu"
+const FORECAST_MK_MIN_N = 4; // Mann–Kendall: dưới 4 điểm → "chưa đủ dữ liệu"
+// Cửa sổ "giai đoạn gần đây": mọi lần đo trong 3 năm gần nhất (≈ 1 chu kỳ 3 năm của Điều 3 QĐ1901),
+// nhưng không ít hơn 5 lần đo — n = 5 là cỡ mẫu nhỏ nhất để Mann–Kendall hai phía có thể đạt
+// p < 0,05 (n = 4 đơn điệu hoàn toàn: S = 6, p ≈ 0,089).
+const FORECAST_RECENT_YEARS = 3;
+const FORECAST_RECENT_MIN_N = 5;
 
 // ---------------------------- Hàm phân phối -----------------------------------
 /** Hàm phân phối chuẩn tắc Φ(z) — xấp xỉ erf của Abramowitz & Stegun 7.1.26 (sai số < 1,5e-7). */
@@ -251,37 +259,41 @@ function senSlopeEstimate(points, varS, alpha = FORECAST_ALPHA) {
   return { slope, intercept, lower, upper };
 }
 
-// ---------------------------- (3) Tốc độ 2 lần đo gần nhất --------------------
-/** Tốc độ (đơn vị y / đơn vị x) giữa 2 lần đo gần nhất có thời điểm khác nhau — cách tính tốc độ tăng
- *  của Bảng 65 QĐ1901. Null nếu không có 2 thời điểm khác nhau. points ĐÃ sắp tăng dần theo x. */
-function latestPairSlope(points) {
-  const last = points[points.length - 1];
-  for (let i = points.length - 2; i >= 0; i--) {
-    const dx = last.x - points[i].x;
-    if (dx !== 0) return (last.y - points[i].y) / dx;
-  }
-  return null;
+// ---------------------------- (3) Cửa sổ giai đoạn gần đây -------------------
+/** Chỉ số đầu của cửa sổ "giai đoạn gần đây" trên chuỗi ĐÃ sắp theo x (đơn vị ngày): lần đo đầu tiên
+ *  trong FORECAST_RECENT_YEARS năm tính tới lần đo cuối, lùi thêm nếu cần để có ≥ FORECAST_RECENT_MIN_N
+ *  lần đo. Trả về 0 khi cửa sổ trùm cả chuỗi (khi đó không tách được giai đoạn gần). */
+function recentWindowStart(points, years = FORECAST_RECENT_YEARS, minN = FORECAST_RECENT_MIN_N) {
+  const n = points.length;
+  if (n === 0) return 0;
+  const fromX = points[n - 1].x - years * FORECAST_DAYS_PER_YEAR;
+  let start = points.findIndex((p) => p.x >= fromX);
+  if (start < 0) start = n - 1;
+  return Math.max(0, Math.min(start, n - minN));
 }
 
 const FORECAST_METHOD_LABELS = {
   ols: "Hồi quy tuyến tính OLS (khoảng dự báo 95%)",
   sen: "Độ dốc Sen + kiểm định Mann–Kendall",
-  latest: "Tốc độ 2 lần đo gần nhất (cách tính Bảng 65)",
+  recent: "Độ dốc Sen + Mann–Kendall — giai đoạn gần đây",
 };
 
 /**
- * Dự báo xu hướng 1 thông số (khí) theo 3 phương pháp (FORECAST_METHOD_LABELS).
+ * Dự báo xu hướng 1 thông số (khí) theo 3 phương pháp (FORECAST_METHOD_LABELS); "recent" chỉ có khi
+ * cửa sổ gần đây ngắn hơn cả chuỗi.
  * @param {Array<{date: string|Date, value: number|string|null|undefined}>} history (không cần sắp sẵn;
  *   điểm rỗng/không phải số/ngày sai bị loại)
  * @param {number} forecastYears số năm ngoại suy (vd 3)
  * @param {number|null} limit ngưỡng đang áp dụng (null nếu không có)
  * @returns {object} { ok:false, reason, n } hoặc
- *   { ok:true, n, lastValue, lastDate, limit, trend (kết quả Mann–Kendall), methods:{ols, sen, latest} }
+ *   { ok:true, n, lastValue, lastDate, limit, trend (kết quả Mann–Kendall), methods:{ols, sen, recent},
+ *     recentWindow: {n, fromDate} | null, rateChange: "faster"|"slower"|"consistent"|null (tốc độ giai đoạn
+ *     gần so với KTC 95% tốc độ Sen toàn chuỗi; null khi thiếu "recent" hoặc KTC) }
  *   — mỗi method (null nếu không tính được): { label, ratePerYear, fittedAtLast (giá trị của mô hình tại
  *   lần đo gần nhất — điểm đầu đường dự báo trên đồ thị), forecastValue (≥ 0), clamped,
  *   forecastDate, interval ({lower, upper} — OLS: khoảng dự báo 95% của giá trị; Sen: khoảng tin
  *   cậy 95% của tốc độ ppm/năm; null nếu không tính được), r2 (chỉ OLS), pValue (OLS: kiểm định t
- *   độ dốc; Sen: Mann–Kendall; latest: null), significant (p < α; latest: null), crossing }
+ *   độ dốc; Sen/recent: Mann–Kendall), significant (p < α; null khi n < 4), crossing }
  *   crossing: null (không có ngưỡng) | {status:"already_exceeded"} | {status:"not_increasing"} |
  *   {status:"predicted", date, withinHorizon, yearsFromLast, significant}.
  */
@@ -305,14 +317,12 @@ function forecastGasTrend(history, forecastYears, limit) {
   const ols = linearRegression(xy);
   const mk = mannKendallTest(xy);
   const sen = senSlopeEstimate(xy, mk.varS);
-  const latest = latestPairSlope(xy);
-  if (!ols && !sen && latest === null) return { ok: false, reason: "same_date", n: pts.length };
+  if (!ols && !sen) return { ok: false, reason: "same_date", n: pts.length };
 
   const hasLimit = limit !== null && limit !== undefined && Number.isFinite(Number(limit));
   const limitNum = hasLimit ? Number(limit) : null;
 
-  // Thời điểm đạt ngưỡng theo 1 ĐƯỜNG y = a + b·x (đường khớp của OLS/Sen, hoặc đường đi qua lần
-  // đo gần nhất của phương pháp "latest"). Đã vượt ngưỡng xét theo GIÁ TRỊ ĐO THỰC TẾ gần nhất.
+  // Thời điểm đạt ngưỡng theo 1 ĐƯỜNG y = a + b·x (đường khớp của OLS/Sen). Đã vượt ngưỡng xét theo GIÁ TRỊ ĐO THỰC TẾ gần nhất.
   function crossingFor(a, b, significant) {
     if (!hasLimit) return null;
     if (lastPoint.value >= limitNum) return { status: "already_exceeded" };
@@ -328,7 +338,7 @@ function forecastGasTrend(history, forecastYears, limit) {
   }
   const clamp0 = (v) => (v < 0 ? 0 : v);
 
-  const methods = { ols: null, sen: null, latest: null };
+  const methods = { ols: null, sen: null, recent: null };
   if (ols) {
     const raw = ols.intercept + ols.slope * horizonX;
     const pi = olsPredictionInterval(ols, horizonX);
@@ -347,39 +357,42 @@ function forecastGasTrend(history, forecastYears, limit) {
       crossing: crossingFor(ols.intercept, ols.slope, significant),
     };
   }
-  if (sen) {
-    const raw = sen.intercept + sen.slope * horizonX;
-    const significant = mk.direction === "insufficient" ? null : mk.p < FORECAST_ALPHA;
-    methods.sen = {
-      label: FORECAST_METHOD_LABELS.sen,
-      ratePerYear: sen.slope * FORECAST_DAYS_PER_YEAR,
-      fittedAtLast: clamp0(sen.intercept + sen.slope * lastX),
+  function senMethod(label, est, test) {
+    const raw = est.intercept + est.slope * horizonX;
+    const significant = test.direction === "insufficient" ? null : test.p < FORECAST_ALPHA;
+    return {
+      label,
+      ratePerYear: est.slope * FORECAST_DAYS_PER_YEAR,
+      fittedAtLast: clamp0(est.intercept + est.slope * lastX),
       forecastValue: clamp0(raw),
       clamped: raw < 0,
       forecastDate,
-      interval: sen.lower === null ? null
-        : { lower: sen.lower * FORECAST_DAYS_PER_YEAR, upper: sen.upper * FORECAST_DAYS_PER_YEAR },
+      interval: est.lower === null ? null
+        : { lower: est.lower * FORECAST_DAYS_PER_YEAR, upper: est.upper * FORECAST_DAYS_PER_YEAR },
       r2: null,
-      pValue: mk.direction === "insufficient" ? null : mk.p,
+      pValue: test.direction === "insufficient" ? null : test.p,
       significant,
-      crossing: crossingFor(sen.intercept, sen.slope, significant),
+      crossing: crossingFor(est.intercept, est.slope, significant),
     };
   }
-  if (latest !== null) {
-    const raw = lastPoint.value + latest * horizonDays;
-    methods.latest = {
-      label: FORECAST_METHOD_LABELS.latest,
-      ratePerYear: latest * FORECAST_DAYS_PER_YEAR,
-      fittedAtLast: lastPoint.value,
-      forecastValue: clamp0(raw),
-      clamped: raw < 0,
-      forecastDate,
-      interval: null,
-      r2: null,
-      pValue: null,
-      significant: null,
-      crossing: crossingFor(lastPoint.value - latest * lastX, latest, null),
-    };
+  if (sen) methods.sen = senMethod(FORECAST_METHOD_LABELS.sen, sen, mk);
+
+  let recentWindow = null;
+  let rateChange = null;
+  const start = recentWindowStart(xy);
+  if (start > 0) {
+    const win = xy.slice(start);
+    const mkR = mannKendallTest(win);
+    const senR = senSlopeEstimate(win, mkR.varS);
+    if (senR) {
+      methods.recent = senMethod(FORECAST_METHOD_LABELS.recent, senR, mkR);
+      recentWindow = { n: win.length, fromDate: pts[start].date.toISOString() };
+      const ci = methods.sen && methods.sen.interval;
+      if (ci) {
+        const r = methods.recent.ratePerYear;
+        rateChange = r > ci.upper ? "faster" : r < ci.lower ? "slower" : "consistent";
+      }
+    }
   }
 
   return {
@@ -390,5 +403,7 @@ function forecastGasTrend(history, forecastYears, limit) {
     limit: limitNum,
     trend: mk,
     methods,
+    recentWindow,
+    rateChange,
   };
 }
