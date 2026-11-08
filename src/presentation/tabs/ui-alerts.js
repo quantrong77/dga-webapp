@@ -755,7 +755,8 @@ function refreshAlertsUI() {
       <td>${escapeHtml(a.sampleDate)}</td>
       <td class="actions-cell">${rowActionsHtml([
         a.record && rowActionBtn("view", "eye",
-          a.record.bbtn_url ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm" : "Xem chi tiết số liệu và chẩn đoán lần đo này",
+          a.record.bbtn_url && a.source !== "gas" ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm"
+            : a.record.bbtn_url ? "Xem số liệu cạnh BBTN đính kèm để đối chiếu" : "Xem chi tiết số liệu và chẩn đoán lần đo này",
           { cls: "btn-action-alert" }),
         a.record && typeof canEditRecord === "function" && canEditRecord(a.record) &&
           rowActionBtn("edit", "edit", "Hiệu chỉnh số liệu lần đo này", { cls: "btn-action-alert" }),
@@ -765,10 +766,10 @@ function refreshAlertsUI() {
     const viewBtn = tr.querySelector('[data-action="view"]');
     if (viewBtn && a.record) {
       viewBtn.addEventListener("click", () => {
-        if (a.record.bbtn_url && typeof viewBbtn === "function") {
+        if (a.source === "gas" && typeof onViewMeasurement === "function") {
+          onViewMeasurement(a.record); // số liệu + BBTN đính kèm cạnh nhau
+        } else if (a.record.bbtn_url && typeof viewBbtn === "function") {
           viewBbtn({ bbtn_url: a.record.bbtn_url, bbtn_name: a.record.bbtn_name });
-        } else if (a.source === "gas" && typeof onViewMeasurement === "function") {
-          onViewMeasurement(a.record);
         } else if (a.source === "oil" && typeof onEditOilTest === "function") {
           onEditOilTest(a.record);
         } else if (a.source === "oltc" && typeof onEditOltcOilTest === "function") {

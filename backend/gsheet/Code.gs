@@ -366,6 +366,9 @@ function doGet(e) {
     if (action === "listRegulationConfig") { requireSession(token); return jsonOut(listRows(SHEET_REGULATION_CONFIG, REGULATION_CONFIG_HEADERS)); }
     // Danh sách user: chỉ Admin xem được (dùng cho tab "Quản trị").
     if (action === "listUsers") { requireAdmin(token); return jsonOut(listPublicUsers()); }
+    // Nội dung 1 file đính kèm (BBTN/ảnh góp ý) — để web app hiện PDF trong khung đối chiếu cạnh số liệu
+    // (trình duyệt không nhúng/tải thẳng được link Google Drive). Xem actionGetAttachment().
+    if (action === "getAttachment") { requireSession(token); return jsonOut(actionGetAttachment(e.parameter.id)); }
     // Trạng thái bản sao Supabase (tab "Quản trị") — xem actionSupabaseSyncStatus().
     if (action === "supabaseSyncStatus") { requireAdmin(token); return jsonOut(actionSupabaseSyncStatus()); }
 
@@ -981,6 +984,32 @@ function actionUploadAttachment(token, body) {
     return { error: "Tải file lên Google Drive thất bại: " + msg };
   }
   return { id: file.getId(), url: file.getUrl(), name: filename };
+}
+
+// Thư mục Drive mà getAttachment được phép đọc — đúng các thư mục actionUploadAttachment() ghi vào.
+const ATTACHMENT_READ_FOLDERS = [BBTN_FOLDER_NAME, "DGA_Feedback_DinhKem"];
+const MAX_ATTACHMENT_READ_BYTES = 15 * 1024 * 1024;
+
+/** Trả { name, mimeType, base64Data } của 1 file đính kèm theo id Drive. CHỈ đọc file nằm trong
+ *  ATTACHMENT_READ_FOLDERS (không biến web app thành cổng đọc mọi file trên Drive của tài khoản deploy). */
+function actionGetAttachment(id) {
+  const fileId = String(id || "");
+  if (!/^[A-Za-z0-9_-]{10,}$/.test(fileId)) return { error: "id file không hợp lệ." };
+  let file;
+  try {
+    file = DriveApp.getFileById(fileId);
+  } catch (err) {
+    return { error: "Không tìm thấy file đính kèm." };
+  }
+  let allowed = false;
+  const parents = file.getParents();
+  while (parents.hasNext()) {
+    if (ATTACHMENT_READ_FOLDERS.indexOf(parents.next().getName()) >= 0) { allowed = true; break; }
+  }
+  if (!allowed) return { error: "File này không phải file đính kèm của ứng dụng." };
+  if (file.getSize() > MAX_ATTACHMENT_READ_BYTES) return { error: "File quá lớn để hiển thị trong khung đối chiếu." };
+  const blob = file.getBlob();
+  return { name: file.getName(), mimeType: blob.getContentType(), base64Data: Utilities.base64Encode(blob.getBytes()) };
 }
 
 function jsonOut(obj) {

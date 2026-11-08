@@ -333,6 +333,23 @@ const Storage = {
     return map[measurementId] || null;
   },
 
+  /** Nội dung file đính kèm (BBTN) dạng Blob để hiện trong khung đối chiếu cạnh số liệu, null nếu không lấy được.
+   *  Chế độ Google Sheets: link Google Drive không nhúng/tải thẳng được từ trình duyệt (CORS, X-Frame-Options) —
+   *  Apps Script đọc hộ (action getAttachment, chỉ file trong thư mục đính kèm của app) rồi trả base64.
+   *  att = { bbtn_url, bbtn_file_id? }; id Drive lấy từ bbtn_file_id hoặc tách từ link .../d/<id>/... */
+  async fetchAttachmentBlob(att) {
+    if (!att || !att.bbtn_url || this.mode !== "gsheet") return null;
+    const m = String(att.bbtn_url).match(/\/d\/([A-Za-z0-9_-]{10,})|[?&]id=([A-Za-z0-9_-]{10,})/);
+    const id = att.bbtn_file_id || (m && (m[1] || m[2]));
+    if (!id) return null;
+    const res = await gsheetGet("getAttachment", { id });
+    if (!res || !res.base64Data) return null;
+    const bin = atob(res.base64Data);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new Blob([bytes], { type: res.mimeType || "application/pdf" });
+  },
+
   // ---------------------------------------------------------------------------
   // API quản lý hàng đợi & Tự động đồng bộ (Outbox Processor)
   // ---------------------------------------------------------------------------

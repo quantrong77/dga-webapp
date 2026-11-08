@@ -181,6 +181,7 @@ function hideBbtnPreview() {
   const frame = $("bbtnPreviewFrame");
   const toggleBtn = $("btnToggleBbtnPreview");
   const toggleBtnText = $("btnToggleBbtnPreviewText");
+  _bbtnPreviewLoadSeq += 1; // hủy lần tải BBTN đang chờ (nếu có)
   if (col) col.classList.add("hidden");
   if (layout) layout.classList.remove("has-preview");
   if (frame) {
@@ -219,6 +220,18 @@ function toggleBbtnPreview() {
   }
 }
 
+// Số thứ tự lần mở BBTN gần nhất — bỏ kết quả tải về muộn của lần mở trước (xem viewBbtnInPreview()).
+let _bbtnPreviewLoadSeq = 0;
+
+/** Trang HTML nhỏ hiện trong khung đối chiếu khi đang tải BBTN. */
+function bbtnPreviewMessageHtml(message, name) {
+  const esc = typeof escapeHtml === "function" ? escapeHtml : (s) => s;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;` +
+    `display:flex;align-items:center;justify-content:center;min-height:80vh;margin:0;background:#f8fafc;color:#475569;` +
+    `text-align:center;font-size:13px}</style></head><body><div><div style="font-size:28px">📄</div><p>${esc(message)}</p>` +
+    `<p style="font-size:12px;color:#94a3b8;word-break:break-all">${esc(name)}</p></div></body></html>`;
+}
+
 /** Mở BBTN ở khung đối chiếu từ attachment */
 async function viewBbtnInPreview(att) {
   if (!att || !att.bbtn_url) return;
@@ -239,6 +252,24 @@ async function viewBbtnInPreview(att) {
   }
   const safe = safeHttpUrl(url);
   if (!safe) return;
+
+  // Google Sheets: Apps Script đọc hộ file trên Drive (Storage.fetchAttachmentBlob) → hiện PDF ngay trong khung
+  // đối chiếu. Code.gs cũ chưa có action getAttachment thì báo lỗi → rơi xuống thẻ "mở ở tab mới" bên dưới.
+  if (Storage.mode === "gsheet" && typeof Storage.fetchAttachmentBlob === "function") {
+    const token = (_bbtnPreviewLoadSeq += 1);
+    showBbtnPreview(new Blob([bbtnPreviewMessageHtml("Đang tải BBTN…", name)], { type: "text/html" }), name, "Đang tải…", safe);
+    try {
+      const blob = await Storage.fetchAttachmentBlob(att);
+      if (token !== _bbtnPreviewLoadSeq) return; // người dùng đã mở lần đo khác trong lúc chờ
+      if (blob) {
+        showBbtnPreview(blob, name, "BBTN đã lưu", safe);
+        return;
+      }
+    } catch (err) {
+      console.warn("Không tải được BBTN qua máy chủ:", err);
+      if (token !== _bbtnPreviewLoadSeq) return;
+    }
+  }
 
   // Thử tải qua fetch nếu có CORS (ví dụ Supabase storage public URL)
   try {
@@ -624,7 +655,7 @@ function onEditMeasurement(rec) {
   $("bbtnImportNote").classList.add("hidden");
   renderBbtnCurrent();
   if (rec.bbtn_url) {
-    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name, bbtn_file_id: rec.bbtn_file_id });
   } else {
     hideBbtnPreview();
   }
@@ -689,7 +720,7 @@ function onViewMeasurement(rec) {
   renderBbtnCurrent();
 
   if (rec.bbtn_url) {
-    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
+    viewBbtnInPreview({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name, bbtn_file_id: rec.bbtn_file_id });
   } else {
     hideBbtnPreview();
   }

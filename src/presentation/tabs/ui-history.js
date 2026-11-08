@@ -102,7 +102,7 @@ function renderMeasurementRows(tbody, records) {
       <td>${ownerCellHtml(rec)}${editLogBadgeHtml(rec)}</td>
       <td class="actions-cell">${rowActionsHtml([
         rowActionBtn("viewbbtn", "eye",
-          rec.bbtn_url ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm" : "Xem chi tiết số liệu và chẩn đoán lần đo",
+          rec.bbtn_url ? "Xem số liệu cạnh BBTN đính kèm để đối chiếu" : "Xem chi tiết số liệu và chẩn đoán lần đo",
           { cls: "btn-action-hist" }),
         canEditRecord(rec) && rowActionBtn("edit", "edit", "Sửa số liệu lần đo này", { cls: "btn-action-hist" }),
         canWrite() && rowActionBtn("del", "trash", "Xóa lần đo này", { danger: true, cls: "btn-action-hist" }),
@@ -110,10 +110,10 @@ function renderMeasurementRows(tbody, records) {
     `;
     const viewBbtnBtn = tr.querySelector('[data-action="viewbbtn"]');
     if (viewBbtnBtn) {
+      // Mở số liệu lên form tab Khí hòa tan, BBTN đính kèm (nếu có) hiện ở khung đối chiếu bên cạnh — xem
+      // onViewMeasurement()/viewBbtnInPreview() ở ui-dga.js; khung đó có nút mở ở tab mới khi cần.
       viewBbtnBtn.addEventListener("click", () => {
-        if (rec.bbtn_url) {
-          viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });
-        } else if (typeof onViewMeasurement === "function") {
+        if (typeof onViewMeasurement === "function") {
           onViewMeasurement(rec);
         } else {
           viewBbtn({ bbtn_url: rec.bbtn_url, bbtn_name: rec.bbtn_name });

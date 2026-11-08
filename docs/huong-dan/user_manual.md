@@ -393,7 +393,7 @@ Mỗi dòng gồm: ngày, trạm, thiết bị, loại, pha, lần đo, 7 khí +
 
 - Ô khí **tô nền đỏ** = giá trị **đã bị sửa** so với lần lưu gốc. Rê chuột vào ô để xem **giá trị cũ và thời điểm sửa**.
 - Huy hiệu **"✎ N lần sửa"** ở cột *Người nhập* cho xem log các lần chỉnh sửa.
-- **Xem BBTN** để mở lại file PDF đã đính kèm (nếu có).
+- Nút **Xem** (biểu tượng con mắt) đưa số liệu lần đo lên form tab Khí hòa tan, kèm kết quả đánh giá; nếu lần đo có BBTN đính kèm, file PDF hiện ngay ở **khung đối chiếu** bên cạnh để soát số liệu đã nhập (nút **"Mở tab mới"** trong khung vẫn dùng được khi cần xem toàn màn hình). Ở chế độ Google Sheets, file trên Google Drive được tải qua máy chủ Apps Script nên lần mở đầu mất vài giây.
 
 ### 10.3. Sửa một lần đo đã lưu
 

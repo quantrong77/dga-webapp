@@ -623,3 +623,48 @@ describe("Băm mật khẩu PBKDF2 (đổi từ SHA-256 một vòng)", () => {
     }
   });
 });
+
+// getAttachment: web app hiện BBTN trong khung đối chiếu cạnh số liệu — link Google Drive không nhúng/tải thẳng
+// được từ trình duyệt nên Apps Script đọc hộ. Chỉ đọc file trong thư mục đính kèm của app, phải đăng nhập.
+describe("getAttachment — đọc file đính kèm cho khung đối chiếu", () => {
+  function withDrive(files) {
+    const { ctx } = createSandbox();
+    ctx.Utilities.base64Encode = (bytes) => Buffer.from(bytes.map((x) => x & 0xff)).toString("base64");
+    ctx.DriveApp = {
+      getFileById: (id) => {
+        const f = files[id];
+        if (!f) throw new Error("No item with the given ID could be found");
+        let i = 0;
+        return {
+          getName: () => f.name,
+          getSize: () => f.bytes.length,
+          getParents: () => ({ hasNext: () => i < f.folders.length, next: () => ({ getName: () => f.folders[i++] }) }),
+          getBlob: () => ({ getContentType: () => "application/pdf", getBytes: () => toJavaBytes(Buffer.from(f.bytes)) }),
+        };
+      },
+    };
+    return ctx;
+  }
+  const FILES = {
+    bbtn_file_id_0001: { name: "01071_18.07.2022.pdf", folders: ["DGA_BBTN_DinhKem"], bytes: "%PDF-1.4 noi dung" },
+    other_file_id_0002: { name: "bang-luong.xlsx", folders: ["Tai lieu rieng"], bytes: "bi mat" },
+  };
+
+  test("đã đăng nhập + file trong thư mục BBTN → trả tên, kiểu, nội dung base64", () => {
+    const ctx = withDrive(FILES);
+    const { token } = registerUser(ctx, "ky.thuat@vidu.com");
+    const res = callGet(ctx, "getAttachment", { token, id: "bbtn_file_id_0001" });
+    expect(res.name).toBe("01071_18.07.2022.pdf");
+    expect(res.mimeType).toBe("application/pdf");
+    expect(Buffer.from(res.base64Data, "base64").toString()).toBe("%PDF-1.4 noi dung");
+  });
+
+  test("chưa đăng nhập, file ngoài thư mục đính kèm, id sai → từ chối", () => {
+    const ctx = withDrive(FILES);
+    const { token } = registerUser(ctx, "ky.thuat@vidu.com");
+    expect(callGet(ctx, "getAttachment", { id: "bbtn_file_id_0001" }).error).toMatch(/Chưa đăng nhập/);
+    expect(callGet(ctx, "getAttachment", { token, id: "other_file_id_0002" }).error).toMatch(/không phải file đính kèm/);
+    expect(callGet(ctx, "getAttachment", { token, id: "khong_ton_tai_123" }).error).toMatch(/Không tìm thấy/);
+    expect(callGet(ctx, "getAttachment", { token, id: "../x" }).error).toMatch(/không hợp lệ/);
+  });
+});

@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v54-bbtn-loai-tb") {
+          if (k !== "dga-offline-v55-bbtn-khung-doi-chieu") {
             caches.delete(k);
           }
         });
@@ -3460,7 +3460,7 @@
           <ul class="rec-list">
           <li>Ô khí <strong>tô nền đỏ</strong> = giá trị <strong>đã bị sửa</strong> so với lần lưu gốc. Rê chuột vào ô để xem <strong>giá trị cũ và thời điểm sửa</strong>.</li>
           <li>Huy hiệu <strong>"✎ N lần sửa"</strong> ở cột <em>Người nhập</em> cho xem log các lần chỉnh sửa.</li>
-          <li><strong>Xem BBTN</strong> để mở lại file PDF đã đính kèm (nếu có).</li>
+          <li>Nút <strong>Xem</strong> (biểu tượng con mắt) đưa số liệu lần đo lên form tab Khí hòa tan, kèm kết quả đánh giá; nếu lần đo có BBTN đính kèm, file PDF hiện ngay ở <strong>khung đối chiếu</strong> bên cạnh để soát số liệu đã nhập (nút <strong>"Mở tab mới"</strong> trong khung vẫn dùng được khi cần xem toàn màn hình). Ở chế độ Google Sheets, file trên Google Drive được tải qua máy chủ Apps Script nên lần mở đầu mất vài giây.</li>
           </ul>
           <h3>10.3. Sửa một lần đo đã lưu</h3>
           <ol type="1">

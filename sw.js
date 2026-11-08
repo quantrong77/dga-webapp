@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v54-bbtn-loai-tb";
+const CACHE_NAME = "dga-offline-v55-bbtn-khung-doi-chieu";
 
 const PRECACHE_ASSETS = [
   "./",
