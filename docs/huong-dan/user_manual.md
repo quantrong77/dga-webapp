@@ -253,9 +253,10 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
    - Nút **"Mở tab mới"** giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần.
    - Nút **"✕ Ẩn"** hoặc **"Hiện BBTN đối chiếu"** để đóng hoặc mở lại khung xem bất kỳ lúc nào.
 3. App tự đọc và **điền sẵn** vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và **7 khí hòa tan**.
-4. **Đối chiếu và xác nhận số liệu:** So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.
-5. Bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
-6. Sau này khi sửa hoặc xem lại lần đo, bạn có thể bấm **Xem BBTN đã lưu** hoặc **Hiện BBTN đối chiếu** để mở lại file PDF đối chiếu trực tiếp song song với form.
+4. **7 khí chính:** ô Kết quả trên biên bản để **trống**, ghi **0** hoặc ghi **KPH** đều được điền là **KPH** — app không lấy số ở cột Tiêu chuẩn thay cho ô trống. Khí nào app **không đọc được chắc chắn** (không thấy dòng khí đó, hoặc không phân biệt được số đọc ra là kết quả hay tiêu chuẩn) thì ô đó **để trống, tô vàng** và app báo tên khí: đối chiếu biên bản ở khung bên cạnh rồi nhập tay (ghi KPH nếu biên bản để trống). Còn ô tô vàng thì app chưa cho **Phân tích & Lưu**. Khi nhập hàng loạt, BBTN có khí đọc không chắc chắn được **bỏ chọn** kèm cảnh báo — kéo riêng BBTN đó vào ô **"Một BBTN (PDF)"** để nhập tay.
+5. **Đối chiếu và xác nhận số liệu:** So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.
+6. Bấm **Phân tích & Lưu**. File PDF được đính kèm cùng lần đo.
+7. Sau này khi sửa hoặc xem lại lần đo, bạn có thể bấm **Xem BBTN đã lưu** hoặc **Hiện BBTN đối chiếu** để mở lại file PDF đối chiếu trực tiếp song song với form.
 
 Việc đọc PDF chạy **hoàn toàn trên trình duyệt của bạn**, file không bị gửi đi đâu để "đọc".
 

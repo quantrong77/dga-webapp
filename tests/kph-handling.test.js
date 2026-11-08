@@ -15,6 +15,7 @@ function loadBbtnHelpers() {
     "\nthis.guessDoAm = guessDoAm;" +
     "\nthis.guessNhietDo = guessNhietDo;" +
     "\nthis.extractGasValues = extractGasValues;" +
+    "\nthis.extractGasValuesDetailed = extractGasValuesDetailed;" +
     "\nthis.extractSoCheTao = extractSoCheTao;" +
     "\nthis.extractLoaiDau = extractLoaiDau;" +
     "\nthis.extractDienApDm = extractDienApDm;" +
@@ -24,7 +25,7 @@ function loadBbtnHelpers() {
   return sandbox;
 }
 
-const { stripVnDiacritics, guessDoAm, guessNhietDo, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class } = loadBbtnHelpers();
+const { stripVnDiacritics, guessDoAm, guessNhietDo, extractGasValues, extractGasValuesDetailed, extractSoCheTao, extractLoaiDau, extractDienApDm, mapVoltageToBang63Class } = loadBbtnHelpers();
 
 describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí", () => {
   test("trích số bình thường khi có số liệu", () => {
@@ -42,7 +43,7 @@ describe("BbtnImport.extractGasValues — Nhận diện KPH và số liệu khí
     expect(res.CH4).toBe(9.703);
     expect(res.C2H6).toBe(13.241);
     expect(res.C2H4).toBe(1.483);
-    expect(res.C2H2).toBe(0);
+    expect(res.C2H2).toBe("KPH"); // 7 khí chính: ghi 0 trên biên bản cũng là KPH
     expect(res.CO).toBe(97.798);
     expect(res.CO2).toBe(192.679);
   });
@@ -621,9 +622,41 @@ describe("BbtnImport.extractGasValues — cột Tiêu chuẩn số trần, ô K�
     expect(res).toMatchObject({ C2H6: "KPH", C2H4: "KPH", C2H2: "KPH", H2: 8.5, CO: 120.3 });
   });
 
-  test("biên bản có ghi 0 trong ô Kết quả (mẫu 2023) vẫn đọc 0", () => {
+  test("biên bản ghi 0 trong ô Kết quả (mẫu 2023) → KPH (trống, 0, KPH đều là KPH)", () => {
     const lines = table(["Tổng lượng khí cháy", "10 132 0-500 2.6 Đạt"]).map((l) =>
       l.replace("C2H6 100 Đạt", "C2H6 0 100 Đạt").replace("C2H4 150 Đạt", "C2H4 0 150 Đạt").replace("C2H2 150 Đạt", "C2H2 0 150 Đạt"));
-    expect(extractGasValues(lines)).toMatchObject({ C2H6: 0, C2H4: 0, C2H2: 0 });
+    expect(extractGasValues(lines)).toMatchObject({ C2H6: "KPH", C2H4: "KPH", C2H2: "KPH" });
+  });
+});
+
+// Không đọc chắc được thì KHÔNG đoán: bỏ giá trị, trả về "uncertain" để giao diện tô vàng, bắt nhập tay.
+describe("extractGasValuesDetailed — ô đọc không chắc → uncertain, không lấy số ở cột Tiêu chuẩn", () => {
+  const head = ["KẾT QUẢ THÍ NGHIỆM", "Hạng mục phân tích Đơn vị Kết quả Tiêu chuẩn Đánh giá", "(Test items) (Unit) (Result) (Limits) (Estimate)"];
+  test("TCG in trên biên bản không khớp cách nào + không đủ dòng đối chứng → bỏ trống, báo uncertain", () => {
+    const r = extractGasValuesDetailed([...head,
+      "1 Hydrogen H2 8.5 250 Đạt",
+      "3 Ethan C2H6 100 Đạt",
+      "Tổng lượng khí cháy", "10 999 0-500 Đạt"]);
+    expect(r.values.C2H6).toBeUndefined();
+    expect(r.uncertain).toEqual(["C2H6"]);
+    expect(r.values.H2).toBe(8.5);
+  });
+  test("số lẻ (không phải số nguyên) đứng một mình ở bảng có cột Tiêu chuẩn, không có TCG → uncertain", () => {
+    const r = extractGasValuesDetailed([...head,
+      "1 Hydrogen H2 8.5 250 Đạt", "2 Methane CH4 3.2 100 Đạt", "4 Ethylen C2H4 12.75 Đạt"]);
+    expect(r.uncertain).toEqual(["C2H4"]);
+    expect(r.values.C2H4).toBeUndefined();
+  });
+  test("TCG không khớp nhưng cấu trúc bảng rõ (khí khác có kết quả + tiêu chuẩn) → KPH, không uncertain", () => {
+    const r = extractGasValuesDetailed([...head,
+      "1 Hydrogen H2 8.5 250 Đạt", "2 Methane CH4 3.2 100 Đạt", "3 Ethan C2H6 100 Đạt",
+      "6 CarbonMonoxit CO 120.3 1000 Đạt", "Tổng lượng khí cháy", "10 140 0-500 Đạt"]);
+    expect(r.values.C2H6).toBe("KPH");
+    expect(r.uncertain).toEqual([]);
+  });
+  test("bảng không có cột Tiêu chuẩn → số đứng một mình là kết quả, giữ nguyên", () => {
+    const r = extractGasValuesDetailed(["1 Hydro (H2) ppm 777 Đạt", "2 Metan (CH4) ppm 10 < 130 Đạt"]);
+    expect(r.values.H2).toBe(777);
+    expect(r.uncertain).toEqual([]);
   });
 });

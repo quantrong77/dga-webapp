@@ -323,8 +323,22 @@ function knownGasLimitValues(gasId) {
   return set;
 }
 
+/** Chỉ trả giá trị khí (giữ nguyên API cũ) — xem extractGasValuesDetailed(). */
 function extractGasValues(lines) {
+  return extractGasValuesDetailed(lines).values;
+}
+
+const MAIN_GAS_IDS = ["H2", "CH4", "C2H6", "C2H4", "C2H2", "CO", "CO2"];
+
+/**
+ * Trích khí hòa tan từ bảng kết quả. Trả { values, uncertain }:
+ *  - values: { H2: số | "KPH", ... } — với 7 khí chính, ô Kết quả TRỐNG, ghi 0 hay KPH đều là "KPH";
+ *  - uncertain: các khí có dòng trong bảng nhưng KHÔNG xác định chắc được số đọc ra là kết quả hay số ở cột
+ *    Tiêu chuẩn — KHÔNG đoán (bỏ khỏi values), giao diện tô vàng để người dùng nhập tay.
+ */
+function extractGasValuesDetailed(lines) {
   const values = {};
+  const uncertain = [];
   const rowInfo = {}; // khí lấy số theo bước 4 (số đầu tiên) — dùng cho resolveBareLimitColumn()
 
   // 1. Giới hạn phạm vi quét vào vùng bảng "KẾT QUẢ THÍ NGHIỆM" nếu tìm thấy tiêu đề bảng.
@@ -466,8 +480,9 @@ function extractGasValues(lines) {
     }
     if (found !== null && found !== undefined) values[gas.id] = found;
   }
-  resolveBareLimitColumn(values, rowInfo, searchLines);
-  return values;
+  resolveBareLimitColumn(values, rowInfo, searchLines, uncertain);
+  MAIN_GAS_IDS.forEach((g) => { if (values[g] === 0) values[g] = "KPH"; });
+  return { values, uncertain };
 }
 
 const TCG_GAS_IDS = ["H2", "CH4", "C2H6", "C2H4", "C2H2", "CO"];
@@ -491,30 +506,40 @@ function extractPrintedTcg(lines) {
 
 /**
  * Ô "Kết quả" TRỐNG ở bảng có cột "Tiêu chuẩn" in SỐ TRẦN (không có "<"), vd mẫu NPTS/BM.15 năm 2022:
- * "3 Ethan C2H6 100 Đạt" — số 100 là Tiêu chuẩn, không phải kết quả (khí không phát hiện). Ứng viên: khí cháy
- * có ĐÚNG 1 số, Đánh giá đạt, không có "<". Quyết định:
- *  - có TCG in trên biên bản: tổng các khí cháy KHÔNG kể ứng viên khớp TCG (sai lệch ≤ 1%) còn tính cả ứng viên
- *    thì không khớp → ứng viên là KPH; tính cả ứng viên mới khớp → giữ nguyên số;
- *  - không có TCG: ≥ 2 khí khác trong bảng có ≥ 2 số (kết quả + tiêu chuẩn) và số của ứng viên là số nguyên
- *    → coi là Tiêu chuẩn → KPH.
+ * "3 Ethan C2H6 100 Đạt" — số 100 là Tiêu chuẩn, không phải kết quả (khí không phát hiện). Ứng viên: khí chính
+ * có ĐÚNG 1 số, Đánh giá đạt, không có "<". Quyết định theo thứ tự:
+ *  1. TCG in trên biên bản (chỉ xét 6 khí cháy): tổng KHÔNG kể ứng viên khớp TCG (≤ 1%) còn tính cả thì không
+ *     → ứng viên là KPH; tính cả ứng viên mới khớp → là kết quả đo, giữ nguyên; không khớp cách nào → bước 2;
+ *  2. cấu trúc bảng: ≥ 2 khí khác có ≥ 2 số (kết quả + tiêu chuẩn) → số NGUYÊN đứng một mình là Tiêu chuẩn → KPH;
+ *  3. bảng có cột Tiêu chuẩn mà vẫn không quyết được → KHÔNG đoán: bỏ giá trị, đưa vào "uncertain" (nhập tay).
+ *  Bảng không có cột Tiêu chuẩn → số đứng một mình là kết quả, giữ nguyên.
  */
-function resolveBareLimitColumn(values, rowInfo, lines) {
-  const cands = TCG_GAS_IDS.filter((g) => {
+function resolveBareLimitColumn(values, rowInfo, lines, uncertain) {
+  let cands = MAIN_GAS_IDS.filter((g) => {
     const r = rowInfo[g];
     return r && r.count === 1 && r.pass && !r.hasLimitToken && typeof values[g] === "number";
   });
   if (!cands.length) return;
+  const toKph = (gs) => gs.forEach((g) => { values[g] = "KPH"; });
   const num = (g) => (typeof values[g] === "number" ? values[g] : 0);
   const tcg = extractPrintedTcg(lines);
-  if (tcg !== null && tcg > 0) {
-    const without = TCG_GAS_IDS.filter((g) => !cands.includes(g)).reduce((s, g) => s + num(g), 0);
-    const withAll = without + cands.reduce((s, g) => s + num(g), 0);
+  const tcgCands = cands.filter((g) => TCG_GAS_IDS.includes(g));
+  if (tcg !== null && tcg > 0 && tcgCands.length) {
+    const without = TCG_GAS_IDS.filter((g) => !tcgCands.includes(g)).reduce((s, g) => s + num(g), 0);
+    const withAll = without + tcgCands.reduce((s, g) => s + num(g), 0);
     const tol = Math.max(0.01 * tcg, 0.05);
-    if (Math.abs(without - tcg) <= tol && Math.abs(withAll - tcg) > tol) cands.forEach((g) => { values[g] = "KPH"; });
-    return;
+    const withoutOk = Math.abs(without - tcg) <= tol;
+    const withAllOk = Math.abs(withAll - tcg) <= tol;
+    if (withoutOk && !withAllOk) { toKph(tcgCands); cands = cands.filter((g) => !tcgCands.includes(g)); }
+    else if (withAllOk && !withoutOk) cands = cands.filter((g) => !tcgCands.includes(g));
   }
+  if (!cands.length) return;
+  const hasLimitsColumn = lines.some((l) => /Tieu\s*chuan|\bLimits?\b|Gioi\s*han/i.test(stripVnDiacritics(l)));
   const others = Object.keys(rowInfo).filter((g) => !cands.includes(g) && rowInfo[g].count >= 2 && rowInfo[g].pass);
-  if (others.length >= 2) cands.filter((g) => Number.isInteger(values[g])).forEach((g) => { values[g] = "KPH"; });
+  cands.forEach((g) => {
+    if (others.length >= 2 && Number.isInteger(values[g])) values[g] = "KPH";
+    else if (hasLimitsColumn) { delete values[g]; uncertain.push(g); }
+  });
 }
 
 function extractSoCheTao(lines, foldedLines, pha) {
@@ -772,7 +797,14 @@ async function extract(file, onProgress) {
   const ngayThiNghiem = guessTestDateISO(foldedFullText);
   const nhietDo = guessNhietDo(foldedFullText);
   const doAm = guessDoAm(foldedFullText);
-  const gases = extractGasValues(lines);
+  const gasDetail = extractGasValuesDetailed(lines);
+  const gases = gasDetail.values;
+  // Khí chính KHÔNG đọc chắc được: số mơ hồ (uncertain) + khí không thấy dòng nào trong bảng (chỉ tính khi đã
+  // đọc được ít nhất 1 khí — tức có bảng kết quả). Giao diện tô vàng các ô này để nhập tay.
+  const gasesUncertain = gasDetail.uncertain.slice();
+  if (Object.keys(gases).length || gasesUncertain.length) {
+    MAIN_GAS_IDS.forEach((g) => { if (!(g in gases) && !gasesUncertain.includes(g)) gasesUncertain.push(g); });
+  }
 
   const matchedCount =
     [tram, thietbi, loai, pha, ngay, soCheTao, loaiDau, dienApDm, nhietDo, doAm].filter(
@@ -781,7 +813,7 @@ async function extract(file, onProgress) {
 
   return {
     tram, thietbi, loai, pha, ngay, hangSanXuat, soCheTao, dienApDm, bang63VoltageClass, namSx, namVanHanh, loaiDau,
-    ngayThiNghiem, lyDoThiNghiem, nhietDo, doAm, gases, matchedCount, viaOCR,
+    ngayThiNghiem, lyDoThiNghiem, nhietDo, doAm, gases, gasesUncertain, matchedCount, viaOCR,
   };
 }
 
@@ -841,11 +873,11 @@ async function readLines(file, onProgress) {
 }
 
 const BbtnImport = {
-  extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, extractHangSanXuat,
+  extract, readLines, extractGasValues, extractGasValuesDetailed, extractSoCheTao, extractLoaiDau, extractDienApDm, extractHangSanXuat,
   mapVoltageToBang63Class, setManufacturerStandardsProvider,
 };
 window.BbtnImport = BbtnImport;
 if (typeof module !== "undefined" && module.exports) module.exports = BbtnImport;
-export { extract, readLines, extractGasValues, extractSoCheTao, extractLoaiDau, extractDienApDm, extractHangSanXuat, mapVoltageToBang63Class };
+export { extract, readLines, extractGasValues, extractGasValuesDetailed, extractSoCheTao, extractLoaiDau, extractDienApDm, extractHangSanXuat, mapVoltageToBang63Class };
 export default BbtnImport;
 window.dispatchEvent(new Event("bbtnimport:ready"));

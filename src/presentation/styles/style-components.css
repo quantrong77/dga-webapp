@@ -69,6 +69,9 @@ input.is-invalid:focus, select.is-invalid:focus, textarea.is-invalid:focus {
   border-color: var(--bad);
   box-shadow: var(--input-inset), 0 0 0 3px color-mix(in srgb, var(--bad) 22%, transparent);
 }
+/* Ô khí chưa đọc được chắc chắn từ BBTN (markGasNeedsCheck(), ui-dga.js): nền vàng — cần nhập tay theo biên bản. */
+input.needs-check { background: #fef08a; color: #422006; border-color: #ca8a04; } /* vàng cố định + chữ tối: rõ ở cả giao diện sáng/tối */
+input.needs-check:focus { border-color: #ca8a04; box-shadow: var(--input-inset), 0 0 0 3px rgba(202, 138, 4, 0.3); }
 
 input::placeholder, textarea::placeholder {
   color: var(--text-tertiary);

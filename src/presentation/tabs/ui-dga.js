@@ -45,6 +45,7 @@ const BBTN_EXTRA_FIELD_IDS = ["f_ngaythinghiem", "f_lydothinghiem", "f_nhietdo",
 
 function clearForm() {
   hideBbtnPreview();
+  clearGasNeedsCheck();
   ["f_tram", "f_thietbi", "f_ghichu"].forEach((id) => ($(id).value = ""));
   if ($("f_xulydau")) $("f_xulydau").value = "";
   TECH_SPEC_FIELD_IDS.forEach((id) => ($(id).value = ""));
@@ -72,6 +73,7 @@ function clearForm() {
 
 function resetMeasurementEditState() {
   hideBbtnPreview();
+  clearGasNeedsCheck();
   _editingMeasurementId = null;
   _editingOriginalRecord = null;
   _editingMeasurementAttachment = null;
@@ -517,6 +519,14 @@ async function onBbtnFileSelected(e) {
     $("f_doam").value = data.doAm;
     filled.push("Độ ẩm môi trường");
   }
+  // 7 khí chính: điền LẠI ĐỦ cả 7 ô (ô không đọc được để trống — không giữ số của BBTN đọc trước đó). Ô trống,
+  // 0, KPH trên biên bản đều đã thành "KPH" (bbtn-import.js). Khí đọc không chắc (data.gasesUncertain) → ô tô vàng,
+  // bắt nhập tay trước khi lưu (xem gasInputsNeedingCheck() ở onAnalyze()).
+  clearGasNeedsCheck();
+  const uncertainGases = (data.gasesUncertain || []).filter((g) => DGA.GASES.includes(g));
+  if (data.gases && Object.keys(data.gases).length) {
+    DGA.GASES.forEach((g) => { if ($("g_" + g)) $("g_" + g).value = ""; });
+  }
   const gasNames = [];
   Object.keys(data.gases || {}).forEach((g) => {
     const input = $("g_" + g);
@@ -525,6 +535,7 @@ async function onBbtnFileSelected(e) {
       gasNames.push(g);
     }
   });
+  uncertainGases.forEach((g) => markGasNeedsCheck(g));
   if (gasNames.length) filled.push("Hàm lượng khí (" + gasNames.join(", ") + ")");
 
   // Trạm/Thiết bị/Pha vừa điền bằng JS (không bắn "change" tự nhiên như khi người
@@ -542,6 +553,30 @@ async function onBbtnFileSelected(e) {
   } else {
     note.textContent = "Đã tự động điền từ BBTN: " + filled.join(", ") + " — vui lòng kiểm tra lại số liệu trước khi lưu.";
   }
+  if (uncertainGases.length) {
+    note.textContent += ` ⚠ CHƯA ĐỌC ĐƯỢC CHẮC CHẮN khí ${uncertainGases.join(", ")} (ô tô vàng) — xem BBTN ở khung bên cạnh ` +
+      "và nhập tay (ghi KPH nếu biên bản để trống/ghi 0/KPH).";
+    notifyError(`Chưa đọc được chắc chắn khí ${uncertainGases.join(", ")} từ BBTN — các ô này được tô vàng, vui lòng nhập tay ` +
+      "theo biên bản trước khi lưu.");
+  }
+}
+
+/** Ô khí đọc không chắc từ BBTN: tô vàng, gỡ khi người dùng sửa ô đó. */
+function markGasNeedsCheck(g) {
+  const input = $("g_" + g);
+  if (!input) return;
+  input.classList.add("needs-check");
+  input.title = "Chưa đọc được chắc chắn từ BBTN — nhập tay theo biên bản (KPH nếu để trống/0/KPH)";
+  input.addEventListener("input", () => { input.classList.remove("needs-check"); input.removeAttribute("title"); }, { once: true });
+}
+
+function clearGasNeedsCheck() {
+  document.querySelectorAll("input.needs-check").forEach((el) => { el.classList.remove("needs-check"); el.removeAttribute("title"); });
+}
+
+/** Các khí còn tô vàng (chưa được người dùng nhập/kiểm tra lại). */
+function gasInputsNeedingCheck() {
+  return DGA.GASES.filter((g) => $("g_" + g) && $("g_" + g).classList.contains("needs-check"));
 }
 
 /** Cập nhật nhãn hiển thị trong ô kéo-thả ảnh nameplate #nameplateDropzone — cùng cơ
@@ -912,6 +947,13 @@ function drawDuvalPoint(xyMath) {
 // Phân tích & lưu 1 lần đo
 // ---------------------------------------------------------------------
 async function onAnalyze() {
+  const pendingCheck = gasInputsNeedingCheck();
+  if (pendingCheck.length) {
+    notifyError(`Khí ${pendingCheck.join(", ")} chưa đọc được chắc chắn từ BBTN (ô tô vàng) — đối chiếu biên bản và nhập tay ` +
+      "(ghi KPH nếu biên bản để trống/0/KPH) rồi bấm lại.");
+    $("g_" + pendingCheck[0]).focus();
+    return;
+  }
   const isKphText = (val) => {
     if (val === null || val === undefined) return false;
     const s = String(val).trim();

@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v55-bbtn-khung-doi-chieu") {
+          if (k !== "dga-offline-v56-bbtn-kph-o-vang") {
             caches.delete(k);
           }
         });
@@ -3298,6 +3298,7 @@
           <li>Ở tab <strong>Khí hòa tan</strong>, tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN"</strong> trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái <strong>"Một BBTN (PDF)"</strong> — <strong>kéo thả</strong> file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải <strong>"Nhiều BBTN hoặc cả thư mục"</strong> — xem mục 7.</li>
           <li><strong>Khung hiển thị Biên bản đối chiếu song song (Split View):</strong> Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới): - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc. - Nút <strong>"Mở tab mới"</strong> giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần. - Nút <strong>"✕ Ẩn"</strong> hoặc <strong>"Hiện BBTN đối chiếu"</strong> để đóng hoặc mở lại khung xem bất kỳ lúc nào.</li>
           <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và <strong>7 khí hòa tan</strong>.</li>
+          <li><strong>7 khí chính:</strong> ô Kết quả trên biên bản để <strong>trống</strong>, ghi <strong>0</strong> hoặc ghi <strong>KPH</strong> đều được điền là <strong>KPH</strong> — app không lấy số ở cột Tiêu chuẩn thay cho ô trống. Khí nào app <strong>không đọc được chắc chắn</strong> (không thấy dòng khí đó, hoặc không phân biệt được số đọc ra là kết quả hay tiêu chuẩn) thì ô đó <strong>để trống, tô vàng</strong> và app báo tên khí: đối chiếu biên bản ở khung bên cạnh rồi nhập tay (ghi KPH nếu biên bản để trống). Còn ô tô vàng thì app chưa cho <strong>Phân tích &amp; Lưu</strong>. Khi nhập hàng loạt, BBTN có khí đọc không chắc chắn được <strong>bỏ chọn</strong> kèm cảnh báo — kéo riêng BBTN đó vào ô <strong>"Một BBTN (PDF)"</strong> để nhập tay.</li>
           <li><strong>Đối chiếu và xác nhận số liệu:</strong> So sánh trực tiếp các giá trị số và thông tin trích xuất trên form với văn bản gốc hiển thị ngay bên cạnh để phát hiện bất kỳ sai sót nào trước khi lưu.</li>
           <li>Bấm <strong>Phân tích &amp; Lưu</strong>. File PDF được đính kèm cùng lần đo.</li>
           <li>Sau này khi sửa hoặc xem lại lần đo, bạn có thể bấm <strong>Xem BBTN đã lưu</strong> hoặc <strong>Hiện BBTN đối chiếu</strong> để mở lại file PDF đối chiếu trực tiếp song song với form.</li>

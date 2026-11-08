@@ -170,6 +170,14 @@ function recomputeRowStatus(row) {
     row.include = false;
     return;
   }
+  const uncertain = (row.parsed && row.parsed.gasesUncertain) || [];
+  if (uncertain.length) {
+    row.status = `⚠ Chưa đọc chắc khí ${uncertain.join(", ")} (ô trống hoặc số có thể là của cột Tiêu chuẩn) — đã bỏ chọn; ` +
+      "kéo BBTN này vào ô \"Một BBTN (PDF)\" để nhập tay các ô tô vàng";
+    row.statusKind = "warn";
+    row.include = false;
+    return;
+  }
   if (!row.parsed.pha) {
     row.status = "⚠ Không đọc được Pha — mặc định A, kiểm tra lại cột Pha";
     row.statusKind = "warn";
