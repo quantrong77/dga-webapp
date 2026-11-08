@@ -522,3 +522,30 @@ function forecastGasTrend(history, forecastYears, limit, options = {}) {
     nBefore,
   };
 }
+
+/**
+ * Cảnh báo "có thể vượt giá trị điển hình" cho 1 khí — thay cột "Dự kiến đạt ngưỡng" (mốc ngoại suy xa hàng chục
+ * năm, hoặc từ xu hướng chưa có ý nghĩa thống kê, không dùng được để ra quyết định vì tốc độ sinh khí còn phụ
+ * thuộc tải, nhiệt độ, lọc/thay dầu). Chỉ cảnh báo khi:
+ *  - lần đo gần nhất đã vượt ngưỡng → { status: "exceeded" };
+ *  - hoặc xu hướng TĂNG CÓ Ý NGHĨA thống kê (Sen + Mann–Kendall, thiếu thì OLS) VÀ mốc đạt ngưỡng nằm trong số năm
+ *    dự báo đã chọn → { status: "predicted", method: "sen"|"ols", date, yearsFromLast, pValue }.
+ * Còn lại → null (không hiện gì).
+ * @param {any} forecast kết quả forecastGasTrend()
+ */
+function forecastLimitWarning(forecast) {
+  if (!forecast || !forecast.ok || forecast.limit === null) return null;
+  const methods = forecast.methods || {};
+  for (const key of ["sen", "ols"]) {
+    const c = methods[key] && methods[key].crossing;
+    if (c && c.status === "already_exceeded") return { status: "exceeded" };
+  }
+  for (const key of ["sen", "ols"]) {
+    const m = methods[key];
+    const c = m && m.crossing;
+    if (c && c.status === "predicted" && c.significant === true && c.withinHorizon) {
+      return { status: "predicted", method: key, date: c.date, yearsFromLast: c.yearsFromLast, pValue: m.pValue };
+    }
+  }
+  return null;
+}

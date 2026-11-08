@@ -445,7 +445,7 @@ Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu
 
 ### 12.2. Dự báo xu hướng
 
-- Tick **"Hiện dự báo xu hướng tương lai"** (app nhớ lựa chọn) và đặt **Số năm dự báo** (1–30).
+- Tick **"Hiện dự báo xu hướng tương lai (ngoại suy tuyến tính, chỉ tham khảo)"** (app nhớ lựa chọn) và đặt **Số năm dự báo** (1–30).
 - Với mỗi khí trong 7 khí chính, bảng hiển thị 4 phương pháp:
   - **Hồi quy tuyến tính OLS**: tốc độ thay đổi, giá trị dự báo kèm **khoảng dự báo 95%**, **R²** và **p-value** kiểm định độ dốc.
   - **Độ dốc Sen + kiểm định Mann–Kendall**: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm **khoảng tin cậy 95% của tốc độ**. Đường nét đứt trên đồ thị dùng phương pháp này.
@@ -453,9 +453,9 @@ Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu
 - Cột **Khí** ghi kết luận xu hướng theo Mann–Kendall: **Tăng** / **Giảm** (khi p < 0,05), **Chưa phát hiện xu hướng có ý nghĩa thống kê**, hoặc **Chưa đủ lần đo** (cần ≥ 4). Khi có giai đoạn gần đây, cột này còn so sánh tốc độ gần đây với khoảng tin cậy 95% của tốc độ toàn chuỗi: **tăng nhanh hơn** / **chậm hơn** (nằm ngoài khoảng) hoặc **phù hợp**.
   - **Tốc độ 2 lần đo gần nhất**: đúng cách tính tốc độ tăng của Bảng 65, để tự động đối chiếu. Chỉ dùng 2 điểm, không có kiểm định thống kê, nên không dùng để kết luận xu hướng.
 - Dự báo lấy từ **đường đã khớp**, không neo vào một lần đo đơn lẻ; nồng độ dự báo **không âm** (cắt tại 0).
-- **Thời điểm dự kiến chạm ngưỡng** chỉ là cảnh báo khi xu hướng tăng **có ý nghĩa thống kê**; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.
+- Cột **Khí** hiện cảnh báo **"⚠ Có thể vượt giá trị điển hình ~tháng/năm"** chỉ khi xu hướng tăng **có ý nghĩa thống kê** (Sen + Mann–Kendall, hoặc OLS) **và** mốc đó nằm trong **số năm dự báo** đã chọn; hoặc **"Lần đo gần nhất đã vượt giá trị điển hình"**. Ngưỡng ở đây là giá trị điển hình đang áp dụng — vượt ngưỡng là tín hiệu cần **tăng cường theo dõi**, chưa phải kết luận có khiếm khuyết. App không hiện mốc ngoại suy xa hơn số năm dự báo hoặc từ xu hướng chưa có ý nghĩa, vì tốc độ sinh khí còn phụ thuộc tải, nhiệt độ, lọc/thay dầu.
 - Cần **tối thiểu 2 lần đo** mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.
-- Chỉ dự báo mốc chạm ngưỡng cho **7 khí chính**.
+- Cảnh báo vượt giá trị điển hình chỉ áp dụng cho **7 khí chính**.
 
 > ⚠ Dự báo giả định tốc độ sinh khí **không đổi** — chỉ mang tính tham khảo thống kê, không thay thế đánh giá tổng hợp.
 

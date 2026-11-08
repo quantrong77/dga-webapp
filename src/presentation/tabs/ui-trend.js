@@ -617,7 +617,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
 
 /** Render 1 dòng <tr> cho 1 PHƯƠNG PHÁP dự báo của 1 khí. gasCellHtml=null nghĩa là dòng này không
  *  mở đầu 1 khí mới (cột "Khí" gộp bằng rowspan từ dòng đầu). */
-function trendForecastMethodRowHtml(method, key, { forecastYears, gasCellHtml, recentWindow = null }) {
+function trendForecastMethodRowHtml(method, key, { gasCellHtml, recentWindow = null }) {
   const fmtDate = (iso) => new Date(iso).toLocaleDateString("vi-VN");
   const fmtP = (p) => (p < 0.001 ? "< 0,001" : "= " + p.toFixed(3).replace(".", ","));
   const num = (v, d = 2) => v.toFixed(d).replace(".", ",");
@@ -637,20 +637,6 @@ function trendForecastMethodRowHtml(method, key, { forecastYears, gasCellHtml, r
   }
   if (method.significant === true) statHtml += ` <span class="pill ok">có ý nghĩa</span>`;
   else if (method.significant === false) statHtml += ` <span class="pill muted">chưa có ý nghĩa</span>`;
-  let crossingHtml = `<span class="pill muted">Không có ngưỡng để so sánh</span>`;
-  const c = method.crossing;
-  if (c) {
-    if (c.status === "already_exceeded") {
-      crossingHtml = `<span class="pill bad">Đã vượt ngưỡng ở lần đo gần nhất</span>`;
-    } else if (c.status === "not_increasing") {
-      crossingHtml = `<span class="pill ok">Ổn định/giảm — không dự báo vượt ngưỡng</span>`;
-    } else {
-      const withinNote = c.withinHorizon ? "" : ` (ngoài ${forecastYears} năm đã chọn)`;
-      const sigNote = c.significant === false ? " — xu hướng tăng chưa có ý nghĩa thống kê" : "";
-      const cls = c.significant === false ? "muted" : c.yearsFromLast <= forecastYears ? "bad" : "warn";
-      crossingHtml = `<span class="pill ${cls}">~${fmtDate(c.date)} (còn ~${num(c.yearsFromLast, 1)} năm)${withinNote}${sigNote}</span>`;
-    }
-  }
   return `<tr>
     ${gasCellHtml !== null ? gasCellHtml : ""}
     <td>${escapeHtml(method.label)}${key === "recent" && recentWindow
@@ -658,7 +644,6 @@ function trendForecastMethodRowHtml(method, key, { forecastYears, gasCellHtml, r
     <td>${rateText}</td>
     <td>${forecastText}</td>
     <td>${statHtml}</td>
-    <td>${crossingHtml}</td>
   </tr>`;
 }
 
@@ -694,21 +679,35 @@ function renderTrendForecastTable(forecastRows, forecastYears) {
     ? `<br /><span class="pill warn" style="margin-top:4px;">Từ ${fmtDate(f.sinceDate)} (sau lọc/thay dầu)` +
       `${f.nBefore ? ` — bỏ ${f.nBefore} lần đo trước` : ""}</span>`
     : "");
+  // Cảnh báo vượt giá trị điển hình — CHỈ khi xu hướng tăng có ý nghĩa thống kê và mốc nằm trong số năm dự báo
+  // đã chọn (xem DGA.forecastLimitWarning()); thay cho cột "Dự kiến đạt ngưỡng" cũ (mốc ngoại suy xa hàng chục năm
+  // không dùng được để ra quyết định).
+  const limitWarningHtml = (w) => {
+    if (!w) return "";
+    if (w.status === "exceeded") {
+      return '<br /><span class="pill bad">Lần đo gần nhất đã vượt giá trị điển hình</span>';
+    }
+    const d = new Date(w.date);
+    const when = String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
+    const p = w.pValue < 0.001 ? "p < 0,001" : "p = " + w.pValue.toFixed(3).replace(".", ",");
+    return `<br /><span class="pill bad">⚠ Có thể vượt giá trị điển hình ~${when} (${w.method === "sen" ? "Sen" : "OLS"}, ${p})` +
+      " — xem xét tăng cường theo dõi</span>";
+  };
   const rowsHtml = forecastRows.map(({ label, forecast }) => {
     if (!forecast.ok) {
       const reasonText = forecast.reason === "not_enough_data"
         ? `Chưa đủ dữ liệu (cần ≥ 2 lần đo${forecast.sinceDate ? " sau lần lọc/thay dầu" : ""}, hiện có ${forecast.n})`
         : "Không tính được (các lần đo cùng 1 ngày)";
-      return `<tr><td>${escapeHtml(label)}${sinceNote(forecast)}</td><td colspan="5" class="pill muted">${reasonText}</td></tr>`;
+      return `<tr><td>${escapeHtml(label)}${sinceNote(forecast)}</td><td colspan="4" class="pill muted">${reasonText}</td></tr>`;
     }
     const keys = ["ols", "sen", "recent", "latest"].filter((k) => forecast.methods[k]);
     const gasHeaderCell = `<td rowspan="${keys.length}">${escapeHtml(label)}<br /><span class="pill muted" ` +
       `style="margin-top:4px;">Gần nhất: ${fmtPpm(forecast.lastValue)} ppm • Ngưỡng: ${forecast.limit === null ? "—" : fmtPpm(forecast.limit) + " ppm"}</span>` +
       sinceNote(forecast) +
       `<br />${trendText[forecast.trend.direction]}` +
-      (forecast.rateChange ? `<br />${rateChangeText[forecast.rateChange]}` : "") + "</td>";
+      (forecast.rateChange ? `<br />${rateChangeText[forecast.rateChange]}` : "") +
+      limitWarningHtml(DGA.forecastLimitWarning(forecast)) + "</td>";
     return keys.map((key, i) => trendForecastMethodRowHtml(forecast.methods[key], key, {
-      forecastYears,
       gasCellHtml: i === 0 ? gasHeaderCell : null,
       recentWindow: forecast.recentWindow,
     })).join("");

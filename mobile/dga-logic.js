@@ -2924,6 +2924,33 @@ function forecastGasTrend(history, forecastYears, limit, options = {}) {
   };
 }
 
+/**
+ * Cảnh báo "có thể vượt giá trị điển hình" cho 1 khí — thay cột "Dự kiến đạt ngưỡng" (mốc ngoại suy xa hàng chục
+ * năm, hoặc từ xu hướng chưa có ý nghĩa thống kê, không dùng được để ra quyết định vì tốc độ sinh khí còn phụ
+ * thuộc tải, nhiệt độ, lọc/thay dầu). Chỉ cảnh báo khi:
+ *  - lần đo gần nhất đã vượt ngưỡng → { status: "exceeded" };
+ *  - hoặc xu hướng TĂNG CÓ Ý NGHĨA thống kê (Sen + Mann–Kendall, thiếu thì OLS) VÀ mốc đạt ngưỡng nằm trong số năm
+ *    dự báo đã chọn → { status: "predicted", method: "sen"|"ols", date, yearsFromLast, pValue }.
+ * Còn lại → null (không hiện gì).
+ * @param {any} forecast kết quả forecastGasTrend()
+ */
+function forecastLimitWarning(forecast) {
+  if (!forecast || !forecast.ok || forecast.limit === null) return null;
+  const methods = forecast.methods || {};
+  for (const key of ["sen", "ols"]) {
+    const c = methods[key] && methods[key].crossing;
+    if (c && c.status === "already_exceeded") return { status: "exceeded" };
+  }
+  for (const key of ["sen", "ols"]) {
+    const m = methods[key];
+    const c = m && m.crossing;
+    if (c && c.status === "predicted" && c.significant === true && c.withinHorizon) {
+      return { status: "predicted", method: key, date: c.date, yearsFromLast: c.yearsFromLast, pValue: m.pValue };
+    }
+  }
+  return null;
+}
+
 // ===== src/domain/dga-logic-regulation-config.js =====
 /* dga-logic-regulation-config.js — Phần 6/6 của dga-logic.js sau khi tách theo miền
    (xem dga-logic.js). Đăng ký + đọc/ghi đè các bảng ngưỡng "đơn giản" có thể cấu hình
@@ -4143,7 +4170,7 @@ if (typeof module !== "undefined" && module.exports) {
       IEC60422_2024_TABLE3_NEW, IEC60422_2024_TABLE5_EXTRA,
       OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
       linearRegression, olsPredictionInterval, theilSenSlope, senSlopeEstimate, mannKendallTest, recentWindowStart, latestPairSlope,
-      OIL_TREATMENT_LABELS, detectGasDrop, findGasDrops, lastOilTreatmentDate,
+      OIL_TREATMENT_LABELS, detectGasDrop, findGasDrops, lastOilTreatmentDate, forecastLimitWarning,
       normalCdf, normalQuantile, studentTCdf, studentTQuantile, FORECAST_ALPHA, FORECAST_RECENT_YEARS, FORECAST_RECENT_MIN_N, FORECAST_METHOD_LABELS, forecastGasTrend,
       REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
       resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive, applyRegulationTermsDeep,
@@ -4190,7 +4217,7 @@ if (typeof module !== "undefined" && module.exports) {
       IEC60422_2024_TABLE3_NEW, IEC60422_2024_TABLE5_EXTRA,
     OLTC_SAMPLE_POINTS, BANG49_OLTC, evaluateOltcOilTest, OIL_SAMPLE_POINTS,
     linearRegression, olsPredictionInterval, theilSenSlope, senSlopeEstimate, mannKendallTest, recentWindowStart, latestPairSlope,
-      OIL_TREATMENT_LABELS, detectGasDrop, findGasDrops, lastOilTreatmentDate,
+      OIL_TREATMENT_LABELS, detectGasDrop, findGasDrops, lastOilTreatmentDate, forecastLimitWarning,
       normalCdf, normalQuantile, studentTCdf, studentTQuantile, FORECAST_ALPHA, FORECAST_RECENT_YEARS, FORECAST_RECENT_MIN_N, FORECAST_METHOD_LABELS, forecastGasTrend,
     REGULATION_CITATIONS, BANG58_WATER, getRegulationConfigRegistry, applyRegulationConfigOverride,
     resetRegulationConfigItem, regulationConfigDefaultCitation, getRegulationConfigCurrentValues, validateRegulationConfigValues, applyRegulationTerms, regulationTermsActive, applyRegulationTermsDeep,

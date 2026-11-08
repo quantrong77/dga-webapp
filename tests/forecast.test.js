@@ -261,3 +261,23 @@ describe("forecastGasTrend", () => {
     expect(c.withinHorizon).toBe(false);
   });
 });
+
+describe("forecastLimitWarning — cảnh báo vượt giá trị điển hình (thay cột 'Dự kiến đạt ngưỡng')", () => {
+  const dateOf = (days) => new Date(Date.UTC(2020, 0, 1) + days * 86400000).toISOString().slice(0, 10);
+  const hist = REF.map((p) => ({ date: dateOf(p.x), value: p.y }));
+  test("xu hướng tăng có ý nghĩa + mốc trong số năm dự báo → cảnh báo theo Sen", () => {
+    const w = DGA.forecastLimitWarning(DGA.forecastGasTrend(hist, 3, 60));
+    expect(w).toMatchObject({ status: "predicted", method: "sen" });
+    expect(w.yearsFromLast).toBeLessThanOrEqual(3);
+    expect(w.pValue).toBeLessThan(0.05);
+  });
+  test("mốc ngoài số năm dự báo → không cảnh báo", () => {
+    expect(DGA.forecastLimitWarning(DGA.forecastGasTrend(hist, 1, 80))).toBeNull();
+  });
+  test("lần đo gần nhất đã vượt ngưỡng → exceeded; không có ngưỡng / chuỗi nhiễu → null", () => {
+    expect(DGA.forecastLimitWarning(DGA.forecastGasTrend(hist, 3, 47))).toEqual({ status: "exceeded" });
+    expect(DGA.forecastLimitWarning(DGA.forecastGasTrend(hist, 3, null))).toBeNull();
+    const noisy = [5, 7, 4, 6, 5, 7, 4, 7].map((v, i) => ({ date: dateOf(i * 200), value: v }));
+    expect(DGA.forecastLimitWarning(DGA.forecastGasTrend(noisy, 30, 8))).toBeNull();
+  });
+});

@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v57-bbtn-h2") {
+          if (k !== "dga-offline-v58-du-bao-canh-bao") {
             caches.delete(k);
           }
         });
@@ -1178,7 +1178,7 @@
 
         <label class="field" style="margin-top:18px; align-items:center; flex-direction:row; gap:8px; display:flex; font-weight:600;">
           <input id="tr_forecastEnabled" type="checkbox" style="width:auto;" checked />
-          Hiện dự báo xu hướng tương lai (ngoại suy tuyến tính)
+          Hiện dự báo xu hướng tương lai (ngoại suy tuyến tính, chỉ tham khảo)
         </label>
 
         <div id="trForecastWrap" class="hidden" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--gray-300);">
@@ -1191,8 +1191,8 @@
             lần đo gần nhất</strong> được tính để đối chiếu tự động Bảng 65 (chỉ 2 điểm, không kiểm định — không dùng để kết luận xu hướng).
             Khi đã xác nhận <strong>lọc/thay dầu</strong>, dự báo chỉ dùng các lần đo từ sau lần xử lý dầu gần nhất. Xu hướng chỉ được coi là có thật khi kiểm định có ý nghĩa thống kê (p &lt; 0,05); Mann–Kendall cần
             tối thiểu 4 lần đo. Nồng độ dự báo không âm. <strong>Chỉ mang tính tham khảo thống kê</strong>, giả định tốc độ
-            sinh khí không đổi — KHÔNG thay thế nguyên tắc đánh giá tổng hợp tại Điều 3 QĐ1901. Chỉ dự báo mốc đạt ngưỡng cho
-            7 khí chính (so với ngưỡng tuyệt đối đang áp dụng cho thiết bị).</p>
+            sinh khí không đổi — KHÔNG thay thế nguyên tắc đánh giá tổng hợp tại Điều 3 QĐ1901. Cảnh báo "có thể vượt giá trị điển hình" (ngưỡng tuyệt đối đang áp dụng cho thiết bị, 7 khí chính) chỉ hiện khi
+            xu hướng tăng có ý nghĩa thống kê và mốc nằm trong số năm dự báo đã chọn.</p>
           <label class="field" style="max-width:220px;">Số năm dự báo
             <input id="tr_forecastYears" type="number" min="1" max="30" step="1" value="3" />
           </label>
@@ -1201,7 +1201,6 @@
               <thead><tr>
                 <th>Khí</th><th>Phương pháp</th><th>Tốc độ thay đổi</th>
                 <th>Dự báo sau <span id="trForecastYearsLabel">3</span> năm</th><th>Độ tin cậy thống kê</th>
-                <th>Dự kiến đạt ngưỡng</th>
               </tr></thead>
               <tbody id="trForecastBody"></tbody>
             </table>
@@ -3510,7 +3509,7 @@
           <p class="sm-note">Nếu không có mạng hoặc thư viện vẽ đồ thị (Chart.js) tải lỗi, đồ thị sẽ ẩn kèm thông báo — kiểm tra kết nối và tải lại trang. Các bảng số liệu và bảng dự báo vẫn dùng được.</p>
           <h3>12.2. Dự báo xu hướng</h3>
           <ul class="rec-list">
-          <li>Tick <strong>"Hiện dự báo xu hướng tương lai"</strong> (app nhớ lựa chọn) và đặt <strong>Số năm dự báo</strong> (1–30).</li>
+          <li>Tick <strong>"Hiện dự báo xu hướng tương lai (ngoại suy tuyến tính, chỉ tham khảo)"</strong> (app nhớ lựa chọn) và đặt <strong>Số năm dự báo</strong> (1–30).</li>
           <li>Với mỗi khí trong 7 khí chính, bảng hiển thị 4 phương pháp:</li>
           <li><strong>Hồi quy tuyến tính OLS</strong>: tốc độ thay đổi, giá trị dự báo kèm <strong>khoảng dự báo 95%</strong>, <strong>R²</strong> và <strong>p-value</strong> kiểm định độ dốc.</li>
           <li><strong>Độ dốc Sen + kiểm định Mann–Kendall</strong>: phương pháp phi tham số, ít bị ảnh hưởng bởi lần đo bất thường; kèm <strong>khoảng tin cậy 95% của tốc độ</strong>. Đường nét đứt trên đồ thị dùng phương pháp này.</li>
@@ -3518,9 +3517,9 @@
           <li>Cột <strong>Khí</strong> ghi kết luận xu hướng theo Mann–Kendall: <strong>Tăng</strong> / <strong>Giảm</strong> (khi p &lt; 0,05), <strong>Chưa phát hiện xu hướng có ý nghĩa thống kê</strong>, hoặc <strong>Chưa đủ lần đo</strong> (cần ≥ 4). Khi có giai đoạn gần đây, cột này còn so sánh tốc độ gần đây với khoảng tin cậy 95% của tốc độ toàn chuỗi: <strong>tăng nhanh hơn</strong> / <strong>chậm hơn</strong> (nằm ngoài khoảng) hoặc <strong>phù hợp</strong>.</li>
           <li><strong>Tốc độ 2 lần đo gần nhất</strong>: đúng cách tính tốc độ tăng của Bảng 65, để tự động đối chiếu. Chỉ dùng 2 điểm, không có kiểm định thống kê, nên không dùng để kết luận xu hướng.</li>
           <li>Dự báo lấy từ <strong>đường đã khớp</strong>, không neo vào một lần đo đơn lẻ; nồng độ dự báo <strong>không âm</strong> (cắt tại 0).</li>
-          <li><strong>Thời điểm dự kiến chạm ngưỡng</strong> chỉ là cảnh báo khi xu hướng tăng <strong>có ý nghĩa thống kê</strong>; nếu chưa có ý nghĩa, mốc được ghi kèm lưu ý.</li>
+          <li>Cột <strong>Khí</strong> hiện cảnh báo <strong>"⚠ Có thể vượt giá trị điển hình ~tháng/năm"</strong> chỉ khi xu hướng tăng <strong>có ý nghĩa thống kê</strong> (Sen + Mann–Kendall, hoặc OLS) <strong>và</strong> mốc đó nằm trong <strong>số năm dự báo</strong> đã chọn; hoặc <strong>"Lần đo gần nhất đã vượt giá trị điển hình"</strong>. Ngưỡng ở đây là giá trị điển hình đang áp dụng — vượt ngưỡng là tín hiệu cần <strong>tăng cường theo dõi</strong>, chưa phải kết luận có khiếm khuyết. App không hiện mốc ngoại suy xa hơn số năm dự báo hoặc từ xu hướng chưa có ý nghĩa, vì tốc độ sinh khí còn phụ thuộc tải, nhiệt độ, lọc/thay dầu.</li>
           <li>Cần <strong>tối thiểu 2 lần đo</strong> mỗi khí để dự báo; khoảng dự báo cần ≥ 3 lần đo, kiểm định Mann–Kendall cần ≥ 4.</li>
-          <li>Chỉ dự báo mốc chạm ngưỡng cho <strong>7 khí chính</strong>.</li>
+          <li>Cảnh báo vượt giá trị điển hình chỉ áp dụng cho <strong>7 khí chính</strong>.</li>
           </ul>
           <p class="sm-note">⚠ Dự báo giả định tốc độ sinh khí <strong>không đổi</strong> — chỉ mang tính tham khảo thống kê, không thay thế đánh giá tổng hợp.</p>
           <h3>12.3. Lọc dầu / thay dầu</h3>
