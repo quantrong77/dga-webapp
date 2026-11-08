@@ -407,8 +407,13 @@ function extractGasValuesDetailed(lines) {
         }
       }
 
-      // 1) Nếu có từ khóa KPH (Không phát hiện / dưới ngưỡng phát hiện / ND / dấu gạch ngang "-"):
-      if (KPH_PATTERN.test(rest)) {
+      // 1) Từ khóa KPH (Không phát hiện / dưới ngưỡng phát hiện / ND / dấu gạch ngang "-") ĐỨNG Ở Ô KẾT QUẢ — tức
+      //    trước số đầu tiên của dòng. Dấu "-" / "–" ở chỗ khác (tiêu chuẩn dạng khoảng "0 – 150", cột tốc độ sinh
+      //    khí để "-") KHÔNG phải KPH: trước đây "H2 12.3 0 – 150 Đạt" bị đọc nhầm thành KPH dù có số đo 12.3.
+      const restBody = restNoUnit(rest);
+      const firstDigit = restBody.search(/\d/);
+      const resultCell = firstDigit === -1 ? restBody : restBody.slice(0, firstDigit);
+      if (KPH_PATTERN.test(" " + resultCell + " ")) {
         found = "KPH";
         break;
       }
@@ -509,9 +514,9 @@ function extractPrintedTcg(lines) {
  * "3 Ethan C2H6 100 Đạt" — số 100 là Tiêu chuẩn, không phải kết quả (khí không phát hiện). Ứng viên: khí chính
  * có ĐÚNG 1 số, Đánh giá đạt, không có "<". Quyết định theo thứ tự:
  *  1. TCG in trên biên bản (chỉ xét 6 khí cháy): tổng KHÔNG kể ứng viên khớp TCG (≤ 1%) còn tính cả thì không
- *     → ứng viên là KPH; tính cả ứng viên mới khớp → là kết quả đo, giữ nguyên; không khớp cách nào → bước 2;
- *  2. cấu trúc bảng: ≥ 2 khí khác có ≥ 2 số (kết quả + tiêu chuẩn) → số NGUYÊN đứng một mình là Tiêu chuẩn → KPH;
- *  3. bảng có cột Tiêu chuẩn mà vẫn không quyết được → KHÔNG đoán: bỏ giá trị, đưa vào "uncertain" (nhập tay).
+ *     → ứng viên là KPH; tính cả ứng viên mới khớp → là kết quả đo, giữ nguyên;
+ *  2. còn lại, nếu bảng có cột Tiêu chuẩn → KHÔNG đoán (một số đo nguyên với ô tiêu chuẩn để trống trông y hệt một
+ *     số tiêu chuẩn với ô kết quả để trống): bỏ giá trị, đưa vào "uncertain" để người dùng nhập tay.
  *  Bảng không có cột Tiêu chuẩn → số đứng một mình là kết quả, giữ nguyên.
  */
 function resolveBareLimitColumn(values, rowInfo, lines, uncertain) {
@@ -535,11 +540,8 @@ function resolveBareLimitColumn(values, rowInfo, lines, uncertain) {
   }
   if (!cands.length) return;
   const hasLimitsColumn = lines.some((l) => /Tieu\s*chuan|\bLimits?\b|Gioi\s*han/i.test(stripVnDiacritics(l)));
-  const others = Object.keys(rowInfo).filter((g) => !cands.includes(g) && rowInfo[g].count >= 2 && rowInfo[g].pass);
-  cands.forEach((g) => {
-    if (others.length >= 2 && Number.isInteger(values[g])) values[g] = "KPH";
-    else if (hasLimitsColumn) { delete values[g]; uncertain.push(g); }
-  });
+  if (!hasLimitsColumn) return;
+  cands.forEach((g) => { delete values[g]; uncertain.push(g); });
 }
 
 function extractSoCheTao(lines, foldedLines, pha) {

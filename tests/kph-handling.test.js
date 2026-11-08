@@ -617,9 +617,11 @@ describe("BbtnImport.extractGasValues — cột Tiêu chuẩn số trần, ô K�
     expect(res.C2H2).toBe(150);
   });
 
-  test("không có dòng TCG: các khí khác có cả kết quả + tiêu chuẩn → số nguyên đứng một mình là Tiêu chuẩn → KPH", () => {
-    const res = extractGasValues(table([]));
-    expect(res).toMatchObject({ C2H6: "KPH", C2H4: "KPH", C2H2: "KPH", H2: 8.5, CO: 120.3 });
+  test("không có dòng TCG để xác nhận → KHÔNG đoán: C2H6/C2H4/C2H2 để trống, báo uncertain (tô vàng)", () => {
+    const r = extractGasValuesDetailed(table([]));
+    expect(r.uncertain).toEqual(["C2H6", "C2H4", "C2H2"]);
+    expect(r.values).toMatchObject({ H2: 8.5, CO: 120.3 });
+    expect(r.values.C2H6).toBeUndefined();
   });
 
   test("biên bản ghi 0 trong ô Kết quả (mẫu 2023) → KPH (trống, 0, KPH đều là KPH)", () => {
@@ -647,16 +649,42 @@ describe("extractGasValuesDetailed — ô đọc không chắc → uncertain, kh
     expect(r.uncertain).toEqual(["C2H4"]);
     expect(r.values.C2H4).toBeUndefined();
   });
-  test("TCG không khớp nhưng cấu trúc bảng rõ (khí khác có kết quả + tiêu chuẩn) → KPH, không uncertain", () => {
+  test("TCG không khớp cách nào → không đoán theo cấu trúc bảng, báo uncertain", () => {
     const r = extractGasValuesDetailed([...head,
       "1 Hydrogen H2 8.5 250 Đạt", "2 Methane CH4 3.2 100 Đạt", "3 Ethan C2H6 100 Đạt",
       "6 CarbonMonoxit CO 120.3 1000 Đạt", "Tổng lượng khí cháy", "10 140 0-500 Đạt"]);
-    expect(r.values.C2H6).toBe("KPH");
-    expect(r.uncertain).toEqual([]);
+    expect(r.values.C2H6).toBeUndefined();
+    expect(r.uncertain).toEqual(["C2H6"]);
   });
   test("bảng không có cột Tiêu chuẩn → số đứng một mình là kết quả, giữ nguyên", () => {
     const r = extractGasValuesDetailed(["1 Hydro (H2) ppm 777 Đạt", "2 Metan (CH4) ppm 10 < 130 Đạt"]);
     expect(r.values.H2).toBe(777);
+    expect(r.uncertain).toEqual([]);
+  });
+});
+
+// H2 có số đo nhưng bị đọc thành KPH: dấu gạch ngang ở cột tiêu chuẩn dạng khoảng / cột tốc độ, hoặc số đo
+// nguyên mà ô tiêu chuẩn để trống — nay KPH chỉ khi "-"/KPH đứng ở ô Kết quả; số mơ hồ thì tô vàng, không đoán.
+describe("H2 có số đo không bị đọc thành KPH", () => {
+  const head = ["KẾT QUẢ THÍ NGHIỆM", "Hạng mục phân tích Đơn vị Kết quả Tiêu chuẩn Tốc độ sinh khí Đánh giá"];
+  test("tiêu chuẩn dạng khoảng có dấu gạch ngang ('0 – 150', '0 - 150') → vẫn đọc số đo", () => {
+    const r = extractGasValuesDetailed([...head,
+      "1 Hydrogen H2 ppm 12.3 0 – 150 Đạt", "2 Methane CH4 ppm 4.1 0 - 130 Đạt", "3 Ethan C2H6 ppm - 0 – 90 Đạt"]);
+    expect(r.values).toMatchObject({ H2: 12.3, CH4: 4.1, C2H6: "KPH" });
+  });
+  test("cột tốc độ sinh khí để '-' (lần đo đầu) → vẫn đọc số đo", () => {
+    const r = extractGasValuesDetailed([...head, "1 Hydrogen H2 7.88 250 - Đạt", "2 Methane CH4 2.773 100 – Đạt"]);
+    expect(r.values).toMatchObject({ H2: 7.88, CH4: 2.773 });
+  });
+  test("H2 số nguyên, ô tiêu chuẩn để trống, không có TCG → tô vàng, không tự ghi KPH", () => {
+    const r = extractGasValuesDetailed([...head, "1 Hydrogen H2 12 Đạt", "2 Methane CH4 3.2 100 Đạt", "6 CarbonMonoxit CO 120.3 1000 Đạt"]);
+    expect(r.values.H2).toBeUndefined();
+    expect(r.uncertain).toEqual(["H2"]);
+  });
+  test("H2 số nguyên, TCG in trên biên bản xác nhận là số đo → giữ nguyên số", () => {
+    const r = extractGasValuesDetailed([...head, "1 Hydrogen H2 12 Đạt", "2 Methane CH4 3.2 100 Đạt",
+      "6 CarbonMonoxit CO 120.3 1000 Đạt", "Tổng lượng khí cháy", "10 135.5 0-500 Đạt"]);
+    expect(r.values.H2).toBe(12);
     expect(r.uncertain).toEqual([]);
   });
 });
