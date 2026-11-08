@@ -259,6 +259,28 @@ function onBatchSelectNone() {
   updateBatchSummary();
 }
 
+/** Chặn lưu khi ô "Loại thiết bị" (áp dụng chung cả đợt, mặc định là TI) KHÁC loại của chính thiết bị đó:
+ *  (1) các lần đo ĐÃ LƯU cùng Trạm + Thiết bị; (2) loại đọc được từ BBTN ("Vị trí lắp đặt: Máy biến áp…").
+ *  Lưu nhầm loại làm sai ngưỡng đánh giá và làm lần đo "biến mất" khỏi Lịch sử đo khi lọc theo loại.
+ *  @returns {string|null} thông báo lỗi, null nếu không mâu thuẫn */
+function batchEquipmentTypeConflict(equipmentType, rows, existing, tram, thietbi) {
+  const norm = (s) => String(s || "").trim().toLowerCase();
+  const prevTypes = new Set((existing || [])
+    .filter((r) => norm(r.tram) === norm(tram) && norm(r.thiet_bi) === norm(thietbi) && r.equipment_type)
+    .map((r) => r.equipment_type));
+  prevTypes.delete(equipmentType);
+  if (prevTypes.size) {
+    return `Thiết bị "${thietbi}"${tram ? ` (${tram})` : ""} đã có lần đo lưu với Loại thiết bị "${[...prevTypes].join('", "')}", ` +
+      `nhưng ô Loại thiết bị đang chọn "${equipmentType}". Chọn đúng loại thiết bị rồi bấm lưu lại.`;
+  }
+  const parsedTypes = new Set((rows || []).map((r) => r.parsed && r.parsed.loai).filter((t) => t && t !== equipmentType));
+  if (parsedTypes.size) {
+    return `BBTN ghi thiết bị là "${[...parsedTypes].join('", "')}", nhưng ô Loại thiết bị đang chọn "${equipmentType}". ` +
+      "Chọn đúng loại thiết bị rồi bấm lưu lại.";
+  }
+  return null;
+}
+
 /** Lưu hàng loạt các dòng đang được tick — TUẦN TỰ từng dòng (không Promise.all) để: (1)
  *  cập nhật tiến độ/trạng thái từng dòng ngay trên bảng, (2) 1 dòng lỗi KHÔNG chặn các
  *  dòng còn lại (khác hẳn onAnalyze() nhập từng lần — ở đó 1 lỗi là dừng hẳn vì chỉ có 1
@@ -306,6 +328,13 @@ async function onBatchSave() {
     existing = await Storage.listMeasurements();
   } catch (err) {
     existing = (_allMeasurements || []).slice();
+  }
+  const typeConflict = batchEquipmentTypeConflict(equipmentType, toSave, existing, tram, thietbi);
+  if (typeConflict) {
+    btn.disabled = false;
+    btn.textContent = originalLabel;
+    notifyError(typeConflict);
+    return;
   }
 
   let okCount = 0;
