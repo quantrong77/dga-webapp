@@ -823,18 +823,23 @@ function refreshAlertsUI() {
 }
 
 /** Xuất danh sách cảnh báo đang hiển thị (_lastAlerts, xem refreshAlertsUI() ở trên)
- *  ra file Excel (.xlsx) — dùng thư viện SheetJS (biến toàn cục "XLSX", tải qua CDN ở
- *  index.html, xem cùng cách tải/kiểm tra Chart.js: nếu mất mạng/CDN lỗi thì báo lỗi
- *  rõ ràng thay vì im lặng thất bại). Toàn bộ xử lý diễn ra ngay trong trình duyệt —
+ *  ra file Excel (.xlsx) — dùng thư viện SheetJS (biến toàn cục "XLSX", vendor/xlsx/, tải
+ *  KHI BẤM NÚT lần đầu qua loadScriptOnce() ở ui-utils.js; lỗi mạng thì báo lỗi rõ ràng
+ *  thay vì im lặng thất bại). Toàn bộ xử lý diễn ra ngay trong trình duyệt —
  *  không gửi dữ liệu lên server nào khác. */
-function onExportAlertsExcel() {
-  if (typeof XLSX === "undefined") {
-    notifyError("Không tải được thư viện xuất Excel (có thể do mất mạng khi tải trang) — kiểm tra kết nối mạng rồi tải lại trang.");
-    return;
-  }
+async function onExportAlertsExcel() {
   if (_lastAlerts.length === 0) {
     notifyError("Chưa có thiết bị nào đang ở mức Cảnh báo/Báo động để xuất.");
     return;
+  }
+  // SheetJS (~860 KB) chỉ tải khi bấm nút này lần đầu — không tải lúc mở trang.
+  if (typeof XLSX === "undefined") {
+    try {
+      await loadScriptOnce("vendor/xlsx/xlsx.full.min.js");
+    } catch (e) {
+      notifyError("Không tải được thư viện xuất Excel — kiểm tra kết nối mạng rồi bấm lại.");
+      return;
+    }
   }
 
   const now = new Date();

@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v59-zalo-boot-guard";
+const CACHE_NAME = "dga-offline-v60-tai-trang-nhanh";
 
 const PRECACHE_ASSETS = [
   "./",

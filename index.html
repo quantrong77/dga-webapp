@@ -11,7 +11,11 @@
          tạo từ blob: (workerBlobURL mặc định của tesseract.js).
        - connect-src data: blob: : viewBbtn() fetch() file đính kèm lưu dạng data URL (chế độ thử nghiệm).
        - style-src 'unsafe-inline': giao diện dùng nhiều thuộc tính style="" (không chạy được mã).
-       GitHub Pages không cho đặt HTTP header nên dùng thẻ meta (frame-ancestors không hỗ trợ ở meta). -->
+       GitHub Pages không cho đặt HTTP header nên dùng thẻ meta (frame-ancestors không hỗ trợ ở meta).
+       LƯU Ý TỐC ĐỘ: có thẻ meta CSP thì Chrome TẮT bộ quét tải trước (preload scanner) -> các <script>
+       thường bị tải LẦN LƯỢT từng file (~70 file x độ trễ mạng = 10+ giây). Vì vậy mọi <script src>
+       đều phải có "defer" (tải song song, vẫn chạy đúng thứ tự) — trừ boot-guard.js và early-layout.js
+       (cần chạy ngay). tests/page-load.test.js khóa quy tắc này. -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline' https://accounts.google.com/gsi/client; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://accounts.google.com/gsi/style; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' data: blob: http://localhost:8080 https://script.google.com https://script.googleusercontent.com https://accounts.google.com; frame-src https://accounts.google.com blob: data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
@@ -40,11 +44,9 @@
   <!-- Chống "trang trắng" khi mở trong Zalo/trình duyệt nhúng: nhắc mở bằng trình duyệt + báo lỗi
        khởi động thay cho trang trắng. Nạp ĐẦU TIÊN (trước mọi thư viện) để bắt cả lỗi của chúng. -->
   <script src="src/presentation/boot-guard.js"></script>
-  <script src="vendor/supabase/supabase.js"></script>
+  <script src="vendor/supabase/supabase.js" defer></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
-  <script src="vendor/chartjs/chart.umd.min.js"></script>
-  <!-- SheetJS (xlsx) — xuất file Excel (.xlsx) cho nút "Xuất Excel". Kèm vendor dự phòng 100% offline. -->
-  <script src="vendor/xlsx/xlsx.full.min.js"></script>
+  <script src="vendor/chartjs/chart.umd.min.js" defer></script>
   <!-- Google Identity Services — cho nút "Đăng nhập bằng Google". Nếu GOOGLE_CLIENT_ID
        trong config.js để trống, hoặc script này tải không được (mất mạng...), nút
        Google sẽ tự ẩn — không ảnh hưởng đến đăng nhập email/mật khẩu như trước.
@@ -61,7 +63,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v59-zalo-boot-guard") {
+          if (k !== "dga-offline-v60-tai-trang-nhanh") {
             caches.delete(k);
           }
         });
@@ -4138,78 +4140,78 @@
        (.docx) ngay trong trình duyệt khi bấm "Xuất BBTN (docx)", xem bbtn-export.js.
        Đóng gói sẵn trong vendor/ (không phụ thuộc CDN ngoài) cùng lý do như vendor/pdfjs/
        ở trên — vẫn hoạt động khi mạng/máy chặn CDN hoặc chạy offline (localStorage). -->
-  <script src="vendor/docxtemplater/pizzip.min.js"></script>
-  <script src="vendor/docxtemplater/docxtemplater.min.js"></script>
-  <script src="config.js"></script>
+  <script src="vendor/docxtemplater/pizzip.min.js" defer></script>
+  <script src="vendor/docxtemplater/docxtemplater.min.js" defer></script>
+  <script src="config.js" defer></script>
   <!-- Xử lý lỗi tập trung (toast lỗi + handler error/unhandledrejection) — nạp SỚM để bắt cả lỗi lúc khởi động, xem src/presentation/components/ui-errors.js -->
-  <script src="src/presentation/components/ui-errors.js"></script>
+  <script src="src/presentation/components/ui-errors.js" defer></script>
   <!-- dga-logic.js (lớp logic nghiệp vụ) đã được tách thành 8 file theo miền, nạp bằng
        <script> thường (KHÔNG phải module) NGAY TRƯỚC dga-logic.js bên dưới — chia sẻ
        chung 1 scope toàn cục giống hệt các file ui-*.js. dga-logic-core.js là "hub" mà
        7 file còn lại phụ thuộc vào nên phải nạp đầu tiên; thứ tự giữa 7 file sau không
        quan trọng. dga-logic.js chỉ còn nhiệm vụ lắp ráp (gom lại thành object window.DGA)
        + hỗ trợ require() từ Node khi chạy test (xem đầu file dga-logic.js). -->
-  <script src="src/domain/dga-logic-core.js"></script>
-  <script src="src/domain/dga-logic-gas.js"></script>
-  <script src="src/domain/dga-logic-oil.js"></script>
-  <script src="src/domain/dga-logic-instrument-oil.js"></script>
-  <script src="src/domain/dga-logic-iec60422-2024.js"></script>
-  <script src="src/domain/dga-logic-oil-extended.js"></script>
-  <script src="src/domain/dga-logic-forecast.js"></script>
-  <script src="src/domain/dga-logic-regulation-config.js"></script>
-  <script src="src/domain/dga-logic-peer.js"></script>
-  <script src="src/domain/dga-logic-case.js"></script>
-  <script src="src/domain/dga-logic.js"></script>
+  <script src="src/domain/dga-logic-core.js" defer></script>
+  <script src="src/domain/dga-logic-gas.js" defer></script>
+  <script src="src/domain/dga-logic-oil.js" defer></script>
+  <script src="src/domain/dga-logic-instrument-oil.js" defer></script>
+  <script src="src/domain/dga-logic-iec60422-2024.js" defer></script>
+  <script src="src/domain/dga-logic-oil-extended.js" defer></script>
+  <script src="src/domain/dga-logic-forecast.js" defer></script>
+  <script src="src/domain/dga-logic-regulation-config.js" defer></script>
+  <script src="src/domain/dga-logic-peer.js" defer></script>
+  <script src="src/domain/dga-logic-case.js" defer></script>
+  <script src="src/domain/dga-logic.js" defer></script>
   <!-- Data Access Tier: các module chuyên trách & Facade Repository -->
-  <script src="src/data/drivers/storage-core.js"></script>
-  <script src="src/data/drivers/storage-remote.js"></script>
-  <script src="src/data/drivers/storage-local.js"></script>
-  <script src="src/data/drivers/storage-offline.js"></script>
-  <script src="src/data/drivers/storage-auth.js"></script>
-  <script src="src/data/drivers/storage-repo.js"></script>
-  <script src="src/data/storage.js"></script>
+  <script src="src/data/drivers/storage-core.js" defer></script>
+  <script src="src/data/drivers/storage-remote.js" defer></script>
+  <script src="src/data/drivers/storage-local.js" defer></script>
+  <script src="src/data/drivers/storage-offline.js" defer></script>
+  <script src="src/data/drivers/storage-auth.js" defer></script>
+  <script src="src/data/drivers/storage-repo.js" defer></script>
+  <script src="src/data/storage.js" defer></script>
   <!-- app.js cũ (2548 dòng, mọi tab gộp 1 file) đã được tách theo tab/tính năng
        thành các file ui-*.js + app-core.js bên dưới, để dễ tìm code hơn khi sửa. Các
        file này KHÔNG dùng ES module — chúng chia sẻ chung 1 scope toàn cục giống hệt
        như khi còn 1 file (xem ghi chú kiến trúc ở đầu ui-auth.js) — nên thứ tự nạp
        không quan trọng, TRỪ app-core.js phải nạp SAU CÙNG (xem ghi chú trong file đó). -->
-  <script src="src/presentation/tabs/ui-auth.js"></script>
+  <script src="src/presentation/tabs/ui-auth.js" defer></script>
   <!-- Presentation Tier: UI Components & Common Utilities -->
-  <script src="src/presentation/components/ui-utils.js"></script>
-  <script src="src/presentation/components/ui-terms.js"></script>
-  <script src="src/presentation/components/ui-combobox.js"></script>
-  <script src="src/presentation/components/ui-dropzone.js"></script>
-  <script src="src/presentation/components/ui-layout.js"></script>
-  <script src="src/presentation/components/ui-busy.js"></script>
-  <script src="src/presentation/components/ui-theme.js"></script>
-  <script src="src/presentation/tabs/ui-guides.js"></script>
-  <script src="src/presentation/tabs/ui-dieu54-charts.js"></script>
-  <script src="src/presentation/tabs/ui-dga-workflow.js"></script>
-  <script src="src/presentation/tabs/ui-dga.js"></script>
-  <script src="src/data/io/bbtn-export.js"></script>
-  <script src="src/data/io/mba-oil-bbtn.js"></script>
-  <script src="src/data/io/mba-oil-bbtn-export.js"></script>
-  <script src="src/data/io/device-specs.js"></script>
-  <script src="src/data/io/oil-bbtn.js"></script>
-  <script src="src/data/io/tech-report-export.js"></script>
-  <script src="src/presentation/tabs/ui-batch-import.js"></script>
-  <script src="src/presentation/tabs/ui-standards.js"></script>
-  <script src="src/presentation/tabs/ui-regulation-config.js"></script>
-  <script src="src/presentation/tabs/ui-admin.js"></script>
-  <script src="src/presentation/tabs/ui-oil.js"></script>
-  <script src="src/presentation/tabs/ui-oltc.js"></script>
-  <script src="src/presentation/tabs/ui-oil-bbtn-export.js"></script>
-  <script src="src/presentation/tabs/ui-oil-batch-import.js"></script>
-  <script src="src/presentation/tabs/ui-ti-oil.js"></script>
-  <script src="src/presentation/tabs/ui-ti-oil-3pha.js"></script>
-  <script src="src/presentation/tabs/ui-history.js"></script>
-  <script src="src/presentation/components/ui-input-subtabs.js"></script>
-  <script src="src/presentation/tabs/ui-device-specs.js"></script>
-  <script src="src/presentation/tabs/ui-trend.js"></script>
-  <script src="src/presentation/tabs/ui-alerts.js"></script>
-  <script src="src/presentation/tabs/ui-feedback.js"></script>
-  <script src="src/presentation/app-status.js"></script>
-  <script src="src/presentation/app-views.js"></script>
-  <script src="src/presentation/app-core.js"></script>
+  <script src="src/presentation/components/ui-utils.js" defer></script>
+  <script src="src/presentation/components/ui-terms.js" defer></script>
+  <script src="src/presentation/components/ui-combobox.js" defer></script>
+  <script src="src/presentation/components/ui-dropzone.js" defer></script>
+  <script src="src/presentation/components/ui-layout.js" defer></script>
+  <script src="src/presentation/components/ui-busy.js" defer></script>
+  <script src="src/presentation/components/ui-theme.js" defer></script>
+  <script src="src/presentation/tabs/ui-guides.js" defer></script>
+  <script src="src/presentation/tabs/ui-dieu54-charts.js" defer></script>
+  <script src="src/presentation/tabs/ui-dga-workflow.js" defer></script>
+  <script src="src/presentation/tabs/ui-dga.js" defer></script>
+  <script src="src/data/io/bbtn-export.js" defer></script>
+  <script src="src/data/io/mba-oil-bbtn.js" defer></script>
+  <script src="src/data/io/mba-oil-bbtn-export.js" defer></script>
+  <script src="src/data/io/device-specs.js" defer></script>
+  <script src="src/data/io/oil-bbtn.js" defer></script>
+  <script src="src/data/io/tech-report-export.js" defer></script>
+  <script src="src/presentation/tabs/ui-batch-import.js" defer></script>
+  <script src="src/presentation/tabs/ui-standards.js" defer></script>
+  <script src="src/presentation/tabs/ui-regulation-config.js" defer></script>
+  <script src="src/presentation/tabs/ui-admin.js" defer></script>
+  <script src="src/presentation/tabs/ui-oil.js" defer></script>
+  <script src="src/presentation/tabs/ui-oltc.js" defer></script>
+  <script src="src/presentation/tabs/ui-oil-bbtn-export.js" defer></script>
+  <script src="src/presentation/tabs/ui-oil-batch-import.js" defer></script>
+  <script src="src/presentation/tabs/ui-ti-oil.js" defer></script>
+  <script src="src/presentation/tabs/ui-ti-oil-3pha.js" defer></script>
+  <script src="src/presentation/tabs/ui-history.js" defer></script>
+  <script src="src/presentation/components/ui-input-subtabs.js" defer></script>
+  <script src="src/presentation/tabs/ui-device-specs.js" defer></script>
+  <script src="src/presentation/tabs/ui-trend.js" defer></script>
+  <script src="src/presentation/tabs/ui-alerts.js" defer></script>
+  <script src="src/presentation/tabs/ui-feedback.js" defer></script>
+  <script src="src/presentation/app-status.js" defer></script>
+  <script src="src/presentation/app-views.js" defer></script>
+  <script src="src/presentation/app-core.js" defer></script>
 </body>
 </html>

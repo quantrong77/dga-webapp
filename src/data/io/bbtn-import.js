@@ -26,9 +26,28 @@
 // cho <script type="module"> nên sẽ CHẶN, không chạy file, và lỗi này chỉ hiện trong
 // Console (F12) chứ không có thông báo gì trên giao diện. Đuôi ".js" thì hầu như mọi
 // server đều tự nhận đúng loại JavaScript nên không gặp lỗi này.
-import * as pdfjsLib from "../../../vendor/pdfjs/pdf.min.js";
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+// TẢI KHI CẦN (dynamic import): pdf.js (~344 KB) và Tesseract chỉ cần khi người dùng chọn file — không
+// tải lúc mở trang để màn hình đầu hiện nhanh. Mỗi thư viện chỉ tải 1 lần (giữ Promise).
+let _pdfjsPromise = null;
+function loadPdfjs() {
+  if (!_pdfjsPromise) {
+    _pdfjsPromise = import("../../../vendor/pdfjs/pdf.min.js").then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+      return lib;
+    });
+    _pdfjsPromise.catch(() => { _pdfjsPromise = null; }); // lỗi mạng -> lần sau thử tải lại
+  }
+  return _pdfjsPromise;
+}
+let _tesseractPromise = null;
+function loadTesseract() {
+  if (!_tesseractPromise) {
+    // Bản ESM của Tesseract.js chỉ có 1 export mặc định (object kiểu CommonJS) — lấy createWorker/OEM/PSM từ đó.
+    _tesseractPromise = import("../../../vendor/tesseract/tesseract.esm.min.js").then((m) => m.default);
+    _tesseractPromise.catch(() => { _tesseractPromise = null; });
+  }
+  return _tesseractPromise;
+}
 
 // OCR (nhận diện chữ từ ảnh) cho trường hợp BBTN là ảnh scan/chụp — không có lớp text
 // nào để pdf.js đọc trực tiếp (pdfFileToLines() ở dưới trả về rỗng/gần rỗng). Dùng
@@ -41,11 +60,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.work
 // tiếp thất bại) và kết quả kém tin cậy hơn đọc trực tiếp từ lớp text thật của PDF, nên
 // mọi kết quả qua OCR đều được đánh dấu viaOCR=true để giao diện nhắc người dùng kiểm
 // tra kỹ hơn — xem onBbtnFileSelected() ở src/presentation/tabs/ui-dga.js.
-// Bản ESM của Tesseract.js chỉ có 1 export mặc định (gói nguyên module.exports kiểu
-// CommonJS gốc thành 1 object) — không có named export createWorker/OEM riêng.
-import Tesseract from "../../../vendor/tesseract/tesseract.esm.min.js";
-const { createWorker, OEM, PSM } = Tesseract;
-
+// Thư viện được tải khi cần qua loadTesseract() ở trên.
 const TESS_WORKER_PATH = new URL("../../../vendor/tesseract/worker.min.js", import.meta.url).href;
 const TESS_CORE_PATH = new URL("../../../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
 const TESS_LANG_PATH = new URL("../../../vendor/tesseract/lang-data", import.meta.url).href;
@@ -67,7 +82,8 @@ const OCR_RENDER_SCALE = 3;
 // ---------------------------------------------------------------------------
 async function pdfFileToLinesViaOCR(file, onProgress) {
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pdf = await (await loadPdfjs()).getDocument({ data: buf }).promise;
+  const { createWorker, OEM, PSM } = await loadTesseract();
   const worker = await createWorker("vie+eng", OEM.LSTM_ONLY, {
     workerPath: TESS_WORKER_PATH,
     corePath: TESS_CORE_PATH,
@@ -117,7 +133,7 @@ async function pdfFileToLinesViaOCR(file, onProgress) {
 // ---------------------------------------------------------------------------
 async function pdfFileToLines(file) {
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pdf = await (await loadPdfjs()).getDocument({ data: buf }).promise;
   const lines = [];
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
@@ -828,7 +844,7 @@ async function extract(file, onProgress) {
 const WORD_GAP_PT = 1.5; // khoảng trống ngang lớn hơn mức này mới tính là có dấu cách
 
 async function pdfFileToCleanLines(file) {
-  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const pdf = await (await loadPdfjs()).getDocument({ data: await file.arrayBuffer() }).promise;
   const lines = [];
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);

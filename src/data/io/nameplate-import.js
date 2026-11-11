@@ -22,12 +22,30 @@
 // (xem file đó để biết vì sao chọn Tesseract.js, vì sao vendor local thay vì CDN, và quy
 // ước OEM.LSTM_ONLY/PSM.AUTO) — không tải thêm gì mới, không phụ thuộc CDN ngoài, không
 // gửi ảnh lên bất kỳ server/API OCR nào.
-import * as pdfjsLib from "../../../vendor/pdfjs/pdf.min.js";
-import Tesseract from "../../../vendor/tesseract/tesseract.esm.min.js";
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+// TẢI KHI CẦN (dynamic import): pdf.js (~344 KB) và Tesseract chỉ cần khi người dùng chọn file — không
+// tải lúc mở trang để màn hình đầu hiện nhanh. Mỗi thư viện chỉ tải 1 lần (giữ Promise).
+let _pdfjsPromise = null;
+function loadPdfjs() {
+  if (!_pdfjsPromise) {
+    _pdfjsPromise = import("../../../vendor/pdfjs/pdf.min.js").then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = new URL("../../../vendor/pdfjs/pdf.worker.min.js", import.meta.url).href;
+      return lib;
+    });
+    _pdfjsPromise.catch(() => { _pdfjsPromise = null; }); // lỗi mạng -> lần sau thử tải lại
+  }
+  return _pdfjsPromise;
+}
+let _tesseractPromise = null;
+function loadTesseract() {
+  if (!_tesseractPromise) {
+    // Bản ESM của Tesseract.js chỉ có 1 export mặc định (object kiểu CommonJS) — lấy createWorker/OEM/PSM từ đó.
+    _tesseractPromise = import("../../../vendor/tesseract/tesseract.esm.min.js").then((m) => m.default);
+    _tesseractPromise.catch(() => { _tesseractPromise = null; });
+  }
+  return _tesseractPromise;
+}
 
-const { createWorker, OEM, PSM } = Tesseract;
 
 const TESS_WORKER_PATH = new URL("../../../vendor/tesseract/worker.min.js", import.meta.url).href;
 const TESS_CORE_PATH = new URL("../../../vendor/tesseract/tesseract-core-lstm.wasm.js", import.meta.url).href;
@@ -42,7 +60,7 @@ function isPdfFile(file) {
 
 async function pdfFileToImages(file) {
   const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const pdf = await (await loadPdfjs()).getDocument({ data: buf }).promise;
   const canvases = [];
   for (let p = 1; p <= pdf.numPages; p++) {
     const page = await pdf.getPage(p);
@@ -58,6 +76,7 @@ async function pdfFileToImages(file) {
 }
 
 async function fileToOcrText(file, onProgress) {
+  const { createWorker, OEM, PSM } = await loadTesseract();
   const worker = await createWorker("vie+eng", OEM.LSTM_ONLY, {
     workerPath: TESS_WORKER_PATH,
     corePath: TESS_CORE_PATH,
