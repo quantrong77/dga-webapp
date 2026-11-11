@@ -80,21 +80,21 @@ describe("buildFaultEvolution — phần tăng (Δ)", () => {
 });
 
 describe("bang66RatioThresholds", () => {
-  test("lấy mốc từ Bảng 66 hiện hành, sắp tăng dần, không trùng", () => {
+  test("lấy mốc từ Bảng 66 hiện hành + bảng sơ bộ PD/D/T, sắp tăng dần, không trùng", () => {
     const t = DGA.bang66RatioThresholds(0.1);
     expect(t.c2h2_c2h4).toEqual([0.1, 0.2, 0.6, 1, 2.5]);
-    expect(t.ch4_h2).toEqual([0.1, 0.5, 1]);
+    expect(t.ch4_h2).toEqual([0.1, 0.2, 0.5, 1]);
     expect(t.c2h4_c2h6).toEqual([0.2, 1, 2, 4]);
   });
 
-  test("ngưỡng PD theo loại thiết bị (TI/TU 0,2) được đưa vào CH4/H2", () => {
-    expect(DGA.bang66RatioThresholds(0.2).ch4_h2).toEqual([0.1, 0.2, 0.5, 1]);
+  test("ngưỡng PD theo loại thiết bị (sứ xuyên 0,07) được đưa vào CH4/H2", () => {
+    expect(DGA.bang66RatioThresholds(0.07).ch4_h2).toEqual([0.07, 0.1, 0.2, 0.5, 1]);
   });
 });
 
 describe("Giao diện tab Xu hướng", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-  test.each(["trFaultWrap", "tr_faultBasis", "tr_faultPhase", "trRatioChart", "trDuvalSvg", "trFaultBody", "trFaultTickAll", "trFaultNoneTicked", "trFaultCodeLegend", "tr_faultScale", "trFaultCard"])("có phần tử #%s", (id) => {
+  test.each(["trFaultWrap", "tr_faultBasis", "tr_faultPhase", "trRatioChart", "trDuvalSvg", "trFaultBody", "trFaultTickAll", "trFaultNoneTicked", "trFaultCodeLegend", "tr_faultScale", "tr_faultMarks", "trFaultCard"])("có phần tử #%s", (id) => {
     expect(html).toContain(`id="${id}"`);
   });
 });
@@ -160,5 +160,26 @@ describe("bang66IecCells — khớp diagnoseRatios()", () => {
     expect(pd.code).toBe("PD");
     expect(pd.cells.g).toMatchObject({ ns: true, ok: true });
     expect(pd.match).toBe(true);
+  });
+});
+
+describe("Bảng sơ bộ PD/D/T (khi không khớp phần PD/D1/D2/T1/T2/T3)", () => {
+  test("buildFaultEvolution gắn kết quả sơ bộ khi mã IEC là Ngoài bảng", () => {
+    // CH4/H2 = 0,05; C2H2/C2H4 = 0,05; C2H4/C2H6 = 2 → không khớp mã IEC; sơ bộ: PD + T
+    const [r] = DGA.buildFaultEvolution([{ date: 1, gases: g(100, 5, 10, 20, 1), exceedCount: 1 }]);
+    expect(r.code).toBe("Ngoài bảng");
+    expect(r.codeSimplified).toBe("PD+T");
+  });
+
+  test("khớp mã IEC thì không dùng bảng sơ bộ", () => {
+    const [r] = DGA.buildFaultEvolution([{ date: 1, gases: g(120, 380, 80, 420, 1), exceedCount: 3 }]);
+    expect(r.code).toBe("T3");
+    expect(r.codeSimplified).toBeNull();
+  });
+
+  test("bang66PdtCells khớp diagnoseSimplifiedPDT()", () => {
+    const ratios = { c2h2_c2h4: 0.5, ch4_h2: 0.1, c2h4_c2h6: 2 };
+    const matched = DGA.bang66PdtCells(ratios).filter((x) => x.match).map((x) => x.code);
+    expect(matched).toEqual(DGA.diagnoseSimplifiedPDT(ratios).codes);
   });
 });

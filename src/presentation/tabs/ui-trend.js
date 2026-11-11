@@ -560,6 +560,24 @@ let _trendRatioChart = null;
 let _trendFaultPhase = null;
 // Lựa chọn thang trục tung của đồ thị 3 tỷ số (log / tuyến tính) — sở thích giao diện, nhớ theo trình duyệt.
 const TREND_RATIO_SCALE_STORAGE_KEY = "dga_trend_ratio_scale";
+// Bộ vạch mốc trên đồ thị 3 tỷ số: phần 9 dòng (0,1 – 1 – 3) hay mốc chi tiết phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ.
+const TREND_RATIO_MARKS_STORAGE_KEY = "dga_trend_ratio_marks";
+
+/** Ô chọn sở thích hiển thị: khôi phục lựa chọn đã lưu (1 lần), đổi thì lưu lại và vẽ lại đồ thị. */
+function trendBindPrefSelect(sel, key, allowed) {
+  if (!sel) return;
+  if (!sel.dataset.restored) {
+    sel.dataset.restored = "1";
+    try {
+      const saved = localStorage.getItem(key);
+      if (allowed.includes(saved)) sel.value = saved;
+    } catch (e) { /* bị chặn lưu trữ — dùng mặc định */ }
+  }
+  sel.onchange = () => {
+    try { localStorage.setItem(key, sel.value); } catch (e) { /* bị chặn lưu trữ — bỏ qua */ }
+    drawTrendFaultCharts();
+  };
+}
 // Lần đo bị BỎ TICK ở bảng chi tiết (khóa = trendFaultRowKey()) — không vẽ lên biểu đồ tỷ số và tam giác Duval.
 // Mặc định tick hết; đổi thiết bị/pha thì tick lại hết.
 const _trendFaultUnticked = new Set();
@@ -660,21 +678,9 @@ function renderTrendFaultEvolution(gasRecords) {
   const rows = DGA.buildFaultEvolution(series, { basis, pdThreshold });
   // Số thứ tự cố định theo bảng — dùng chung cho bảng, tooltip, dải mã, nhãn điểm Duval và phiếu đối chiếu.
   rows.forEach((r, i) => { r.seq = i + 1; });
-  _trendFaultView = { rows, recs: recsOk };
-  const scaleSel = $("tr_faultScale");
-  if (scaleSel) {
-    if (!scaleSel.dataset.restored) {
-      scaleSel.dataset.restored = "1";
-      try {
-        const saved = localStorage.getItem(TREND_RATIO_SCALE_STORAGE_KEY);
-        if (saved === "log" || saved === "linear") scaleSel.value = saved;
-      } catch (e) { /* bị chặn lưu trữ — dùng mặc định (log) */ }
-    }
-    scaleSel.onchange = () => {
-      try { localStorage.setItem(TREND_RATIO_SCALE_STORAGE_KEY, scaleSel.value); } catch (e) { /* bị chặn lưu trữ — bỏ qua */ }
-      drawTrendFaultCharts();
-    };
-  }
+  _trendFaultView = { rows, recs: recsOk, iecMarks: DGA.bang66RatioThresholds(pdThreshold), pdThreshold };
+  trendBindPrefSelect($("tr_faultMarks"), TREND_RATIO_MARKS_STORAGE_KEY, ["code9", "iec"]);
+  trendBindPrefSelect($("tr_faultScale"), TREND_RATIO_SCALE_STORAGE_KEY, ["log", "linear"]);
 
   $("trFaultEmpty").classList.toggle("hidden", rows.length > 0);
   $("trFaultCharts").classList.toggle("hidden", rows.length === 0);
@@ -750,7 +756,7 @@ function renderTrendFaultTable(rows) {
       if (r.applicable && r.code) prevCode = r.code;
       const date = r.prevDate ? `${trendFmtDate(r.prevDate)} → ${trendFmtDate(r.date)}` : trendFmtDate(r.date);
       const code = r.code
-        ? `<span title="${escapeHtml(r.codeLabel || "")}">${changed ? "<strong>" + escapeHtml(r.code) + " (đổi)</strong>" : escapeHtml(r.code)}</span>`
+        ? `<span title="${escapeHtml(r.codeLabel || "")}">${changed ? "<strong>" + escapeHtml(r.code) + " (đổi)</strong>" : escapeHtml(r.code)}${r.code === "Ngoài bảng" && r.codeSimplified ? ` → sơ bộ ${escapeHtml(r.codeSimplified)}` : ""}</span>`
         : "—";
       const key = trendFaultRowKey(r);
       const ticked = !_trendFaultUnticked.has(key);
@@ -771,6 +777,44 @@ function renderTrendFaultTable(rows) {
 // Vạch ngang tại các mốc phần 9 dòng của Bảng 66 (0,1 – 1 – 3), ghi rõ mốc đó dùng cho tỷ số nào.
 const TREND_RATIO_MARK_USES = { 0.1: "C2H2/C2H4 · CH4/H2", 1: "CH4/H2 · C2H4/C2H6", 3: "C2H2/C2H4 · C2H4/C2H6" };
 
+/** Mốc chi tiết phần PD/D1/D2/T1/T2/T3 Bảng 66 + bảng sơ bộ PD/D/T: mỗi tỷ số 1 bộ vạch CÙNG MÀU đường của nó,
+ *  nhãn giá trị xếp thành cột ở mép phải (mỗi tỷ số 1 cột). Chỉ vẽ cho tỷ số đang hiện — bấm chú giải để ẩn bớt
+ *  2 tỷ số kia thì chỉ còn vạch của tỷ số cần xem. */
+function trendDrawIecMarks(chart, s, opts) {
+  const { ctx, chartArea } = chart;
+  const marks = opts.iecMarks || {};
+  ctx.textAlign = "right";
+  let col = 0;
+  TREND_RATIO_META.forEach((m, i) => {
+    if (!chart.isDatasetVisible(i)) return;
+    const color = chart.data.datasets[i].borderColor;
+    const xText = chartArea.right - 3 - col * 34;
+    col += 1;
+    let lastY = null;
+    [...(marks[m.key] || [])].sort((a, b) => b - a).forEach((v) => {
+      const y = s.getPixelForValue(v);
+      if (!(y >= chartArea.top && y <= chartArea.bottom)) return;
+      ctx.setLineDash([2, 3]);
+      ctx.globalAlpha = 0.75;
+      ctx.strokeStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      if (lastY !== null && Math.abs(y - lastY) < 12) return;
+      lastY = y;
+      const text = trendFmtRatio(v);
+      const w = ctx.measureText(text).width + 4;
+      ctx.setLineDash([]);
+      ctx.fillStyle = opts.labelBg;
+      ctx.fillRect(xText - w + 1, y - 12, w, 11);
+      ctx.fillStyle = color;
+      ctx.fillText(text, xText, y - 2);
+    });
+  });
+}
+
 const trendRatioMarksPlugin = {
   id: "trendRatioMarks",
   beforeDatasetsDraw(chart, _args, opts) {
@@ -781,8 +825,13 @@ const trendRatioMarksPlugin = {
     ctx.setLineDash([5, 4]);
     ctx.lineWidth = 1;
     ctx.font = '10px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
-    ctx.textAlign = "left";
     ctx.textBaseline = "bottom";
+    if (opts.mode === "iec") {
+      trendDrawIecMarks(chart, s, opts);
+      ctx.restore();
+      return;
+    }
+    ctx.textAlign = "left";
     let lastLabelY = null;
     // Vẽ từ mốc lớn xuống mốc nhỏ; nhãn nào sát nhãn trước (thang tuyến tính: 0,1 sát 1) thì chỉ kẻ vạch.
     [...DGA.BANG66_CODE9_MARKS].sort((a, b) => b - a).forEach((v) => {
@@ -808,6 +857,12 @@ const trendRatioMarksPlugin = {
   },
 };
 
+/** Mã phần PD/D1/D2/T1/T2/T3; không khớp thì kèm kết quả bảng sơ bộ PD/D/T (Điều 54). */
+function trendIecCodeText(r, short) {
+  if (r.code !== "Ngoài bảng" || !r.codeSimplified) return r.code;
+  return short ? `${r.codeSimplified} (sơ bộ)` : `Ngoài bảng → sơ bộ ${r.codeSimplified}`;
+}
+
 // Nhóm màu cho dải mã: mã IEC/Duval dùng thẳng màu vùng Duval (D54_ZONE_COLORS), "N" = bình thường.
 function trendFamilyOfCode(code) {
   if (!code) return null;
@@ -824,7 +879,7 @@ function trendFamilyColor(family, th) {
 
 const TREND_CODE_LANES = [
   { label: "9 dòng", get: (r) => (r.code9 ? { text: r.code9.short, family: r.code9.family } : null) },
-  { label: "IEC", get: (r) => (r.code ? { text: r.code, family: trendFamilyOfCode(r.code) } : null) },
+  { label: "IEC", get: (r) => (r.code ? { text: trendIecCodeText(r, true), family: trendFamilyOfCode(r.code) } : null) },
   { label: "Duval", get: (r) => (r.duval ? { text: r.duval.zone, family: trendFamilyOfCode(r.duval.zone) } : null) },
 ];
 const TREND_LANE_H = 18;
@@ -876,6 +931,11 @@ const trendCodeStripPlugin = {
     ctx.restore();
   },
 };
+
+function trendRatioMarksMode() {
+  const sel = $("tr_faultMarks");
+  return sel && sel.value === "iec" ? "iec" : "code9";
+}
 
 function trendRatioScaleMode() {
   const sel = $("tr_faultScale");
@@ -952,7 +1012,7 @@ function renderTrendRatioChart(rows) {
       },
       plugins: {
         legend: { position: "top", labels: { boxWidth: 14 } },
-        trendRatioMarks: { lineColor: theme.dark ? "rgba(148,163,184,0.6)" : "rgba(71,85,105,0.5)", textColor: theme.muted, labelBg: theme.dark ? "rgba(15,23,42,0.8)" : "rgba(255,255,255,0.85)" },
+        trendRatioMarks: { mode: trendRatioMarksMode(), iecMarks: _trendFaultView ? _trendFaultView.iecMarks : null, lineColor: theme.dark ? "rgba(148,163,184,0.6)" : "rgba(71,85,105,0.5)", textColor: theme.muted, labelBg: theme.dark ? "rgba(15,23,42,0.8)" : "rgba(255,255,255,0.85)" },
         trendCodeStrip: { rows, theme },
         tooltip: {
           callbacks: {
@@ -967,7 +1027,7 @@ function renderTrendRatioChart(rows) {
               const row = items[0].raw.row;
               return [
                 `Bảng 66 (9 dòng): ${row.code9 ? row.code9.short : "—"}`,
-                `Bảng 66 (IEC): ${row.code || "—"}`,
+                `Bảng 66 (IEC): ${row.code ? trendIecCodeText(row, false) : "—"}`,
                 `Duval: ${row.duval ? row.duval.zone : "—"}`,
                 row.applicable ? "Đủ điều kiện chẩn đoán" : "Chỉ tham khảo (chưa khí nào vượt giá trị điển hình)",
                 "Bấm để mở phiếu đối chiếu",
@@ -1042,7 +1102,7 @@ function trendRatioRulerHtml(title, p) {
 }
 
 function trendCheckCell(c) {
-  if (c.ns) return `<td class="chk-ns" title="Không xét (NS)">NS</td>`;
+  if (c.ns) return `<td class="chk-ns" title="Không xét">${escapeHtml(c.text)}</td>`;
   return `<td class="${c.ok ? "chk-ok" : "chk-no"}">${c.ok ? "✓ " : ""}${escapeHtml(c.text)}</td>`;
 }
 
@@ -1110,11 +1170,29 @@ function renderTrendFaultCard() {
     : '<p class="note">Thiếu tỷ số — không tra được.</p>';
   const iecMatch = iec ? iec.filter((r) => r.match) : [];
   const simplified = iec && iecMatch.length === 0 ? DGA.diagnoseSimplifiedPDT(raw) : null;
-  const tableIec = iec
+  // Chú thích như Bảng 66: ᵃ NS — không có ý nghĩa dù giá trị bao nhiêu; ᵇ C2H2 tăng có thể cho thấy điểm nóng > 1000 °C.
+  const iecShown = iec
+    ? iec.map((r) => {
+      const cells = { g: { ...r.cells.g }, h: { ...r.cells.h }, i: { ...r.cells.i } };
+      ["g", "h", "i"].forEach((k) => { if (cells[k].ns) cells[k].text = "NSᵃ"; });
+      if (r.code === "T1") cells.h.text = `${cells.h.text} nhưng NSᵃ`;
+      if (r.code === "T3") cells.g.text = `${cells.g.text}ᵇ`;
+      return { ...r, cells };
+    })
+    : null;
+  const pdt = DGA.bang66PdtCells(raw);
+  const tableIec = iecShown
     ? `<div class="table-scroll"><table class="fault-check-table"><thead><tr><th>Mã</th><th>Sự cố đặc trưng</th><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th></tr></thead><tbody>
-      ${iec.map((r) => `<tr class="${r.match ? "match-row" : ""}"><td><strong>${r.code}</strong></td><td>${escapeHtml(r.label)}${r.match ? " <strong>← khớp</strong>" : ""}</td>${trendCheckCell(r.cells.g)}${trendCheckCell(r.cells.h)}${trendCheckCell(r.cells.i)}</tr>`).join("")}
+      ${iecShown.map((r) => `<tr class="${r.match ? "match-row" : ""}"><td><strong>${r.code}</strong></td><td>${escapeHtml(r.label)}${r.match ? " <strong>← khớp</strong>" : ""}</td>${trendCheckCell(r.cells.g)}${trendCheckCell(r.cells.h)}${trendCheckCell(r.cells.i)}</tr>`).join("")}
       </tbody></table></div>
-      ${iecMatch.length ? "" : `<p class="note">Không khớp mã nào — theo Điều 54 dùng bảng sơ bộ: <strong>${escapeHtml(simplified ? simplified.label || simplified.text : "không xác định")}</strong>.</p>`}`
+      <p class="note">ᵃ NS: không có ý nghĩa, dù giá trị là bao nhiêu. ᵇ Sự gia tăng hàm lượng C2H2 có thể cho thấy nhiệt độ tại điểm nóng vượt quá 1000 °C.</p>
+      <h4>Bảng sơ bộ PD / D / T (Điều 54: dùng khi tỷ lệ không nằm trong giới hạn của bảng trên)</h4>
+      <div class="table-scroll${iecMatch.length ? " pdt-inactive" : ""}"><table class="fault-check-table"><thead><tr><th>Trường hợp</th><th>Sự cố</th><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th></tr></thead><tbody>
+      ${(pdt || []).map((r) => `<tr class="${r.match && !iecMatch.length ? "match-row" : ""}"><td><strong>${r.code}</strong></td><td>${escapeHtml(r.label)}${r.match && !iecMatch.length ? " <strong>← khớp</strong>" : ""}</td>${trendCheckCell(r.cells.g)}${trendCheckCell(r.cells.h)}${trendCheckCell(r.cells.i)}</tr>`).join("")}
+      </tbody></table></div>
+      <p class="note">${iecMatch.length
+    ? `Không áp dụng: tỷ lệ đã khớp mã <strong>${iecMatch.map((r) => r.code).join(", ")}</strong> ở bảng trên (bảng sơ bộ chỉ hiện để đối chiếu).`
+    : `Không khớp mã nào ở bảng trên — kết luận <strong>sơ bộ</strong>: <strong>${escapeHtml(simplified ? simplified.text : "không xác định")}</strong>.`}</p>`
     : "";
 
   // (5) Duval
@@ -1161,7 +1239,7 @@ function renderTrendFaultCard() {
     </div>
     <h4>Bảng 66 — phần 9 dòng (mốc 0,1 – 1 – 3)</h4>
     ${table9}
-    <h4>Bảng 66 — phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599)</h4>
+    <h4>Bảng 66 — phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599, ngưỡng hiện hành)</h4>
     ${tableIec}
     <h4>Các bước khác của Điều 54</h4>
     <ol class="dieu54-steps">${steps.map(([t, b]) => `<li><strong>${t}:</strong> ${b}</li>`).join("")}</ol>

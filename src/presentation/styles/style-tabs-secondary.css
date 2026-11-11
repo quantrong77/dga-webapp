@@ -847,3 +847,8 @@ a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
   .about-contact-list .about-label { width: auto; }
 }
 
+
+/* Bảng sơ bộ PD/D/T trong phiếu đối chiếu khi đã khớp bảng trên (chỉ để đối chiếu) */
+.pdt-inactive {
+  opacity: 0.6;
+}

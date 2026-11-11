@@ -593,6 +593,24 @@ function diagnoseBang66Code9(ratios) {
 }
 
 /**
+ * Từng ô của bảng sơ bộ PD/D/T (ngay dưới Bảng 66) — cùng điều kiện với diagnoseSimplifiedPDT(). Ô "–" = không xét.
+ * @returns {Array<{code, label, cells:{g,h,i}, match:boolean}>|null}
+ */
+function bang66PdtCells(ratios) {
+  if (!bang66RatiosOk(ratios)) return null;
+  const P = QD1901_BANG66_PDT;
+  const t = bang66NumText;
+  const ns = { ok: true, ns: true, text: "–" };
+  const g = ratios.c2h2_c2h4, h = ratios.ch4_h2;
+  const defs = [
+    { code: "PD", label: "Phóng điện cục bộ", cells: { g: ns, h: { ok: h < P.pd_h_max, text: `< ${t(P.pd_h_max)}` }, i: ns } },
+    { code: "D", label: "Phóng điện", cells: { g: { ok: g > P.dt_g, text: `> ${t(P.dt_g)}` }, h: ns, i: ns } },
+    { code: "T", label: "Lỗi tăng nhiệt", cells: { g: { ok: g < P.dt_g, text: `< ${t(P.dt_g)}` }, h: ns, i: ns } },
+  ];
+  return defs.map((d) => ({ ...d, match: d.cells.g.ok && d.cells.h.ok && d.cells.i.ok }));
+}
+
+/**
  * Từng ô của phần DƯỚI Bảng 66 (PD/D1/D2/T1/T2/T3 = Table 1 IEC 60599) — cùng điều kiện so sánh với
  * diagnoseRatios() (ngưỡng hiện hành QD1901_BANG66_TABLE1, ngưỡng PD theo loại thiết bị). Ô "NS" = không xét.
  * @returns {Array<{code, label, cells:{g,h,i}, match:boolean}>|null}
@@ -646,14 +664,16 @@ const RATIO_TREND_DEFS = [
   { key: "c2h4_c2h6", num: "C2H4", den: "C2H6" },
 ];
 
-/** Các mốc ngưỡng của Bảng 66 (hiện hành, kể cả khi đã cấu hình lại) cho từng tỷ số — để kẻ vạch ngang. */
+/** Các mốc chi tiết của phần PD/D1/D2/T1/T2/T3 Bảng 66 + bảng sơ bộ PD/D/T ngay dưới (hiện hành, kể cả khi đã
+ *  cấu hình lại) cho từng tỷ số — để kẻ vạch ngang. */
 function bang66RatioThresholds(pdThreshold) {
   const T = QD1901_BANG66_TABLE1;
+  const P = QD1901_BANG66_PDT;
   const pd = pdThreshold === undefined || pdThreshold === null ? DEFAULT_PD_THRESHOLD : pdThreshold;
   const uniq = (arr) => Array.from(new Set(arr.filter((v) => Number.isFinite(v) && v > 0))).sort((a, b) => a - b);
   return {
-    c2h2_c2h4: uniq([T.D1.g_min, T.D2.g_min, T.D2.g_max, T.T2.g_max, T.T3.g_max]),
-    ch4_h2: uniq([pd, T.D1.h_min, T.D1.h_max, T.D2.h_min, T.D2.h_max, T.T1.h_min]),
+    c2h2_c2h4: uniq([T.D1.g_min, T.D2.g_min, T.D2.g_max, T.T2.g_max, T.T3.g_max, P.dt_g]),
+    ch4_h2: uniq([pd, T.D1.h_min, T.D1.h_max, T.D2.h_min, T.D2.h_max, T.T1.h_min, P.pd_h_max]),
     c2h4_c2h6: uniq([T.PD.i_max, T.D1.i_min, T.D2.i_min, T.T1.i_max, T.T2.i_max, T.T3.i_min]),
   };
 }
@@ -702,6 +722,12 @@ function buildFaultEvolution(series, opts) {
       }, pd);
       code = codeLabel === NO_DIAGNOSIS ? "Ngoài bảng" : codeLabel.split(" - ")[0];
     }
+    // Điều 54: tỷ lệ không nằm trong bảng trên → dùng bảng sơ bộ PD/D/T ngay dưới.
+    let codeSimplified = null;
+    if (code === "Ngoài bảng") {
+      const simp = diagnoseSimplifiedPDT({ c2h2_c2h4: ratios.c2h2_c2h4.raw, ch4_h2: ratios.ch4_h2.raw });
+      codeSimplified = simp ? simp.codes.join("+") : null;
+    }
     // Phần 9 dòng của Bảng 66 (mốc 0,1 – 1 – 3) — tra trên giá trị THỰC (raw), kể cả tỷ số < 0,01.
     let code9 = null;
     if (RATIO_TREND_DEFS.every((d) => ratios[d.key])) {
@@ -717,7 +743,7 @@ function buildFaultEvolution(series, opts) {
       if (pct) duval = { ...pct, ...classifyDuval1(pct), xy: duvalPlotXY(pct) };
     }
 
-    rows.push({ index: i, date: cur.date, prevDate, gases, ratios, code, codeLabel, code9, duval, applicable: (cur.exceedCount || 0) > 0 });
+    rows.push({ index: i, date: cur.date, prevDate, gases, ratios, code, codeLabel, codeSimplified, code9, duval, applicable: (cur.exceedCount || 0) > 0 });
   });
   return rows;
 }

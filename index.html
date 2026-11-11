@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v65-bang66-9-dong") {
+          if (k !== "dga-offline-v66-bang66-so-bo") {
             caches.delete(k);
           }
         });
@@ -1220,8 +1220,10 @@
           mức độ — mức độ xem ở nồng độ và tốc độ tăng phía trên. Theo dõi theo thời gian để thấy khiếm khuyết có
           <strong>đổi bản chất</strong> không (vd T2 → T3, hoặc xuất hiện phóng điện). Điểm <strong>rỗng</strong> là lần đo
           chưa có khí nào vượt giá trị điển hình: tỷ số chỉ để tham khảo (Điều 54 QĐ1901, mục 6.1(c) IEC 60599).
-          Ba tỷ số vẽ chung 1 trục; vạch đứt ngang là các mốc <strong>0,1 – 1 – 3</strong> của phần 9 dòng Bảng 66
-          (bên cạnh ghi mốc đó dùng cho tỷ số nào). Thang log: <strong>▽</strong> ở đáy là tỷ số &lt; 0,01 (kể cả tử số
+          Ba tỷ số vẽ chung 1 trục. Ô <strong>Vạch mốc</strong>: <strong>phần 9 dòng</strong> kẻ các mốc 0,1 – 1 – 3
+          (bên cạnh ghi mốc đó dùng cho tỷ số nào); <strong>phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ</strong> kẻ mốc chi tiết
+          (0,1 · 0,2 · 0,5 · 0,6 · 1 · 2 · 2,5 · 4) cùng màu với đường tỷ số dùng mốc đó — bấm tên tỷ số ở chú giải để ẩn
+          bớt, chỉ còn vạch của tỷ số cần xem. Thang log: <strong>▽</strong> ở đáy là tỷ số &lt; 0,01 (kể cả tử số
           bằng 0/KPH); <strong>▲</strong> ở đỉnh là tỷ số &gt; 10. Mẫu số bằng 0 thì không tính. Dải màu dưới trục thời
           gian là mã của từng lần đo: <strong>9 dòng</strong> = Bảng 66 phần trên, <strong>IEC</strong> = Bảng 66 phần
           PD/D1/D2/T1/T2/T3, <strong>Duval</strong> = tam giác Duval 1. Bấm vào điểm, dải mã hoặc dòng trong bảng để mở
@@ -1237,6 +1239,12 @@
             <select id="tr_faultScale" autocomplete="off">
               <option value="log" selected>Logarit 0,01–10 (như Biểu đồ 1, 2 Điều 54)</option>
               <option value="linear">Tuyến tính 0–10</option>
+            </select>
+          </label>
+          <label class="field" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Vạch mốc
+            <select id="tr_faultMarks" autocomplete="off">
+              <option value="code9" selected>Phần 9 dòng Bảng 66 (0,1 – 1 – 3)</option>
+              <option value="iec">Phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ (mốc chi tiết, theo màu từng tỷ số)</option>
             </select>
           </label>
           <label class="field hidden" id="trFaultPhaseWrap" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Pha
@@ -3611,11 +3619,17 @@
           <p>Bảng 66 Điều 54 QĐ1901 gồm 2 phần, app tra cả hai:</p>
           <ul class="rec-list">
           <li><strong>Phần 9 dòng</strong> (mốc 0,1 – 1 – 3): bình thường, phóng điện cục bộ năng lượng thấp/cao, phóng điện năng lượng thấp/cao, khuyết tật nhiệt &lt;150 °C, 150–300 °C, 300–700 °C, &gt;700 °C. Văn bản không nói rõ biên, app quy ước <strong>cận dưới tính vào, cận trên không tính</strong> (ví dụ "0,1–1" là 0,1 ≤ tỷ số &lt; 1). Tổ hợp không khớp dòng nào ghi <strong>Ngoài bảng</strong>.</li>
-          <li><strong>Phần PD/D1/D2/T1/T2/T3</strong> (= Table 1 IEC 60599). Không khớp mã nào thì dùng bảng sơ bộ PD/D/T ngay dưới.</li>
+          <li><strong>Phần PD/D1/D2/T1/T2/T3</strong> (= Table 1 IEC 60599), mốc chi tiết 0,1 · 0,2 · 0,5 · 0,6 · 1 · 2 · 2,5 · 4, kèm chú thích ᵃ NS (không có ý nghĩa, dù giá trị bao nhiêu) và ᵇ (C2H2 tăng có thể cho thấy điểm nóng vượt 1000 °C).</li>
+          <li><strong>Bảng sơ bộ PD/D/T</strong> ngay dưới: theo Điều 54, khi tỷ lệ không nằm trong giới hạn của phần PD/D1/D2/T1/T2/T3 thì dùng bảng này để xác định sơ bộ PD (CH4/H2 &lt; 0,2), D (C2H2/C2H4 &gt; 0,2) hay T (C2H2/C2H4 &lt; 0,2). Trong bảng chi tiết và dải mã, lần đo như vậy ghi "Ngoài bảng → sơ bộ D" (hoặc PD, T).</li>
           </ul>
           <p>Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi thiết bị có số liệu khí hòa tan, gồm:</p>
           <ul class="rec-list">
-          <li><strong>Đồ thị 3 tỷ số</strong> theo thời gian, vẽ chung một trục tung. Ô <strong>Thang trục tung</strong> chọn <strong>Logarit 0,01–10</strong> (mặc định, cùng thang với Biểu đồ 1, 2 Điều 54) hoặc <strong>Tuyến tính 0–10</strong>; app nhớ lựa chọn. Vạch đứt ngang là các mốc <strong>0,1 – 1 – 3</strong> của phần 9 dòng, bên cạnh ghi mốc đó dùng cho tỷ số nào (C2H2/C2H4 dùng 0,1 và 3; CH4/H2 dùng 0,1 và 1; C2H4/C2H6 dùng 1 và 3). Tỷ số lớn hơn 10 vẽ <strong>▲</strong> ở đỉnh.</li>
+          <li><strong>Đồ thị 3 tỷ số</strong> theo thời gian, vẽ chung một trục tung. Ô <strong>Thang trục tung</strong> chọn <strong>Logarit 0,01–10</strong> (mặc định, cùng thang với Biểu đồ 1, 2 Điều 54) hoặc <strong>Tuyến tính 0–10</strong>; app nhớ lựa chọn. Ô <strong>Vạch mốc</strong> chọn bộ vạch đứt ngang (app nhớ lựa chọn):</li>
+          <li><strong>Phần 9 dòng Bảng 66</strong>: các mốc <strong>0,1 – 1 – 3</strong>, bên cạnh ghi mốc đó dùng cho tỷ số nào (C2H2/C2H4 dùng 0,1 và 3; CH4/H2 dùng 0,1 và 1; C2H4/C2H6 dùng 1 và 3).</li>
+          <li><strong>Phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ</strong>: mốc chi tiết của từng tỷ số, vạch và nhãn <strong>cùng màu với đường tỷ số</strong> dùng mốc đó (C2H2/C2H4: 0,1 · 0,2 · 0,6 · 1 · 2,5; CH4/H2: 0,1 · 0,2 · 0,5 · 1 và ngưỡng PD theo loại thiết bị; C2H4/C2H6: 0,2 · 1 · 2 · 4). Bấm tên tỷ số ở chú giải trên đồ thị để ẩn bớt, chỉ còn vạch của tỷ số cần xem.</li>
+          </ul>
+          <p>Tỷ số lớn hơn 10 vẽ <strong>▲</strong> ở đỉnh.</p>
+          <ul class="rec-list">
           <li><strong>Dải mã</strong> ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn <strong>9 dòng</strong> / <strong>IEC</strong> / <strong>Duval</strong>. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.</li>
           <li><strong>Tam giác Duval 1</strong> với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.</li>
           <li><strong>Bảng từng lần đo</strong>: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ <strong>(đổi)</strong>.</li>
@@ -3668,7 +3682,8 @@
           <ol type="1">
           <li><strong>3 thước</strong> (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.</li>
           <li><strong>Bảng 66 phần 9 dòng</strong> dựng lại đúng như quy định: ô xanh ✓ là tỷ số nằm trong khoảng của ô, ô xám là không; dòng khớp đủ 3 ô được viền xanh, kèm cột ví dụ điển hình.</li>
-          <li><strong>Bảng 66 phần PD/D1/D2/T1/T2/T3</strong> theo cùng cách (ô NS = không xét); không khớp mã nào thì ghi kết quả bảng sơ bộ PD/D/T.</li>
+          <li><strong>Bảng 66 phần PD/D1/D2/T1/T2/T3</strong> theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).</li>
+          <li><strong>Bảng sơ bộ PD/D/T</strong> cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".</li>
           <li><strong>Các bước khác của Điều 54</strong> theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 &gt; 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là <strong>gợi ý</strong>, Điều 54 không quy định cách chọn.</li>
           </ol>
           <p>Cách đọc:</p>

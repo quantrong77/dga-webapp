@@ -483,11 +483,16 @@ Ba tỷ số C2H2/C2H4, CH4/H2, C2H4/C2H6 và tam giác Duval cho biết **loạ
 Bảng 66 Điều 54 QĐ1901 gồm 2 phần, app tra cả hai:
 
 - **Phần 9 dòng** (mốc 0,1 – 1 – 3): bình thường, phóng điện cục bộ năng lượng thấp/cao, phóng điện năng lượng thấp/cao, khuyết tật nhiệt <150 °C, 150–300 °C, 300–700 °C, >700 °C. Văn bản không nói rõ biên, app quy ước **cận dưới tính vào, cận trên không tính** (ví dụ "0,1–1" là 0,1 ≤ tỷ số < 1). Tổ hợp không khớp dòng nào ghi **Ngoài bảng**.
-- **Phần PD/D1/D2/T1/T2/T3** (= Table 1 IEC 60599). Không khớp mã nào thì dùng bảng sơ bộ PD/D/T ngay dưới.
+- **Phần PD/D1/D2/T1/T2/T3** (= Table 1 IEC 60599), mốc chi tiết 0,1 · 0,2 · 0,5 · 0,6 · 1 · 2 · 2,5 · 4, kèm chú thích ᵃ NS (không có ý nghĩa, dù giá trị bao nhiêu) và ᵇ (C2H2 tăng có thể cho thấy điểm nóng vượt 1000 °C).
+- **Bảng sơ bộ PD/D/T** ngay dưới: theo Điều 54, khi tỷ lệ không nằm trong giới hạn của phần PD/D1/D2/T1/T2/T3 thì dùng bảng này để xác định sơ bộ PD (CH4/H2 < 0,2), D (C2H2/C2H4 > 0,2) hay T (C2H2/C2H4 < 0,2). Trong bảng chi tiết và dải mã, lần đo như vậy ghi "Ngoài bảng → sơ bộ D" (hoặc PD, T).
 
 Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi thiết bị có số liệu khí hòa tan, gồm:
 
-- **Đồ thị 3 tỷ số** theo thời gian, vẽ chung một trục tung. Ô **Thang trục tung** chọn **Logarit 0,01–10** (mặc định, cùng thang với Biểu đồ 1, 2 Điều 54) hoặc **Tuyến tính 0–10**; app nhớ lựa chọn. Vạch đứt ngang là các mốc **0,1 – 1 – 3** của phần 9 dòng, bên cạnh ghi mốc đó dùng cho tỷ số nào (C2H2/C2H4 dùng 0,1 và 3; CH4/H2 dùng 0,1 và 1; C2H4/C2H6 dùng 1 và 3). Tỷ số lớn hơn 10 vẽ **▲** ở đỉnh.
+- **Đồ thị 3 tỷ số** theo thời gian, vẽ chung một trục tung. Ô **Thang trục tung** chọn **Logarit 0,01–10** (mặc định, cùng thang với Biểu đồ 1, 2 Điều 54) hoặc **Tuyến tính 0–10**; app nhớ lựa chọn. Ô **Vạch mốc** chọn bộ vạch đứt ngang (app nhớ lựa chọn):
+  - **Phần 9 dòng Bảng 66**: các mốc **0,1 – 1 – 3**, bên cạnh ghi mốc đó dùng cho tỷ số nào (C2H2/C2H4 dùng 0,1 và 3; CH4/H2 dùng 0,1 và 1; C2H4/C2H6 dùng 1 và 3).
+  - **Phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ**: mốc chi tiết của từng tỷ số, vạch và nhãn **cùng màu với đường tỷ số** dùng mốc đó (C2H2/C2H4: 0,1 · 0,2 · 0,6 · 1 · 2,5; CH4/H2: 0,1 · 0,2 · 0,5 · 1 và ngưỡng PD theo loại thiết bị; C2H4/C2H6: 0,2 · 1 · 2 · 4). Bấm tên tỷ số ở chú giải trên đồ thị để ẩn bớt, chỉ còn vạch của tỷ số cần xem.
+
+  Tỷ số lớn hơn 10 vẽ **▲** ở đỉnh.
 - **Dải mã** ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn **9 dòng** / **IEC** / **Duval**. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.
 - **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.
 - **Bảng từng lần đo**: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
@@ -509,8 +514,9 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
 
 1. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
 2. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định: ô xanh ✓ là tỷ số nằm trong khoảng của ô, ô xám là không; dòng khớp đủ 3 ô được viền xanh, kèm cột ví dụ điển hình.
-3. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách (ô NS = không xét); không khớp mã nào thì ghi kết quả bảng sơ bộ PD/D/T.
-4. **Các bước khác của Điều 54** theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
+3. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).
+4. **Bảng sơ bộ PD/D/T** cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".
+5. **Các bước khác của Điều 54** theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
 
 Cách đọc:
 
