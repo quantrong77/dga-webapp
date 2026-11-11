@@ -127,6 +127,12 @@
   flex-wrap: wrap;
 }
 
+/* Biến thể: control đặt NGAY SAU tiêu đề thay vì bị đẩy sát mép phải — dùng cho ô "Loại thiết bị"
+   đầu tab Khí hòa tan (#f_loai) và Lý-hóa dầu (#dau_equipmenttype). */
+.toolbar.toolbar-start {
+  justify-content: flex-start;
+}
+
 .section-title {
   display: flex;
   align-items: center;

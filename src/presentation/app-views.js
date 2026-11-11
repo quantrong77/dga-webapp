@@ -146,8 +146,9 @@ function setLichSuView(view) {
 /** Bộ chọn "Loại thiết bị" ở tab "Dầu cách điện" (#dau_equipmenttype, giống #f_loai ở
  *  tab "DGA") — CHỈ ẩn/hiện (các) khối nhập liệu liên quan để đỡ cuộn qua cả 3 khối
  *  MBA/OLTC/TI-TU cùng lúc, không phải 1 trường dữ liệu của bản ghi nên KHÔNG lưu qua
- *  Storage — chỉ SỞ THÍCH GIAO DIỆN riêng trình duyệt, cùng quy ước với
- *  LICHSU_VIEW_STORAGE_KEY ở trên. MBA/Kháng dầu gộp chung với OLTC (#dauMbaWrap, OLTC
+ *  Storage. Mỗi lần mở app luôn bắt đầu ở "MBA/Kháng dầu" (giống #f_loai) — KHÔNG nhớ lựa
+ *  chọn lần trước (trước đây có nhớ qua localStorage "dga_dau_equipmenttype", đã bỏ theo
+ *  yêu cầu; khóa cũ được xóa lúc khởi động). MBA/Kháng dầu gộp chung với OLTC (#dauMbaWrap, OLTC
  *  là 1 khoang dầu phụ CỦA chính MBA đó — xem ghi chú ở index.html); TI và TU đều dùng
  *  chung 1 khối "Dầu cách điện TI/TU" (#dauInstrumentWrap) — chọn TI/TU ở đây thì tự
  *  đồng bộ luôn #tio_equipmenttype BÊN TRONG khối đó theo đúng lựa chọn, khỏi phải chọn
@@ -155,7 +156,7 @@ function setLichSuView(view) {
  *  xuất theo đúng loại). Sứ xuyên/Khác chưa có tính năng nhập dầu ở tab này (QĐ1901
  *  không có bảng dầu cho sứ xuyên, "Khác" không xác định được tiêu chuẩn nào) nên ẩn cả
  *  3 khối, chỉ hiện ghi chú #dauNoOilSupportNote. */
-const DAU_EQUIPMENTTYPE_STORAGE_KEY = "dga_dau_equipmenttype";
+const LEGACY_DAU_EQUIPMENTTYPE_STORAGE_KEY = "dga_dau_equipmenttype";
 
 function toggleDauEquipmentType() {
   const select = $("dau_equipmenttype");
@@ -173,17 +174,14 @@ function toggleDauEquipmentType() {
     $("tio_equipmenttype").value = value;
     onTioEquipmentTypeChange();
   }
-
-  try { localStorage.setItem(DAU_EQUIPMENTTYPE_STORAGE_KEY, value); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
 }
 
 function setupDauEquipmentTypeToggle() {
   const select = $("dau_equipmenttype");
   if (!select) return;
   select.addEventListener("change", toggleDauEquipmentType);
-  let saved = null;
-  try { saved = localStorage.getItem(DAU_EQUIPMENTTYPE_STORAGE_KEY); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
-  if (saved && Array.from(select.options).some((o) => o.value === saved)) select.value = saved;
+  select.value = DGA.EQUIPMENT_TYPES.MBA; // luôn mở ở MBA/Kháng dầu (kể cả khi trình duyệt tự khôi phục lựa chọn cũ của form)
+  try { localStorage.removeItem(LEGACY_DAU_EQUIPMENTTYPE_STORAGE_KEY); } catch (e) { /* localStorage bị chặn — bỏ qua */ }
   toggleDauEquipmentType();
 }
 

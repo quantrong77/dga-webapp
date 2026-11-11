@@ -63,7 +63,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v60-tai-trang-nhanh") {
+          if (k !== "dga-offline-v61-loai-thiet-bi") {
             caches.delete(k);
           }
         });
@@ -333,12 +333,12 @@
            chuyển VỊ TRÍ hiển thị thôi, không đổi hành vi/JS liên quan (xem
            refreshManufacturerOptions()/toggleMbaSubtypeField() ở app-core.js). -->
       <div class="panel">
-        <div class="toolbar" style="margin-bottom:0;">
+        <div class="toolbar toolbar-start" style="margin-bottom:0;">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị</h2>
-          <select id="f_loai" title="Chọn loại thiết bị" style="min-width:220px;">
+          <select id="f_loai" title="Chọn loại thiết bị" style="min-width:220px;" autocomplete="off">
+            <option selected>MBA/Kháng dầu</option>
             <option>TI (biến dòng điện)</option>
             <option>TU (biến điện áp)</option>
-            <option>MBA/Kháng dầu</option>
             <option>Sứ xuyên (Bushing)</option>
             <option>Khác</option>
           </select>
@@ -2133,9 +2133,9 @@
     <section id="tab-dau" class="tab-panel hidden" data-input-mode="import">
       <!-- Chọn "Loại thiết bị" giống tab "DGA" (#f_loai) — CHỈ ẩn/hiện đúng (các) khối
            nhập liệu liên quan để đỡ phải cuộn qua cả 3 khối (MBA+OLTC/TI-TU) cùng lúc,
-           KHÔNG phải 1 trường dữ liệu của bản ghi. Lựa chọn được nhớ lại giữa các lần vào
-           app (localStorage, cùng quy ước với LICHSU_VIEW_STORAGE_KEY) — xem
-           setupDauEquipmentTypeToggle()/toggleDauEquipmentType() ở app-core.js. MBA/Kháng
+           KHÔNG phải 1 trường dữ liệu của bản ghi. Mỗi lần mở app luôn bắt đầu ở
+           MBA/Kháng dầu (không nhớ lựa chọn lần trước) — xem
+           setupDauEquipmentTypeToggle()/toggleDauEquipmentType() ở app-views.js. MBA/Kháng
            dầu gộp CHUNG với OLTC (OLTC là 1 khoang dầu phụ CỦA chính MBA đó, không phải
            loại thiết bị riêng); chọn TI hoặc TU đều hiện cùng 1 khối "Dầu cách điện
            TI/TU" (tự đồng bộ #tio_equipmenttype bên trong theo đúng lựa chọn ở đây, khỏi
@@ -2146,10 +2146,10 @@
            nhập liệu bên dưới — tab "DGA" (#f_loai) dùng LẠI ĐÚNG khuôn mẫu này cho đồng
            nhất giao diện giữa 2 tab. -->
       <div class="panel">
-        <div class="toolbar" style="margin-bottom:0;">
+        <div class="toolbar toolbar-start" style="margin-bottom:0;">
           <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị</h2>
-          <select id="dau_equipmenttype" title="Chọn loại thiết bị" style="min-width:220px;">
-            <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
+          <select id="dau_equipmenttype" title="Chọn loại thiết bị" style="min-width:220px;" autocomplete="off">
+            <option value="MBA/Kháng dầu" selected>MBA/Kháng dầu</option>
             <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
             <option value="TU (biến điện áp)">TU (biến điện áp)</option>
             <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
@@ -3123,7 +3123,7 @@
           <p>Ở <strong>Lập BBTN</strong>, chọn <strong>Trạm</strong> và <strong>Thiết bị</strong>: nếu thiết bị đã có dữ liệu lưu trước đây (lần đo khí hòa tan, thí nghiệm dầu), app <strong>tự điền thông số kỹ thuật</strong> (kiểu máy, năm sản xuất, điện áp định mức, số chế tạo, loại dầu...) vào các ô <strong>còn trống</strong> và ghi rõ lấy từ lần lưu nào — ô bạn đã gõ không bị ghi đè; đổi sang thiết bị khác thì các ô app tự điền được thay theo thiết bị mới. Thiết bị mới thì nhập tay, hoặc kéo thả file PDF/Word cũ (BBTN, lý lịch thiết bị) vào ô <strong>"Nhập thông số kỹ thuật từ file"</strong> — app chỉ lấy thông số kỹ thuật, không đọc số liệu đo và không đính kèm file. Nếu còn file BBTN đã chọn ở tab Nhập BBTN cũ, Lập BBTN hiện dòng <strong>"Biên bản đính kèm khi lưu"</strong> kèm nút Bỏ file.</p>
           <p>Hai tab con dùng <strong>chung một form</strong> — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con <strong>Nhập BBTN cũ</strong>.</p>
           <h3>Bước 1 — Chọn loại thiết bị</h3>
-          <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — <strong>hãy chọn đúng</strong>.</p>
+          <p>Ở ô <strong>Loại thiết bị</strong> trên cùng, chọn: MBA/Kháng dầu (mặc định), TI, TU, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — <strong>hãy chọn đúng</strong>.</p>
           <h3>Bước 2 — Điền khối "Thí nghiệm khí hòa tan trong dầu cách điện"</h3>
           <div class="table-scroll"><table>
           <thead>
