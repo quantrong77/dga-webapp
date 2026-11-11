@@ -169,8 +169,8 @@ function alertSeriesContext(latest, records, phaseIdOf) {
 /** Gộp cảnh báo của cả 4 nguồn; với cảnh báo cũ (đã có số liệu mới hơn) đánh dấu số liệu mới nhất CÒN
  *  cảnh báo hay KHÔNG (newerStillAlert) — bản ghi mới nhất luôn là "latest" của nhóm của nó nên chỉ cần
  *  tra xem có cảnh báo nào gắn với đúng bản ghi đó. */
-function collectAllAlerts() {
-  const all = [...computeGasAlerts(), ...computeOilAlerts(), ...computeOltcOilAlerts(), ...computeInstrumentOilAlerts()];
+function collectAllAlerts(opts = {}) {
+  const all = [...computeGasAlerts(opts), ...computeOilAlerts(opts), ...computeOltcOilAlerts(opts), ...computeInstrumentOilAlerts(opts)];
   const byRecord = new Map();
   all.forEach((a) => { if (a.record) byRecord.set(a.record, a); });
   all.forEach((a) => {
@@ -241,7 +241,7 @@ function alertSortRecordsDescending(records) {
  *  cố — giống HỆT quy trình DGA.computeOverallStatus() đang chạy khi phân tích 1 lần đo
  *  ở tab "DGA" (xem onAnalyze(), ui-dga.js), chỉ khác là chạy tự động cho MỌI thiết bị
  *  thay vì 1 lần đo người dùng vừa nhập. */
-function computeGasAlerts() {
+function computeGasAlerts(opts = {}) {
   const groups = new Map();
   _allMeasurements.forEach((r) => {
     const tram = (r.tram || "").trim();
@@ -350,7 +350,7 @@ function computeGasAlerts() {
             action: [overallStatus.action, ...dieu54Acts.map((t) => "• " + t)].filter(Boolean).join("\n"),
           };
     }
-    if (effectiveStatus.level === "normal") return;
+    if (effectiveStatus.level === "normal" && !opts.includeNormal) return;
 
     const condemnExceeded = DGA.condemningExceededRows(condemningRows);
     const condemnBad = condemnExceeded.length > 0;
@@ -434,7 +434,7 @@ function computeGasAlerts() {
  *  "Cảnh báo" trung gian cho dầu (chỉ Đạt/Không đạt/Chưa đủ dữ liệu) nên "Không đạt"
  *  được xếp thẳng vào mức Báo động (ALARM) — tương đương "vượt ngưỡng tuyệt đối" bên
  *  khí hòa tan. */
-function computeOilAlerts() {
+function computeOilAlerts(opts = {}) {
   const groups = new Map();
   _allOilTests.forEach((r) => {
     // Gộp theo Trạm+Thiết bị+điểm lấy mẫu — MBA/Kháng 3 pha rời (oil_sample_point=
@@ -455,7 +455,18 @@ function computeOilAlerts() {
     const latest = sorted[0];
     // Gồm cả chỉ tiêu lý-hóa bổ sung (axit, chớp cháy, tạp chất...) — DGA.evaluateOilRecord() (dga-logic-oil-extended.js)
     const evalResult = DGA.evaluateOilRecord(latest, oilStandardsForLogic, _allOilTests);
-    if (evalResult.overall !== "Không đạt") return; // bỏ qua "Đạt"/"Chưa đủ dữ liệu"
+    if (evalResult.overall !== "Không đạt") { // "Đạt"/"Chưa đủ dữ liệu": chỉ liệt kê khi xuất kèm thiết bị không cảnh báo
+      if (opts.includeNormal) {
+        results.push(normalAlertRow({
+          source: "oil", sourceLabel: "Dầu MBA chính", latest, overall: evalResult.overall,
+          thietBiLabel: (latest.thiet_bi || "?") + (latest.oil_sample_point === "pharieng" && latest.phase ? ` — Pha ${latest.phase}` : ""),
+          phase: latest.oil_sample_point === "pharieng" ? (latest.phase || null) : null,
+          identityPhase: oilPhaseIdentity(latest.oil_sample_point, latest.phase),
+          ctx: alertSeriesContext(latest, _allOilTests, (r) => oilPhaseIdentity(r.oil_sample_point, r.phase)),
+        }));
+      }
+      return;
+    }
 
     const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
     const phaSuffix = latest.oil_sample_point === "pharieng" && latest.phase ? ` — Pha ${latest.phase}` : "";
@@ -504,7 +515,7 @@ function computeOilAlerts() {
  *  hoặc riêng từng pha "pha:A/B/C" khi oltc_sample_point = "pharieng"), lấy thí nghiệm
  *  GẦN NHẤT của mỗi nhóm, đối chiếu DGA.evaluateOltcOilTest() (Điều 37/Bảng 49 QĐ1901,
  *  hoặc Bảng 58/55/54 nếu là dầu MỚI) y hệt refreshOltcOilTestsUI() (ui-oltc.js). */
-function computeOltcOilAlerts() {
+function computeOltcOilAlerts(opts = {}) {
   const groups = new Map();
   _allOltcOilTests.forEach((r) => {
     const sub = r.oltc_sample_point === "pharieng" ? `pha:${r.phase || ""}` : "chung";
@@ -521,7 +532,19 @@ function computeOltcOilAlerts() {
     const latest = sorted[0];
     // Gồm cả chỉ tiêu bổ sung (dầu OLTC mới — Điều 37) — DGA.evaluateOltcRecord() (dga-logic-oil-extended.js)
     const evalResult = DGA.evaluateOltcRecord(latest, oilStandardsForLogic, _allOltcOilTests);
-    if (evalResult.overall !== "Không đạt") return;
+    if (evalResult.overall !== "Không đạt") {
+      if (opts.includeNormal) {
+        const ph = latest.oltc_sample_point === "pharieng" && latest.phase ? ` — Pha ${latest.phase}` : "";
+        results.push(normalAlertRow({
+          source: "oltc", sourceLabel: "Dầu OLTC", latest, overall: evalResult.overall,
+          thietBiLabel: `${latest.thiet_bi || "?"} (OLTC${ph})`,
+          phase: latest.oltc_sample_point === "pharieng" ? (latest.phase || null) : null,
+          identityPhase: oltcPhaseIdentity(latest.oltc_sample_point, latest.phase),
+          ctx: alertSeriesContext(latest, _allOltcOilTests, (r) => oltcPhaseIdentity(r.oltc_sample_point, r.phase)),
+        }));
+      }
+      return;
+    }
 
     const failing = evalResult.rows.filter((r) => r.verdict === "Không đạt");
     const phaSuffix = latest.oltc_sample_point === "pharieng" && latest.phase ? ` — Pha ${latest.phase}` : "";
@@ -576,7 +599,7 @@ function computeOltcOilAlerts() {
  *  (computeGasAlerts()) có 2 mức. Bỏ qua "Đạt"/"Chưa đủ dữ liệu"/"Chưa có tiêu chuẩn
  *  nhà sản xuất" (thiết bị CHƯA cấu hình NSX ở tab "Cấu hình" — mục "Tiêu chuẩn" — không
  *  phải lỗi thiết bị, không nên liệt vào Cảnh báo). */
-function computeInstrumentOilAlerts() {
+function computeInstrumentOilAlerts(opts = {}) {
   const groups = new Map();
   (_allTioOilTests || []).forEach((r) => {
     const key = `${r.tram || ""}|||${r.thiet_bi || ""}|||${tioPhaseIdentity(r.phase)}`;
@@ -596,7 +619,18 @@ function computeInstrumentOilAlerts() {
       moisture: latest.moisture_ppm, tgd90: latest.tgd_90c_percent,
       tgd20: latest.tgd_20c_percent, bdv: latest.bdv_kv, umKv: latest.um_kv,
     });
-    if (evalResult.overall !== "Không đạt" && evalResult.overall !== "Cảnh báo") return;
+    if (evalResult.overall !== "Không đạt" && evalResult.overall !== "Cảnh báo") {
+      if (opts.includeNormal) {
+        results.push(normalAlertRow({
+          source: "tio", sourceLabel: `Dầu ${tioEquipmentTypeShort(equipmentType)}`, latest, overall: evalResult.overall,
+          thietBiLabel: (latest.thiet_bi || "?") + (latest.phase && latest.phase !== DGA.PHA_CHUNG_3_PHA ? ` — ${DGA.phaLabelWithPrefix(latest.phase)}` : ""),
+          phase: latest.phase && latest.phase !== DGA.PHA_CHUNG_3_PHA ? latest.phase : null,
+          identityPhase: tioPhaseIdentity(latest.phase),
+          ctx: alertSeriesContext(latest, _allTioOilTests || [], (r) => tioPhaseIdentity(r.phase)),
+        }));
+      }
+      return;
+    }
 
     const level = evalResult.overall === "Không đạt" ? "alarm" : "alert";
     // Chỉ liệt vào "Chỉ tiêu vượt ngưỡng" đúng những hạng mục cùng mức verdict với
@@ -639,6 +673,27 @@ function computeInstrumentOilAlerts() {
   });
 
   return results;
+}
+
+/** Dòng "không có cảnh báo" (chỉ dùng khi xuất Excel kèm thiết bị bình thường) — cùng khuôn với dòng cảnh báo. */
+function normalAlertRow({ source, sourceLabel, latest, overall, thietBiLabel, phase, identityPhase, ctx }) {
+  const noData = overall !== "Đạt";
+  return {
+    source, sourceLabel, record: latest,
+    tram: (latest.tram || "").trim(),
+    deviceName: (latest.thiet_bi || "").trim(),
+    thietBiLabel,
+    level: "normal",
+    levelLabel: noData ? "CHƯA ĐỦ DỮ LIỆU" : "BÌNH THƯỜNG",
+    statusHtml: "", statusText: overall || "—",
+    exceededItems: [], exceededKeys: [], phase, identityPhase,
+    reasons: [], action: noData ? "Bổ sung số liệu còn thiếu để đánh giá." : "Tiếp tục giám sát định kỳ theo chu kỳ quy định.",
+    lanDo: "—", categories: [],
+    ...ctx,
+    sampleDate: latest.sample_date,
+    isEdited: Boolean(latest.edited_fields || latest.edit_log || latest.edited_at),
+    editLog: latest.edit_log || "", editedAt: latest.edited_at || null,
+  };
 }
 
 function alertLevelPill(level, label) {
@@ -693,9 +748,7 @@ function goToTrendForDevice(tram, thietBi, exceededKeys, phase) {
   if (typeof onTrendDeviceChange === "function") onTrendDeviceChange();
 }
 
-// Cache kết quả lần refreshAlertsUI() gần nhất — dùng cho onExportAlertsExcel() để
-// xuất ĐÚNG những gì đang hiển thị trên bảng, khỏi phải tính lại (và khỏi lệch nhau
-// nếu 2 nơi tính theo 2 cách khác nhau).
+// Cache kết quả lần refreshAlertsUI() gần nhất (danh sách cảnh báo đang hiển thị trên bảng).
 let _lastAlerts = [];
 
 function refreshAlertsUI() {
@@ -811,7 +864,6 @@ function refreshAlertsUI() {
   if ($("al_warnDevices")) $("al_warnDevices").textContent = `${warnDeviceKeys.size} / ${totalDevices}`;
   if ($("al_alertCount")) $("al_alertCount").textContent = String(alertCount);
   if ($("al_alarmCount")) $("al_alarmCount").textContent = String(alarmCount);
-  if ($("btnExportAlertsExcel")) $("btnExportAlertsExcel").disabled = alerts.length === 0;
   const staleNote = $("alertsStaleNote");
   if (staleNote) {
     const staleN = alerts.filter((a) => a.isLatest === false).length;
@@ -822,52 +874,208 @@ function refreshAlertsUI() {
   }
 }
 
-/** Xuất danh sách cảnh báo đang hiển thị (_lastAlerts, xem refreshAlertsUI() ở trên)
- *  ra file Excel (.xlsx) — dùng thư viện SheetJS (biến toàn cục "XLSX", tải qua CDN ở
- *  index.html, xem cùng cách tải/kiểm tra Chart.js: nếu mất mạng/CDN lỗi thì báo lỗi
- *  rõ ràng thay vì im lặng thất bại). Toàn bộ xử lý diễn ra ngay trong trình duyệt —
- *  không gửi dữ liệu lên server nào khác. */
-function onExportAlertsExcel() {
+// ===================== Xuất Excel theo tùy chọn (#alertsExportOverlay, index.html) =====================
+// Phạm vi Trạm ▸ Thiết bị ▸ Pha (bậc thang như bộ chọn ở form nhập liệu) + Loại cảnh báo, hoặc "Tất cả (kể cả
+// thiết bị không có cảnh báo)". User chỉ xuất được các Trạm Admin gán cho mình (Auth.current.stations); Admin hoặc
+// khi tắt đăng nhập xuất được tất cả; Viewer không xuất được (nút cũng bị ẩn — CSS .role-viewer).
+// Toàn bộ xử lý trong trình duyệt — không gửi dữ liệu đi đâu.
+
+let _alertsExportRows = [];
+
+/** Máy chủ đã hỗ trợ "Trạm phụ trách" chưa — Apps Script (Code.gs) bản cũ không trả trường stations ở "me". */
+function exportStationsSupported() {
+  return !!(Auth.current && Array.isArray(Auth.current.stations));
+}
+
+/** null = được xuất mọi trạm; mảng = chỉ các trạm này (có thể rỗng = chưa được gán trạm nào).
+ *  Máy chủ chưa nâng cấp (chưa có trường stations) → tạm cho xuất mọi trạm như trước, kèm ghi chú. */
+function exportAllowedStations() {
+  if (typeof Auth === "undefined" || !Auth.enabled) return null;
+  if (Auth.isAdmin()) return null;
+  return exportStationsSupported() ? Auth.current.stations : null;
+}
+
+function exportPhaseLabel(identityPhase) {
+  return identityPhase ? `Pha ${identityPhase}` : "Chung / không tách pha";
+}
+
+function exportOptionsHtml(values, allLabel, labelOf) {
+  return [`<option value="">${escapeHtml(allLabel)}</option>`]
+    .concat(values.map((v) => `<option value="${escapeHtml(v)}">${escapeHtml(labelOf ? labelOf(v) : v)}</option>`))
+    .join("");
+}
+
+/** Các dòng khớp phạm vi + loại đang chọn trong hộp thoại. */
+function alertsExportSelection() {
+  const st = $("xl_station").value;
+  const dev = $("xl_device").value;
+  const ph = $("xl_phase").value;
+  const type = $("xl_type").value;
+  const latestOnly = $("xl_latestOnly").checked;
+  return _alertsExportRows.filter((a) => {
+    if (st && locationKey(a.tram) !== st) return false;
+    if (dev && locationKey(a.deviceName) !== dev) return false;
+    if (ph && (a.identityPhase || "") !== (ph === "-" ? "" : ph)) return false;
+    if (latestOnly && a.isLatest === false) return false;
+    if (type === "all") return true;
+    if (type === "normal") return a.level === "normal";
+    if (a.level === "normal") return false;
+    return type === "alerts" || alertMatchesType(a, type);
+  });
+}
+
+/** Cập nhật ô Thiết bị theo Trạm, ô Pha theo Thiết bị (giữ lựa chọn cũ nếu còn hợp lệ) và dòng xem trước. */
+function refreshAlertsExportCascade(level) {
+  const rows = _alertsExportRows;
+  const st = $("xl_station").value;
+  if (level <= 1) {
+    const devs = new Map();
+    rows.filter((a) => !st || locationKey(a.tram) === st).forEach((a) => {
+      const k = locationKey(a.deviceName);
+      if (k && !devs.has(k)) devs.set(k, a.deviceName + (st ? "" : ` — ${a.tram || "?"}`));
+    });
+    const keep = $("xl_device").value;
+    const keys = Array.from(devs.keys()).sort((a, b) => devs.get(a).localeCompare(devs.get(b), "vi"));
+    $("xl_device").innerHTML = exportOptionsHtml(keys, `Tất cả thiết bị (${keys.length})`, (k) => devs.get(k));
+    if (keys.includes(keep)) $("xl_device").value = keep;
+  }
+  if (level <= 2) {
+    const dev = $("xl_device").value;
+    const phases = new Set();
+    rows.filter((a) => (!st || locationKey(a.tram) === st) && (!dev || locationKey(a.deviceName) === dev))
+      .forEach((a) => phases.add(a.identityPhase ? a.identityPhase : "-"));
+    const keep = $("xl_phase").value;
+    const list = Array.from(phases).sort((a, b) => (a === "-") - (b === "-") || a.localeCompare(b));
+    $("xl_phase").innerHTML = exportOptionsHtml(list, "Tất cả pha", (p) => exportPhaseLabel(p === "-" ? "" : p));
+    if (list.includes(keep)) $("xl_phase").value = keep;
+  }
+  const sel = alertsExportSelection();
+  const warn = sel.filter((a) => a.level !== "normal").length;
+  $("alertsExportPreview").textContent = `Sẽ xuất ${sel.length} dòng (${warn} có cảnh báo/báo động, ${sel.length - warn} không có cảnh báo).`;
+  $("btnDoAlertsExport").disabled = sel.length === 0;
+}
+
+async function openAlertsExportDialog() {
+  if (typeof Auth !== "undefined" && Auth.enabled && Auth.isViewer()) {
+    notifyError("Tài khoản Viewer (chỉ xem) không xuất được Excel.");
+    return;
+  }
+  // Lấy lại danh sách trạm phụ trách mới nhất (Admin có thể vừa gán) — mất mạng thì giữ phiên đã lưu.
+  if (typeof Auth !== "undefined" && Auth.enabled && !Auth.isAdmin()) {
+    try { await Auth.refresh(); } catch (e) { /* giữ phiên cục bộ */ }
+  }
+  const allowed = exportAllowedStations();
+  const allowedKeys = allowed ? new Set(allowed.map(locationKey)) : null;
+  const all = collectAllAlerts({ includeNormal: true });
+  _alertsExportRows = allowedKeys ? all.filter((a) => allowedKeys.has(locationKey(a.tram))) : all;
+
+  $("alertsExportError").classList.add("hidden");
+  if (allowed && allowed.length === 0) {
+    $("alertsExportScope").innerHTML = "Tài khoản của bạn <strong>chưa được Admin gán trạm phụ trách</strong> nên chưa xuất được dữ liệu. Liên hệ Admin (tab Quản trị → Người dùng → Gán trạm).";
+  } else if (allowed) {
+    $("alertsExportScope").innerHTML = `Bạn được xuất dữ liệu của <strong>${allowed.length} trạm</strong> phụ trách: ${allowed.map(escapeHtml).join(", ")}.`;
+  } else if (typeof Auth !== "undefined" && Auth.enabled && !Auth.isAdmin() && !exportStationsSupported()) {
+    $("alertsExportScope").textContent = "Máy chủ chưa hỗ trợ giới hạn theo trạm phụ trách (cần triển khai lại Apps Script) — tạm xuất được tất cả các trạm.";
+  } else {
+    $("alertsExportScope").textContent = "Xuất được dữ liệu của tất cả các trạm.";
+  }
+
+  const stations = new Map();
+  _alertsExportRows.forEach((a) => { const k = locationKey(a.tram); if (!stations.has(k)) stations.set(k, a.tram || "(chưa ghi trạm)"); });
+  const stKeys = Array.from(stations.keys()).sort((a, b) => stations.get(a).localeCompare(stations.get(b), "vi"));
+  $("xl_station").innerHTML = exportOptionsHtml(stKeys, `Tất cả trạm (${stKeys.length})`, (k) => stations.get(k));
+  $("xl_device").innerHTML = "";
+  $("xl_phase").innerHTML = "";
+
+  // Loại cảnh báo: thêm "Tất cả (kể cả không có cảnh báo)" / "Chỉ thiết bị không có cảnh báo" vào các nhóm của ô
+  // lọc "Loại cảnh báo" ở tab Cảnh báo (#al_typeFilter) — dùng chung giá trị, khỏi định nghĩa lại.
+  const src = $("al_typeFilter");
+  const groups = src ? Array.from(src.querySelectorAll("optgroup")).map((g) => g.outerHTML).join("") : "";
+  $("xl_type").innerHTML =
+    '<option value="all">Tất cả (kể cả thiết bị không có cảnh báo)</option>' +
+    '<option value="alerts">Tất cả cảnh báo (Cảnh báo + Báo động)</option>' +
+    '<option value="normal">Chỉ thiết bị không có cảnh báo</option>' + groups;
+
+  // Mặc định theo bộ lọc đang dùng trên bảng Cảnh báo.
+  const f = alertFilters();
+  if (f.station && stations.has(locationKey(f.station))) $("xl_station").value = locationKey(f.station);
+  refreshAlertsExportCascade(1);
+  if (f.device) {
+    const dk = locationKey(f.device);
+    if (Array.from($("xl_device").options).some((o) => o.value === dk)) $("xl_device").value = dk;
+  }
+  $("xl_type").value = f.type || "alerts";
+  $("xl_latestOnly").checked = f.data !== "stale";
+  refreshAlertsExportCascade(2);
+  $("alertsExportOverlay").classList.remove("hidden");
+}
+
+function setupAlertsExportDialog() {
+  const close = () => $("alertsExportOverlay").classList.add("hidden");
+  $("btnCloseAlertsExport").addEventListener("click", close);
+  $("xl_station").addEventListener("change", () => refreshAlertsExportCascade(1));
+  $("xl_device").addEventListener("change", () => refreshAlertsExportCascade(2));
+  ["xl_phase", "xl_type", "xl_latestOnly"].forEach((id) => $(id).addEventListener("change", () => refreshAlertsExportCascade(3)));
+  $("btnDoAlertsExport").addEventListener("click", async () => {
+    try {
+      await onExportAlertsExcel(alertsExportSelection());
+      close();
+    } catch (err) {
+      $("alertsExportError").textContent = "Xuất thất bại: " + ((err && err.message) || err);
+      $("alertsExportError").classList.remove("hidden");
+    }
+  });
+}
+
+/** Ghi file Excel (.xlsx) cho các dòng đã chọn ở hộp thoại xuất. Thư viện SheetJS chỉ tải khi cần (loadScriptOnce). */
+async function onExportAlertsExcel(rows) {
+  if (!rows || rows.length === 0) {
+    notifyError("Không có dòng nào khớp phạm vi/loại đã chọn để xuất.");
+    return;
+  }
+  if (typeof XLSX === "undefined" && typeof loadScriptOnce === "function") {
+    try {
+      await loadScriptOnce("vendor/xlsx/xlsx.full.min.js");
+    } catch (e) { /* báo lỗi ngay dưới */ }
+  }
   if (typeof XLSX === "undefined") {
-    notifyError("Không tải được thư viện xuất Excel (có thể do mất mạng khi tải trang) — kiểm tra kết nối mạng rồi tải lại trang.");
-    return;
+    throw new Error("Không tải được thư viện xuất Excel (có thể do mất mạng) — kiểm tra kết nối rồi thử lại.");
   }
-  if (_lastAlerts.length === 0) {
-    notifyError("Chưa có thiết bị nào đang ở mức Cảnh báo/Báo động để xuất.");
-    return;
-  }
+
+  const order = { alarm: 0, alert: 1, normal: 2 };
+  const sorted = rows.slice().sort((a, b) =>
+    (a.tram || "").localeCompare(b.tram || "", "vi") ||
+    (a.deviceName || "").localeCompare(b.deviceName || "", "vi") ||
+    (a.identityPhase || "").localeCompare(b.identityPhase || "") ||
+    (order[a.level] ?? 3) - (order[b.level] ?? 3));
 
   const now = new Date();
-  const exportedAt = now.toLocaleString("vi-VN");
-  // Khớp đúng bộ lọc Trạm đang áp dụng trên bảng (#al_stationFilter) — xuất đúng những
-  // gì đang hiển thị, kể cả khi đã lọc về 1 trạm cụ thể.
-  const { station, device } = alertFilters();
-  const totalDevices = totalTrackedDeviceCount(station, device);
-  // Xem chú thích ở warnDeviceKeys trong refreshAlertsUI() — phải gồm cả Pha (deviceIdentityKey())
-  // để không gộp nhầm các Pha khác nhau của cùng 1 TI thành 1 thiết bị.
-  const warnDeviceKeys = new Set(_lastAlerts.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
-  const alarmCount = _lastAlerts.filter((a) => a.level === "alarm").length;
-  const alertCount = _lastAlerts.filter((a) => a.level === "alert").length;
+  const optText = (id) => { const el = $(id); return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].textContent : ""; };
+  const alarmCount = sorted.filter((a) => a.level === "alarm").length;
+  const alertCount = sorted.filter((a) => a.level === "alert").length;
+  const normalCount = sorted.filter((a) => a.level === "normal").length;
+  const deviceKeys = new Set(sorted.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
 
   const HEADER = [
-    "Trạm", "Thiết bị", "Loại đo", "Mức cảnh báo", "Tình trạng", "Chỉ tiêu vượt ngưỡng",
+    "Trạm", "Thiết bị", "Pha", "Loại đo", "Mức cảnh báo", "Tình trạng", "Chỉ tiêu vượt ngưỡng",
     "Hạng mục cảnh báo", "Khuyến cáo", "Lần đo", "Thứ tự lần đo", "Số liệu mới nhất?", "Ngày thí nghiệm",
     "Trạng thái hiệu chỉnh",
   ];
   const aoa = [
-    ["BÁO CÁO CẢNH BÁO THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
-    [`Ngày xuất: ${exportedAt}  |  Trạm biến áp: ${station || "Tất cả"}  |  Thiết bị: ${device || "Tất cả"}`],
+    ["BÁO CÁO TÌNH TRẠNG THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
+    [`Ngày xuất: ${now.toLocaleString("vi-VN")}  |  Trạm: ${optText("xl_station")}  |  Thiết bị: ${optText("xl_device")}  |  Pha: ${optText("xl_phase")}  |  Loại: ${optText("xl_type")}`],
     [
-      `Tổng thiết bị theo dõi: ${totalDevices}`,
-      `Thiết bị đang có cảnh báo: ${warnDeviceKeys.size}/${totalDevices}`,
-      `Mức Cảnh báo (ALERT): ${alertCount}`,
-      `Mức Báo động (ALARM): ${alarmCount}`,
+      `Số thiết bị: ${deviceKeys.size}`,
+      `Báo động (ALARM): ${alarmCount}`,
+      `Cảnh báo (ALERT): ${alertCount}`,
+      `Không có cảnh báo: ${normalCount}`,
     ],
     [],
     HEADER,
-    ..._lastAlerts.map((a) => [
+    ...sorted.map((a) => [
       a.tram || "—",
       a.thietBiLabel,
+      exportPhaseLabel(a.identityPhase),
       a.sourceLabel,
       a.levelLabel,
       a.statusText || "",
@@ -886,18 +1094,14 @@ function onExportAlertsExcel() {
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws["!cols"] = [
-    { wch: 16 }, { wch: 18 }, { wch: 16 }, { wch: 16 }, { wch: 20 }, { wch: 18 },
-    { wch: 55 }, { wch: 45 }, { wch: 8 }, { wch: 10 }, { wch: 30 }, { wch: 14 },
+    { wch: 16 }, { wch: 18 }, { wch: 12 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 },
+    { wch: 55 }, { wch: 45 }, { wch: 8 }, { wch: 10 }, { wch: 30 }, { wch: 14 }, { wch: 20 },
   ];
-  // Gộp ô tiêu đề/dòng thống kê cho gọn (span hết bề rộng bảng, 10 cột).
   ws["!merges"] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: HEADER.length - 1 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: HEADER.length - 1 } },
   ];
-
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Cảnh báo thiết bị");
-
-  const fileDate = now.toISOString().slice(0, 10);
-  XLSX.writeFile(wb, `Canh_bao_thiet_bi_${fileDate}.xlsx`);
+  XLSX.utils.book_append_sheet(wb, ws, "Tình trạng thiết bị");
+  XLSX.writeFile(wb, `Tinh_trang_thiet_bi_${now.toISOString().slice(0, 10)}.xlsx`);
 }

@@ -146,6 +146,15 @@ Dưới ô **Loại thiết bị** có 2 tab con (cách tổ chức giống hệ
 - **Nhập BBTN cũ** — kéo thả BBTN (PDF) để tự điền form và đối chiếu ở khung bên cạnh, nhập hàng loạt nhiều BBTN của cùng 1 thiết bị, và bảng **Số liệu đã lưu** ở cuối trang: các lần đo đã lưu của đúng Trạm/Thiết bị đang nhập ở form (có nút Xem/Sửa/Xóa như tab Lịch sử đo).
 - **Lập BBTN** — nhập tay số liệu mới, bấm **Phân tích & Lưu** rồi **Xuất BBTN (docx)** / báo cáo phân tích kỹ thuật ở khối kết quả.
 
+**Vị trí thiết bị (Trạm ▸ Thiết bị ▸ Pha):** ở đầu form của cả 2 tab con (và ở mọi form của tab Lý-Hóa dầu: dầu MBA, OLTC, TI/TU) có 1 hàng riêng chọn theo bậc:
+
+- Chọn **Trạm** trước: ô **Thiết bị** chỉ gợi ý các thiết bị của trạm đó.
+- Chọn **Thiết bị** khi chưa ghi trạm: app tự điền trạm (nếu thiết bị chỉ thuộc 1 trạm).
+- Ô **Pha** ghi số lần đo đã có ở từng pha, ví dụ "A (3 lần đo)". Thiết bị chỉ có số liệu ở đúng 1 pha thì app tự chọn pha đó.
+- Đổi sang trạm khác mà thiết bị đang ghi không thuộc trạm đó: ô Thiết bị được xóa để chọn lại.
+- Vẫn gõ được trạm/thiết bị **mới** chưa có trong dữ liệu.
+- Dầu MBA và dầu OLTC: hàng này gồm cả **Điểm lấy mẫu**; ô Pha chỉ hiện khi lấy mẫu riêng từng pha.
+
 Ở **Lập BBTN**, chọn **Trạm** và **Thiết bị**: nếu thiết bị đã có dữ liệu lưu trước đây (lần đo khí hòa tan, thí nghiệm dầu), app **tự điền thông số kỹ thuật** (kiểu máy, năm sản xuất, điện áp định mức, số chế tạo, loại dầu...) vào các ô **còn trống** và ghi rõ lấy từ lần lưu nào — ô bạn đã gõ không bị ghi đè; đổi sang thiết bị khác thì các ô app tự điền được thay theo thiết bị mới. Thiết bị mới thì nhập tay, hoặc kéo thả file PDF/Word cũ (BBTN, lý lịch thiết bị) vào ô **"Nhập thông số kỹ thuật từ file"** — app chỉ lấy thông số kỹ thuật, không đọc số liệu đo và không đính kèm file. Nếu còn file BBTN đã chọn ở tab Nhập BBTN cũ, Lập BBTN hiện dòng **"Biên bản đính kèm khi lưu"** kèm nút Bỏ file.
 
 Hai tab con dùng **chung một form** — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con **Nhập BBTN cũ**.
@@ -424,7 +433,12 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 - **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.
 - Mỗi dòng cho biết: thiết bị, loại đo, mức cảnh báo, tình trạng, khí/chỉ tiêu vượt ngưỡng, lý do và khuyến cáo hành động.
 - **Xem xu hướng:** nhảy thẳng sang tab **Xu hướng**, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.
-- **Xuất Excel:** tải file `.xlsx` gồm thống kê tổng quan và toàn bộ danh sách đang hiển thị (theo bộ lọc Trạm hiện tại). Nút này chỉ bấm được khi có dữ liệu.
+- **Xuất Excel:** bấm nút mở hộp thoại chọn phạm vi rồi tải file `.xlsx`:
+  - **Trạm ▸ Thiết bị ▸ Pha**: chọn theo bậc (ô sau chỉ liệt kê theo ô trước), hoặc để "Tất cả".
+  - **Loại cảnh báo**: **Tất cả (kể cả thiết bị không có cảnh báo)**, **Tất cả cảnh báo**, **Chỉ thiết bị không có cảnh báo**, hoặc từng mức/loại đo/hạng mục như ô lọc trên bảng.
+  - **Chỉ số liệu mới nhất của từng thiết bị** (mặc định bật): bỏ các cảnh báo cũ đã có lần đo mới hơn.
+  - Hộp thoại báo trước số dòng sẽ xuất. File gồm dòng thống kê và cột Pha; thiết bị không có cảnh báo ghi mức "BÌNH THƯỜNG" (hoặc "CHƯA ĐỦ DỮ LIỆU" với dầu).
+  - **User** chỉ xuất được dữ liệu các **trạm phụ trách** do Admin gán (mục 16.2); chưa được gán trạm nào thì chưa xuất được. **Admin** xuất được tất cả. **Viewer** không có nút này.
 
 **Gợi ý thói quen:** mở tab này mỗi ngày/tuần để nắm các thiết bị cần theo dõi ngay, không phải mở từng thiết bị.
 
@@ -546,11 +560,14 @@ Các góp ý đã gửi được hiển thị (mới nhất ở trên) để m�
 | Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU/Sứ xuyên | ✘ | ✔ | ✔ |
 | Sửa bản ghi đo khí / thí nghiệm dầu đã lưu | ✘ | Chỉ bản ghi **do mình nhập** | Mọi bản ghi |
 | Xóa bản ghi dữ liệu | ✘ | ✘ | ✔ |
+| Xuất Excel (tab Cảnh báo) | ✘ | Chỉ các **trạm phụ trách** do Admin gán | ✔ (mọi trạm) |
 | Gửi ý kiến phản hồi kèm ảnh minh họa | ✔ | ✔ | ✔ |
 | Cấu hình Tiêu chuẩn theo nhà sản xuất | ✘ | ✘ (chỉ xem khi tra cứu) | ✔ (Thêm, Sửa, Xóa) |
 | Chỉnh sửa các bảng Quy định số học QĐ1901/IEC | ✘ | ✘ (chỉ xem bảng) | ✔ (Lưu bảng, Khôi phục) |
 | Quản lý người dùng (tạo tài khoản, đổi vai trò, đặt lại mật khẩu, xóa) | ✘ | ✘ | ✔ |
 | Đồng bộ dữ liệu sang Bản sao Supabase | ✘ | ✘ | ✔ |
+
+Với **Viewer**, tab **Khí hòa tan** và **Lý-Hóa dầu** không hiện vùng nhập liệu (2 tab con Nhập BBTN cũ / Lập BBTN), chỉ hiện thông báo "Tài khoản chỉ xem" kèm nút chuyển sang Lịch sử đo, Xu hướng, Cảnh báo.
 
 Mỗi bản ghi khi lưu đều tự động ghi nhận **người tạo, người sửa cuối cùng và thời điểm thực hiện** (cột "Người nhập" ở bảng Lịch sử đo). Mọi thao tác kiểm tra quyền đều được máy chủ (Apps Script / Supabase) xác thực độc lập.
 
@@ -567,6 +584,7 @@ Biểu tượng **Quản trị** trên thanh Menu bar ở đầu trang chỉ hi�
   - *Lưu ý quan trọng:* Mật khẩu tạm chỉ hiển thị **duy nhất 1 lần**, ứng dụng không lưu lại mật khẩu này. Admin nên gửi email tài khoản qua tin nhắn và đọc mật khẩu tạm qua cuộc gọi (không gửi chung cả hai trong cùng một tin nhắn). Khi người dùng đăng nhập lần đầu bằng mật khẩu tạm, hệ thống sẽ **bắt buộc đổi sang mật khẩu cá nhân** mới được phép vào sử dụng ứng dụng.
 - **Danh sách tài khoản:** Bảng hiển thị thông tin toàn bộ tài khoản: Email, Vai trò hiện tại, Ngày đăng ký và Thời điểm đăng nhập gần nhất.
 - **Đổi vai trò người dùng:** Admin có thể thay đổi trực tiếp vai trò của bất kỳ tài khoản nào (User ⇄ Viewer ⇄ Admin) thông qua menu chọn tại cột Vai trò.
+- **Trạm phụ trách:** cột **Trạm phụ trách** cho biết user được xuất Excel dữ liệu của trạm nào. Bấm **Gán trạm** → tìm và tick các trạm (có nút chọn các trạm đang hiện / bỏ chọn tất cả) → **Lưu**. Danh sách trạm lấy từ danh mục trạm và các trạm đã có trong dữ liệu đo. Gán trạm **chỉ giới hạn xuất Excel** — user vẫn xem được dữ liệu mọi trạm. Admin không cần gán. Nếu cột ghi "(máy chủ chưa hỗ trợ)" thì cần triển khai lại bản Apps Script (Code.gs) mới.
 - **Đặt lại mật khẩu (Reset password):** Khi người dùng quên mật khẩu hoặc cần cấp lại, bấm nút đặt lại mật khẩu ở dòng tương ứng → hệ thống tạo mật khẩu tạm mới để Admin gửi cho người dùng.
 - **Xóa người dùng:** Bấm nút xóa (kèm hộp thoại xác nhận) để thu hồi quyền truy cập của tài khoản không còn hoạt động.
 - **Cơ chế tự bảo vệ:** Dòng tài khoản của chính Admin đang đăng nhập sẽ tự động bị khóa ô chọn vai trò và ẩn nút xóa, ngăn ngừa tình huống Admin vô tình tự hạ quyền hoặc tự xóa tài khoản của chính mình.

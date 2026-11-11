@@ -74,6 +74,13 @@ function setupStickyHeaderObserver() {
 }
 
 function setupTabs() {
+  // Nút chuyển nhanh sang tab khác (vd thông báo "Tài khoản chỉ xem": data-goto-tab="lichsu").
+  document.querySelectorAll("[data-goto-tab]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const target = document.querySelector(`.tab-btn[data-tab="${el.dataset.gotoTab}"]`);
+      if (target) target.click();
+    });
+  });
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));

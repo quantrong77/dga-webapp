@@ -279,6 +279,10 @@ const USER_HEADERS = [
   // sang mật khẩu riêng — mật khẩu tạm đã đi qua kênh ngoài (Zalo/điện thoại...) nên coi như
   // không còn bí mật. Record cũ/để trống = không bắt đổi.
   "must_change_password",
+  // "stations": thêm ở CUỐI — các Trạm user PHỤ TRÁCH (Admin gán ở tab Quản trị, actionSetUserStations()),
+  // mỗi trạm 1 dòng trong ô. Dùng để giới hạn XUẤT EXCEL của user về đúng trạm của họ (client). Admin không cần
+  // gán (xuất được tất cả). Record cũ/để trống = chưa được gán trạm nào.
+  "stations",
 ];
 
 // Phiên đăng nhập — mỗi lần Đăng nhập/Đăng ký thành công tạo 1 dòng token mới.
@@ -434,6 +438,7 @@ function doPost(e) {
     else if (action === "saveRegulationConfig") { requireAdmin(token); result = upsertRow(SHEET_REGULATION_CONFIG, REGULATION_CONFIG_HEADERS, body.record); }
     else if (action === "deleteRegulationConfig") { requireAdmin(token); result = deleteRow(SHEET_REGULATION_CONFIG, body.id); }
     else if (action === "setUserRole") { requireAdmin(token); result = actionSetUserRole(body); }
+    else if (action === "setUserStations") { requireAdmin(token); result = actionSetUserStations(body); }
     else if (action === "deleteUser") { requireAdmin(token); result = actionDeleteUser(body); }
     // Đổi mật khẩu tự phục vụ (cần biết mật khẩu cũ — xác thực bên trong actionChangePassword())
     // và 2 thao tác chỉ Admin làm được (đặt lại mật khẩu quên/tạo tài khoản mới trực tiếp) —
@@ -572,7 +577,29 @@ function findUserByEmail(email) {
 function listPublicUsers() {
   return listRows(SHEET_USERS, USER_HEADERS).map((u) => ({
     email: u.email, role: u.role, created_at: u.created_at, last_login: u.last_login,
+    stations: parseUserStations(u.stations),
   }));
+}
+
+/** Ô "stations" (mỗi trạm 1 dòng) -> mảng tên trạm, bỏ dòng trống/trùng. */
+function parseUserStations(cell) {
+  const out = [];
+  String(cell || "").split(/\r?\n/).forEach((x) => {
+    const name = x.trim();
+    if (name && out.indexOf(name) < 0) out.push(name);
+  });
+  return out;
+}
+
+/** Admin gán danh sách Trạm phụ trách cho 1 user (ghi đè danh sách cũ). */
+function actionSetUserStations(body) {
+  const email = normalizeEmail(body.email);
+  const user = findUserByEmail(email);
+  if (!user) return { error: "Không tìm thấy user." };
+  const list = Array.isArray(body.stations) ? body.stations : [];
+  const stations = parseUserStations(list.map((x) => String(x || "").replace(/[\r\n]+/g, " ")).join("\n"));
+  upsertRow(SHEET_USERS, USER_HEADERS, Object.assign({}, user, { stations: stations.join("\n") }));
+  return { email: email, stations: stations };
 }
 
 /** Kiểm tra REGISTRATION_MODE — trả về null nếu được phép tự đăng ký/tự tạo tài khoản qua
@@ -800,7 +827,10 @@ function actionMe(token) {
   // chỉ đăng nhập Google thì password_hash rỗng) — dùng hiện gợi ý #changePasswordGoogleHint
   // TRƯỚC khi user bấm "Đổi mật khẩu" (xem setupChangePassword() ở ui-auth.js), thay vì để
   // họ nhập xong mới nhận lỗi "Mật khẩu hiện tại không đúng" khó hiểu.
-  return { email: user.email, role: user.role, hasPassword: !!user.password_hash, mustChangePassword: mustChangePassword(user) };
+  return {
+    email: user.email, role: user.role, hasPassword: !!user.password_hash, mustChangePassword: mustChangePassword(user),
+    stations: parseUserStations(user.stations),
+  };
 }
 
 function actionSetUserRole(body) {

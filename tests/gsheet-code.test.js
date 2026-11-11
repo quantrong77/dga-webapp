@@ -668,3 +668,24 @@ describe("getAttachment — đọc file đính kèm cho khung đối chiếu", (
     expect(callGet(ctx, "getAttachment", { token, id: "../x" }).error).toMatch(/không hợp lệ/);
   });
 });
+
+describe("Trạm phụ trách của user (setUserStations) — giới hạn xuất Excel", () => {
+  test("Admin gán trạm; user đọc lại qua 'me' và Admin thấy trong listUsers", () => {
+    const { ctx } = createSandbox();
+    const admin = registerUser(ctx, "quantrong77@gmail.com");
+    const u = registerUser(ctx, "ky.su.b@vidu.com");
+    const res = callPost(ctx, "setUserStations", { token: admin.token, email: u.email, stations: ["E1.1 Đồng Hòa", " E1.2 ", "E1.1 Đồng Hòa", ""] });
+    expect(res.stations).toEqual(["E1.1 Đồng Hòa", "E1.2"]);
+    expect(callGet(ctx, "me", { token: u.token }).stations).toEqual(["E1.1 Đồng Hòa", "E1.2"]);
+    const listed = callGet(ctx, "listUsers", { token: admin.token }).find((x) => x.email === u.email);
+    expect(listed.stations).toEqual(["E1.1 Đồng Hòa", "E1.2"]);
+  });
+
+  test("user chưa được gán trạm → mảng rỗng; user thường không tự gán trạm được", () => {
+    const { ctx } = createSandbox();
+    registerUser(ctx, "quantrong77@gmail.com");
+    const u = registerUser(ctx, "ky.su.c@vidu.com");
+    expect(callGet(ctx, "me", { token: u.token }).stations).toEqual([]);
+    expect(callPost(ctx, "setUserStations", { token: u.token, email: u.email, stations: ["X"] }).error).toBeTruthy();
+  });
+});

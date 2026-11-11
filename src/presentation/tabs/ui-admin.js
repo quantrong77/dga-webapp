@@ -18,6 +18,7 @@ async function refreshUsersUI() {
       tr.innerHTML = `
         <td>${escapeHtml(u.email)}${isSelf ? ' <span class="pill muted">bạn</span>' : ""}</td>
         <td></td>
+        <td></td>
         <td style="font-size:12px;">${escapeHtml(u.created_at || "—")}</td>
         <td style="font-size:12px;">${escapeHtml(u.last_login || "—")}</td>
         <td></td>
@@ -43,7 +44,28 @@ async function refreshUsersUI() {
       });
       roleCell.appendChild(sel);
 
-      const delCell = tr.children[4];
+      // Trạm phụ trách — giới hạn XUẤT EXCEL của user (Admin luôn xuất được tất cả, không cần gán).
+      const stCell = tr.children[2];
+      const stations = Array.isArray(u.stations) ? u.stations : null;
+      if (u.role === "admin") {
+        stCell.innerHTML = '<span class="pill muted">Tất cả (Admin)</span>';
+      } else {
+        const summary = document.createElement("span");
+        summary.style.fontSize = "12px";
+        summary.textContent = stations === null ? "(máy chủ chưa hỗ trợ)" : stations.length === 0 ? "Chưa gán" : stations.length <= 2 ? stations.join(", ") : `${stations.length} trạm`;
+        if (stations && stations.length > 2) summary.title = stations.join(", ");
+        stCell.appendChild(summary);
+        if (stations !== null) {
+          const btn = document.createElement("button");
+          btn.className = "btn xs ghost";
+          btn.style.marginLeft = "6px";
+          btn.textContent = "Gán trạm";
+          btn.addEventListener("click", () => openStationAssignDialog(u.email, stations));
+          stCell.appendChild(btn);
+        }
+      }
+
+      const delCell = tr.children[5];
       delCell.style.display = "flex";
       delCell.style.gap = "6px";
       // Đặt lại mật khẩu — cho MỌI user kể cả chính mình (Admin quên mật khẩu chính tài
@@ -184,6 +206,7 @@ async function onSyncSupabase() {
 function setupAdminUsers() {
   $("btnAdminCreateUser").addEventListener("click", onAdminCreateUser);
   $("btnSyncSupabase").addEventListener("click", onSyncSupabase);
+  setupStationAssignDialog();
   $("qt_newuser_email").addEventListener("keydown", (e) => {
     if (e.key === "Enter") onAdminCreateUser();
   });
@@ -208,6 +231,75 @@ function setupAdminUsers() {
       // người dùng tự bôi đen chọn thủ công trong <code id="tempPasswordValue">, không
       // chặn luồng chính vì đây chỉ là tiện ích phụ.
       notifyError("Không tự copy được (trình duyệt chặn) — vui lòng bôi đen mật khẩu tạm rồi copy thủ công.");
+    }
+  });
+}
+
+// ---------------------------------------------------------------------
+// Gán Trạm phụ trách cho user (#stationAssignOverlay, index.html) — danh sách trạm lấy từ danh mục trạm
+// (_allStations) cộng các tên trạm đã có trong dữ liệu đo, cộng các trạm user đang được gán (kể cả trạm đã đổi tên).
+// ---------------------------------------------------------------------
+let _stationAssignEmail = null;
+
+function stationAssignCandidates(current) {
+  const names = new Map();
+  const add = (n) => { const v = String(n || "").trim(); if (v && !names.has(locationKey(v))) names.set(locationKey(v), v); };
+  (_allStations || []).forEach((st) => add(st.ten_tram));
+  [_allMeasurements, _allOilTests, _allOltcOilTests, _allTioOilTests].forEach((list) => (list || []).forEach((r) => add(r.tram)));
+  (current || []).forEach(add);
+  return Array.from(names.values()).sort((a, b) => a.localeCompare(b, "vi"));
+}
+
+function renderStationAssignList() {
+  const q = normalizeSearch($("stationAssignSearch").value);
+  $("stationAssignList").querySelectorAll("label").forEach((lb) => {
+    lb.classList.toggle("hidden", !!q && !normalizeSearch(lb.dataset.name).includes(q));
+  });
+  const n = $("stationAssignList").querySelectorAll("input:checked").length;
+  $("stationAssignCount").textContent = `Đã chọn ${n} trạm`;
+}
+
+function openStationAssignDialog(email, current) {
+  _stationAssignEmail = email;
+  $("stationAssignTitle").textContent = `Trạm phụ trách — ${email}`;
+  $("stationAssignSearch").value = "";
+  $("stationAssignError").classList.add("hidden");
+  const chosen = new Set((current || []).map(locationKey));
+  $("stationAssignList").innerHTML = stationAssignCandidates(current).map((name) =>
+    `<label data-name="${escapeHtml(name)}"><input type="checkbox" value="${escapeHtml(name)}"${chosen.has(locationKey(name)) ? " checked" : ""} /> ${escapeHtml(name)}</label>`
+  ).join("") || '<p class="note">Chưa có trạm nào trong danh mục/dữ liệu.</p>';
+  renderStationAssignList();
+  $("stationAssignOverlay").classList.remove("hidden");
+}
+
+function setupStationAssignDialog() {
+  const close = () => { $("stationAssignOverlay").classList.add("hidden"); _stationAssignEmail = null; };
+  $("btnCloseStationAssign").addEventListener("click", close);
+  $("stationAssignSearch").addEventListener("input", renderStationAssignList);
+  $("stationAssignList").addEventListener("change", renderStationAssignList);
+  $("btnStationAssignAll").addEventListener("click", () => {
+    $("stationAssignList").querySelectorAll("label:not(.hidden) input").forEach((i) => { i.checked = true; });
+    renderStationAssignList();
+  });
+  $("btnStationAssignNone").addEventListener("click", () => {
+    $("stationAssignList").querySelectorAll("input").forEach((i) => { i.checked = false; });
+    renderStationAssignList();
+  });
+  $("btnSaveStationAssign").addEventListener("click", async () => {
+    if (!_stationAssignEmail) return;
+    const stations = Array.from($("stationAssignList").querySelectorAll("input:checked")).map((i) => i.value);
+    const btn = $("btnSaveStationAssign");
+    btn.disabled = true;
+    try {
+      const res = await Auth.setUserStations(_stationAssignEmail, stations);
+      if (res && res.error) throw new Error(res.error);
+      close();
+      await refreshUsersUI();
+    } catch (err) {
+      $("stationAssignError").textContent = "Lưu thất bại: " + ((err && err.message) || err);
+      $("stationAssignError").classList.remove("hidden");
+    } finally {
+      btn.disabled = false;
     }
   });
 }

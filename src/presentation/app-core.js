@@ -84,6 +84,8 @@ async function initApp() {
 
 /** Tên/vai trò người dùng ở thanh trên + hiện tab "Quản trị" cho Admin (hoặc khi tắt Auth). */
 function renderUserHeader() {
+  // Viewer (chỉ xem): ẩn vùng nhập liệu + nút Xuất Excel bằng CSS (.role-viewer, style-components.css).
+  document.body.classList.toggle("role-viewer", !!(Auth.enabled && Auth.current && Auth.current.role === "viewer"));
   if (Auth.enabled && Auth.current) {
     const roleLabel = Auth.current.role === "admin" ? "Admin" : Auth.current.role === "viewer" ? "Viewer" : "User";
     $("userBadge").textContent = `${Auth.current.email} — ${roleLabel}`;
@@ -255,27 +257,64 @@ async function loadInitialData(isAdminOrNoAuth) {
 
 /** Ô combo Trạm/Thiết bị/Nhà sản xuất ở các tab nhập liệu (DGA, Dầu MBA, OLTC, TI/TU, Tiêu chuẩn). */
 function setupStationDeviceCombos() {
-  setupCombo({
-    input: $("o_tram"),
-    toggleBtn: $("o_tram_toggle"),
-    listEl: $("o_tram_list"),
-    getOptions: () => stationComboOptions(),
-  });
-  // Ô "Thiết bị" ở tab Dầu cách điện gợi ý từ cả lần đo DGA lẫn thí nghiệm dầu đã
-  // lưu trước đó (cùng 1 MBA có thể vừa có lịch sử đo khí, vừa có lịch sử dầu).
-  setupCombo({
-    input: $("o_thietbi"),
-    toggleBtn: $("o_thietbi_toggle"),
-    listEl: $("o_thietbi_list"),
-    getOptions: () => deviceComboOptions([_allMeasurements, _allOilTests]),
+  // Mọi form nhập liệu dùng CHUNG bộ chọn bậc thang Trạm ▸ Thiết bị ▸ Pha (setupLocationPicker(),
+  // ui-location-picker.js): Thiết bị chỉ gợi ý theo Trạm đã chọn, Pha ghi số lần đo đã có. Ô Trạm gợi ý từ
+  // danh mục trạm (stationComboOptions()).
+  ["f", "o", "ot", "tio"].forEach((p) => {
+    setupCombo({
+      input: $(`${p}_tram`),
+      toggleBtn: $(`${p}_tram_toggle`),
+      listEl: $(`${p}_tram_list`),
+      getOptions: () => stationComboOptions(),
+    });
   });
 
-  setupCombo({
-    input: $("f_tram"),
-    toggleBtn: $("f_tram_toggle"),
-    listEl: $("f_tram_list"),
-    getOptions: () => stationComboOptions(),
+  // Khí hòa tan: gợi ý thiết bị từ lịch sử đo khí; Pha theo trường "pha" (A/B/C/chung3pha).
+  setupLocationPicker({
+    stationInput: $("f_tram"),
+    deviceInput: $("f_thietbi"),
+    deviceToggle: $("f_thietbi_toggle"),
+    deviceList: $("f_thietbi_list"),
+    phaseSelect: $("f_pha"),
+    sources: () => [_allMeasurements],
+    phaseOf: (r) => r.pha,
   });
+
+  // Dầu MBA: cùng 1 MBA có thể vừa có lịch sử đo khí, vừa có lịch sử dầu. Pha chỉ có khi lấy mẫu riêng từng pha.
+  setupLocationPicker({
+    stationInput: $("o_tram"),
+    deviceInput: $("o_thietbi"),
+    deviceToggle: $("o_thietbi_toggle"),
+    deviceList: $("o_thietbi_list"),
+    phaseSelect: $("o_phase"),
+    sources: () => [_allMeasurements, _allOilTests],
+    phaseOf: (r) => (r.oil_sample_point === "pharieng" ? r.phase : ""),
+  });
+
+  // Dầu OLTC: gợi ý từ lịch sử đo khí, dầu MBA chính lẫn dầu OLTC (cùng 1 MBA có thể xuất hiện ở cả 3 nơi).
+  setupLocationPicker({
+    stationInput: $("ot_tram"),
+    deviceInput: $("ot_thietbi"),
+    deviceToggle: $("ot_thietbi_toggle"),
+    deviceList: $("ot_thietbi_list"),
+    phaseSelect: $("ot_phase"),
+    sources: () => [_allMeasurements, _allOilTests, _allOltcOilTests],
+    phaseOf: (r) => (r.oltc_sample_point === "pharieng" ? r.phase : ""),
+  });
+
+  // Dầu TI/TU/Sứ xuyên: gợi ý từ lịch sử đo khí của TI/TU/Sứ xuyên lẫn dầu TI/TU — không gộp
+  // _allOilTests/_allOltcOilTests vì đó là thiết bị MBA/OLTC, khác nhóm thiết bị.
+  const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
+  setupLocationPicker({
+    stationInput: $("tio_tram"),
+    deviceInput: $("tio_thietbi"),
+    deviceToggle: $("tio_thietbi_toggle"),
+    deviceList: $("tio_thietbi_list"),
+    phaseSelect: $("tio_phase"),
+    sources: () => [_allMeasurements.filter((r) => instrumentTypes.includes(r.equipment_type)), _allTioOilTests],
+    phaseOf: (r) => r.phase ?? r.pha,
+  });
+
   setupCombo({
     input: $("s_manufacturer"),
     toggleBtn: $("s_manufacturer_toggle"),
@@ -285,56 +324,6 @@ function setupStationDeviceCombos() {
       names.sort((a, b) => a.localeCompare(b, "vi"));
       return names.map((n) => ({ value: n, label: n }));
     },
-  });
-  // Ô "Thiết bị" chưa có danh mục riêng như Trạm — gợi ý được lấy từ các thiết bị
-  // đã từng nhập trong lịch sử đo (_allMeasurements), không bắt buộc chọn từ đó. Nếu
-  // đã chọn/gõ Trạm, chỉ gợi ý thiết bị THUỘC đúng trạm đó (đọc $("f_tram") mỗi lần mở
-  // danh sách nên luôn theo giá trị Trạm hiện tại, kể cả đổi sau khi đã mở form) — gõ
-  // tên chưa có trong danh mục vẫn dùng được bình thường (xem "combo-empty" ở
-  // setupCombo()), không bị khóa chỉ chọn từ gợi ý.
-  setupCombo({
-    input: $("f_thietbi"),
-    toggleBtn: $("f_thietbi_toggle"),
-    listEl: $("f_thietbi_list"),
-    getOptions: () => {
-      const tram = $("f_tram").value.trim();
-      return deviceComboOptions([_allMeasurements], (r) => !tram || (r.tram || "").trim() === tram);
-    },
-  });
-
-  setupCombo({
-    input: $("ot_tram"),
-    toggleBtn: $("ot_tram_toggle"),
-    listEl: $("ot_tram_list"),
-    getOptions: () => stationComboOptions(),
-  });
-  // Ô "Thiết bị" ở dầu OLTC gợi ý từ cả lịch sử đo DGA, dầu chính MBA lẫn dầu OLTC
-  // đã lưu trước đó (cùng 1 MBA có thể xuất hiện ở cả 3 nơi).
-  setupCombo({
-    input: $("ot_thietbi"),
-    toggleBtn: $("ot_thietbi_toggle"),
-    listEl: $("ot_thietbi_list"),
-    getOptions: () => deviceComboOptions([_allMeasurements, _allOilTests, _allOltcOilTests]),
-  });
-
-  setupCombo({
-    input: $("tio_tram"),
-    toggleBtn: $("tio_tram_toggle"),
-    listEl: $("tio_tram_list"),
-    getOptions: () => stationComboOptions(),
-  });
-  // Ô "Thiết bị" ở dầu TI/TU gợi ý từ cả lịch sử đo DGA lẫn dầu TI/TU đã lưu trước đó
-  // (cùng 1 TI/TU có thể vừa có lịch sử đo khí, vừa có lịch sử dầu) — không gộp
-  // _allOilTests/_allOltcOilTests vì đó là thiết bị MBA/OLTC, khác nhóm thiết bị.
-  const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
-  setupCombo({
-    input: $("tio_thietbi"),
-    toggleBtn: $("tio_thietbi_toggle"),
-    listEl: $("tio_thietbi_list"),
-    getOptions: () => deviceComboOptions([
-      _allMeasurements.filter((r) => instrumentTypes.includes(r.equipment_type)),
-      _allTioOilTests,
-    ]),
   });
 }
 
@@ -488,7 +477,8 @@ function bindHistoryTrendAlertEvents() {
   $("f_loai").addEventListener("change", () => { refreshManufacturerOptions(); toggleMbaSubtypeField(); });
   $("cmp_device").addEventListener("change", refreshCompareMeasurementOptions);
   $("btnCompareRate").addEventListener("click", onCompareRate);
-  $("btnExportAlertsExcel").addEventListener("click", onExportAlertsExcel);
+  $("btnExportAlertsExcel").addEventListener("click", openAlertsExportDialog);
+  setupAlertsExportDialog();
   const btnRefreshAlerts = $("btnRefreshAlerts");
   if (btnRefreshAlerts) {
     btnRefreshAlerts.addEventListener("click", async () => {

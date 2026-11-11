@@ -329,7 +329,29 @@ function listUsers(adminToken) {
     role: u.role,
     created_at: u.created_at,
     last_login: u.last_login,
+    stations: normalizeStations(u.stations),
   }));
+}
+
+/** Danh sách Trạm phụ trách (mảng hoặc chuỗi mỗi trạm 1 dòng) -> mảng tên trạm, bỏ trống/trùng. */
+function normalizeStations(value) {
+  const raw = Array.isArray(value) ? value : String(value || "").split(/\r?\n/);
+  const out = [];
+  raw.forEach((x) => {
+    const name = String(x || "").replace(/[\r\n]+/g, " ").trim();
+    if (name && !out.includes(name)) out.push(name);
+  });
+  return out;
+}
+
+/** Admin gán danh sách Trạm phụ trách cho 1 user (ghi đè) — giới hạn xuất Excel của user về đúng các trạm này. */
+function setUserStations(adminToken, targetEmail, stations) {
+  requireAdmin(adminToken);
+  const user = findUserByEmail(targetEmail);
+  if (!user) return { error: "Không tìm thấy người dùng." };
+  const list = normalizeStations(stations);
+  db.upsert("users", { id: user.id, stations: list });
+  return { ok: true, email: targetEmail, stations: list };
 }
 
 function setUserRole(adminToken, targetEmail, newRole) {
@@ -374,6 +396,8 @@ module.exports = {
   adminCreateUser,
   listUsers,
   setUserRole,
+  setUserStations,
+  normalizeStations,
   deleteUser,
 };
 
