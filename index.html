@@ -37,6 +37,9 @@
   <link rel="stylesheet" href="src/presentation/styles/style-tab-regulation-config.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-dieu54-charts.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-dga-workflow.css" />
+  <!-- Chống "trang trắng" khi mở trong Zalo/trình duyệt nhúng: nhắc mở bằng trình duyệt + báo lỗi
+       khởi động thay cho trang trắng. Nạp ĐẦU TIÊN (trước mọi thư viện) để bắt cả lỗi của chúng. -->
+  <script src="src/presentation/boot-guard.js"></script>
   <script src="vendor/supabase/supabase.js"></script>
   <!-- Chart.js — vẽ đồ thị xu hướng (tab "Xu hướng"). Kèm vendor dự phòng 100% offline. -->
   <script src="vendor/chartjs/chart.umd.min.js"></script>
@@ -58,7 +61,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v58-du-bao-canh-bao") {
+          if (k !== "dga-offline-v59-zalo-boot-guard") {
             caches.delete(k);
           }
         });

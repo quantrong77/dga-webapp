@@ -50,7 +50,7 @@ describe("index.html (web) — thứ tự nạp", () => {
   test("config.js → logic → src/data/storage.js → src/presentation/* → app-core.js (app-core.js cuối cùng)", () => {
     expect(idx("config.js")).toBeLessThan(idx("src/domain/dga-logic.js"));
     expect(idx("src/domain/dga-logic.js")).toBeLessThan(idx("src/data/storage.js"));
-    order.filter((f) => f.startsWith("src/presentation/") && f !== "src/presentation/components/ui-errors.js" && f !== "src/presentation/early-layout.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("src/data/storage.js")));
+    order.filter((f) => f.startsWith("src/presentation/") && f !== "src/presentation/components/ui-errors.js" && f !== "src/presentation/early-layout.js" && f !== "src/presentation/boot-guard.js").forEach((f) => expect(idx(f)).toBeGreaterThan(idx("src/data/storage.js")));
     expect(order[order.length - 1]).toBe("src/presentation/app-core.js");
   });
   test("src/presentation/tabs/ui-auth.js (định nghĩa showToast) nạp trước các ui/* khác dùng nó", () => {
