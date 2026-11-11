@@ -37,9 +37,17 @@ function TREND_OIL_EXT_DEFS() {
   return (DGA.OIL_PARAM_DEFS || []).filter((d) => (d.group === "qd1901" || d.group === "iec") && d.type !== "select");
 }
 
+// Ký hiệu NGẮN của chỉ tiêu dầu bổ sung — in cạnh đường trên đồ thị (xem trendLineLabelsPlugin).
+const TREND_OIL_EXT_SHORT = {
+  acid: "Axit", flash: "Chớp cháy", mech: "Tạp chất", p6: ">6µm", p14: ">14µm", resistivity: "ρ90",
+  furfural: "2-FAL", color: "Màu", ift: "IFT", pcb: "PCB", sediment: "Cặn", sludge: "Bùn",
+  inhibitor: "Ức chế", passivator: "Thụ động",
+};
+
+// short = ký hiệu ngắn in cạnh đường (H2, CH4, Ẩm, BDV...) để nhận ra đường khi nhiều đường sát/chồng nhau.
 const TREND_PARAM_DEFS = Object.assign(
   {},
-  ...DGA.GASES.map((g) => ({ ["gas:" + g]: { label: g, unit: "ppm", axis: "yGas", field: g } })),
+  ...DGA.GASES.map((g) => ({ ["gas:" + g]: { label: g, short: g, unit: "ppm", axis: "yGas", field: g } })),
   {
     // N2, O2 (khí bổ sung, tùy chọn — không thuộc DGA.GASES, xem ghi chú ở onAnalyze()
     // trong ui-dga.js) + 2 chỉ tiêu TỔNG HỢP tính từ 7 khí chính (và N2/O2 với Bảng 63):
@@ -47,22 +55,22 @@ const TREND_PARAM_DEFS = Object.assign(
     // hòa tan (Bảng 63, Điều 54 QĐ1901 — DGA.computeTotalDissolvedGasPercent(), CẦN cả
     // N2 lẫn O2 mới tính được nên điểm dữ liệu sẽ trống ở các lần đo chưa nhập đủ 2 khí
     // này). Đọc giá trị qua gasTrendValue() (không nằm trong recordGases() 7 khí chính).
-    "gas:N2": { label: "Nitơ N2", unit: "ppm", axis: "yGas", field: "N2" },
-    "gas:O2": { label: "Oxy O2", unit: "ppm", axis: "yGas", field: "O2" },
-    "gas:TCG": { label: "Tổng lượng khí cháy (TCG)", unit: "ppm", axis: "yGas", field: "TCG" },
-    "gas:BANG63": { label: "Tổng hàm lượng khí hòa tan (Bảng 63)", unit: "%", axis: "yBang63", field: "BANG63" },
-    "oil:moisture": { label: "Độ ẩm dầu chính", unit: "ppm", axis: "yMoisture", field: "moisture_ppm" },
-    "oil:tgd90": { label: "tgδ 90°C dầu chính", unit: "%", axis: "yTgd", field: "tgd_90c_percent" },
-    "oil:bdv": { label: "Điện áp chọc thủng dầu chính", unit: "kV", axis: "yBdv", field: "bdv_kv" },
-    "oltc:moisture": { label: "Độ ẩm dầu OLTC", unit: "ppm", axis: "yMoisture", field: "moisture_ppm" },
-    "oltc:tgd90": { label: "tgδ 90°C dầu OLTC", unit: "%", axis: "yTgd", field: "tgd_90c_percent" },
-    "oltc:bdv": { label: "Điện áp chọc thủng dầu OLTC", unit: "kV", axis: "yBdv", field: "bdv_kv" },
+    "gas:N2": { label: "Nitơ N2", short: "N2", unit: "ppm", axis: "yGas", field: "N2" },
+    "gas:O2": { label: "Oxy O2", short: "O2", unit: "ppm", axis: "yGas", field: "O2" },
+    "gas:TCG": { label: "Tổng lượng khí cháy (TCG)", short: "TCG", unit: "ppm", axis: "yGas", field: "TCG" },
+    "gas:BANG63": { label: "Tổng hàm lượng khí hòa tan (Bảng 63)", short: "Bảng 63", unit: "%", axis: "yBang63", field: "BANG63" },
+    "oil:moisture": { label: "Độ ẩm dầu chính", short: "Ẩm", unit: "ppm", axis: "yMoisture", field: "moisture_ppm" },
+    "oil:tgd90": { label: "tgδ 90°C dầu chính", short: "tgδ", unit: "%", axis: "yTgd", field: "tgd_90c_percent" },
+    "oil:bdv": { label: "Điện áp chọc thủng dầu chính", short: "BDV", unit: "kV", axis: "yBdv", field: "bdv_kv" },
+    "oltc:moisture": { label: "Độ ẩm dầu OLTC", short: "Ẩm OLTC", unit: "ppm", axis: "yMoisture", field: "moisture_ppm" },
+    "oltc:tgd90": { label: "tgδ 90°C dầu OLTC", short: "tgδ OLTC", unit: "%", axis: "yTgd", field: "tgd_90c_percent" },
+    "oltc:bdv": { label: "Điện áp chọc thủng dầu OLTC", short: "BDV OLTC", unit: "kV", axis: "yBdv", field: "bdv_kv" },
   },
   // Chỉ tiêu lý-hóa BỔ SUNG của dầu chính (số) — DGA.OIL_PARAM_DEFS nhóm qd1901/iec, mỗi chỉ tiêu 1 trục riêng
   // (đơn vị khác hẳn nhau). Trục chỉ hiện khi chỉ tiêu đó đang được chọn (xem usedAxes ở renderTrendChart()).
-  ...TREND_OIL_EXT_DEFS().map((d) => ({ ["oil:" + d.key]: { label: d.label, unit: d.unit, axis: "yOil_" + d.key, field: d.field } })),
+  ...TREND_OIL_EXT_DEFS().map((d) => ({ ["oil:" + d.key]: { label: d.label, short: TREND_OIL_EXT_SHORT[d.key] || d.key, unit: d.unit, axis: "yOil_" + d.key, field: d.field } })),
   ...TREND_OIL_EXT_DEFS().filter((d) => d.group === "qd1901")
-    .map((d) => ({ ["oltc:" + d.key]: { label: d.label + " OLTC", unit: d.unit, axis: "yOil_" + d.key, field: d.field } }))
+    .map((d) => ({ ["oltc:" + d.key]: { label: d.label + " OLTC", short: (TREND_OIL_EXT_SHORT[d.key] || d.key) + " OLTC", unit: d.unit, axis: "yOil_" + d.key, field: d.field } }))
 );
 
 // Được giữ nguyên khi đổi thiết bị, để người dùng không phải chọn lại các thông số
@@ -332,6 +340,211 @@ function renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords) {
   `).join("");
 }
 
+// ===================== Nhãn ký hiệu cạnh đường (H2, CH4, C2H2...) =====================
+// Nhiều đường thường sát nhau, thậm chí chồng lên nhau → khó biết đường nào là thông số nào.
+// - Tự in ký hiệu ngắn ở CUỐI mỗi đường khi còn chỗ (nhãn nào đè lên nhãn đã in thì bỏ qua).
+// - Chạm/click vào 1 đường: chọn đường đó (các đường khác mờ đi) và in ký hiệu ngay tại chỗ chạm.
+//   Nhiều đường chồng nhau tại chỗ chạm → chạm lại cùng chỗ để chuyển lần lượt sang đường kế tiếp.
+//   Chạm vào vùng trống → bỏ chọn.
+const TREND_LABEL_FONT = '600 11px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const TREND_LABEL_H = 16;
+const TREND_LABEL_PAD_X = 4;
+const TREND_LABEL_GAP = 6;
+const TREND_LABEL_PAD_RIGHT = 48;
+// px — chạm cách mọi đường xa hơn mức này coi như chạm vùng trống (bỏ chọn).
+const TREND_PICK_RADIUS = 18;
+// px — các đường cách điểm chạm chênh nhau không quá mức này coi như "chồng nhau" (chạm lại để chuyển).
+const TREND_PICK_TIE = 6;
+
+// Đường đang chọn: { datasetIndex, xVal, yVal } — lưu tọa độ DỮ LIỆU (không phải pixel) để nhãn vẫn
+// đúng chỗ khi đồ thị đổi kích thước. Vẽ lại đồ thị (renderTrendChart) thì bỏ chọn.
+let _trendSelected = null;
+
+/** Ký hiệu ngắn kèm pha khi tách đường theo pha: "H2·A", "Ẩm OLTC·B", "CH4·Chung". */
+function trendPhaseShort(short, p) {
+  return `${short}·${p === DGA.PHA_CHUNG_3_PHA ? "Chung" : p}`;
+}
+
+/** Chữ trắng hay chữ gần đen trên nền màu của đường — chọn bên có độ tương phản cao hơn (WCAG). */
+function trendLabelTextColor(hex) {
+  const m = /^#([0-9a-f]{6})/i.exec(hex || "");
+  if (!m) return "#fff";
+  const n = parseInt(m[1], 16);
+  const ch = (v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const lum = 0.2126 * ch((n >> 16) & 255) + 0.7152 * ch((n >> 8) & 255) + 0.0722 * ch(n & 255);
+  // #111 có độ chói ≈ 0,0056.
+  return 1.05 / (lum + 0.05) >= (lum + 0.05) / 0.0556 ? "#fff" : "#111";
+}
+
+function trendLabelBox(ctx, text, anchorX, anchorY, side) {
+  const w = Math.ceil(ctx.measureText(text).width) + TREND_LABEL_PAD_X * 2;
+  const x = side === "left" ? anchorX - TREND_LABEL_GAP - w : anchorX + TREND_LABEL_GAP;
+  return { x, y: anchorY - TREND_LABEL_H / 2, w, h: TREND_LABEL_H, text };
+}
+
+function trendDrawLabel(ctx, box, color, strong) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(box.x, box.y, box.w, box.h, 4);
+  else ctx.rect(box.x, box.y, box.w, box.h);
+  ctx.fillStyle = color;
+  ctx.fill();
+  if (strong) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = document.documentElement.dataset.theme === "dark" ? "#000" : "#fff";
+    ctx.stroke();
+  }
+  ctx.fillStyle = trendLabelTextColor(color);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(box.text, box.x + TREND_LABEL_PAD_X, box.y + box.h / 2 + 0.5);
+}
+
+function trendHasRightAxis(chart) {
+  return Object.values(chart.scales).some((s) => s.axis === "y" && s.position === "right");
+}
+
+/** Các điểm vẽ được (bỏ điểm trống) của 1 đường, theo pixel. */
+function trendDrawnPoints(chart, datasetIndex) {
+  return chart.getDatasetMeta(datasetIndex).data.filter((p) => p && !p.skip && Number.isFinite(p.x) && Number.isFinite(p.y));
+}
+
+const trendLineLabelsPlugin = {
+  id: "trendLineLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea: area } = chart;
+    const rightLimit = trendHasRightAxis(chart) ? area.right : chart.width - 2;
+    const placed = [];
+    const blocked = (b) =>
+      b.y < area.top - 4 || b.y + b.h > area.bottom + 4 || b.x < area.left || b.x + b.w > rightLimit ||
+      placed.some((p) => b.x < p.x + p.w && b.x + b.w > p.x && b.y < p.y + p.h && b.y + b.h > p.y);
+
+    ctx.save();
+    ctx.font = TREND_LABEL_FONT;
+
+    // Nhãn của đường đang chọn — đặt trước để luôn có chỗ, vẽ sau cùng để nằm trên.
+    let selDraw = null;
+    const sel = _trendSelected;
+    if (sel && chart.isDatasetVisible(sel.datasetIndex)) {
+      const ds = chart.data.datasets[sel.datasetIndex];
+      const yScale = ds && chart.scales[ds.yAxisID];
+      if (yScale) {
+        const px = chart.scales.x.getPixelForValue(sel.xVal);
+        const py = yScale.getPixelForValue(sel.yVal);
+        const anchorY = Math.max(TREND_LABEL_H / 2, py - TREND_LABEL_H);
+        let box = trendLabelBox(ctx, ds.shortLabel, px, anchorY, "right");
+        if (box.x + box.w > chart.width - 2) box = trendLabelBox(ctx, ds.shortLabel, px, anchorY, "left");
+        selDraw = { box, color: ds.trendColor, px, py };
+        placed.push(box);
+      }
+    }
+
+    // Nhãn ở cuối mỗi đường đo (không in cho đường dự báo nét đứt) — chỉ in khi còn chỗ.
+    ctx.globalAlpha = selDraw ? 0.35 : 1;
+    chart.data.datasets.forEach((ds, i) => {
+      if (ds.isForecast || !ds.shortLabel || !chart.isDatasetVisible(i)) return;
+      if (selDraw && sel.datasetIndex === i) return;
+      const pts = trendDrawnPoints(chart, i);
+      const last = pts[pts.length - 1];
+      if (!last) return;
+      for (const side of ["right", "left"]) {
+        for (const dy of [0, -TREND_LABEL_H * 0.6, TREND_LABEL_H * 0.6]) {
+          const box = trendLabelBox(ctx, ds.shortLabel, last.x, last.y + dy, side);
+          if (!blocked(box)) {
+            placed.push(box);
+            trendDrawLabel(ctx, box, ds.trendColor, false);
+            return;
+          }
+        }
+      }
+    });
+    ctx.globalAlpha = 1;
+
+    if (selDraw) {
+      ctx.beginPath();
+      ctx.arc(selDraw.px, selDraw.py, 5, 0, Math.PI * 2);
+      ctx.fillStyle = selDraw.color;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = document.documentElement.dataset.theme === "dark" ? "#000" : "#fff";
+      ctx.stroke();
+      trendDrawLabel(ctx, selDraw.box, selDraw.color, true);
+    }
+    ctx.restore();
+  },
+};
+
+/** Màu điểm đo = màu đường hiện tại (kể cả khi bị làm mờ). Phải là HÀM: Chart.js lưu đệm màu điểm dạng
+ *  chuỗi cố định, đổi dataset.borderColor rồi update() không làm điểm đổi màu theo. */
+function trendPointColor(ctx) {
+  return ctx.dataset.borderColor;
+}
+
+/** Khoảng cách từ điểm (px, py) tới đoạn thẳng a–b, kèm điểm gần nhất trên đoạn. */
+function trendDistToSegment(px, py, a, b) {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const len2 = dx * dx + dy * dy;
+  const t = len2 > 0 ? Math.max(0, Math.min(1, ((px - a.x) * dx + (py - a.y) * dy) / len2)) : 0;
+  const x = a.x + t * dx;
+  const y = a.y + t * dy;
+  return { d: Math.hypot(px - x, py - y), x, y };
+}
+
+/** Chọn/bỏ chọn 1 đường: đường được chọn (và đường dự báo của nó) đậm lên, các đường khác mờ đi. */
+function setTrendSelection(chart, sel) {
+  _trendSelected = sel;
+  const selKey = sel ? chart.data.datasets[sel.datasetIndex].seriesKey : null;
+  chart.data.datasets.forEach((ds) => {
+    if (!ds.trendColor) return;
+    const faded = selKey !== null && ds.seriesKey !== selKey;
+    const color = faded ? ds.trendColor + "40" : ds.trendColor;
+    ds.borderColor = color;
+    ds.backgroundColor = color;
+    const baseWidth = ds.isForecast ? 1.5 : 2;
+    ds.borderWidth = selKey !== null && !faded ? baseWidth + 1 : baseWidth;
+  });
+  chart.update("none");
+}
+
+function onTrendChartClick(evt, chart) {
+  const ex = evt.x;
+  const ey = evt.y;
+  if (!Number.isFinite(ex) || !Number.isFinite(ey)) return;
+  const cands = [];
+  chart.data.datasets.forEach((ds, i) => {
+    if (!chart.isDatasetVisible(i)) return;
+    const pts = trendDrawnPoints(chart, i);
+    let best = pts.length === 1 ? { d: Math.hypot(ex - pts[0].x, ey - pts[0].y), x: pts[0].x, y: pts[0].y } : null;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const r = trendDistToSegment(ex, ey, pts[k], pts[k + 1]);
+      if (!best || r.d < best.d) best = r;
+    }
+    if (best && best.d <= TREND_PICK_RADIUS) cands.push({ i, ...best });
+  });
+  if (cands.length === 0) {
+    if (_trendSelected) setTrendSelection(chart, null);
+    return;
+  }
+  cands.sort((a, b) => a.d - b.d);
+  const near = cands.filter((c) => c.d <= cands[0].d + TREND_PICK_TIE);
+  let pick = near[0];
+  // Nhiều đường chồng nhau và đang chọn 1 trong số đó → chuyển sang đường kế tiếp.
+  if (_trendSelected && near.length > 1) {
+    const cur = near.findIndex((c) => c.i === _trendSelected.datasetIndex);
+    if (cur >= 0) pick = near[(cur + 1) % near.length];
+  }
+  const ds = chart.data.datasets[pick.i];
+  setTrendSelection(chart, {
+    datasetIndex: pick.i,
+    xVal: chart.scales.x.getValueForPixel(pick.x),
+    yVal: chart.scales[ds.yAxisID].getValueForPixel(pick.y),
+  });
+}
+
+
 function destroyTrendChart() {
   if (_trendChart) {
     _trendChart.destroy();
@@ -398,6 +611,9 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     .filter((k) => sourceOk[k.split(":")[0]]);
 
   destroyTrendChart();
+  _trendSelected = null;
+  // Dòng hướng dẫn nhãn/chạm chọn đường chỉ hiện khi đồ thị thực sự được vẽ (bật lại ngay trước new Chart).
+  $("trChartHint")?.classList.add("hidden");
 
   // Khí hòa tan: Storage.addMeasurement() hạ chữ thường các key khí (H2 -> h2, xem
   // normalizeGasKeys trong storage.js) trước khi lưu — gasTrendValue() tự đọc đúng cả 2
@@ -429,6 +645,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
         const recs = gasRecords.filter((r) => (r.pha || "").trim() === p);
         seriesSpecs.push({
           label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`,
+          short: trendPhaseShort(def.short, p),
           axis: def.axis,
           points: trendPoints(recs, (r) => gasValueOf(r, def.field)),
           gasField,
@@ -445,13 +662,13 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       const trungtinhRecs = oltcRecords.filter((r) => r.oltc_sample_point !== "pharieng");
       const trungtinhPoints = trendPoints(trungtinhRecs, (r) => r[def.field]);
       if (trungtinhPoints.length > 0) {
-        seriesSpecs.push({ label: `${def.label} (${def.unit})`, axis: def.axis, points: trungtinhPoints });
+        seriesSpecs.push({ label: `${def.label} (${def.unit})`, short: def.short, axis: def.axis, points: trungtinhPoints });
       }
       tickedPhases.forEach((p) => {
         const recs = oltcRecords.filter((r) => r.oltc_sample_point === "pharieng" && (r.phase || "").trim() === p);
         const points = trendPoints(recs, (r) => r[def.field]);
         if (points.length > 0) {
-          seriesSpecs.push({ label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`, axis: def.axis, points });
+          seriesSpecs.push({ label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`, short: trendPhaseShort(def.short, p), axis: def.axis, points });
         }
       });
       return;
@@ -462,6 +679,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     const valueOf = source === "gas" ? (r) => gasValueOf(r, def.field) : (r) => r[def.field];
     seriesSpecs.push({
       label: `${def.label} (${def.unit})`,
+      short: def.short,
       axis: def.axis,
       points: trendPoints(recordsBySource[source], valueOf),
       gasField,
@@ -487,9 +705,14 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     const { color, pointStyle } = trendSeriesStyle(spec.label);
     return {
       label: spec.label,
+      shortLabel: spec.short || spec.label,
+      seriesKey: spec.label,
+      trendColor: color,
       data: spec.points,
       borderColor: color,
       backgroundColor: color,
+      pointBorderColor: trendPointColor,
+      pointBackgroundColor: trendPointColor,
       pointStyle,
       borderWidth: 2,
       yAxisID: spec.axis,
@@ -550,12 +773,18 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       const { color } = trendSeriesStyle(spec.label);
       datasets.push({
         label: `${spec.label} — dự báo (${rep === forecast.methods.sen ? "Sen" : "OLS"})`,
+        shortLabel: `${spec.short || spec.label} (dự báo)`,
+        seriesKey: spec.label,
+        trendColor: color,
+        isForecast: true,
         data: [
           { x: lastPoint.x, y: rep.fittedAtLast },
           { x: new Date(rep.forecastDate).getTime(), y: rep.forecastValue },
         ],
         borderColor: color,
         backgroundColor: color,
+        pointBorderColor: trendPointColor,
+        pointBackgroundColor: trendPointColor,
         yAxisID: spec.axis,
         borderDash: [6, 4],
         borderWidth: 1.5,
@@ -595,6 +824,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     firstAxis = false;
   });
 
+  $("trChartHint")?.classList.remove("hidden");
   _trendChart = new Chart(canvas.getContext("2d"), {
     type: "line",
     data: { datasets },
@@ -602,8 +832,19 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       responsive: true,
       maintainAspectRatio: false,
       interaction: { mode: "nearest", axis: "x", intersect: false },
+      // Chừa chỗ bên phải cho nhãn ký hiệu ở cuối đường (trendLineLabelsPlugin).
+      layout: { padding: { right: TREND_LABEL_PAD_RIGHT } },
+      onClick: (evt, _els, chart) => onTrendChartClick(evt, chart),
       plugins: {
-        legend: { position: "bottom" },
+        legend: {
+          position: "bottom",
+          // Ẩn đường đang được chọn qua chú giải → bỏ chọn (để các đường khác không bị làm mờ).
+          onClick(evt, item, legend) {
+            Chart.defaults.plugins.legend.onClick.call(this, evt, item, legend);
+            const chart = legend.chart;
+            if (_trendSelected && !chart.isDatasetVisible(_trendSelected.datasetIndex)) setTrendSelection(chart, null);
+          },
+        },
         tooltip: {
           callbacks: {
             title: (items) => (items.length ? new Date(items[0].parsed.x).toLocaleDateString("vi-VN") : ""),
@@ -612,6 +853,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       },
       scales,
     },
+    plugins: [trendLineLabelsPlugin],
   });
 }
 

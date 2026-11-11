@@ -439,6 +439,12 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 3. Nếu thiết bị có dữ liệu từ nhiều pha, tick các pha muốn so sánh ở **"Lọc theo pha"** — mỗi pha một đường riêng.
 4. Ở **"Chọn thông số cần vẽ"**, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị.
 
+**Nhận biết từng đường:**
+
+- Ký hiệu thông số (H2, CH4, C2H2, TCG, Ẩm, BDV…) hiện ở cuối mỗi đường khi còn chỗ. Khi tách theo pha, ký hiệu kèm pha, ví dụ **H2·A**.
+- Nhiều đường sát hoặc chồng nhau thì một số ký hiệu bị ẩn để không đè lên nhau. Chạm (điện thoại) hoặc click (máy tính) vào đường: đường đó đậm lên, các đường khác mờ đi, và ký hiệu hiện ngay tại chỗ chạm.
+- Chạm lại đúng chỗ đó để chuyển sang đường đang bị chồng bên dưới. Chạm vào vùng trống để bỏ chọn.
+
 Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu chính / dầu OLTC).
 
 > Nếu không có mạng hoặc thư viện vẽ đồ thị (Chart.js) tải lỗi, đồ thị sẽ ẩn kèm thông báo — kiểm tra kết nối và tải lại trang. Các bảng số liệu và bảng dự báo vẫn dùng được.

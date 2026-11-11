@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v58-du-bao-canh-bao") {
+          if (k !== "dga-offline-v59-nhan-khi-xu-huong") {
             caches.delete(k);
           }
         });
@@ -1171,6 +1171,10 @@
         <div class="trend-chart-wrap">
           <canvas id="trendChart"></canvas>
         </div>
+        <!-- Nhãn ký hiệu cạnh đường + chạm để chọn đường — trendLineLabelsPlugin/onTrendChartClick, ui-trend.js -->
+        <p class="note hidden" id="trChartHint" style="margin-top:6px;">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
+          mỗi đường khi còn chỗ. Đường sát hoặc chồng nhau: chạm/click vào đường để hiện ký hiệu (chạm lại cùng chỗ để
+          chuyển sang đường chồng bên dưới); chạm vùng trống để bỏ chọn.</p>
         <p class="note hidden" id="trChartEmpty" style="margin-top:10px;">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
           thiết bị có nhiều pha, cũng cần tick ít nhất 1 pha ở mục "Lọc theo pha".</p>
         <p class="note hidden" id="trChartNoLib" style="margin-top:10px;">Không tải được thư viện vẽ đồ thị (Chart.js) — có
@@ -3505,6 +3509,12 @@
           <li>Nếu thiết bị có dữ liệu từ nhiều pha, tick các pha muốn so sánh ở <strong>"Lọc theo pha"</strong> — mỗi pha một đường riêng.</li>
           <li>Ở <strong>"Chọn thông số cần vẽ"</strong>, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị.</li>
           </ol>
+          <p><strong>Nhận biết từng đường:</strong></p>
+          <ul class="rec-list">
+          <li>Ký hiệu thông số (H2, CH4, C2H2, TCG, Ẩm, BDV…) hiện ở cuối mỗi đường khi còn chỗ. Khi tách theo pha, ký hiệu kèm pha, ví dụ <strong>H2·A</strong>.</li>
+          <li>Nhiều đường sát hoặc chồng nhau thì một số ký hiệu bị ẩn để không đè lên nhau. Chạm (điện thoại) hoặc click (máy tính) vào đường: đường đó đậm lên, các đường khác mờ đi, và ký hiệu hiện ngay tại chỗ chạm.</li>
+          <li>Chạm lại đúng chỗ đó để chuyển sang đường đang bị chồng bên dưới. Chạm vào vùng trống để bỏ chọn.</li>
+          </ul>
           <p>Phía dưới có <strong>bảng số liệu thô</strong> của từng nguồn (khí / dầu chính / dầu OLTC).</p>
           <p class="sm-note">Nếu không có mạng hoặc thư viện vẽ đồ thị (Chart.js) tải lỗi, đồ thị sẽ ẩn kèm thông báo — kiểm tra kết nối và tải lại trang. Các bảng số liệu và bảng dự báo vẫn dùng được.</p>
           <h3>12.2. Dự báo xu hướng</h3>
