@@ -526,6 +526,98 @@ function diagnoseDuval1(gases, kphGases) {
 
 
 // ---------------------------------------------------------------------------
+// 6b) Diễn biến LOẠI khiếm khuyết theo thời gian (tab Xu hướng): 3 tỷ số Bảng 66 / Table 1
+//     IEC 60599 + vị trí trên Tam giác Duval 1 của từng lần đo.
+//     Tỷ số cho biết LOẠI khiếm khuyết, không cho biết mức độ (mức độ xem nồng độ/tốc độ tăng).
+//     Theo dõi theo thời gian để thấy khiếm khuyết có đổi bản chất không (vd T2 → T3, T → D).
+//     - basis "abs": tỷ số trên giá trị đo (khí tích lũy trong dầu).
+//     - basis "delta": tỷ số trên PHẦN TĂNG giữa 2 lần đo liên tiếp — IEC 60599 khuyến nghị khi
+//       khí tăng đáng kể, để tách khí của khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu.
+//       Không tính qua lần lọc/thay dầu (chuỗi bị đặt lại).
+//     - applicable: chỉ có giá trị chẩn đoán chính thức khi có khí vượt giá trị điển hình
+//       (Điều 54 QĐ1901 / mục 6.1(c) IEC 60599 — cùng điều kiện ratioApplicability()).
+//     - Tỷ số < RATIO_TREND_FLOOR (kể cả tử số = 0/KPH, tỷ số thực = 0): không vẽ được/không có ý nghĩa
+//       trên trục log (mốc nhỏ nhất của Bảng 66 là 0,1) → value = RATIO_TREND_FLOOR, censored = true
+//       ("< 0,01"), raw giữ giá trị thật để tra Bảng 66. Mẫu số ≤ 0: không tính (null) — KHÔNG
+//       dùng quy ước 999 của computeRatios() vì sẽ thành điểm giả trên đồ thị.
+// ---------------------------------------------------------------------------
+
+const RATIO_TREND_FLOOR = 0.01;
+const RATIO_TREND_DEFS = [
+  { key: "c2h2_c2h4", num: "C2H2", den: "C2H4" },
+  { key: "ch4_h2", num: "CH4", den: "H2" },
+  { key: "c2h4_c2h6", num: "C2H4", den: "C2H6" },
+];
+
+/** Các mốc ngưỡng của Bảng 66 (hiện hành, kể cả khi đã cấu hình lại) cho từng tỷ số — để kẻ vạch ngang. */
+function bang66RatioThresholds(pdThreshold) {
+  const T = QD1901_BANG66_TABLE1;
+  const pd = pdThreshold === undefined || pdThreshold === null ? DEFAULT_PD_THRESHOLD : pdThreshold;
+  const uniq = (arr) => Array.from(new Set(arr.filter((v) => Number.isFinite(v) && v > 0))).sort((a, b) => a - b);
+  return {
+    c2h2_c2h4: uniq([T.D1.g_min, T.D2.g_min, T.D2.g_max, T.T2.g_max, T.T3.g_max]),
+    ch4_h2: uniq([pd, T.D1.h_min, T.D1.h_max, T.D2.h_min, T.D2.h_max, T.T1.h_min]),
+    c2h4_c2h6: uniq([T.PD.i_max, T.D1.i_min, T.D2.i_min, T.T1.i_max, T.T2.i_max, T.T3.i_min]),
+  };
+}
+
+function faultRatioPoint(n, d) {
+  if (!(d > 0) || !(n >= 0)) return null;
+  const raw = n / d;
+  if (raw < RATIO_TREND_FLOOR) return { value: RATIO_TREND_FLOOR, raw, censored: true };
+  return { value: raw, raw, censored: false };
+}
+
+/**
+ * @param {Array<{date:number, gases:Object, treated?:boolean, exceedCount:number}>} series lần đo của
+ *   CÙNG 1 thiết bị/pha, đã sắp tăng dần theo ngày. treated = lần đo này ngay sau lọc/thay dầu.
+ * @param {{basis?: "abs"|"delta", pdThreshold?: number}} [opts]
+ * @returns {Array<{date:number, prevDate:number|null, gases:Object, ratios:Object, code:string|null,
+ *   codeLabel:string|null, duval:Object|null, applicable:boolean}>}
+ */
+function buildFaultEvolution(series, opts) {
+  const basis = opts && opts.basis === "delta" ? "delta" : "abs";
+  const pd = opts && opts.pdThreshold !== undefined && opts.pdThreshold !== null ? opts.pdThreshold : DEFAULT_PD_THRESHOLD;
+  const rows = [];
+  (series || []).forEach((cur, i) => {
+    let gases;
+    let prevDate = null;
+    if (basis === "abs") {
+      gases = {};
+      GASES.forEach((g) => { gases[g] = num(cur.gases[g]); });
+    } else {
+      if (i === 0 || cur.treated) return;
+      const prev = series[i - 1];
+      prevDate = prev.date;
+      gases = {};
+      GASES.forEach((g) => { gases[g] = num(cur.gases[g]) - num(prev.gases[g]); });
+      if (!["H2", "CH4", "C2H6", "C2H4", "C2H2"].some((g) => gases[g] > 0)) return;
+    }
+
+    const ratios = {};
+    RATIO_TREND_DEFS.forEach((d) => { ratios[d.key] = faultRatioPoint(gases[d.num], gases[d.den]); });
+
+    let code = null;
+    let codeLabel = null;
+    if (RATIO_TREND_DEFS.every((d) => ratios[d.key])) {
+      codeLabel = diagnoseRatios({
+        c2h2_c2h4: ratios.c2h2_c2h4.raw, ch4_h2: ratios.ch4_h2.raw, c2h4_c2h6: ratios.c2h4_c2h6.raw,
+      }, pd);
+      code = codeLabel === NO_DIAGNOSIS ? "Ngoài bảng" : codeLabel.split(" - ")[0];
+    }
+
+    let duval = null;
+    if (gases.CH4 >= 0 && gases.C2H4 >= 0 && gases.C2H2 >= 0) {
+      const pct = normalizeDuval(gases);
+      if (pct) duval = { ...pct, ...classifyDuval1(pct), xy: duvalPlotXY(pct) };
+    }
+
+    rows.push({ date: cur.date, prevDate, gases, ratios, code, codeLabel, duval, applicable: (cur.exceedCount || 0) > 0 });
+  });
+  return rows;
+}
+
+// ---------------------------------------------------------------------------
 // 7) Tốc độ tăng hàm lượng khí giữa 2 lần đo (ppm/năm, Bảng 65, Điều 54 QĐ1901)
 // ---------------------------------------------------------------------------
 

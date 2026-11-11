@@ -476,6 +476,25 @@ Lọc hoặc thay dầu làm nồng độ khí hòa tan giảm đột ngột, n�
 - Các lần xử lý dầu đã ghi nhận được liệt kê ở tab Xu hướng, kèm nút **Đổi** để bỏ xác nhận. Cũng có thể chọn trực tiếp ở ô **Xử lý dầu trước lần đo này** khi nhập hoặc sửa lần đo.
 - Chỉ **Admin** hoặc **người đã nhập lần đo** mới xác nhận được.
 
+### 12.4. Diễn biến loại khiếm khuyết (Bảng 66 và tam giác Duval)
+
+Ba tỷ số C2H2/C2H4, CH4/H2, C2H4/C2H6 (Bảng 66 = Table 1 IEC 60599) và tam giác Duval cho biết **loại** khiếm khuyết (PD, D1, D2, T1, T2, T3), không cho biết mức độ. Mức độ xem ở nồng độ và tốc độ tăng. Theo dõi chúng theo thời gian giúp thấy khiếm khuyết có **đổi bản chất** không, ví dụ quá nhiệt nóng dần lên (T2 → T3) hay xuất hiện phóng điện.
+
+Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi thiết bị có số liệu khí hòa tan, gồm:
+
+- **Biểu đồ 3 tỷ số** theo thời gian, mỗi tỷ số một dải, trục logarit. Vạch đứt ngang là các mốc ngưỡng của Bảng 66 (theo cấu hình quy định hiện hành).
+- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất.
+- **Bảng từng lần đo**: 3 tỷ số, mã theo Bảng 66, vùng Duval và điều kiện áp dụng. Lần đo mà mã Bảng 66 khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
+
+Cách đọc:
+
+- **Điểm rỗng** (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.
+- **Tam giác ▽ ở đáy dải**: tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.
+- **Tính trên → Phần tăng giữa 2 lần đo (Δ)**: tỷ số tính trên lượng khí tăng thêm giữa hai lần đo liên tiếp. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể, để tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. App bỏ qua cặp có lọc/thay dầu ở giữa và cặp không có khí nào tăng.
+- Thiết bị có nhiều pha: chọn từng pha ở ô **Pha**.
+
+> Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599.
+
 ---
 
 ## 13. Cấu hình tiêu chuẩn theo nhà sản xuất và bảng quy định (trong Quản trị → Cấu hình)
@@ -610,7 +629,7 @@ Thư mục `mobile/` chứa bản giao diện tối ưu cho điện thoại (m�
 
 **Cùng số liệu, cùng kết luận:** bản di động dùng **chính bộ logic đánh giá của bản web** (file `mobile/dga-logic.js` được sinh tự động từ logic web, không sửa tay), nên ngưỡng QĐ1901/IEC 60599:2022, chẩn đoán Bảng 66/Table A.10 (sứ xuyên), Tam giác Duval, trạng thái tổng thể và đánh giá dầu đều giống hệt. **Cấu hình quy định** do Admin chỉnh ở bản web cũng được bản di động tự áp dụng khi mở app.
 
-Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu chuẩn** (Admin ghi được, người dùng thường chỉ xem) và **Quản trị** (chỉ Admin). Các phần **chỉ có trên bản web**: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem `mobile/README.md`.
+Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu chuẩn** (Admin ghi được, người dùng thường chỉ xem) và **Quản trị** (chỉ Admin). Các phần **chỉ có trên bản web**: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, diễn biến loại khiếm khuyết (Bảng 66 / tam giác Duval), so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem `mobile/README.md`.
 
 ---
 

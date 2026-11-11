@@ -211,7 +211,7 @@ function trendDistinctStationsIn(gasRecords, oilRecords, oltcRecords) {
 
 function onTrendDeviceChange() {
   const device = $("tr_device").value;
-  ["trHistGasWrap", "trHistOilWrap", "trHistOltcWrap"].forEach((id) => $(id).classList.add("hidden"));
+  ["trHistGasWrap", "trHistOilWrap", "trHistOltcWrap", "trFaultWrap"].forEach((id) => $(id).classList.add("hidden"));
 
   if (!device) {
     $("trContentWrap").classList.add("hidden");
@@ -545,6 +545,316 @@ function onTrendChartClick(evt, chart) {
 }
 
 
+// ===================== Diễn biến LOẠI khiếm khuyết (Bảng 66 + tam giác Duval) =====================
+// Số liệu: DGA.buildFaultEvolution() (dga-logic-gas.js). Phần này độc lập với các thông số đang tick ở
+// trên: luôn dựa trên khí hòa tan của thiết bị (1 pha mỗi lần khi thiết bị có nhiều pha).
+// Bảng từng lần đo không cần Chart.js; biểu đồ tỷ số cần Chart.js; tam giác Duval vẽ bằng SVG thuần.
+
+const TREND_RATIO_META = [
+  { key: "c2h2_c2h4", axis: "yR1", title: "C2H2/C2H4" },
+  { key: "ch4_h2", axis: "yR2", title: "CH4/H2" },
+  { key: "c2h4_c2h6", axis: "yR3", title: "C2H4/C2H6" },
+];
+// Trục log bắt đầu thấp hơn RATIO_TREND_FLOOR một chút để điểm "< 0,01" (▽) nằm sát đáy mà không bị cắt.
+const TREND_RATIO_AXIS_MIN = 0.005;
+
+let _trendRatioChart = null;
+let _trendFaultPhase = null;
+
+function trendFmtRatio(v) {
+  return Number(v).toLocaleString("vi-VN", { maximumSignificantDigits: 3 });
+}
+
+function trendFmtDate(ms) {
+  return new Date(ms).toLocaleDateString("vi-VN");
+}
+
+function trendRatioCellText(p) {
+  if (!p) return "—";
+  return p.censored ? "< 0,01" : trendFmtRatio(p.value);
+}
+
+function trendSurfaceColor() {
+  const v = getComputedStyle(document.documentElement).getPropertyValue("--surface").trim();
+  return v || (document.documentElement.dataset.theme === "dark" ? "#0f172a" : "#fff");
+}
+
+function trendFaultTheme() {
+  if (typeof d54Theme === "function") return d54Theme();
+  const dark = document.documentElement.dataset.theme === "dark";
+  return { dark, text: dark ? "#e2e8f0" : "#0f172a", muted: dark ? "#94a3b8" : "#475569", point: dark ? "#38bdf8" : "#0369a1", zone: null };
+}
+
+function renderTrendFaultEvolution(gasRecords) {
+  const wrap = $("trFaultWrap");
+  if (!wrap) return;
+  if (_trendRatioChart) {
+    _trendRatioChart.destroy();
+    _trendRatioChart = null;
+  }
+  if (!gasRecords || gasRecords.length === 0) {
+    wrap.classList.add("hidden");
+    return;
+  }
+  wrap.classList.remove("hidden");
+
+  // Nhiều pha: xem từng pha một (quỹ đạo Duval của nhiều pha chồng lên nhau sẽ không đọc được).
+  const phases = trendDistinctPhases(gasRecords, []);
+  let recs = gasRecords;
+  if (phases.length >= 2) {
+    if (!phases.includes(_trendFaultPhase)) _trendFaultPhase = phases[0];
+    $("tr_faultPhase").innerHTML = phases
+      .map((p) => `<option value="${escapeHtml(p)}"${p === _trendFaultPhase ? " selected" : ""}>${escapeHtml(DGA.phaLabelWithPrefix(p))}</option>`)
+      .join("");
+    $("trFaultPhaseWrap").classList.remove("hidden");
+    recs = gasRecords.filter((r) => (r.pha || "").trim() === _trendFaultPhase);
+  } else {
+    $("trFaultPhaseWrap").classList.add("hidden");
+  }
+
+  const basis = $("tr_faultBasis").value === "delta" ? "delta" : "abs";
+  $("trFaultDeltaNote").classList.toggle("hidden", basis !== "delta");
+
+  const logicOf = (r) => ({ equipmentType: r.equipment_type, manufacturer: r.manufacturer, mbaSubtype: r.mba_subtype ?? r.mbaSubtype ?? null });
+  const latest = recs[recs.length - 1];
+  const standard = latest ? DGA.resolveStandard(logicOf(latest), toManufacturerStandardsForLogic(_allStandards)) : null;
+  const pdThreshold = standard && standard.pdThreshold !== undefined ? standard.pdThreshold : DGA.DEFAULT_PD_THRESHOLD;
+
+  const series = recs
+    .map((r) => {
+      const gases = recordGases(r);
+      return {
+        date: new Date(r.sample_date).getTime(),
+        gases,
+        treated: r.xu_ly_dau === "loc_dau" || r.xu_ly_dau === "thay_dau",
+        exceedCount: DGA.countExceedTypical(gases, r.equipment_type, logicOf(r)),
+      };
+    })
+    .filter((s) => Number.isFinite(s.date));
+  const rows = DGA.buildFaultEvolution(series, { basis, pdThreshold });
+
+  $("trFaultEmpty").classList.toggle("hidden", rows.length > 0);
+  $("trFaultCharts").classList.toggle("hidden", rows.length === 0);
+  renderTrendFaultTable(rows);
+  renderTrendDuval(rows);
+
+  const chartOk = typeof Chart !== "undefined";
+  $("trRatioChart").parentElement.classList.toggle("hidden", !chartOk);
+  if (rows.length > 0 && chartOk) renderTrendRatioChart(rows, DGA.bang66RatioThresholds(pdThreshold));
+}
+
+function renderTrendFaultTable(rows) {
+  let prevCode = null;
+  $("trFaultBody").innerHTML = rows
+    .map((r, i) => {
+      // Đánh dấu lần đo mà mã Bảng 66 khác lần đo ĐỦ ĐIỀU KIỆN trước đó (khiếm khuyết đổi bản chất).
+      const changed = Boolean(r.applicable && r.code && prevCode && r.code !== prevCode);
+      if (r.applicable && r.code) prevCode = r.code;
+      const date = r.prevDate ? `${trendFmtDate(r.prevDate)} → ${trendFmtDate(r.date)}` : trendFmtDate(r.date);
+      const code = r.code
+        ? `<span title="${escapeHtml(r.codeLabel || "")}">${changed ? "<strong>" + escapeHtml(r.code) + " (đổi)</strong>" : escapeHtml(r.code)}</span>`
+        : "—";
+      return `<tr${r.applicable ? "" : ' class="muted-row"'}>
+        <td>${i + 1}</td><td>${date}</td>
+        <td>${trendRatioCellText(r.ratios.c2h2_c2h4)}</td><td>${trendRatioCellText(r.ratios.ch4_h2)}</td>
+        <td>${trendRatioCellText(r.ratios.c2h4_c2h6)}</td>
+        <td>${code}</td><td>${r.duval ? escapeHtml(r.duval.zone) : "—"}</td>
+        <td>${r.applicable ? "Đủ điều kiện" : "Tham khảo"}</td></tr>`;
+    })
+    .join("");
+}
+
+// Vạch ngang tại các mốc ngưỡng Bảng 66 trên từng trục tỷ số.
+const trendRatioThresholdPlugin = {
+  id: "trendRatioThresholds",
+  beforeDatasetsDraw(chart, _args, opts) {
+    const th = opts && opts.thresholds;
+    if (!th) return;
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.setLineDash([4, 3]);
+    ctx.lineWidth = 1;
+    ctx.font = '10px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    TREND_RATIO_META.forEach((m) => {
+      const s = chart.scales[m.axis];
+      if (!s) return;
+      (th[m.key] || []).forEach((v) => {
+        const y = s.getPixelForValue(v);
+        if (!(y >= s.top && y <= s.bottom)) return;
+        ctx.strokeStyle = opts.lineColor;
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, y);
+        ctx.lineTo(chartArea.right, y);
+        ctx.stroke();
+        ctx.fillStyle = opts.textColor;
+        ctx.fillText(trendFmtRatio(v), chartArea.right - 2, y - 1);
+      });
+    });
+    ctx.restore();
+  },
+};
+
+function renderTrendRatioChart(rows, thresholds) {
+  const theme = trendFaultTheme();
+  const colors = TREND_COLORS[theme.dark ? "dark" : "light"];
+  const surface = trendSurfaceColor();
+  const isPow10 = (v) => Math.abs(Math.log10(v) - Math.round(Math.log10(v))) < 1e-9;
+
+  const datasets = TREND_RATIO_META.map((m, k) => {
+    const color = colors[k];
+    const pointOf = (ctx) => (ctx.raw ? ctx.raw.row : null);
+    return {
+      label: m.title,
+      yAxisID: m.axis,
+      data: rows.filter((r) => r.ratios[m.key]).map((r) => ({ x: r.date, y: r.ratios[m.key].value, row: r, censored: r.ratios[m.key].censored })),
+      borderColor: color,
+      backgroundColor: color,
+      borderWidth: 1.5,
+      tension: 0,
+      pointRadius: 4,
+      pointHoverRadius: 6,
+      pointBorderWidth: 1.5,
+      pointBorderColor: color,
+      pointStyle: (ctx) => (ctx.raw && ctx.raw.censored ? "triangle" : "circle"),
+      pointRotation: (ctx) => (ctx.raw && ctx.raw.censored ? 180 : 0),
+      pointBackgroundColor: (ctx) => (pointOf(ctx) && pointOf(ctx).applicable ? color : surface),
+    };
+  });
+
+  const scales = {
+    x: {
+      type: "linear",
+      ticks: { callback: (val) => trendFmtDate(val) },
+      title: { display: true, text: "Ngày lấy mẫu" },
+    },
+  };
+  // 3 trục log xếp chồng theo chiều dọc (stack) — mỗi tỷ số 1 dải riêng, chung trục thời gian. Chart.js
+  // xếp trục khai báo TRƯỚC ở DƯỚI, nên khai báo ngược để C2H2/C2H4 nằm trên cùng (cùng thứ tự với bảng).
+  [...TREND_RATIO_META].reverse().forEach((m) => {
+    const vals = rows.map((r) => r.ratios[m.key] && r.ratios[m.key].value).filter(Number.isFinite);
+    const top = Math.max(10, ...vals, ...(thresholds[m.key] || []));
+    scales[m.axis] = {
+      type: "logarithmic",
+      stack: "ratios",
+      stackWeight: 1,
+      offset: true,
+      position: "left",
+      min: TREND_RATIO_AXIS_MIN,
+      max: 10 ** Math.ceil(Math.log10(top * 1.2)),
+      title: { display: true, text: m.title },
+      // Ẩn nhãn ở đỉnh mỗi dải để không dính vào nhãn đáy của dải phía trên.
+      ticks: { autoSkip: false, callback(v) { return isPow10(v) && v < this.max ? trendFmtRatio(v) : ""; } },
+      grid: { color: (ctx) => (ctx.tick && isPow10(ctx.tick.value) ? theme.dark ? "rgba(148,163,184,0.25)" : "rgba(15,23,42,0.10)" : "transparent") },
+    };
+  });
+
+  _trendRatioChart = new Chart($("trRatioChart").getContext("2d"), {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: false,
+      interaction: { mode: "nearest", axis: "xy", intersect: false },
+      plugins: {
+        legend: { display: false },
+        trendRatioThresholds: { thresholds, lineColor: theme.dark ? "rgba(148,163,184,0.55)" : "rgba(71,85,105,0.45)", textColor: theme.muted },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              if (!items.length) return "";
+              const row = items[0].raw.row;
+              return row.prevDate ? `Δ ${trendFmtDate(row.prevDate)} → ${trendFmtDate(row.date)}` : trendFmtDate(row.date);
+            },
+            label: (item) => `${item.dataset.label}: ${item.raw.censored ? "< 0,01" : trendFmtRatio(item.raw.y)}`,
+            afterBody: (items) => {
+              if (!items.length) return [];
+              const row = items[0].raw.row;
+              return [
+                `Bảng 66: ${row.code || "—"}`,
+                `Duval: ${row.duval ? row.duval.zone : "—"}`,
+                row.applicable ? "Đủ điều kiện chẩn đoán" : "Chỉ tham khảo (chưa khí nào vượt giá trị điển hình)",
+              ];
+            },
+          },
+        },
+      },
+      scales,
+    },
+    plugins: [trendRatioThresholdPlugin],
+  });
+}
+
+function trendSvg(tag, attrs, text) {
+  const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => el.setAttribute(k, String(v)));
+  if (text !== undefined) el.textContent = text;
+  return el;
+}
+
+/** Tam giác Duval 1 phẳng (2D) + quỹ đạo các lần đo theo thời gian. Vùng lấy từ d54DuvalZones() (Bảng 67 hiện hành). */
+function renderTrendDuval(rows) {
+  const svg = $("trDuvalSvg");
+  if (!svg) return;
+  svg.replaceChildren();
+  const th = trendFaultTheme();
+  const surface = trendSurfaceColor();
+  const H = 50 * Math.sqrt(3);
+  // (a = %C2H2, e = %C2H4) -> tọa độ SVG (y hướng xuống). Đỉnh CH4 trên, C2H2 dưới-trái, C2H4 dưới-phải.
+  const P = (a, e) => {
+    const { x, y } = DGA.duvalPlotXY({ pctCH4: 100 - a - e, pctC2H4: e, pctC2H2: a });
+    return [x, H - y];
+  };
+  svg.setAttribute("viewBox", `-12 -10 124 ${H + 22}`);
+  svg.setAttribute("font-family", 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif');
+
+  if (typeof d54DuvalZones === "function" && th.zone) {
+    d54DuvalZones().forEach((z) => {
+      const color = th.zone[z.key];
+      const pts = z.poly.map(([a, e]) => P(a, e).map((n) => n.toFixed(2)).join(",")).join(" ");
+      svg.appendChild(trendSvg("polygon", { points: pts, fill: color, "fill-opacity": 0.3, stroke: color, "stroke-opacity": 0.7, "stroke-width": 0.3 }));
+      const [la, le] = z.label || [1, 1];
+      // PD: vùng rất nhỏ sát đỉnh CH4 — ghi nhãn lệch sang phải đỉnh.
+      const [lx, ly] = z.label ? P(la, le) : [P(0, 0)[0] + 3, P(0, 0)[1] + 2];
+      svg.appendChild(trendSvg("text", { x: lx, y: ly, "font-size": 4, "font-weight": 700, fill: th.text, "fill-opacity": 0.75, "text-anchor": z.label ? "middle" : "start", "dominant-baseline": "middle" }, z.code));
+    });
+  }
+  const cCH4 = P(0, 0), cC2H4 = P(0, 100), cC2H2 = P(100, 0);
+  svg.appendChild(trendSvg("polygon", { points: [cCH4, cC2H4, cC2H2].map((p) => p.join(",")).join(" "), fill: "none", stroke: th.muted, "stroke-width": 0.4 }));
+  const corner = (p, text, dx, dy, anchor) => svg.appendChild(trendSvg("text", { x: p[0] + dx, y: p[1] + dy, "font-size": 4, "font-weight": 600, fill: th.text, "text-anchor": anchor }, text));
+  corner(cCH4, "CH4", 0, -3, "middle");
+  corner(cC2H2, "C2H2", -1, 6, "start");
+  corner(cC2H4, "C2H4", 1, 6, "end");
+
+  const pts = rows.map((r, i) => ({ r, n: i + 1 })).filter((p) => p.r.duval);
+  if (pts.length === 0) return;
+  const xy = (p) => P(p.r.duval.pctC2H2, p.r.duval.pctC2H4);
+  if (pts.length > 1) {
+    svg.appendChild(trendSvg("polyline", {
+      points: pts.map((p) => xy(p).map((n) => n.toFixed(2)).join(",")).join(" "),
+      fill: "none", stroke: th.text, "stroke-opacity": 0.6, "stroke-width": 0.5, "stroke-linejoin": "round",
+    }));
+  }
+  const showAllNumbers = pts.length <= 15;
+  pts.forEach((p, k) => {
+    const [x, y] = xy(p);
+    const last = k === pts.length - 1;
+    const g = trendSvg("g", {});
+    g.appendChild(trendSvg("title", {}, `#${p.n} ${p.r.prevDate ? "Δ " + trendFmtDate(p.r.prevDate) + " → " : ""}${trendFmtDate(p.r.date)} — Duval ${p.r.duval.zone}` +
+      ` (CH4 ${p.r.duval.pctCH4.toFixed(0)}%, C2H4 ${p.r.duval.pctC2H4.toFixed(0)}%, C2H2 ${p.r.duval.pctC2H2.toFixed(0)}%)${p.r.applicable ? "" : " — tham khảo"}`));
+    g.appendChild(trendSvg("circle", {
+      cx: x, cy: y, r: last ? 2.2 : 1.5,
+      fill: p.r.applicable ? th.point : surface, stroke: last ? th.text : th.point, "stroke-width": last ? 0.8 : 0.5,
+    }));
+    if (showAllNumbers || k === 0 || last) {
+      g.appendChild(trendSvg("text", { x: x + 2.4, y: y - 1.6, "font-size": 3.4, "font-weight": last ? 700 : 500, fill: th.text }, String(p.n)));
+    }
+    svg.appendChild(g);
+  });
+}
+
 function destroyTrendChart() {
   if (_trendChart) {
     _trendChart.destroy();
@@ -590,6 +900,8 @@ function trendPoints(records, valueOf) {
 
 function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
   _trendLastArgs = [gasRecords, oilRecords, oltcRecords];
+  // Phần diễn biến loại khiếm khuyết (Bảng 66/Duval) — độc lập với thông số đang tick, không cần Chart.js cho bảng.
+  renderTrendFaultEvolution(gasRecords);
   const canvas = $("trendChart");
   // Bảng "Dự báo xu hướng" (renderTrendForecastTable()) chỉ cần các hàm tính toán thuần ở
   // dga-logic.js (forecastGasTrend()) và DOM bảng — KHÔNG phụ thuộc Chart.js — nên vẫn phải

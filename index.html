@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v59-nhan-khi-xu-huong") {
+          if (k !== "dga-offline-v63-ty-so-iec-duval") {
             caches.delete(k);
           }
         });
@@ -1209,6 +1209,50 @@
               <tbody id="trForecastBody"></tbody>
             </table>
           </div>
+        </div>
+      </div>
+
+      <!-- Diễn biến LOẠI khiếm khuyết: 3 tỷ số Bảng 66 theo thời gian + quỹ đạo trên tam giác Duval —
+           renderTrendFaultEvolution(), ui-trend.js; số liệu: DGA.buildFaultEvolution() (dga-logic-gas.js) -->
+      <div class="panel hidden" id="trFaultWrap">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Diễn biến loại khiếm khuyết (Bảng 66 &amp; tam giác Duval)</h2>
+        <p class="note">Tỷ số khí cho biết <strong>loại</strong> khiếm khuyết (PD, D1, D2, T1, T2, T3), không cho biết
+          mức độ — mức độ xem ở nồng độ và tốc độ tăng phía trên. Theo dõi theo thời gian để thấy khiếm khuyết có
+          <strong>đổi bản chất</strong> không (vd T2 → T3, hoặc xuất hiện phóng điện). Điểm <strong>rỗng</strong> là lần đo
+          chưa có khí nào vượt giá trị điển hình: tỷ số chỉ để tham khảo (Điều 54 QĐ1901, mục 6.1(c) IEC 60599).
+          Tam giác <strong>▽</strong> ở đáy: tỷ số &lt; 0,01 (kể cả khi tử số bằng 0/KPH). Mẫu số bằng 0 thì không tính.
+          Vạch đứt ngang là các mốc ngưỡng của Bảng 66.</p>
+        <div class="toolbar toolbar-start" style="gap:16px; flex-wrap:wrap;">
+          <label class="field" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Tính trên
+            <select id="tr_faultBasis" autocomplete="off">
+              <option value="abs" selected>Giá trị đo</option>
+              <option value="delta">Phần tăng giữa 2 lần đo (Δ)</option>
+            </select>
+          </label>
+          <label class="field hidden" id="trFaultPhaseWrap" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Pha
+            <select id="tr_faultPhase" autocomplete="off"></select>
+          </label>
+        </div>
+        <p class="note hidden" id="trFaultDeltaNote" style="margin-top:8px;">Phần tăng (Δ) = lần đo trừ lần đo ngay trước,
+          bỏ qua cặp có lọc/thay dầu ở giữa. IEC 60599 khuyến nghị tính tỷ số trên phần tăng khi khí tăng đáng kể, để
+          tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. Cặp nào không có khí tăng thì bỏ qua.</p>
+        <p class="note hidden" id="trFaultEmpty" style="margin-top:8px;">Chưa có lần đo nào tính được tỷ số.</p>
+        <div class="trend-fault-grid" id="trFaultCharts">
+          <div class="trend-ratio-wrap"><canvas id="trRatioChart"></canvas></div>
+          <figure class="trend-duval">
+            <svg id="trDuvalSvg" role="img" aria-label="Quỹ đạo các lần đo trên tam giác Duval 1"></svg>
+            <figcaption class="note">Tam giác Duval 1 (Bảng 67): các lần đo nối theo thứ tự thời gian, số = thứ tự trong
+              bảng dưới, điểm viền đậm = lần đo gần nhất.</figcaption>
+          </figure>
+        </div>
+        <div class="table-scroll" style="margin-top:12px;">
+          <table>
+            <thead><tr>
+              <th>#</th><th>Ngày lấy mẫu</th><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th>
+              <th>Bảng 66</th><th>Duval</th><th>Điều kiện</th>
+            </tr></thead>
+            <tbody id="trFaultBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -3542,6 +3586,22 @@
           <li>Các lần xử lý dầu đã ghi nhận được liệt kê ở tab Xu hướng, kèm nút <strong>Đổi</strong> để bỏ xác nhận. Cũng có thể chọn trực tiếp ở ô <strong>Xử lý dầu trước lần đo này</strong> khi nhập hoặc sửa lần đo.</li>
           <li>Chỉ <strong>Admin</strong> hoặc <strong>người đã nhập lần đo</strong> mới xác nhận được.</li>
           </ul>
+          <h3>12.4. Diễn biến loại khiếm khuyết (Bảng 66 và tam giác Duval)</h3>
+          <p>Ba tỷ số C2H2/C2H4, CH4/H2, C2H4/C2H6 (Bảng 66 = Table 1 IEC 60599) và tam giác Duval cho biết <strong>loại</strong> khiếm khuyết (PD, D1, D2, T1, T2, T3), không cho biết mức độ. Mức độ xem ở nồng độ và tốc độ tăng. Theo dõi chúng theo thời gian giúp thấy khiếm khuyết có <strong>đổi bản chất</strong> không, ví dụ quá nhiệt nóng dần lên (T2 → T3) hay xuất hiện phóng điện.</p>
+          <p>Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi thiết bị có số liệu khí hòa tan, gồm:</p>
+          <ul class="rec-list">
+          <li><strong>Biểu đồ 3 tỷ số</strong> theo thời gian, mỗi tỷ số một dải, trục logarit. Vạch đứt ngang là các mốc ngưỡng của Bảng 66 (theo cấu hình quy định hiện hành).</li>
+          <li><strong>Tam giác Duval 1</strong> với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất.</li>
+          <li><strong>Bảng từng lần đo</strong>: 3 tỷ số, mã theo Bảng 66, vùng Duval và điều kiện áp dụng. Lần đo mà mã Bảng 66 khác lần đo đủ điều kiện trước đó được in đậm kèm chữ <strong>(đổi)</strong>.</li>
+          </ul>
+          <p>Cách đọc:</p>
+          <ul class="rec-list">
+          <li><strong>Điểm rỗng</strong> (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.</li>
+          <li><strong>Tam giác ▽ ở đáy dải</strong>: tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.</li>
+          <li><strong>Tính trên → Phần tăng giữa 2 lần đo (Δ)</strong>: tỷ số tính trên lượng khí tăng thêm giữa hai lần đo liên tiếp. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể, để tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. App bỏ qua cặp có lọc/thay dầu ở giữa và cặp không có khí nào tăng.</li>
+          <li>Thiết bị có nhiều pha: chọn từng pha ở ô <strong>Pha</strong>.</li>
+          </ul>
+          <p class="sm-note">Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599.</p>
 
           </div>
         </details>
@@ -3721,7 +3781,7 @@
           <div class="sm-body">
           <p>Thư mục <code>mobile/</code> chứa bản giao diện tối ưu cho điện thoại (một cột, thanh điều hướng trên cùng), <strong>dùng chung database và tài khoản</strong> với bản web nếu được cấu hình cùng <code>config.js</code>. Số liệu nhập ở điện thoại xuất hiện ở bản web và ngược lại.</p>
           <p><strong>Cùng số liệu, cùng kết luận:</strong> bản di động dùng <strong>chính bộ logic đánh giá của bản web</strong> (file <code>mobile/dga-logic.js</code> được sinh tự động từ logic web, không sửa tay), nên ngưỡng QĐ1901/IEC 60599:2022, chẩn đoán Bảng 66/Table A.10 (sứ xuyên), Tam giác Duval, trạng thái tổng thể và đánh giá dầu đều giống hệt. <strong>Cấu hình quy định</strong> do Admin chỉnh ở bản web cũng được bản di động tự áp dụng khi mở app.</p>
-          <p>Bản di động gồm các tab: <strong>DGA</strong>, <strong>Dầu</strong>, <strong>Xu hướng</strong>, <strong>Tiêu chuẩn</strong> (Admin ghi được, người dùng thường chỉ xem) và <strong>Quản trị</strong> (chỉ Admin). Các phần <strong>chỉ có trên bản web</strong>: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem <code>mobile/README.md</code>.</p>
+          <p>Bản di động gồm các tab: <strong>DGA</strong>, <strong>Dầu</strong>, <strong>Xu hướng</strong>, <strong>Tiêu chuẩn</strong> (Admin ghi được, người dùng thường chỉ xem) và <strong>Quản trị</strong> (chỉ Admin). Các phần <strong>chỉ có trên bản web</strong>: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, diễn biến loại khiếm khuyết (Bảng 66 / tam giác Duval), so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem <code>mobile/README.md</code>.</p>
 
           </div>
         </details>

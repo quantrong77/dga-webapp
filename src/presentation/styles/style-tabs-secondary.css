@@ -196,6 +196,35 @@ footer.app-footer {
   .trend-chart-wrap { height: 320px; }
 }
 
+/* Diễn biến loại khiếm khuyết (tab Xu hướng): 3 tỷ số Bảng 66 + tam giác Duval cạnh nhau, xếp dọc trên màn hẹp */
+.trend-fault-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+  margin-top: var(--space-3);
+}
+.trend-ratio-wrap {
+  position: relative;
+  height: 480px;
+}
+.trend-duval {
+  margin: 0;
+}
+.trend-duval svg {
+  display: block;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+}
+#trFaultBody tr.muted-row td {
+  color: var(--text-secondary);
+}
+@media (max-width: 900px) {
+  .trend-fault-grid { grid-template-columns: minmax(0, 1fr); }
+  .trend-ratio-wrap { height: 420px; }
+}
+
 /* ===================== Cẩm nang tham khảo (ảnh + lightbox phóng to) — tab "Quy
    trình đánh giá" ===================== */
 .handbook-gallery {
