@@ -220,6 +220,41 @@ footer.app-footer {
 #trFaultBody tr.muted-row td {
   color: var(--text-secondary);
 }
+/* Lần đo bỏ tick: không vẽ lên biểu đồ — làm nhạt cả dòng (trừ ô tick) */
+#trFaultBody tr.unticked-row td:not(:first-child) {
+  opacity: 0.45;
+}
+#trFaultBody input[type="checkbox"],
+#trFaultTickAll {
+  width: auto;
+  margin: 0;
+}
+.fault-code-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+.fault-code-legend li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  margin-bottom: 4px;
+}
+.fault-code-legend strong {
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.fault-code-swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid var(--border-strong, #cbd5e1);
+  align-self: center;
+}
 @media (max-width: 900px) {
   .trend-fault-grid { grid-template-columns: minmax(0, 1fr); }
   .trend-ratio-wrap { height: 420px; }

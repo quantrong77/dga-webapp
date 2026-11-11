@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v63-ty-so-iec-duval") {
+          if (k !== "dga-offline-v64-tick-duval") {
             caches.delete(k);
           }
         });
@@ -1237,17 +1237,25 @@
           bỏ qua cặp có lọc/thay dầu ở giữa. IEC 60599 khuyến nghị tính tỷ số trên phần tăng khi khí tăng đáng kể, để
           tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. Cặp nào không có khí tăng thì bỏ qua.</p>
         <p class="note hidden" id="trFaultEmpty" style="margin-top:8px;">Chưa có lần đo nào tính được tỷ số.</p>
+        <p class="note hidden" id="trFaultNoneTicked" style="margin-top:8px;">Chưa tick lần đo nào ở bảng bên dưới — tick
+          các lần đo muốn xem (hoặc ô ở tiêu đề cột để chọn hết).</p>
         <div class="trend-fault-grid" id="trFaultCharts">
           <div class="trend-ratio-wrap"><canvas id="trRatioChart"></canvas></div>
           <figure class="trend-duval">
             <svg id="trDuvalSvg" role="img" aria-label="Quỹ đạo các lần đo trên tam giác Duval 1"></svg>
-            <figcaption class="note">Tam giác Duval 1 (Bảng 67): các lần đo nối theo thứ tự thời gian, số = thứ tự trong
-              bảng dưới, điểm viền đậm = lần đo gần nhất.</figcaption>
+            <figcaption class="note">Tam giác Duval 1 (Bảng 67): các lần đo đang tick nối theo thứ tự thời gian, số = thứ
+              tự trong bảng dưới, điểm viền đậm = lần đo gần nhất trong số đang tick.</figcaption>
+            <p class="section-title" style="margin:10px 0 4px;">Ý nghĩa mã khiếm khuyết</p>
+            <!-- renderTrendFaultCodeLegend(), ui-trend.js -->
+            <ul class="fault-code-legend" id="trFaultCodeLegend"></ul>
           </figure>
         </div>
-        <div class="table-scroll" style="margin-top:12px;">
+        <p class="note" style="margin-top:12px;">Tick/bỏ tick ở cột đầu để chọn lần đo hiện trên biểu đồ tỷ số và tam giác
+          Duval; ô ở tiêu đề cột để chọn hoặc bỏ tất cả.</p>
+        <div class="table-scroll" style="margin-top:6px;">
           <table>
             <thead><tr>
+              <th><input type="checkbox" id="trFaultTickAll" checked aria-label="Chọn/bỏ chọn tất cả lần đo" /></th>
               <th>#</th><th>Ngày lấy mẫu</th><th>C2H2/C2H4</th><th>CH4/H2</th><th>C2H4/C2H6</th>
               <th>Bảng 66</th><th>Duval</th><th>Điều kiện</th>
             </tr></thead>
@@ -3593,7 +3601,51 @@
           <li><strong>Biểu đồ 3 tỷ số</strong> theo thời gian, mỗi tỷ số một dải, trục logarit. Vạch đứt ngang là các mốc ngưỡng của Bảng 66 (theo cấu hình quy định hiện hành).</li>
           <li><strong>Tam giác Duval 1</strong> với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất.</li>
           <li><strong>Bảng từng lần đo</strong>: 3 tỷ số, mã theo Bảng 66, vùng Duval và điều kiện áp dụng. Lần đo mà mã Bảng 66 khác lần đo đủ điều kiện trước đó được in đậm kèm chữ <strong>(đổi)</strong>.</li>
+          <li><strong>Chọn lần đo hiển thị</strong>: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên biểu đồ tỷ số và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Số thứ tự của điểm vẫn giữ theo bảng. Đổi thiết bị hoặc pha thì tick lại hết.</li>
+          <li><strong>Ý nghĩa mã khiếm khuyết</strong> ngay dưới tam giác:</li>
           </ul>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Mã</th>
+          <th>Dạng khiếm khuyết</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>PD</td>
+          <td>Phóng điện cục bộ dạng corona (bọt khí, khoang rỗng trong cách điện ngâm dầu)</td>
+          </tr>
+          <tr>
+          <td>D1</td>
+          <td>Phóng điện năng lượng thấp: tia lửa, phóng điện bề mặt, lỗ châm/vết cháy nhỏ trên giấy</td>
+          </tr>
+          <tr>
+          <td>D2</td>
+          <td>Phóng điện năng lượng cao: hồ quang, phóng điện xuyên thủng, ngắn mạch vòng dây</td>
+          </tr>
+          <tr>
+          <td>T1</td>
+          <td>Quá nhiệt dưới 300 °C: quá tải, giấy cách điện bị nung nóng</td>
+          </tr>
+          <tr>
+          <td>T2</td>
+          <td>Quá nhiệt 300–700 °C: tiếp xúc xấu ở mối nối/bộ chuyển nấc, dòng xoáy</td>
+          </tr>
+          <tr>
+          <td>T3</td>
+          <td>Quá nhiệt trên 700 °C: dòng tuần hoàn trong lõi/vỏ thùng, chạm lõi nhiều điểm</td>
+          </tr>
+          <tr>
+          <td>D+T</td>
+          <td>Hỗn hợp phóng điện và quá nhiệt (ranh giới không phân định rõ trên tam giác Duval)</td>
+          </tr>
+          <tr>
+          <td>Ngoài bảng</td>
+          <td>Chỉ ở cột Bảng 66: tổ hợp 3 tỷ số không khớp mã nào — xem vùng Duval</td>
+          </tr>
+          </tbody>
+          </table></div>
           <p>Cách đọc:</p>
           <ul class="rec-list">
           <li><strong>Điểm rỗng</strong> (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.</li>

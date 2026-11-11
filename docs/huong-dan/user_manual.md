@@ -485,6 +485,19 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
 - **Biểu đồ 3 tỷ số** theo thời gian, mỗi tỷ số một dải, trục logarit. Vạch đứt ngang là các mốc ngưỡng của Bảng 66 (theo cấu hình quy định hiện hành).
 - **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất.
 - **Bảng từng lần đo**: 3 tỷ số, mã theo Bảng 66, vùng Duval và điều kiện áp dụng. Lần đo mà mã Bảng 66 khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
+- **Chọn lần đo hiển thị**: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên biểu đồ tỷ số và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Số thứ tự của điểm vẫn giữ theo bảng. Đổi thiết bị hoặc pha thì tick lại hết.
+- **Ý nghĩa mã khiếm khuyết** ngay dưới tam giác:
+
+  | Mã | Dạng khiếm khuyết |
+  |---|---|
+  | PD | Phóng điện cục bộ dạng corona (bọt khí, khoang rỗng trong cách điện ngâm dầu) |
+  | D1 | Phóng điện năng lượng thấp: tia lửa, phóng điện bề mặt, lỗ châm/vết cháy nhỏ trên giấy |
+  | D2 | Phóng điện năng lượng cao: hồ quang, phóng điện xuyên thủng, ngắn mạch vòng dây |
+  | T1 | Quá nhiệt dưới 300 °C: quá tải, giấy cách điện bị nung nóng |
+  | T2 | Quá nhiệt 300–700 °C: tiếp xúc xấu ở mối nối/bộ chuyển nấc, dòng xoáy |
+  | T3 | Quá nhiệt trên 700 °C: dòng tuần hoàn trong lõi/vỏ thùng, chạm lõi nhiều điểm |
+  | D+T | Hỗn hợp phóng điện và quá nhiệt (ranh giới không phân định rõ trên tam giác Duval) |
+  | Ngoài bảng | Chỉ ở cột Bảng 66: tổ hợp 3 tỷ số không khớp mã nào — xem vùng Duval |
 
 Cách đọc:
 

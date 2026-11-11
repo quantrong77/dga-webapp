@@ -560,6 +560,27 @@ const TREND_RATIO_AXIS_MIN = 0.005;
 
 let _trendRatioChart = null;
 let _trendFaultPhase = null;
+// Lần đo bị BỎ TICK ở bảng chi tiết (khóa = trendFaultRowKey()) — không vẽ lên biểu đồ tỷ số và tam giác Duval.
+// Mặc định tick hết; đổi thiết bị/pha thì tick lại hết.
+const _trendFaultUnticked = new Set();
+let _trendFaultScope = null;
+// Kết quả tính của lần vẽ gần nhất — đổi tick chỉ vẽ lại biểu đồ, không tính lại.
+let _trendFaultView = null;
+
+function trendFaultRowKey(r) {
+  return `${r.prevDate ?? ""}>${r.date}`;
+}
+
+// Ý nghĩa mã khiếm khuyết (Bảng 66/67 Điều 54 QĐ1901 = Table 1 & Annex B IEC 60599; ví dụ theo Table 3 IEC 60599).
+const TREND_FAULT_CODE_NOTES = [
+  { code: "PD", key: "PD", text: "Phóng điện cục bộ dạng corona (plasma lạnh): bọt khí, khoang rỗng trong cách điện ngâm dầu." },
+  { code: "D1", key: "D1", text: "Phóng điện năng lượng thấp: tia lửa, phóng điện bề mặt (tracking), lỗ châm/vết cháy nhỏ trên giấy, chập chờn tiếp xúc." },
+  { code: "D2", key: "D2", text: "Phóng điện năng lượng cao: hồ quang, phóng điện xuyên thủng, ngắn mạch vòng dây — vết cháy, nóng chảy kim loại." },
+  { code: "T1", key: "T1", text: "Quá nhiệt t < 300 °C: quá tải, giấy cách điện bị nung nóng (thường kèm CO, CO2 tăng)." },
+  { code: "T2", key: "T2", text: "Quá nhiệt 300–700 °C: tiếp xúc xấu ở mối nối/bộ chuyển nấc, dòng xoáy, giấy hóa than." },
+  { code: "T3", key: "T3", text: "Quá nhiệt t > 700 °C: dòng tuần hoàn trong lõi/vỏ thùng, chạm lõi nhiều điểm, dầu bị cracking (C2H4 cao, có thể có C2H2)." },
+  { code: "D+T", key: "DT", text: "Hỗn hợp phóng điện và quá nhiệt — ranh giới không phân định rõ trên tam giác Duval gốc (IEC 60599 Annex B)." },
+];
 
 function trendFmtRatio(v) {
   return Number(v).toLocaleString("vi-VN", { maximumSignificantDigits: 3 });
@@ -611,6 +632,11 @@ function renderTrendFaultEvolution(gasRecords) {
   } else {
     $("trFaultPhaseWrap").classList.add("hidden");
   }
+  const scope = `${$("tr_device") ? $("tr_device").value : ""}|${phases.length >= 2 ? _trendFaultPhase : ""}`;
+  if (scope !== _trendFaultScope) {
+    _trendFaultScope = scope;
+    _trendFaultUnticked.clear();
+  }
 
   const basis = $("tr_faultBasis").value === "delta" ? "delta" : "abs";
   $("trFaultDeltaNote").classList.toggle("hidden", basis !== "delta");
@@ -632,21 +658,71 @@ function renderTrendFaultEvolution(gasRecords) {
     })
     .filter((s) => Number.isFinite(s.date));
   const rows = DGA.buildFaultEvolution(series, { basis, pdThreshold });
+  // Số thứ tự cố định theo bảng — dùng chung cho bảng, tooltip và nhãn điểm trên tam giác Duval.
+  rows.forEach((r, i) => { r.seq = i + 1; });
+  _trendFaultView = { rows, thresholds: DGA.bang66RatioThresholds(pdThreshold) };
 
   $("trFaultEmpty").classList.toggle("hidden", rows.length > 0);
   $("trFaultCharts").classList.toggle("hidden", rows.length === 0);
   renderTrendFaultTable(rows);
-  renderTrendDuval(rows);
+  drawTrendFaultCharts();
+}
 
+/** Vẽ biểu đồ tỷ số + quỹ đạo Duval chỉ với các lần đo đang được tick ở bảng. */
+function drawTrendFaultCharts() {
+  if (_trendRatioChart) {
+    _trendRatioChart.destroy();
+    _trendRatioChart = null;
+  }
+  const view = _trendFaultView;
+  if (!view) return;
+  const shown = view.rows.filter((r) => !_trendFaultUnticked.has(trendFaultRowKey(r)));
+  $("trFaultNoneTicked").classList.toggle("hidden", !(view.rows.length > 0 && shown.length === 0));
+  renderTrendDuval(shown);
   const chartOk = typeof Chart !== "undefined";
   $("trRatioChart").parentElement.classList.toggle("hidden", !chartOk);
-  if (rows.length > 0 && chartOk) renderTrendRatioChart(rows, DGA.bang66RatioThresholds(pdThreshold));
+  if (shown.length > 0 && chartOk) renderTrendRatioChart(shown, view.thresholds);
+  syncTrendFaultTickAll();
+}
+
+/** Ô tick ở tiêu đề: tick hết / bỏ hết; trạng thái lưng chừng khi chỉ tick một phần. */
+function syncTrendFaultTickAll() {
+  const all = $("trFaultTickAll");
+  const view = _trendFaultView;
+  if (!all || !view) return;
+  const n = view.rows.length;
+  const ticked = view.rows.filter((r) => !_trendFaultUnticked.has(trendFaultRowKey(r))).length;
+  all.checked = n > 0 && ticked === n;
+  all.indeterminate = ticked > 0 && ticked < n;
+}
+
+function onTrendFaultTickChange(e) {
+  const box = e.target;
+  if (!box || !box.classList || !box.classList.contains("tr-fault-tick")) return;
+  const key = box.dataset.key;
+  if (box.checked) _trendFaultUnticked.delete(key);
+  else _trendFaultUnticked.add(key);
+  const tr = box.closest("tr");
+  if (tr) tr.classList.toggle("unticked-row", !box.checked);
+  drawTrendFaultCharts();
+}
+
+function onTrendFaultTickAllChange(e) {
+  const view = _trendFaultView;
+  if (!view) return;
+  _trendFaultUnticked.clear();
+  if (!e.target.checked) view.rows.forEach((r) => _trendFaultUnticked.add(trendFaultRowKey(r)));
+  renderTrendFaultTable(view.rows);
+  drawTrendFaultCharts();
 }
 
 function renderTrendFaultTable(rows) {
   let prevCode = null;
-  $("trFaultBody").innerHTML = rows
-    .map((r, i) => {
+  const body = $("trFaultBody");
+  body.onchange = onTrendFaultTickChange;
+  if ($("trFaultTickAll")) $("trFaultTickAll").onchange = onTrendFaultTickAllChange;
+  body.innerHTML = rows
+    .map((r) => {
       // Đánh dấu lần đo mà mã Bảng 66 khác lần đo ĐỦ ĐIỀU KIỆN trước đó (khiếm khuyết đổi bản chất).
       const changed = Boolean(r.applicable && r.code && prevCode && r.code !== prevCode);
       if (r.applicable && r.code) prevCode = r.code;
@@ -654,8 +730,13 @@ function renderTrendFaultTable(rows) {
       const code = r.code
         ? `<span title="${escapeHtml(r.codeLabel || "")}">${changed ? "<strong>" + escapeHtml(r.code) + " (đổi)</strong>" : escapeHtml(r.code)}</span>`
         : "—";
-      return `<tr${r.applicable ? "" : ' class="muted-row"'}>
-        <td>${i + 1}</td><td>${date}</td>
+      const key = trendFaultRowKey(r);
+      const ticked = !_trendFaultUnticked.has(key);
+      const cls = [r.applicable ? "" : "muted-row", ticked ? "" : "unticked-row"].filter(Boolean).join(" ");
+      return `<tr${cls ? ` class="${cls}"` : ""}>
+        <td><input type="checkbox" class="tr-fault-tick" data-key="${escapeHtml(key)}"${ticked ? " checked" : ""}
+          aria-label="Hiện lần đo #${r.seq} trên biểu đồ và tam giác Duval" /></td>
+        <td>${r.seq}</td><td>${date}</td>
         <td>${trendRatioCellText(r.ratios.c2h2_c2h4)}</td><td>${trendRatioCellText(r.ratios.ch4_h2)}</td>
         <td>${trendRatioCellText(r.ratios.c2h4_c2h6)}</td>
         <td>${code}</td><td>${r.duval ? escapeHtml(r.duval.zone) : "—"}</td>
@@ -766,7 +847,7 @@ function renderTrendRatioChart(rows, thresholds) {
             title: (items) => {
               if (!items.length) return "";
               const row = items[0].raw.row;
-              return row.prevDate ? `Δ ${trendFmtDate(row.prevDate)} → ${trendFmtDate(row.date)}` : trendFmtDate(row.date);
+              return `#${row.seq} ` + (row.prevDate ? `Δ ${trendFmtDate(row.prevDate)} → ${trendFmtDate(row.date)}` : trendFmtDate(row.date));
             },
             label: (item) => `${item.dataset.label}: ${item.raw.censored ? "< 0,01" : trendFmtRatio(item.raw.y)}`,
             afterBody: (items) => {
@@ -794,12 +875,23 @@ function trendSvg(tag, attrs, text) {
   return el;
 }
 
+/** Chú giải ý nghĩa mã khiếm khuyết (dùng chung cho cột Bảng 66 và vùng Duval), ô màu theo màu vùng Duval. */
+function renderTrendFaultCodeLegend(th) {
+  const box = $("trFaultCodeLegend");
+  if (!box) return;
+  box.innerHTML = TREND_FAULT_CODE_NOTES.map((n) => {
+    const color = th.zone ? th.zone[n.key] : "transparent";
+    return `<li><span class="fault-code-swatch" style="background:${escapeHtml(color)}"></span><strong>${escapeHtml(n.code)}</strong> — ${escapeHtml(n.text)}</li>`;
+  }).join("") + '<li><span class="fault-code-swatch"></span><strong>Ngoài bảng</strong> — (chỉ cột Bảng 66) tổ hợp 3 tỷ số không khớp mã nào của Bảng 66; xem vùng Duval.</li>';
+}
+
 /** Tam giác Duval 1 phẳng (2D) + quỹ đạo các lần đo theo thời gian. Vùng lấy từ d54DuvalZones() (Bảng 67 hiện hành). */
 function renderTrendDuval(rows) {
   const svg = $("trDuvalSvg");
   if (!svg) return;
   svg.replaceChildren();
   const th = trendFaultTheme();
+  renderTrendFaultCodeLegend(th);
   const surface = trendSurfaceColor();
   const H = 50 * Math.sqrt(3);
   // (a = %C2H2, e = %C2H4) -> tọa độ SVG (y hướng xuống). Đỉnh CH4 trên, C2H2 dưới-trái, C2H4 dưới-phải.
@@ -828,7 +920,7 @@ function renderTrendDuval(rows) {
   corner(cC2H2, "C2H2", -1, 6, "start");
   corner(cC2H4, "C2H4", 1, 6, "end");
 
-  const pts = rows.map((r, i) => ({ r, n: i + 1 })).filter((p) => p.r.duval);
+  const pts = rows.filter((r) => r.duval).map((r) => ({ r, n: r.seq }));
   if (pts.length === 0) return;
   const xy = (p) => P(p.r.duval.pctC2H2, p.r.duval.pctC2H4);
   if (pts.length > 1) {

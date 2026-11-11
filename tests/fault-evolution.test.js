@@ -94,7 +94,7 @@ describe("bang66RatioThresholds", () => {
 
 describe("Giao diện tab Xu hướng", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
-  test.each(["trFaultWrap", "tr_faultBasis", "tr_faultPhase", "trRatioChart", "trDuvalSvg", "trFaultBody"])("có phần tử #%s", (id) => {
+  test.each(["trFaultWrap", "tr_faultBasis", "tr_faultPhase", "trRatioChart", "trDuvalSvg", "trFaultBody", "trFaultTickAll", "trFaultNoneTicked", "trFaultCodeLegend"])("có phần tử #%s", (id) => {
     expect(html).toContain(`id="${id}"`);
   });
 });
