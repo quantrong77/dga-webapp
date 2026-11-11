@@ -478,14 +478,20 @@ Lọc hoặc thay dầu làm nồng độ khí hòa tan giảm đột ngột, n�
 
 ### 12.4. Diễn biến loại khiếm khuyết (Bảng 66 và tam giác Duval)
 
-Ba tỷ số C2H2/C2H4, CH4/H2, C2H4/C2H6 (Bảng 66 = Table 1 IEC 60599) và tam giác Duval cho biết **loại** khiếm khuyết (PD, D1, D2, T1, T2, T3), không cho biết mức độ. Mức độ xem ở nồng độ và tốc độ tăng. Theo dõi chúng theo thời gian giúp thấy khiếm khuyết có **đổi bản chất** không, ví dụ quá nhiệt nóng dần lên (T2 → T3) hay xuất hiện phóng điện.
+Ba tỷ số C2H2/C2H4, CH4/H2, C2H4/C2H6 và tam giác Duval cho biết **loại** khiếm khuyết, không cho biết mức độ. Mức độ xem ở nồng độ và tốc độ tăng. Theo dõi chúng theo thời gian giúp thấy khiếm khuyết có **đổi bản chất** không, ví dụ quá nhiệt nóng dần lên hay xuất hiện phóng điện.
+
+Bảng 66 Điều 54 QĐ1901 gồm 2 phần, app tra cả hai:
+
+- **Phần 9 dòng** (mốc 0,1 – 1 – 3): bình thường, phóng điện cục bộ năng lượng thấp/cao, phóng điện năng lượng thấp/cao, khuyết tật nhiệt <150 °C, 150–300 °C, 300–700 °C, >700 °C. Văn bản không nói rõ biên, app quy ước **cận dưới tính vào, cận trên không tính** (ví dụ "0,1–1" là 0,1 ≤ tỷ số < 1). Tổ hợp không khớp dòng nào ghi **Ngoài bảng**.
+- **Phần PD/D1/D2/T1/T2/T3** (= Table 1 IEC 60599). Không khớp mã nào thì dùng bảng sơ bộ PD/D/T ngay dưới.
 
 Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi thiết bị có số liệu khí hòa tan, gồm:
 
-- **Biểu đồ 3 tỷ số** theo thời gian, mỗi tỷ số một dải, trục logarit. Vạch đứt ngang là các mốc ngưỡng của Bảng 66 (theo cấu hình quy định hiện hành).
-- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất.
-- **Bảng từng lần đo**: 3 tỷ số, mã theo Bảng 66, vùng Duval và điều kiện áp dụng. Lần đo mà mã Bảng 66 khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
-- **Chọn lần đo hiển thị**: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên biểu đồ tỷ số và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Số thứ tự của điểm vẫn giữ theo bảng. Đổi thiết bị hoặc pha thì tick lại hết.
+- **Đồ thị 3 tỷ số** theo thời gian, vẽ chung một trục tung. Ô **Thang trục tung** chọn **Logarit 0,01–10** (mặc định, cùng thang với Biểu đồ 1, 2 Điều 54) hoặc **Tuyến tính 0–10**; app nhớ lựa chọn. Vạch đứt ngang là các mốc **0,1 – 1 – 3** của phần 9 dòng, bên cạnh ghi mốc đó dùng cho tỷ số nào (C2H2/C2H4 dùng 0,1 và 3; CH4/H2 dùng 0,1 và 1; C2H4/C2H6 dùng 1 và 3). Tỷ số lớn hơn 10 vẽ **▲** ở đỉnh.
+- **Dải mã** ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn **9 dòng** / **IEC** / **Duval**. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.
+- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.
+- **Bảng từng lần đo**: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
+- **Chọn lần đo hiển thị**: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên đồ thị và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Đổi thiết bị hoặc pha thì tick lại hết.
 - **Ý nghĩa mã khiếm khuyết** ngay dưới tam giác:
 
   | Mã | Dạng khiếm khuyết |
@@ -497,16 +503,23 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
   | T2 | Quá nhiệt 300–700 °C: tiếp xúc xấu ở mối nối/bộ chuyển nấc, dòng xoáy |
   | T3 | Quá nhiệt trên 700 °C: dòng tuần hoàn trong lõi/vỏ thùng, chạm lõi nhiều điểm |
   | D+T | Hỗn hợp phóng điện và quá nhiệt (ranh giới không phân định rõ trên tam giác Duval) |
-  | Ngoài bảng | Chỉ ở cột Bảng 66: tổ hợp 3 tỷ số không khớp mã nào — xem vùng Duval |
+  | Ngoài bảng | Tổ hợp 3 tỷ số không khớp dòng/mã nào của Bảng 66 — xem vùng Duval |
+
+**Phiếu đối chiếu từng lần đo:** bấm vào một điểm trên đồ thị, một ô ở dải mã, hoặc một dòng trong bảng để mở phiếu của lần đo đó. Phiếu gồm:
+
+1. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
+2. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định: ô xanh ✓ là tỷ số nằm trong khoảng của ô, ô xám là không; dòng khớp đủ 3 ô được viền xanh, kèm cột ví dụ điển hình.
+3. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách (ô NS = không xét); không khớp mã nào thì ghi kết quả bảng sơ bộ PD/D/T.
+4. **Các bước khác của Điều 54** theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
 
 Cách đọc:
 
 - **Điểm rỗng** (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.
-- **Tam giác ▽ ở đáy dải**: tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.
-- **Tính trên → Phần tăng giữa 2 lần đo (Δ)**: tỷ số tính trên lượng khí tăng thêm giữa hai lần đo liên tiếp. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể, để tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. App bỏ qua cặp có lọc/thay dầu ở giữa và cặp không có khí nào tăng.
+- **Tam giác ▽ ở đáy** (thang log): tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.
+- **Tính trên → Phần tăng giữa 2 lần đo (Δ)**: tỷ số tính trên lượng khí tăng thêm giữa hai lần đo liên tiếp. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể, để tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. App bỏ qua cặp có lọc/thay dầu ở giữa và cặp không có khí nào tăng. Trong phiếu đối chiếu, các bước kiểm tra nồng độ vẫn dùng giá trị đo của lần đo sau.
 - Thiết bị có nhiều pha: chọn từng pha ở ô **Pha**.
 
-> Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599.
+> Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599. Phiếu đối chiếu chỉ hỗ trợ — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).
 
 ---
 

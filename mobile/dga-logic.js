@@ -971,6 +971,103 @@ function diagnoseDuval1(gases, kphGases) {
 
 
 // ---------------------------------------------------------------------------
+// 5b) Bảng 66 — PHẦN TRÊN (9 dòng, mốc 0,1 – 1 – 3) của Điều 54 QĐ1901. Phần DƯỚI của cùng Bảng 66
+//     (PD/D1/D2/T1/T2/T3 = Table 1 IEC 60599) tra bằng diagnoseRatios() ở trên.
+//     Văn bản không nói rõ cận nào được tính vào → quy ước: CẬN DƯỚI TÍNH VÀO, CẬN TRÊN KHÔNG TÍNH
+//     (vd "0,1–1" = 0,1 ≤ x < 1; ">1" = x ≥ 1; "<0,1" = x < 0,1). Mỗi khoảng [lo, hi], null = không giới hạn.
+//     Tổ hợp không khớp dòng nào (vd <0,1 / <0,1 / 1–3) → "Ngoài bảng".
+//     family: nhóm màu dùng chung với mã IEC/Duval để hiển thị (N = bình thường).
+// ---------------------------------------------------------------------------
+const QD1901_BANG66_CODE9 = [
+  { id: 1, short: "Bình thường", family: "N", label: "Tình trạng bình thường", g: [null, 0.1], h: [0.1, 1], i: [null, 1],
+    example: "Tình trạng già hoá bình thường." },
+  { id: 2, short: "PD thấp", family: "PD", label: "Phóng điện cục bộ năng lượng thấp", g: [null, 0.1], h: [null, 0.1], i: [null, 1],
+    example: "Phóng điện trong các khoảng khí tạo ra bởi dầu không thấm hết hoặc ẩm cách điện." },
+  { id: 3, short: "PD cao", family: "PD", label: "Phóng điện cục bộ năng lượng cao", g: [0.1, 3], h: [null, 0.1], i: [null, 1],
+    example: "Phóng điện trong các khoảng khí tạo ra bởi dầu không thấm hết hoặc ẩm cách điện và dẫn đến để lại vết hoặc thủng cách điện." },
+  { id: 4, short: "PĐ thấp", family: "D1", label: "Phóng điện năng lượng thấp", g: [0.1, null], h: [0.1, 1], i: [1, 3],
+    example: "Phát tia lửa điện liên tục trong dầu giữa các chỗ nối điện thế khác nhau hoặc điện thế trôi. Chọc thủng dầu giữa các chất liệu cứng." },
+  { id: 5, short: "PĐ cao", family: "D2", label: "Phóng điện năng lượng cao", g: [0.1, 3], h: [0.1, 1], i: [3, null],
+    example: "Phóng điện hồ quang; tia lửa điện; chọc thủng dầu giữa các cuộn dây hoặc các bối dây hoặc giữa các bối dây với đất." },
+  { id: 6, short: "Nhiệt <150", family: "T1", label: "Khuyết tật nhiệt độ thấp (<150°C)", g: [null, 0.1], h: [0.1, 1], i: [1, 3],
+    example: "Quá nhiệt dây dẫn điện." },
+  { id: 7, short: "Nhiệt 150–300", family: "T1", label: "Khuyết tật tăng nhiệt trong khoảng nhiệt độ thấp (150–300°C)", g: [null, 0.1], h: [1, null], i: [null, 1],
+    example: "Quá nhiệt cục bộ lõi từ do tập trung từ thông. Sự tăng nhiệt của điểm nóng." },
+  { id: 8, short: "Nhiệt 300–700", family: "T2", label: "Khuyết tật tăng nhiệt trong khoảng nhiệt độ trung bình (300–700°C)", g: [null, 0.1], h: [1, null], i: [1, 3],
+    example: "Quá nhiệt cục bộ lõi từ do tập trung từ thông. Sự tăng nhiệt và tiếp tục tăng cao của điểm nóng." },
+  { id: 9, short: "Nhiệt >700", family: "T3", label: "Khuyết tật tăng nhiệt trong khoảng nhiệt độ cao (>700°C)", g: [null, 0.1], h: [1, null], i: [3, null],
+    example: "Điểm nóng trong lõi từ; quá nhiệt đồng do dòng Phucô, tiếp điểm kém; dòng quẩn trong lõi từ hoặc vỏ máy." },
+];
+// Các mốc của phần 9 dòng — vạch ngang trên đồ thị xu hướng 3 tỷ số.
+const BANG66_CODE9_MARKS = [0.1, 1, 3];
+
+function bang66NumText(v) {
+  return String(v).replace(".", ",");
+}
+
+function bang66BandText(band) {
+  const [lo, hi] = band;
+  if (lo === null) return `< ${bang66NumText(hi)}`;
+  if (hi === null) return `> ${bang66NumText(lo)}`;
+  return `${bang66NumText(lo)}–${bang66NumText(hi)}`;
+}
+
+function bang66InBand(v, band) {
+  const [lo, hi] = band;
+  return (lo === null || v >= lo) && (hi === null || v < hi);
+}
+
+function bang66RatiosOk(ratios) {
+  return Boolean(ratios) && ["c2h2_c2h4", "ch4_h2", "c2h4_c2h6"].every((k) => Number.isFinite(ratios[k]));
+}
+
+/**
+ * Tra phần 9 dòng của Bảng 66. Trả về từng dòng kèm kết quả từng ô (để hiển thị đối chiếu) và dòng khớp.
+ * @param {{c2h2_c2h4:number, ch4_h2:number, c2h4_c2h6:number}} ratios giá trị THỰC (không dùng quy ước 999)
+ * @returns {{rows:Array, match:object|null}|null} null nếu thiếu tỷ số
+ */
+function diagnoseBang66Code9(ratios) {
+  if (!bang66RatiosOk(ratios)) return null;
+  const v = { g: ratios.c2h2_c2h4, h: ratios.ch4_h2, i: ratios.c2h4_c2h6 };
+  const rows = QD1901_BANG66_CODE9.map((r) => {
+    const cells = {};
+    ["g", "h", "i"].forEach((k) => { cells[k] = { text: bang66BandText(r[k]), ok: bang66InBand(v[k], r[k]) }; });
+    return { id: r.id, short: r.short, family: r.family, label: r.label, example: r.example, cells, match: cells.g.ok && cells.h.ok && cells.i.ok };
+  });
+  return { rows, match: rows.find((r) => r.match) || null };
+}
+
+/**
+ * Từng ô của phần DƯỚI Bảng 66 (PD/D1/D2/T1/T2/T3 = Table 1 IEC 60599) — cùng điều kiện so sánh với
+ * diagnoseRatios() (ngưỡng hiện hành QD1901_BANG66_TABLE1, ngưỡng PD theo loại thiết bị). Ô "NS" = không xét.
+ * @returns {Array<{code, label, cells:{g,h,i}, match:boolean}>|null}
+ */
+function bang66IecCells(ratios, pdThreshold) {
+  if (!bang66RatiosOk(ratios)) return null;
+  const T = QD1901_BANG66_TABLE1;
+  const pd = pdThreshold === undefined || pdThreshold === null ? DEFAULT_PD_THRESHOLD : pdThreshold;
+  const t = bang66NumText;
+  const lt = (x) => ({ test: (v) => v < x, text: `< ${t(x)}` });
+  const gt = (x) => ({ test: (v) => v > x, text: `> ${t(x)}` });
+  const rng = (a, b) => ({ test: (v) => v >= a && v <= b, text: `${t(a)}–${t(b)}` });
+  const ns = { test: () => true, text: "NS", ns: true };
+  const defs = [
+    { code: "PD", label: "Phóng điện cục bộ", g: ns, h: lt(pd), i: lt(T.PD.i_max) },
+    { code: "D1", label: "Phóng điện năng lượng thấp", g: gt(T.D1.g_min), h: rng(T.D1.h_min, T.D1.h_max), i: gt(T.D1.i_min) },
+    { code: "D2", label: "Phóng điện năng lượng cao", g: rng(T.D2.g_min, T.D2.g_max), h: rng(T.D2.h_min, T.D2.h_max), i: gt(T.D2.i_min) },
+    { code: "T1", label: "Lỗi tăng nhiệt ở nhiệt độ thấp (<300°C)", g: ns, h: gt(T.T1.h_min), i: lt(T.T1.i_max) },
+    { code: "T2", label: "Lỗi tăng nhiệt ở nhiệt độ trung bình (300–700°C)", g: lt(T.T2.g_max), h: gt(T.T2.h_min), i: rng(T.T2.i_min, T.T2.i_max) },
+    { code: "T3", label: "Lỗi tăng nhiệt ở nhiệt độ cao (>700°C)", g: lt(T.T3.g_max), h: gt(T.T3.h_min), i: gt(T.T3.i_min) },
+  ];
+  const v = { g: ratios.c2h2_c2h4, h: ratios.ch4_h2, i: ratios.c2h4_c2h6 };
+  return defs.map((d) => {
+    const cells = {};
+    ["g", "h", "i"].forEach((k) => { cells[k] = { text: d[k].text, ok: d[k].test(v[k]), ns: Boolean(d[k].ns) }; });
+    return { code: d.code, label: d.label, cells, match: cells.g.ok && cells.h.ok && cells.i.ok };
+  });
+}
+
+// ---------------------------------------------------------------------------
 // 6b) Diễn biến LOẠI khiếm khuyết theo thời gian (tab Xu hướng): 3 tỷ số Bảng 66 / Table 1
 //     IEC 60599 + vị trí trên Tam giác Duval 1 của từng lần đo.
 //     Tỷ số cho biết LOẠI khiếm khuyết, không cho biết mức độ (mức độ xem nồng độ/tốc độ tăng).
@@ -1050,6 +1147,14 @@ function buildFaultEvolution(series, opts) {
       }, pd);
       code = codeLabel === NO_DIAGNOSIS ? "Ngoài bảng" : codeLabel.split(" - ")[0];
     }
+    // Phần 9 dòng của Bảng 66 (mốc 0,1 – 1 – 3) — tra trên giá trị THỰC (raw), kể cả tỷ số < 0,01.
+    let code9 = null;
+    if (RATIO_TREND_DEFS.every((d) => ratios[d.key])) {
+      const res = diagnoseBang66Code9({ c2h2_c2h4: ratios.c2h2_c2h4.raw, ch4_h2: ratios.ch4_h2.raw, c2h4_c2h6: ratios.c2h4_c2h6.raw });
+      code9 = res.match
+        ? { id: res.match.id, short: res.match.short, family: res.match.family, label: res.match.label }
+        : { id: null, short: "Ngoài bảng", family: null, label: "Không khớp dòng nào của phần 9 dòng Bảng 66" };
+    }
 
     let duval = null;
     if (gases.CH4 >= 0 && gases.C2H4 >= 0 && gases.C2H2 >= 0) {
@@ -1057,7 +1162,7 @@ function buildFaultEvolution(series, opts) {
       if (pct) duval = { ...pct, ...classifyDuval1(pct), xy: duvalPlotXY(pct) };
     }
 
-    rows.push({ date: cur.date, prevDate, gases, ratios, code, codeLabel, duval, applicable: (cur.exceedCount || 0) > 0 });
+    rows.push({ index: i, date: cur.date, prevDate, gases, ratios, code, codeLabel, code9, duval, applicable: (cur.exceedCount || 0) > 0 });
   });
   return rows;
 }
@@ -4247,7 +4352,7 @@ if (typeof module !== "undefined" && module.exports) {
       QD1901_BANG66_TABLE1, QD1901_BANG66_PDT, IEC_A10_BUSHING_RATIOS, QD1901_BANG67_DUVAL,
       DIEU54_OLTC_C2H2_H2, DIEU54_ADDITIONAL_RATIOS, PD_THRESHOLD_BY_TYPE,
       computeTcgRateOfChange,
-      normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1, RATIO_TREND_FLOOR, RATIO_TREND_DEFS, bang66RatioThresholds, buildFaultEvolution,
+      normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1, RATIO_TREND_FLOOR, RATIO_TREND_DEFS, bang66RatioThresholds, buildFaultEvolution, QD1901_BANG66_CODE9, BANG66_CODE9_MARKS, diagnoseBang66Code9, bang66IecCells,
       QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
       dieu54AdvisoryMessages, dieu54ActionMessages, dieu54AdditionalFlags, dieu54Applies, buildRecommendations, computeOverallStatus,
       OIL_VOLTAGE_CLASSES, OIL_VOLTAGE_CLASS_LEGACY_LABELS, oilVoltageClassName, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
@@ -4294,7 +4399,7 @@ if (typeof module !== "undefined" && module.exports) {
       QD1901_BANG66_TABLE1, QD1901_BANG66_PDT, IEC_A10_BUSHING_RATIOS, QD1901_BANG67_DUVAL,
       DIEU54_OLTC_C2H2_H2, DIEU54_ADDITIONAL_RATIOS, PD_THRESHOLD_BY_TYPE,
     computeTcgRateOfChange,
-    normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1, RATIO_TREND_FLOOR, RATIO_TREND_DEFS, bang66RatioThresholds, buildFaultEvolution,
+    normalizeDuval, classifyDuval1, duvalPlotXY, diagnoseDuval1, RATIO_TREND_FLOOR, RATIO_TREND_DEFS, bang66RatioThresholds, buildFaultEvolution, QD1901_BANG66_CODE9, BANG66_CODE9_MARKS, diagnoseBang66Code9, bang66IecCells,
     QD1901_BANG63_TDGC, computeTotalDissolvedGasPercent, evaluateBang63, diagnoseAdditionalRatios,
     dieu54AdvisoryMessages, dieu54ActionMessages, dieu54AdditionalFlags, dieu54Applies, buildRecommendations, computeOverallStatus,
     OIL_VOLTAGE_CLASSES, OIL_VOLTAGE_CLASS_LEGACY_LABELS, oilVoltageClassName, BANG54_BDV, BANG55_TGD90, bang58WaterLimits, resolveOilLimits, evaluateOilTest,
