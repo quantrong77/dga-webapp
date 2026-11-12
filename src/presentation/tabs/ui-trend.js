@@ -343,27 +343,56 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
   $("trParamsOilWrap").classList.toggle("hidden", !hasOil);
   $("trParamsOltcWrap").classList.toggle("hidden", !hasOltc);
 
-  const buildChecks = (containerId, keys) => {
+  const buildChecks = (containerId, keys, allKeys) => {
     const el = $(containerId);
-    el.innerHTML = keys.map((key) => {
+    // Ô "Tất cả khí" (đầu hàng chip khí hòa tan): tick/bỏ tick cùng lúc 7 khí thành phần (DGA.GASES). Không gồm N2/O2
+    // (hàng chục nghìn ppm — đè dẹt các khí khác trên cùng trục) và 2 chỉ tiêu tổng hợp TCG / Tổng khí hòa tan.
+    // Tick 1 phần → trạng thái "đang chọn một phần" (indeterminate).
+    const allChip = allKeys && allKeys.length
+      ? `<label class="chk chk-all" title="Tick/bỏ tick cùng lúc ${allKeys.length} khí thành phần (${allKeys.map((k) => TREND_PARAM_DEFS[k].label).join(", ")}). N2, O2, TCG, Tổng khí hòa tan chọn riêng."><input type="checkbox" data-trend-all="1" /> Tất cả khí (${allKeys.length})</label>`
+      : "";
+    el.innerHTML = allChip + keys.map((key) => {
       const def = TREND_PARAM_DEFS[key];
       const checked = _trendSelectedParams.has(key) ? "checked" : "";
       // Icon cạnh tên khí CHỈ áp dụng cho 7 khí chính trong DGA.GASES — N2/O2/TCG/Bảng 63
       // (cùng nhóm "gas:..." vì đọc từ gasRecords, nhưng không phải khí phân hủy đơn lẻ)
       // và nhóm "oil:"/"oltc:" (nhãn mô tả, vd "Độ ẩm dầu chính") không có icon.
       const icon = key.startsWith("gas:") && DGA.GASES.includes(key.slice(4)) ? gasLabelIcon(key.slice(4)) : "";
-      return `<label class="chk"><input type="checkbox" data-trend-key="${key}" ${checked} /> ${icon}${escapeHtml(def.label)}</label>`;
+      // Chip khí hòa tan: chuột phải (giữ ngón tay trên điện thoại) → ô tiêu chuẩn (setupTrendStdPopover()).
+      const std = key.startsWith("gas:") ? ` data-std-key="${key}" title="Chuột phải để xem tiêu chuẩn của ${escapeHtml(def.label)}"` : "";
+      return `<label class="chk"${std}><input type="checkbox" data-trend-key="${key}" ${checked} /> ${icon}${escapeHtml(def.label)}</label>`;
     }).join("");
+    const master = el.querySelector("input[data-trend-all]");
+    const syncMaster = () => {
+      if (!master) return;
+      const n = allKeys.filter((k) => _trendSelectedParams.has(k)).length;
+      master.checked = n === allKeys.length;
+      master.indeterminate = n > 0 && n < allKeys.length;
+      master.setAttribute("aria-checked", master.indeterminate ? "mixed" : String(master.checked));
+    };
     el.querySelectorAll("input[data-trend-key]").forEach((cb) => {
       cb.addEventListener("change", () => {
         if (cb.checked) _trendSelectedParams.add(cb.dataset.trendKey);
         else _trendSelectedParams.delete(cb.dataset.trendKey);
+        syncMaster();
         renderTrendChart(gasRecords, oilRecords, oltcRecords);
       });
     });
+    if (master) {
+      master.addEventListener("change", () => {
+        allKeys.forEach((k) => (master.checked ? _trendSelectedParams.add(k) : _trendSelectedParams.delete(k)));
+        el.querySelectorAll("input[data-trend-key]").forEach((cb) => {
+          if (allKeys.includes(cb.dataset.trendKey)) cb.checked = master.checked;
+        });
+        syncMaster();
+        renderTrendChart(gasRecords, oilRecords, oltcRecords);
+      });
+      syncMaster();
+    }
   };
 
-  if (hasGas) buildChecks("trParamsGas", [...DGA.GASES.map((g) => "gas:" + g), "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"]);
+  const gasComponentKeys = DGA.GASES.map((g) => "gas:" + g);
+  if (hasGas) buildChecks("trParamsGas", [...gasComponentKeys, "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"], gasComponentKeys);
   // Chỉ liệt kê chỉ tiêu bổ sung mà thiết bị này THỰC SỰ có số liệu (tránh danh sách dài toàn ô trống)
   const oilExtKeys = TREND_OIL_EXT_DEFS().filter((d) => oilRecords.some((r) => r[d.field] !== null && r[d.field] !== undefined && r[d.field] !== ""))
     .map((d) => "oil:" + d.key);
@@ -487,6 +516,7 @@ const trendLineLabelsPlugin = {
 
     ctx.save();
     ctx.font = TREND_LABEL_FONT;
+    chart.$trendLabelBoxes = []; // vị trí nhãn tên khí — chuột phải trúng nhãn → ô tiêu chuẩn (trendStdKeyAtChartPoint())
 
     // Nhãn của đường đang chọn — đặt trước để luôn có chỗ, vẽ sau cùng để nằm trên.
     let selDraw = null;
@@ -502,6 +532,7 @@ const trendLineLabelsPlugin = {
         if (box.x + box.w > chart.width - 2) box = trendLabelBox(ctx, ds.shortLabel, px, anchorY, "left");
         selDraw = { box, color: ds.trendColor, px, py };
         placed.push(box);
+        chart.$trendLabelBoxes.push({ ...box, datasetIndex: sel.datasetIndex });
       }
     }
 
@@ -518,6 +549,7 @@ const trendLineLabelsPlugin = {
           const box = trendLabelBox(ctx, ds.shortLabel, last.x, last.y + dy, side);
           if (!blocked(box)) {
             placed.push(box);
+            chart.$trendLabelBoxes.push({ ...box, datasetIndex: i });
             trendDrawLabel(ctx, box, ds.trendColor, false);
             return;
           }
@@ -577,22 +609,11 @@ function onTrendChartClick(evt, chart) {
   const ex = evt.x;
   const ey = evt.y;
   if (!Number.isFinite(ex) || !Number.isFinite(ey)) return;
-  const cands = [];
-  chart.data.datasets.forEach((ds, i) => {
-    if (!chart.isDatasetVisible(i)) return;
-    const pts = trendDrawnPoints(chart, i);
-    let best = pts.length === 1 ? { d: Math.hypot(ex - pts[0].x, ey - pts[0].y), x: pts[0].x, y: pts[0].y } : null;
-    for (let k = 0; k + 1 < pts.length; k++) {
-      const r = trendDistToSegment(ex, ey, pts[k], pts[k + 1]);
-      if (!best || r.d < best.d) best = r;
-    }
-    if (best && best.d <= TREND_PICK_RADIUS) cands.push({ i, ...best });
-  });
+  const cands = trendPickCandidates(chart, ex, ey);
   if (cands.length === 0) {
     if (_trendSelected) setTrendSelection(chart, null);
     return;
   }
-  cands.sort((a, b) => a.d - b.d);
   const near = cands.filter((c) => c.d <= cands[0].d + TREND_PICK_TIE);
   let pick = near[0];
   // Nhiều đường chồng nhau và đang chọn 1 trong số đó → chuyển sang đường kế tiếp.
@@ -1170,6 +1191,26 @@ function trendCheckCell(c) {
   return `<td class="${c.ok ? "chk-ok" : "chk-no"}">${c.ok ? "✓ " : ""}${escapeHtml(c.text)}</td>`;
 }
 
+/** Chú giải các bảng tra Bảng 66 trong phiếu đối chiếu (đặt NGAY TRÊN bảng đầu tiên, trước đây là 1 câu chữ ở cuối
+ *  phiếu, cách xa bảng và không nói ô được so với cái gì). Nói rõ: mỗi ô = 1 KHOẢNG giá trị của 1 tỷ số, so với tỷ số
+ *  CỦA LẦN ĐO NÀY (ghi luôn 3 giá trị); kèm ô mẫu đúng kiểu hiển thị trong bảng. Hàm thuần (có test). */
+function trendBang66LegendHtml(ratios) {
+  const r = ratios || {};
+  const val = (x) => (x && x.value !== null && x.value !== undefined ? trendFmtRatio(x.value) : "—");
+  return `<div class="chk-legend" role="note">
+      <p class="chk-legend-lead"><strong>Cách đọc các bảng dưới:</strong> mỗi ô là 1 khoảng giá trị của tỷ số ở đầu cột, đem so với
+        tỷ số của lần đo này: <strong class="chk-ratio">C2H2/C2H4 = ${val(r.c2h2_c2h4)}</strong> · <strong class="chk-ratio">CH4/H2 = ${val(r.ch4_h2)}</strong> ·
+        <strong class="chk-ratio">C2H4/C2H6 = ${val(r.c2h4_c2h6)}</strong>.</p>
+      <ul class="chk-legend-keys">
+        <li class="chk-key"><span class="chk-sample chk-ok">✓ 0,1–1</span> tỷ số <strong>nằm trong</strong> khoảng của ô</li>
+        <li class="chk-key"><span class="chk-sample chk-no">&lt; 0,1</span> <strong>không nằm trong</strong> khoảng</li>
+        <li class="chk-key"><span class="chk-sample chk-ns">NS</span> không xét tỷ số này</li>
+        <li class="chk-key"><span class="chk-sample chk-row">← khớp</span> dòng có đủ các ô ✓ (khung xanh) = dạng khiếm khuyết khớp</li>
+      </ul>
+      <p class="chk-legend-foot">Phần 9 dòng: cận dưới tính vào, cận trên không tính (VD tỷ số đúng 0,1 thuộc ô "0,1–1", không thuộc ô "&lt; 0,1").</p>
+    </div>`;
+}
+
 function renderTrendFaultCard() {
   const card = $("trFaultCard");
   const view = _trendFaultView;
@@ -1280,35 +1321,120 @@ function renderTrendFaultCard() {
   const top69 = QD1901_BANG69.filter((r) => factor(r.gas) > 1).sort((a, b) => factor(b.gas) - factor(a.gas))[0] || null;
   const step8 = `<ul class="bang69-list">${QD1901_BANG69.map((r) => `<li class="${top69 && r.gas === top69.gas ? "match-row" : ""}"><strong>${escapeHtml(r.kind)}</strong> — ${escapeHtml(r.text)}${top69 && r.gas === top69.gas ? ` <em>← gợi ý: ${r.gas} vượt điển hình nhiều nhất (${trendFmtRatio(factor(r.gas))} lần)</em>` : ""}</li>`).join("")}</ul>`;
 
+  // ---- Trạng thái từng bước (màu: ok xanh · warn vàng · bad đỏ · info xanh dương · none xám) — chỉ để TRÌNH BÀY, không
+  //      đổi kết quả tra/đánh giá ở trên.
+  const st64 = exceed.length ? { st: "warn", v: `Vượt: ${exceed.join(", ")}` }
+    : DGA.gasesBelowTypicalLow(gases, type) ? { st: "info", v: "Thấp hơn điển hình" } : { st: "ok", v: "Trong khoảng điển hình" };
+  let st65 = { st: "none", v: "Chưa có lần đo trước" };
+  if (prevRec) {
+    const days = (new Date(rec.sample_date) - new Date(prevRec.sample_date)) / 86400000;
+    const rates = DGA.computeRateOfChange(recordGases(prevRec), gases, days, standard.rate, type);
+    const high = rates ? rates.filter((x) => x.ratePerYear > x.rangeHi) : [];
+    st65 = !rates ? { st: "none", v: "Không tính được" } : high.length ? { st: "warn", v: `Vượt: ${high.map((x) => x.gas).join(", ")}` } : { st: "ok", v: "Không vượt" };
+  }
+  const c9Match = c9 && c9.match;
+  const st66 = !c9 && !iec ? { st: "none", v: "Thiếu tỷ số" }
+    : iecMatch.length ? { st: "warn", v: iecMatch.map((r) => r.code).join(", "), sub: iecMatch.map((r) => r.label).join("; ") }
+      : c9Match && c9Match.id === 1 ? { st: "ok", v: "Bình thường", sub: "phần 9 dòng, dòng 1" }
+        : c9Match ? { st: "warn", v: `Dòng ${c9Match.id}`, sub: c9Match.label }
+          : simplified ? { st: "warn", v: `Sơ bộ: ${simplified.text}`, sub: "bảng PD/D/T" } : { st: "none", v: "Không xác định" };
+  const zoneTheme = trendFaultTheme();
+  const zoneColor = duv && zoneTheme.zone ? zoneTheme.zone[duv.zone] : null;
+  const stDuval = duv ? { st: "info", v: `Vùng ${duv.zone}`, sub: `CH4 ${duv.pctCH4.toFixed(0)}% · C2H4 ${duv.pctC2H4.toFixed(0)}% · C2H2 ${duv.pctC2H2.toFixed(0)}%`, swatch: zoneColor } : { st: "none", v: "Không tính được" };
+  const stOltc = oltc.ratio === null ? { st: "none", v: "Không tính được" }
+    : oltc.level === "likely" ? { st: "bad", v: "Nghi rõ nhiễm", sub: `C2H2/H2 = ${trendFmtRatio(oltc.ratio)} (> 3)` }
+      : oltc.level === "possible" ? { st: "warn", v: "Có thể nhiễm", sub: `C2H2/H2 = ${trendFmtRatio(oltc.ratio)} (2–3)` }
+        : { st: "ok", v: "Không nghi", sub: `C2H2/H2 = ${trendFmtRatio(oltc.ratio)} (≤ 2)` };
+  const R54 = DGA.DIEU54_ADDITIONAL_RATIOS || { o2n2_low: 0.3 };
+  const o2Low = add.o2_n2 !== null && add.o2_n2 < R54.o2n2_low;
+  const stAdd = add.co2coCase === "carbonization" ? { st: "warn", v: "Nghi giấy carbon hóa", sub: `CO2/CO = ${trendFmtRatio(add.co2_co)}` }
+    : add.co2coCase === "overheat" ? { st: "warn", v: "Nghi quá nhiệt nhẹ", sub: `CO2/CO = ${trendFmtRatio(add.co2_co)}` }
+      : o2Low ? { st: "warn", v: "Tiêu thụ oxy cao", sub: `O2/N2 = ${trendFmtRatio(add.o2_n2)}` }
+        : add.co2_co === null && add.o2_n2 === null ? { st: "none", v: "Không đủ dữ liệu" } : { st: "ok", v: "Không có dấu hiệu" };
+  const st68 = code68 ? { st: "info", v: code68 } : { st: "none", v: "Chưa xác định mã" };
+  const st69 = top69 ? { st: "info", v: `Gợi ý: ${top69.gas}` } : { st: "none", v: "Không khí nào vượt" };
+
+  const ST_TEXT = { ok: "Ổn", warn: "Cần lưu ý", bad: "Nghiêm trọng", info: "Kết quả", none: "Không xét" };
+  // Bảng 69 không có khí nào vượt điển hình: không có gợi ý, nhưng vẫn liệt kê 4 dạng để tham khảo.
+  const stepPill = (id, x) => (id === "b69" && x.st === "none" ? "Không có gợi ý" : ST_TEXT[x.st]);
+  const idp = `fc${row.seq}-`;
+  const tile = (id, label, x) => `<a class="fc-tile st-${x.st}" href="#${idp}${id}" data-fc-jump="${idp}${id}">
+      <span class="fc-tile-label">${escapeHtml(label)}</span>
+      <span class="fc-tile-value">${x.swatch ? `<i class="fc-swatch" style="background:${escapeHtml(x.swatch)}"></i>` : ""}${escapeHtml(x.v)}</span>
+      ${x.sub ? `<span class="fc-tile-sub">${escapeHtml(x.sub)}</span>` : ""}</a>`;
+  const summary = `<div class="fc-summary" role="list" aria-label="Tóm tắt kết quả đối chiếu">
+      ${[["b64", isMba ? "Giá trị điển hình (Bảng 64)" : "Giá trị điển hình", st64], ["b65", "Tốc độ tăng (Bảng 65)", st65],
+          ["b66", "Bảng 66", st66], ["duval", "Tam giác Duval", stDuval], ["oltc", "Nhiễm khí từ OLTC", stOltc],
+          ["add", "Tỷ lệ bổ sung", stAdd]].map(([id, l, x]) => `<div role="listitem">${tile(id, l, x)}</div>`).join("")}
+    </div>`;
+
+  // Chip khí đo: khí vượt giá trị điển hình tô vàng (title = giá trị điển hình).
+  const gasChips = `<div class="fc-gases">${DGA.GASES.map((g) => {
+    const over = exceed.includes(g);
+    const tip = typical[g] !== null && typical[g] !== undefined ? `Giá trị điển hình ≤ ${fmtPpm(typical[g])} ppm` : "Không có giá trị điển hình";
+    return `<span class="fc-gas${over ? " is-over" : ""}" title="${escapeHtml(tip)}"><b>${g}</b> ${fmtPpm(gases[g])}${over ? ` <small>&gt; ${fmtPpm(typical[g])}</small>` : ""}</span>`;
+  }).join("")}<span class="fc-gas-unit">ppm</span></div>`;
+
   const steps = [
-    [`Giá trị điển hình (${isMba ? "Bảng 64" : "giá trị điển hình áp dụng cho loại thiết bị"})`, step1],
-    ["Tốc độ tăng hàm lượng khí (Bảng 65)", step2],
-    ["Kiểm tra nhiễm khí từ OLTC (C2H2/H2)", step3],
-    ["Tam giác Duval 1 (Biểu đồ 3)", step5],
-    ["Tỷ lệ bổ sung (CO2/CO, O2/N2)", step6],
-    ["Lỗi điển hình (Bảng 68)", step7],
-    ["Dạng hư hỏng theo khí chính (Bảng 69, gợi ý)", step8],
+    ["b64", `Giá trị điển hình (${isMba ? "Bảng 64" : "giá trị điển hình áp dụng cho loại thiết bị"})`, step1, st64],
+    ["b65", "Tốc độ tăng hàm lượng khí (Bảng 65)", step2, st65],
+    ["oltc", "Kiểm tra nhiễm khí từ OLTC (C2H2/H2)", step3, stOltc],
+    ["duval", "Tam giác Duval 1 (Biểu đồ 3)", step5, stDuval],
+    ["add", "Tỷ lệ bổ sung (CO2/CO, O2/N2)", step6, stAdd],
+    ["b68", "Lỗi điển hình (Bảng 68)", step7, st68],
+    ["b69", "Dạng hư hỏng theo khí chính (Bảng 69, gợi ý)", step8, st69],
   ];
+  const stepCards = steps.map(([id, t, body, x], i) => `<li class="fc-step st-${x.st}${id === "b69" ? " fc-step-wide" : ""}" id="${idp}${id}">
+      <div class="fc-step-head"><span class="fc-step-num" aria-hidden="true">${i + 1}</span><strong class="fc-step-title">${t}</strong>
+        <span class="fc-pill">${escapeHtml(stepPill(id, x))}</span></div>
+      <div class="fc-step-body">${body}</div></li>`).join("");
 
   card.innerHTML = `
-    <div class="fault-card-head">
-      <h3>Phiếu đối chiếu lần đo #${row.seq} — ${trendFmtDate(row.date)}${row.applicable ? "" : ' <span class="badge-muted">tham khảo</span>'}</h3>
+    <div class="fault-card-head fc-head">
+      <div class="fc-head-title">
+        <span class="fc-kicker">Phiếu đối chiếu Điều 54 · QĐ1901</span>
+        <h3>Lần đo #${row.seq} <span class="fc-date">${trendFmtDate(row.date)}</span>${row.applicable ? "" : ' <span class="badge-muted" title="Lần đo chưa có khí nào vượt giá trị điển hình — tỷ số chỉ để tham khảo">tham khảo</span>'}</h3>
+      </div>
       <button type="button" class="btn sm ghost" id="trFaultCardClose">Đóng</button>
     </div>
-    <p class="note">${basisNote} Khí (ppm): ${DGA.GASES.map((g) => `${g} ${fmtPpm(gases[g])}`).join(" · ")}.</p>
-    <div class="ratio-rulers">
-      ${trendRatioRulerHtml("C2H2/C2H4", row.ratios.c2h2_c2h4)}
-      ${trendRatioRulerHtml("CH4/H2", row.ratios.ch4_h2)}
-      ${trendRatioRulerHtml("C2H4/C2H6", row.ratios.c2h4_c2h6)}
-    </div>
-    <h4>Bảng 66 — phần 9 dòng (mốc 0,1 – 1 – 3)</h4>
-    ${table9}
-    <h4>Bảng 66 — phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599, ngưỡng hiện hành)</h4>
-    ${tableIec}
-    <h4>Các bước khác của Điều 54</h4>
-    <ol class="dieu54-steps">${steps.map(([t, b]) => `<li><strong>${t}:</strong> ${b}</li>`).join("")}</ol>
-    <p class="note">Ô xanh ✓ = tỷ số nằm trong khoảng của ô; ô xám = không nằm trong; NS = không xét. Quy ước biên phần 9 dòng:
-      cận dưới tính vào, cận trên không tính. Phiếu chỉ hỗ trợ đối chiếu — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>`;
+    ${summary}
+    <section class="fc-block">
+      <h4 class="fc-block-title"><span class="fc-block-icon" aria-hidden="true">◉</span>Số liệu lần đo</h4>
+      ${gasChips}
+      <p class="note fc-basis">${basisNote}</p>
+      <div class="ratio-rulers">
+        ${trendRatioRulerHtml("C2H2/C2H4", row.ratios.c2h2_c2h4)}
+        ${trendRatioRulerHtml("CH4/H2", row.ratios.ch4_h2)}
+        ${trendRatioRulerHtml("C2H4/C2H6", row.ratios.c2h4_c2h6)}
+      </div>
+    </section>
+    <details class="fc-block fc-collapsible" id="${idp}b66" open>
+      <summary class="fc-block-title fc-toggle"><span class="fc-block-icon" aria-hidden="true">▦</span>Bảng 66 — tra theo 3 tỷ số
+        <span class="fc-pill st-${st66.st}">${escapeHtml(st66.v)}</span></summary>
+      ${c9 || iec ? trendBang66LegendHtml(row.ratios) : ""}
+      <h5 class="fc-sub">Phần 9 dòng (mốc 0,1 – 1 – 3)</h5>
+      ${table9}
+      <h5 class="fc-sub">Phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599, ngưỡng hiện hành)</h5>
+      ${tableIec}
+    </details>
+    <section class="fc-block">
+      <h4 class="fc-block-title"><span class="fc-block-icon" aria-hidden="true">☰</span>Các bước khác của Điều 54</h4>
+      <ol class="fc-steps">${stepCards}</ol>
+    </section>
+    <p class="note fc-foot">Phiếu chỉ hỗ trợ đối chiếu — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>`;
+  // Bấm ô tóm tắt → cuộn tới phần chi tiết (không đổi URL/hash của app); mở khối Bảng 66 nếu đang thu gọn.
+  card.querySelectorAll("[data-fc-jump]").forEach((lnk) => {
+    lnk.addEventListener("click", (e) => {
+      e.preventDefault();
+      const t = document.getElementById(lnk.dataset.fcJump);
+      if (!t) return;
+      if (t.tagName === "DETAILS") t.open = true;
+      t.scrollIntoView({ behavior: "smooth", block: "start" });
+      t.classList.add("fc-flash");
+      setTimeout(() => t.classList.remove("fc-flash"), 1200);
+    });
+  });
+  card.classList.add("fc-card");
   card.classList.remove("hidden");
   $("trFaultCardClose").onclick = closeTrendFaultCard;
 }
@@ -1328,6 +1454,76 @@ function renderTrendFaultCodeLegend(th) {
     const color = th.zone ? th.zone[n.key] : "transparent";
     return `<li><span class="fault-code-swatch" style="background:${escapeHtml(color)}"></span><strong>${escapeHtml(n.code)}</strong> — ${escapeHtml(n.text)}</li>`;
   }).join("") + '<li><span class="fault-code-swatch"></span><strong>Ngoài bảng</strong> — (chỉ cột Bảng 66) tổ hợp 3 tỷ số không khớp mã nào của Bảng 66; xem vùng Duval.</li>';
+}
+
+/** Nội dung ô chú thích khi trỏ vào 1 vùng của tam giác Duval: mã + ý nghĩa (TREND_FAULT_CODE_NOTES, cùng nội dung với
+ *  danh sách "Ý nghĩa mã khiếm khuyết" bên cạnh) + các lần đo đang tick nằm trong vùng đó. Hàm thuần (có test). */
+function trendDuvalZoneTipHtml(zoneKey, rows) {
+  const note = TREND_FAULT_CODE_NOTES.find((n) => n.key === zoneKey);
+  if (!note) return "";
+  const inZone = (rows || []).filter((r) => r.duval && r.duval.zone === note.code);
+  const here = inZone.length
+    ? `<span class="duval-tip-here">${inZone.length} lần đo đang tick nằm trong vùng này: ${inZone.map((r) => "#" + r.seq).join(", ")}</span>`
+    : '<span class="duval-tip-here is-empty">Không có lần đo đang tick nằm trong vùng này</span>';
+  return `<strong class="duval-tip-code">${escapeHtml(note.code)}</strong> ${escapeHtml(note.text)}${here}`;
+}
+
+let _trendDuvalRows = [];
+
+/** Gắn 1 lần cho #trDuvalSvg: rê chuột (máy tính) hoặc chạm (điện thoại) vào vùng → hiện ô chú thích ngay cạnh con trỏ,
+ *  tô đậm vùng đó; rời khỏi vùng / chạm chỗ khác → ẩn. Điểm đo vẽ đè lên trên vẫn giữ chú thích riêng (<title>). */
+function setupTrendDuvalZoneTip(svg) {
+  if (!svg || svg.dataset.zoneTip) return;
+  svg.dataset.zoneTip = "1";
+  const fig = svg.closest("figure") || svg.parentElement;
+  let tip = document.getElementById("trDuvalTip");
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.id = "trDuvalTip";
+    tip.className = "duval-tip hidden";
+    tip.setAttribute("role", "tooltip");
+    fig.appendChild(tip);
+  }
+  let current = null;
+  const hide = () => {
+    tip.classList.add("hidden");
+    if (current) current.classList.remove("is-hover");
+    current = null;
+  };
+  const show = (poly, clientX, clientY) => {
+    if (current !== poly) {
+      if (current) current.classList.remove("is-hover");
+      current = poly;
+      poly.classList.add("is-hover");
+      tip.innerHTML = trendDuvalZoneTipHtml(poly.dataset.zone, _trendDuvalRows);
+    }
+    tip.classList.remove("hidden");
+    const box = fig.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    const h = tip.offsetHeight;
+    let left = clientX - box.left + 14;
+    if (left + w > box.width) left = Math.max(0, clientX - box.left - w - 14);
+    let top = clientY - box.top + 14;
+    if (top + h > box.height) top = Math.max(0, clientY - box.top - h - 14);
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+  };
+  const zoneAt = (e) => (e.target && e.target.closest ? e.target.closest("polygon.duval-zone") : null);
+  svg.addEventListener("pointermove", (e) => {
+    const z = zoneAt(e);
+    if (z) show(z, e.clientX, e.clientY);
+    else hide();
+  });
+  svg.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") hide(); });
+  // Điện thoại: chạm vào vùng để xem; chạm ra ngoài tam giác để ẩn.
+  svg.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "touch") return;
+    const z = zoneAt(e);
+    if (z) show(z, e.clientX, e.clientY);
+    else hide();
+  });
+  document.addEventListener("pointerdown", (e) => { if (!svg.contains(e.target) && !tip.contains(e.target)) hide(); }, true);
+  window.addEventListener("scroll", hide, { passive: true });
 }
 
 /** Tam giác Duval 1 phẳng (2D) + quỹ đạo các lần đo theo thời gian. Vùng lấy từ d54DuvalZones() (Bảng 67 hiện hành). */
@@ -1351,13 +1547,16 @@ function renderTrendDuval(rows) {
     d54DuvalZones().forEach((z) => {
       const color = th.zone[z.key];
       const pts = z.poly.map(([a, e]) => P(a, e).map((n) => n.toFixed(2)).join(",")).join(" ");
-      svg.appendChild(trendSvg("polygon", { points: pts, fill: color, "fill-opacity": 0.3, stroke: color, "stroke-opacity": 0.7, "stroke-width": 0.3 }));
+      svg.appendChild(trendSvg("polygon", { points: pts, fill: color, "fill-opacity": 0.3, stroke: color, "stroke-opacity": 0.7, "stroke-width": 0.3, class: "duval-zone", "data-zone": z.key }));
       const [la, le] = z.label || [1, 1];
       // PD: vùng rất nhỏ sát đỉnh CH4 — ghi nhãn lệch sang phải đỉnh.
       const [lx, ly] = z.label ? P(la, le) : [P(0, 0)[0] + 3, P(0, 0)[1] + 2];
-      svg.appendChild(trendSvg("text", { x: lx, y: ly, "font-size": 4, "font-weight": 700, fill: th.text, "fill-opacity": 0.75, "text-anchor": z.label ? "middle" : "start", "dominant-baseline": "middle" }, z.code));
+      svg.appendChild(trendSvg("text", { x: lx, y: ly, "font-size": 4, "font-weight": 700, fill: th.text, "fill-opacity": 0.75, "text-anchor": z.label ? "middle" : "start", "dominant-baseline": "middle", "pointer-events": "none" }, z.code));
     });
   }
+  // Trỏ chuột / chạm vào 1 vùng → ô chú thích ý nghĩa mã (trendDuvalZoneTipHtml()); đếm các lần đo đang tick nằm trong vùng.
+  _trendDuvalRows = rows;
+  setupTrendDuvalZoneTip(svg);
   const cCH4 = P(0, 0), cC2H4 = P(0, 100), cC2H2 = P(100, 0);
   svg.appendChild(trendSvg("polygon", { points: [cCH4, cC2H4, cC2H2].map((p) => p.join(",")).join(" "), fill: "none", stroke: th.muted, "stroke-width": 0.4 }));
   const corner = (p, text, dx, dy, anchor) => svg.appendChild(trendSvg("text", { x: p[0] + dx, y: p[1] + dy, "font-size": 4, "font-weight": 600, fill: th.text, "text-anchor": anchor }, text));
@@ -1435,67 +1634,198 @@ function trendPoints(records, valueOf) {
     .map((r) => ({ x: new Date(r.sample_date).getTime(), y: Number(valueOf(r)) }));
 }
 
-/** Ghi chú TIÊU CHUẨN cho các thông số khí đang tick (#trStdWrap, dưới đồ thị): 7 khí — ngưỡng đang áp dụng cho thiết bị
- *  (resolveStandard(), cùng nguồn với tab Khí hòa tan/dự báo, theo lần đo GẦN NHẤT) + tốc độ tăng Bảng 65 + ngưỡng loại bỏ
- *  NSX nếu có; N2/O2 — không có ngưỡng riêng; TCG — QĐ1901/IEC 60599 không quy định, ghi mốc IEEE C57.104-2008 để tham khảo;
- *  Bảng 63 — ngưỡng theo cấp điện áp + điều kiện áp dụng. Chỉ hiển thị, không đổi cách đánh giá. */
-function renderTrendStandardsNote(selectedKeys, gasRecords) {
-  const wrap = $("trStdWrap");
-  const body = $("trStdBody");
-  if (!wrap || !body) return;
-  const gasKeys = DGA.GASES.map((g) => "gas:" + g).concat(["gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"])
-    .filter((k) => selectedKeys.includes(k));
-  if (gasKeys.length === 0 || !gasRecords || gasRecords.length === 0) {
-    wrap.classList.add("hidden");
-    body.innerHTML = "";
-    return;
-  }
+/** TIÊU CHUẨN của 1 thông số khí (H2…CO2, N2, O2, TCG, Tổng khí hòa tan) cho thiết bị đang xem — trước đây là bảng
+ *  "Tiêu chuẩn so sánh của thông số khí đang vẽ" dưới đồ thị, nay hiện trong ô thông tin khi BẤM CHUỘT PHẢI vào tên khí
+ *  (chip ở "Chọn thông số cần vẽ" hoặc nhãn/đường trên đồ thị). Cùng nguồn, cùng nội dung như bảng cũ: 7 khí — ngưỡng
+ *  đang áp dụng cho thiết bị (resolveStandard(), như tab Khí hòa tan, theo lần đo GẦN NHẤT) + tốc độ tăng Bảng 65 +
+ *  ngưỡng loại bỏ NSX nếu có; N2/O2 — không có ngưỡng riêng; TCG — QĐ1901/IEC 60599 không quy định, ghi mốc IEEE
+ *  C57.104-2008 để tham khảo; Bảng 63 — ngưỡng theo cấp điện áp + điều kiện áp dụng. Chỉ hiển thị, không đổi cách đánh
+ *  giá. Trả về { name, rows: [[nhãn, html]], source: html, basis: html } hoặc null (không phải thông số khí). */
+function trendStandardInfo(key, gasRecords) {
+  if (!key || !key.startsWith("gas:") || !gasRecords || gasRecords.length === 0) return null;
+  const field = key.slice(4);
   const latest = gasRecords[gasRecords.length - 1];
   const equipmentType = latest.equipment_type;
   const isMba = equipmentType === DGA.EQUIPMENT_TYPES.MBA;
   const std = DGA.resolveStandard(
     { equipmentType, manufacturer: latest.manufacturer, mbaSubtype: latest.mba_subtype ?? latest.mbaSubtype ?? null },
-    typeof toManufacturerStandardsForLogic === "function" ? toManufacturerStandardsForLogic(_allStandards) : []
+    typeof toManufacturerStandardsForLogic === "function" && typeof _allStandards !== "undefined" ? toManufacturerStandardsForLogic(_allStandards) : []
   );
   const vn = (v) => Number(v).toLocaleString("vi-VN");
   const R = DGA.DIEU54_ADDITIONAL_RATIOS || { o2n2_low: 0.3, o2n2_normal: 0.5 };
   const rateCite = (DGA.REGULATION_CITATIONS && DGA.REGULATION_CITATIONS.BANG65_RATE) || "Bảng 65, Điều 54 QĐ1901";
   const lastWith = (pred) => { for (let i = gasRecords.length - 1; i >= 0; i--) if (pred(gasRecords[i])) return gasRecords[i]; return null; };
   const has = (v) => v !== undefined && v !== null && v !== "";
-  const rows = [];
-  gasKeys.forEach((key) => {
-    const field = key.slice(4);
-    if (DGA.GASES.includes(field)) {
-      const lim = std.limits[field];
-      const rate = std.rate && std.rate[field];
-      const cond = std.condemning && std.condemning[field];
-      const parts = [has(lim) ? `Giá trị điển hình ≤ <strong>${vn(lim)}</strong> ppm` : "Không có ngưỡng"];
-      if (has(cond)) parts.push(`Loại bỏ (NSX): ${vn(cond)} ppm`);
-      if (rate) parts.push(`Tốc độ tăng điển hình ${vn(rate[0])}–${vn(rate[1])} ppm/năm (${rateCite}${isMba ? "" : ", tham khảo"})`);
-      rows.push([field, parts.join("<br>"), escapeHtml(std.sourceLabel)]);
-    } else if (field === "N2" || field === "O2") {
-      rows.push([field, "Không có ngưỡng riêng",
-        `Dùng cho tỷ lệ O2/N2 (Điều 54: ~${vn(R.o2n2_normal)} là bình thường ở thiết bị tiếp xúc không khí; &lt; ${vn(R.o2n2_low)} là tiêu thụ oxy quá mức) và Tổng hàm lượng khí hòa tan (Bảng 63).`]);
-    } else if (field === "TCG") {
-      rows.push(["TCG", "QĐ1901 và IEC 60599 <strong>không quy định</strong> ngưỡng TCG — app không đánh giá đạt/không đạt, chỉ theo dõi xu hướng.",
-        "Tham khảo IEEE C57.104-2008 (TDCG, cùng 6 khí): ≤ 720 ppm điều kiện 1; 721–1.920 điều kiện 2; 1.921–4.630 điều kiện 3; &gt; 4.630 điều kiện 4. Bản IEEE C57.104-2019 đã bỏ cách phân loại này."]);
-    } else if (field === "BANG63") {
-      const vRec = lastWith((r) => has(r.bang63_voltage_class));
-      const vc = vRec ? String(vRec.bang63_voltage_class) : null;
-      const lims = DGA.QD1901_BANG63_TDGC;
-      const fmtLim = (k, label) => (vc === k ? `<strong>${label}: &lt; ${vn(lims[k])}%</strong> (cấp của thiết bị)` : `${label}: &lt; ${vn(lims[k])}%`);
-      const ap = latest.bang63_applicable;
-      const applicable = ap === true || String(ap).toLowerCase() === "true";
-      rows.push(["Tổng khí hòa tan", `${fmtLim("110-220", "110–220 kV")}<br>${fmtLim("500", "500 kV")}`,
-        "Bảng 63, Điều 54 QĐ1901. Chỉ đánh giá với dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu. " +
+  const basis = `Theo loại thiết bị/nhà sản xuất của lần đo gần nhất (${escapeHtml(equipmentType || "chưa rõ loại")}), cùng nguồn với đánh giá ở tab Khí hòa tan.`;
+  if (DGA.GASES.includes(field)) {
+    const lim = std.limits[field];
+    const rate = std.rate && std.rate[field];
+    const cond = std.condemning && std.condemning[field];
+    const rows = [
+      ["Giá trị điển hình", has(lim) ? `≤ <strong>${vn(lim)}</strong> ppm` : "Không có ngưỡng"],
+      ["Tốc độ gia tăng điển hình", rate ? `<strong>${vn(rate[0])}–${vn(rate[1])}</strong> ppm/năm${isMba ? "" : " (tham khảo)"}` : "Không quy định"],
+    ];
+    if (has(cond)) rows.push(["Ngưỡng loại bỏ (NSX)", `${vn(cond)} ppm`]);
+    const src = [escapeHtml(std.sourceLabel)];
+    if (rate) src.push(`Tốc độ tăng: ${rateCite}${isMba ? "" : " — áp dụng tham khảo cho loại thiết bị này"}.`);
+    return { name: field, rows, source: src.join("<br>"), basis };
+  }
+  if (field === "N2" || field === "O2") {
+    return { name: field, rows: [["Tiêu chuẩn", "Không có ngưỡng riêng"]],
+      source: `Dùng cho tỷ lệ O2/N2 (Điều 54: ~${vn(R.o2n2_normal)} là bình thường ở thiết bị tiếp xúc không khí; &lt; ${vn(R.o2n2_low)} là tiêu thụ oxy quá mức) và Tổng hàm lượng khí hòa tan (Bảng 63).`, basis: "" };
+  }
+  if (field === "TCG") {
+    return { name: "TCG — Tổng lượng khí cháy", rows: [["Tiêu chuẩn", "QĐ1901 và IEC 60599 <strong>không quy định</strong> ngưỡng TCG — app không đánh giá đạt/không đạt, chỉ theo dõi xu hướng."]],
+      source: "Tham khảo IEEE C57.104-2008 (TDCG, cùng 6 khí): ≤ 720 ppm điều kiện 1; 721–1.920 điều kiện 2; 1.921–4.630 điều kiện 3; &gt; 4.630 điều kiện 4. Bản IEEE C57.104-2019 đã bỏ cách phân loại này.", basis: "" };
+  }
+  if (field === "BANG63") {
+    const vRec = lastWith((r) => has(r.bang63_voltage_class));
+    const vc = vRec ? String(vRec.bang63_voltage_class) : null;
+    const lims = DGA.QD1901_BANG63_TDGC;
+    const fmtLim = (k, label) => (vc === k ? `<strong>${label}: &lt; ${vn(lims[k])}%</strong> (cấp của thiết bị)` : `${label}: &lt; ${vn(lims[k])}%`);
+    const ap = latest.bang63_applicable;
+    const applicable = ap === true || String(ap).toLowerCase() === "true";
+    return { name: "Tổng hàm lượng khí hòa tan", rows: [["Giới hạn", `${fmtLim("110-220", "110–220 kV")}<br>${fmtLim("500", "500 kV")}`]],
+      source: "Bảng 63, Điều 54 QĐ1901. Chỉ đánh giá với dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu. " +
         (applicable ? "Lần đo gần nhất <strong>thuộc</strong> trường hợp này." : "Lần đo gần nhất không đánh dấu trường hợp này — giá trị chỉ để tham khảo.") +
-        " Cần nhập cả N2 lẫn O2."]);
+        " Cần nhập cả N2 lẫn O2.", basis: "" };
+  }
+  return null;
+}
+
+// Bản ghi khí hòa tan của thiết bị đang vẽ — nguồn cho ô tiêu chuẩn khi bấm chuột phải (cập nhật mỗi lần vẽ lại).
+let _trendStdRecords = [];
+function setTrendStandardsContext(gasRecords) {
+  _trendStdRecords = gasRecords || [];
+  hideTrendStdPopover();
+}
+
+/** Ô thông tin tiêu chuẩn (#trStdPopover) tại vị trí (x, y) của màn hình. opener: phần tử nhận lại focus khi đóng. */
+function showTrendStdPopover(key, x, y, opener) {
+  const pop = $("trStdPopover");
+  const info = trendStandardInfo(key, _trendStdRecords);
+  if (!pop || !info) return false;
+  pop.innerHTML = `<div class="std-pop-head"><strong id="trStdPopTitle">${escapeHtml(info.name)}</strong><span class="std-pop-sub">Tiêu chuẩn</span>
+      <button type="button" class="std-pop-close" aria-label="Đóng">&times;</button></div>
+    <dl class="std-pop-rows">${info.rows.map(([k, v]) => `<dt>${escapeHtml(k)}</dt><dd>${v}</dd>`).join("")}</dl>
+    <p class="std-pop-src"><span>Nguồn / ghi chú:</span> ${info.source}</p>${info.basis ? `<p class="std-pop-basis">${info.basis}</p>` : ""}`;
+  pop.classList.remove("hidden");
+  pop._opener = opener || null;
+  // Đặt cạnh con trỏ, không tràn khỏi màn hình.
+  const r = pop.getBoundingClientRect();
+  const pad = 8;
+  const left = Math.min(Math.max(pad, x + 12), window.innerWidth - r.width - pad);
+  const top = y + 12 + r.height > window.innerHeight - pad ? Math.max(pad, y - r.height - 12) : y + 12;
+  pop.style.left = left + "px";
+  pop.style.top = top + "px";
+  pop.querySelector(".std-pop-close").onclick = () => hideTrendStdPopover(true);
+  pop.querySelector(".std-pop-close").focus({ preventScroll: true });
+  return true;
+}
+
+/** Bật/tắt tooltip điểm đo của đồ thị — Chart.js tự phát lại sự kiện chuột cuối khi update(), nên phải TẮT hẳn tooltip
+ *  trong lúc ô tiêu chuẩn mở (ẩn tạm thời sẽ hiện lại ngay). */
+function trendChartTooltip(enabled) {
+  const tt = _trendChart && _trendChart.options && _trendChart.options.plugins && _trendChart.options.plugins.tooltip;
+  if (!tt || tt.enabled === enabled) return;
+  tt.enabled = enabled;
+  try { if (!enabled) _trendChart.tooltip.setActiveElements([], { x: 0, y: 0 }); _trendChart.update("none"); } catch (_) { /* Chart.js cũ: bỏ qua */ }
+}
+
+function hideTrendStdPopover(returnFocus) {
+  const pop = $("trStdPopover");
+  if (!pop || pop.classList.contains("hidden")) return;
+  pop.classList.add("hidden");
+  trendChartTooltip(true);
+  if (returnFocus && pop._opener && pop._opener.isConnected) pop._opener.focus({ preventScroll: true });
+  pop._opener = null;
+}
+
+/** Chọn đường gần điểm (ex, ey) trên đồ thị (px, toạ độ canvas) — dùng chung cho chạm chọn đường và chuột phải. */
+function trendPickCandidates(chart, ex, ey) {
+  const cands = [];
+  chart.data.datasets.forEach((ds, i) => {
+    if (!chart.isDatasetVisible(i)) return;
+    const pts = trendDrawnPoints(chart, i);
+    let best = pts.length === 1 ? { d: Math.hypot(ex - pts[0].x, ey - pts[0].y), x: pts[0].x, y: pts[0].y } : null;
+    for (let k = 0; k + 1 < pts.length; k++) {
+      const r = trendDistToSegment(ex, ey, pts[k], pts[k + 1]);
+      if (!best || r.d < best.d) best = r;
     }
+    if (best && best.d <= TREND_PICK_RADIUS) cands.push({ i, ...best });
   });
-  body.innerHTML = `<div class="table-scroll"><table><thead><tr><th>Thông số</th><th>Tiêu chuẩn</th><th>Nguồn / ghi chú</th></tr></thead><tbody>${
-    rows.map((r) => `<tr><td><strong>${escapeHtml(r[0])}</strong></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")
-  }</tbody></table></div><p class="note" style="margin:4px 0 0;">Ngưỡng 7 khí lấy theo loại thiết bị/nhà sản xuất của lần đo gần nhất (${escapeHtml(equipmentType || "chưa rõ loại")}), cùng nguồn với đánh giá ở tab Khí hòa tan.</p>`;
-  wrap.classList.remove("hidden");
+  return cands.sort((p, q) => p.d - q.d);
+}
+
+/** Chuột phải trên đồ thị: ưu tiên nhãn tên khí (ô chữ cuối đường), rồi chú thích dưới đồ thị, cuối cùng là đường gần nhất. */
+function trendStdKeyAtChartPoint(chart, ex, ey) {
+  const boxes = chart.$trendLabelBoxes || [];
+  const hit = boxes.find((bx) => ex >= bx.x - 2 && ex <= bx.x + bx.w + 2 && ey >= bx.y - 2 && ey <= bx.y + bx.h + 2);
+  // Chú thích (legend) dưới đồ thị: "H2 (ppm)", "C2H4 (ppm) — dự báo"… cũng là nhãn tên khí.
+  const lg = chart.legend;
+  const lgIdx = lg && lg.legendHitBoxes ? lg.legendHitBoxes.findIndex((h) => ex >= h.left && ex <= h.left + h.width && ey >= h.top && ey <= h.top + h.height) : -1;
+  const lgDs = lgIdx >= 0 && lg.legendItems && lg.legendItems[lgIdx] ? lg.legendItems[lgIdx].datasetIndex : undefined;
+  const idx = hit ? hit.datasetIndex : lgDs !== undefined ? lgDs : (trendPickCandidates(chart, ex, ey)[0] || {}).i;
+  const ds = idx === undefined ? null : chart.data.datasets[idx];
+  return ds && ds.paramKey ? ds.paramKey : null;
+}
+
+/** Gắn 1 lần: chuột phải / giữ ngón tay / phím Menu (Shift+F10) trên tên khí → ô tiêu chuẩn; Esc / bấm ra ngoài → đóng. */
+function setupTrendStdPopover() {
+  const gasWrap = $("trParamsGas");
+  const canvas = $("trendChart");
+  const pop = $("trStdPopover");
+  if (!pop || pop.dataset.bound) return;
+  pop.dataset.bound = "1";
+  const chipKey = (el) => { const lab = el && el.closest && el.closest("label[data-std-key]"); return lab ? lab : null; };
+  const openFromChip = (lab, x, y) => {
+    if (x === undefined) { const r = lab.getBoundingClientRect(); x = r.left; y = r.bottom - 6; }
+    return showTrendStdPopover(lab.dataset.stdKey, x, y, lab.querySelector("input") || lab);
+  };
+  if (gasWrap) {
+    gasWrap.addEventListener("contextmenu", (e) => {
+      const lab = chipKey(e.target);
+      if (!lab) return;
+      // Phím Menu/Shift+F10 trên chip đang focus: không có toạ độ chuột (0,0) → mở dưới chip.
+      const fromKeyboard = e.clientX === 0 && e.clientY === 0;
+      if (openFromChip(lab, fromKeyboard ? undefined : e.clientX, fromKeyboard ? undefined : e.clientY)) e.preventDefault();
+    });
+    // Điện thoại (iPhone không có sự kiện contextmenu): giữ ngón tay ~0,5 giây trên chip.
+    let timer = null;
+    let start = null;
+    gasWrap.addEventListener("pointerdown", (e) => {
+      if (e.pointerType !== "touch") return;
+      const lab = chipKey(e.target);
+      if (!lab) return;
+      start = { x: e.clientX, y: e.clientY };
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        if (openFromChip(lab, start.x, start.y)) lab.dataset.longPressed = "1";
+      }, 550);
+    });
+    const cancel = (e) => { if (e.type !== "pointermove" || !start || Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) clearTimeout(timer); };
+    ["pointerup", "pointercancel", "pointermove"].forEach((t) => gasWrap.addEventListener(t, cancel));
+    // Giữ ngón tay đã mở ô tiêu chuẩn → không tick/bỏ tick chip.
+    gasWrap.addEventListener("click", (e) => {
+      const lab = chipKey(e.target);
+      if (lab && lab.dataset.longPressed) { e.preventDefault(); delete lab.dataset.longPressed; }
+    }, true);
+  }
+  if (canvas) {
+    canvas.addEventListener("contextmenu", (e) => {
+      if (!_trendChart) return;
+      const rect = canvas.getBoundingClientRect();
+      const key = trendStdKeyAtChartPoint(_trendChart, e.clientX - rect.left, e.clientY - rect.top);
+      if (key && showTrendStdPopover(key, e.clientX, e.clientY, canvas)) {
+        e.preventDefault();
+        trendChartTooltip(false); // tắt tooltip điểm đo trong lúc ô tiêu chuẩn mở (không chồng lên nhau)
+      }
+    });
+  }
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.classList.contains("hidden")) hideTrendStdPopover(true); });
+  document.addEventListener("pointerdown", (e) => { if (!pop.contains(e.target)) hideTrendStdPopover(false); }, true);
+  window.addEventListener("scroll", () => hideTrendStdPopover(false), { passive: true });
+  window.addEventListener("resize", () => hideTrendStdPopover(false));
 }
 
 
@@ -1525,7 +1855,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
 
   destroyTrendChart();
   _trendSelected = null;
-  renderTrendStandardsNote(selectedKeys, gasRecords);
+  setTrendStandardsContext(gasRecords); // ô tiêu chuẩn khi chuột phải vào tên khí (thay bảng dưới đồ thị)
   // Dòng hướng dẫn nhãn/chạm chọn đường chỉ hiện khi đồ thị thực sự được vẽ (bật lại ngay trước new Chart).
   $("trChartHint")?.classList.add("hidden");
 
@@ -1558,6 +1888,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       tickedPhases.forEach((p) => {
         const recs = gasRecords.filter((r) => (r.pha || "").trim() === p);
         seriesSpecs.push({
+          paramKey: key,
           label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`,
           short: trendPhaseShort(def.short, p),
           axis: def.axis,
@@ -1576,13 +1907,13 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       const trungtinhRecs = oltcRecords.filter((r) => r.oltc_sample_point !== "pharieng");
       const trungtinhPoints = trendPoints(trungtinhRecs, (r) => r[def.field]);
       if (trungtinhPoints.length > 0) {
-        seriesSpecs.push({ label: `${def.label} (${def.unit})`, short: def.short, axis: def.axis, points: trungtinhPoints });
+        seriesSpecs.push({ paramKey: key, label: `${def.label} (${def.unit})`, short: def.short, axis: def.axis, points: trungtinhPoints });
       }
       tickedPhases.forEach((p) => {
         const recs = oltcRecords.filter((r) => r.oltc_sample_point === "pharieng" && (r.phase || "").trim() === p);
         const points = trendPoints(recs, (r) => r[def.field]);
         if (points.length > 0) {
-          seriesSpecs.push({ label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`, short: trendPhaseShort(def.short, p), axis: def.axis, points });
+          seriesSpecs.push({ paramKey: key, label: `${def.label} - ${DGA.phaLabelWithPrefix(p)} (${def.unit})`, short: trendPhaseShort(def.short, p), axis: def.axis, points });
         }
       });
       return;
@@ -1592,6 +1923,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
     // khái niệm pha): gộp toàn bộ bản ghi của nguồn dữ liệu này thành 1 đường như trước.
     const valueOf = source === "gas" ? (r) => gasValueOf(r, def.field) : (r) => r[def.field];
     seriesSpecs.push({
+      paramKey: key,
       label: `${def.label} (${def.unit})`,
       short: def.short,
       axis: def.axis,
@@ -1621,6 +1953,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
       label: spec.label,
       shortLabel: spec.short || spec.label,
       seriesKey: spec.label,
+      paramKey: spec.paramKey,
       trendColor: color,
       data: spec.points,
       borderColor: color,
@@ -1689,6 +2022,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
         label: `${spec.label} — dự báo (${rep === forecast.methods.sen ? "Sen" : "OLS"})`,
         shortLabel: `${spec.short || spec.label} (dự báo)`,
         seriesKey: spec.label,
+        paramKey: spec.paramKey,
         trendColor: color,
         isForecast: true,
         data: [

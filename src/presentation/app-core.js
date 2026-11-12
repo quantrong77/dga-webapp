@@ -491,7 +491,7 @@ function bindHistoryTrendAlertEvents() {
     $("lichsu_station").dispatchEvent(new Event("change", { bubbles: true }));
     toggleLichSuOilSourceWraps();
     refreshAllLichSuTables();
-    $("lichsu_station").focus();
+    $("historyEquipmentFilter").focus(); // ô lọc đầu tiên (trái → phải: Loại thiết bị → Trạm → Thiết bị)
   });
   // Nút "Sắp xếp lại Lần đo..." ở bảng "Lịch sử đo khí hòa tan (DGA)" — xem
   // onHistoryRenumber() ở ui-history.js.
@@ -549,6 +549,7 @@ function bindHistoryTrendAlertEvents() {
   });
   $("tr_device").addEventListener("change", onTrendDeviceChange);
   if (typeof setupTrendQuickPick === "function") setupTrendQuickPick();
+  if (typeof setupTrendStdPopover === "function") setupTrendStdPopover();
   ["input", "change"].forEach((evt) => $("tr_station").addEventListener(evt, () => {
     updateTrendEmptyNote();
     onTrendDeviceChange();

@@ -413,8 +413,10 @@ Thí nghiệm dầu sứ xuyên nhập ở khối **TI / TU / Sứ xuyên** (m�
 
 **Bộ lọc chung** ở đầu tab lọc **một lần cho cả 2 bảng** Khí hòa tan và Dầu:
 
-- **Trạm biến áp**, **Thiết bị**: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu.
+Các ô lọc xếp từ trái qua phải theo thứ tự chọn: **Loại thiết bị → Trạm biến áp → Thiết bị → Từ ngày / Đến ngày**.
+
 - **Loại thiết bị**: MBA/Kháng dầu, TI, TU, Sứ xuyên, Khác, hoặc **(Chưa ghi loại thiết bị)** cho các bản ghi cũ chưa ghi loại. Ở bảng Dầu: chọn MBA/Kháng dầu thì hiện bảng dầu MBA chính + dầu OLTC; chọn TI/TU/Sứ xuyên thì hiện bảng dầu TI/TU/Sứ xuyên đúng loại đó.
+- **Trạm biến áp**, **Thiết bị**: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu, chỉ gồm trạm/thiết bị thuộc **Loại thiết bị** đã chọn; ô Thiết bị chỉ gợi ý thiết bị của trạm đã chọn.
 - **Từ ngày / Đến ngày**: khoảng ngày lấy mẫu (để trống 1 đầu = không giới hạn đầu đó).
 - **Xóa lọc**: bỏ toàn bộ điều kiện lọc.
 
@@ -472,7 +474,7 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 
 ## 12. Xem xu hướng và dự báo (tab Xu hướng)
 
-> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng **Tiêu chuẩn so sánh** dưới đồ thị có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
+> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
 
 ### 12.1. Vẽ đồ thị
 
@@ -481,7 +483,7 @@ Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Cần lưu ý/theo d�
 1. (Tùy chọn) Chọn **Trạm biến áp** để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.
 2. Chọn **Thiết bị**.
 3. Nếu thiết bị có dữ liệu từ nhiều pha, tick các pha muốn so sánh ở **"Lọc theo pha"** — mỗi pha một đường riêng.
-4. Ở **"Chọn thông số cần vẽ"**, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị.
+4. Ở **"Chọn thông số cần vẽ"**, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị. Ô **"Tất cả khí (7)"** đầu hàng khí hòa tan tick/bỏ tick cùng lúc 7 khí thành phần (H2, CH4, C2H6, C2H4, C2H2, CO, CO2); N2, O2, TCG và Tổng hàm lượng khí hòa tan vẫn chọn riêng vì khác thang giá trị. Khi chỉ tick một phần, ô này hiện dấu "–".
 
 **Nhận biết từng đường:**
 
@@ -498,7 +500,7 @@ Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Cần lưu ý/theo d�
 
 **Khi nào đánh giá Bảng 63:** chỉ kết luận đạt/không đạt với **dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu** (tick ô tương ứng và chọn cấp điện áp ở form Khí hòa tan, mục 4). Với dầu đang vận hành định kỳ, giá trị chỉ để tham khảo.
 
-**Tiêu chuẩn so sánh của thông số khí đang vẽ:** ngay dưới đồ thị, khi đang tick ít nhất một thông số khí, app hiện bảng tiêu chuẩn của đúng các thông số đó. Bảng này có **nút con mắt riêng** để ẩn/hiện, không phụ thuộc nút của mục "Chọn thông số cần vẽ".
+**Xem tiêu chuẩn của 1 thông số khí:** bấm **chuột phải** vào tên khí — ở ô chọn trong mục "Chọn thông số cần vẽ", hoặc vào **nhãn tên khí / đường** trên đồ thị. Một ô thông tin hiện ngay tại con trỏ, gồm **Giá trị điển hình**, **Tốc độ gia tăng điển hình**, ngưỡng loại bỏ của nhà sản xuất (nếu có) và **Nguồn / ghi chú**. Trên điện thoại: **giữ ngón tay** trên tên khí; bàn phím: phím **Menu** hoặc **Shift+F10** khi đang chọn ô. Đóng bằng nút ×, phím Esc hoặc bấm ra ngoài. (Thay cho bảng "Tiêu chuẩn so sánh của thông số khí đang vẽ" dưới đồ thị trước đây.) Nội dung theo từng loại thông số:
 
 - **7 khí chính:** giá trị điển hình đang áp dụng cho thiết bị (theo loại thiết bị/nhà sản xuất của lần đo gần nhất — cùng nguồn với tab Khí hòa tan), ngưỡng loại bỏ nếu nhà sản xuất có cấu hình, và tốc độ tăng điển hình Bảng 65 (chỉ áp dụng chính thức cho MBA; loại khác ghi "tham khảo").
 - **N2, O2:** không có ngưỡng riêng; dùng cho tỷ lệ O2/N2 (~0,5 là bình thường ở thiết bị tiếp xúc không khí, < 0,3 là tiêu thụ oxy quá mức) và Bảng 63.
@@ -554,7 +556,7 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
 
   Tỷ số lớn hơn 10 vẽ **▲** ở đỉnh.
 - **Dải mã** ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn **9 dòng** / **IEC** / **Duval**. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.
-- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.
+- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick. **Trỏ chuột vào 1 vùng** (PD, T1, T2, T3, D1, D2, D+T) — trên điện thoại: chạm vào vùng — để vùng đó đậm lên và hiện ô chú thích **ý nghĩa của mã**, kèm các lần đo đang tick nằm trong vùng đó (VD "1 lần đo đang tick nằm trong vùng này: #2"). Rời chuột hoặc chạm ra ngoài tam giác để ẩn.
 - **Bảng từng lần đo**: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
 - **Chọn lần đo hiển thị**: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên đồ thị và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Đổi thiết bị hoặc pha thì tick lại hết.
 - **Ý nghĩa mã khiếm khuyết** ngay dưới tam giác:
@@ -572,11 +574,13 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
 
 **Phiếu đối chiếu từng lần đo:** bấm vào một điểm trên đồ thị, một ô ở dải mã, hoặc một dòng trong bảng để mở phiếu của lần đo đó. Phiếu gồm:
 
-1. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
-2. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định: ô xanh ✓ là tỷ số nằm trong khoảng của ô, ô xám là không; dòng khớp đủ 3 ô được viền xanh, kèm cột ví dụ điển hình.
-3. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).
-4. **Bảng sơ bộ PD/D/T** cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".
-5. **Các bước khác của Điều 54** theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
+1. **Hàng tóm tắt** ở đầu phiếu: 6 ô kết quả — Giá trị điển hình (Bảng 64), Tốc độ tăng (Bảng 65), Bảng 66, Tam giác Duval, Nhiễm khí từ OLTC, Tỷ lệ bổ sung. Màu ô cho biết trạng thái: **xanh lá** = ổn, **vàng/cam** = cần lưu ý, **đỏ** = nghiêm trọng, **xanh dương** = kết quả tra (VD vùng Duval, có ô màu đúng màu vùng trên tam giác), **xám** = không xét/không tính được. Bấm 1 ô để nhảy tới phần chi tiết. Ngay dưới là **chip số liệu khí** của lần đo; khí vượt giá trị điển hình tô vàng kèm ngưỡng.
+2. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
+3. **Chú giải** ngay trên bảng đầu tiên: ghi 3 tỷ số của lần đo đang xem (C2H2/C2H4, CH4/H2, C2H4/C2H6) kèm ô mẫu. Mỗi ô trong các bảng tra là **1 khoảng giá trị** của tỷ số ở đầu cột, đem so với tỷ số của lần đo: ô **xanh có dấu ✓** (VD "✓ 0,1–1") = tỷ số **nằm trong** khoảng; ô **nền xám** (VD "< 0,1") = **không nằm trong**; ô **NS** (chữ nghiêng) = không xét tỷ số này; dòng có **khung xanh** và chữ "**← khớp**" = đủ các ô ✓, tức dạng khiếm khuyết khớp với lần đo. Chú giải chỉ hiện khi lần đo tính được tỷ số để tra bảng.
+4. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định, kèm cột ví dụ điển hình. Quy ước biên: cận dưới tính vào, cận trên không tính (VD tỷ số đúng 0,1 thuộc ô "0,1–1").
+5. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).
+6. **Bảng sơ bộ PD/D/T** cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".
+7. **Các bước khác của Điều 54** dạng thẻ, mỗi thẻ có số thứ tự, nhãn trạng thái (Ổn / Cần lưu ý / Nghiêm trọng / Kết quả / Không xét) và viền màu tương ứng, theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
 
 Cách đọc:
 
