@@ -574,12 +574,13 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
 
 **Phiếu đối chiếu từng lần đo:** bấm vào một điểm trên đồ thị, một ô ở dải mã, hoặc một dòng trong bảng để mở phiếu của lần đo đó. Phiếu gồm:
 
-1. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
-2. **Chú giải** ngay trên bảng đầu tiên: ghi 3 tỷ số của lần đo đang xem (C2H2/C2H4, CH4/H2, C2H4/C2H6) kèm ô mẫu. Mỗi ô trong các bảng tra là **1 khoảng giá trị** của tỷ số ở đầu cột, đem so với tỷ số của lần đo: ô **xanh có dấu ✓** (VD "✓ 0,1–1") = tỷ số **nằm trong** khoảng; ô **nền xám** (VD "< 0,1") = **không nằm trong**; ô **NS** (chữ nghiêng) = không xét tỷ số này; dòng có **khung xanh** và chữ "**← khớp**" = đủ các ô ✓, tức dạng khiếm khuyết khớp với lần đo. Chú giải chỉ hiện khi lần đo tính được tỷ số để tra bảng.
-3. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định, kèm cột ví dụ điển hình. Quy ước biên: cận dưới tính vào, cận trên không tính (VD tỷ số đúng 0,1 thuộc ô "0,1–1").
-4. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).
-5. **Bảng sơ bộ PD/D/T** cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".
-6. **Các bước khác của Điều 54** theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
+1. **Hàng tóm tắt** ở đầu phiếu: 6 ô kết quả — Giá trị điển hình (Bảng 64), Tốc độ tăng (Bảng 65), Bảng 66, Tam giác Duval, Nhiễm khí từ OLTC, Tỷ lệ bổ sung. Màu ô cho biết trạng thái: **xanh lá** = ổn, **vàng/cam** = cần lưu ý, **đỏ** = nghiêm trọng, **xanh dương** = kết quả tra (VD vùng Duval, có ô màu đúng màu vùng trên tam giác), **xám** = không xét/không tính được. Bấm 1 ô để nhảy tới phần chi tiết. Ngay dưới là **chip số liệu khí** của lần đo; khí vượt giá trị điển hình tô vàng kèm ngưỡng.
+2. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
+3. **Chú giải** ngay trên bảng đầu tiên: ghi 3 tỷ số của lần đo đang xem (C2H2/C2H4, CH4/H2, C2H4/C2H6) kèm ô mẫu. Mỗi ô trong các bảng tra là **1 khoảng giá trị** của tỷ số ở đầu cột, đem so với tỷ số của lần đo: ô **xanh có dấu ✓** (VD "✓ 0,1–1") = tỷ số **nằm trong** khoảng; ô **nền xám** (VD "< 0,1") = **không nằm trong**; ô **NS** (chữ nghiêng) = không xét tỷ số này; dòng có **khung xanh** và chữ "**← khớp**" = đủ các ô ✓, tức dạng khiếm khuyết khớp với lần đo. Chú giải chỉ hiện khi lần đo tính được tỷ số để tra bảng.
+4. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định, kèm cột ví dụ điển hình. Quy ước biên: cận dưới tính vào, cận trên không tính (VD tỷ số đúng 0,1 thuộc ô "0,1–1").
+5. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).
+6. **Bảng sơ bộ PD/D/T** cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".
+7. **Các bước khác của Điều 54** dạng thẻ, mỗi thẻ có số thứ tự, nhãn trạng thái (Ổn / Cần lưu ý / Nghiêm trọng / Kết quả / Không xét) và viền màu tương ứng, theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
 
 Cách đọc:
 
