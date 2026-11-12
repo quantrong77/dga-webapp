@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      # TAM THOI: nhanh thu tren Pages (moi truong github-pages cho phep nhanh nay) — xoa nhanh sau khi thu xong
+      - thu/gop-zalo-tai-trang-loai-thiet-bi
   workflow_dispatch:
 
 permissions:
