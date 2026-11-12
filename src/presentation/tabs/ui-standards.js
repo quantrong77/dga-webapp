@@ -427,7 +427,7 @@ function resetStandardForm() {
 async function onSaveStandard() {
   if (!canWrite()) { notifyError("Chỉ Admin mới lưu được tiêu chuẩn."); return; }
   const manufacturer = $("s_manufacturer").value.trim();
-  if (!manufacturer) { notifyError("Vui lòng nhập tên nhà sản xuất."); return; }
+  if (!requireFields([[manufacturer, "s_manufacturer", "tên Nhà sản xuất"]])) return;
   const standardType = $("s_standard_type").value === "dau" ? "dau" : "khi";
   const source = $("s_source").value.trim();
 

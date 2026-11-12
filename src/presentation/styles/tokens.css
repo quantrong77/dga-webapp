@@ -89,6 +89,10 @@
   --btn-primary: #00189e;
   --btn-primary-hover: #001380;
   --on-accent: #fff;
+  /* Nền ĐẶC của nhãn mức (Bình thường/Cảnh báo/Báo động) dưới chữ trắng — Bước 5. */
+  --ok-solid: var(--ok);
+  --warn-solid: var(--warn);
+  --bad-solid: var(--bad);
 
   /* Tương thích ngược hệ màu gray-* */
   --gray-50: var(--surface-page);
@@ -204,6 +208,10 @@
   --btn-primary: #2f43d4;
   --btn-primary-hover: #3347e0;
   --on-accent: #fff;
+  /* Giao diện tối: --ok/--warn/--bad là màu SÁNG (cho chữ) → nhãn nền đặc dùng tông đậm để chữ trắng đạt AA. */
+  --ok-solid: #15803d;
+  --warn-solid: #b45309;
+  --bad-solid: #b91c1c;
 
   --gray-50: var(--surface-page);
   --gray-100: var(--surface-sunken);

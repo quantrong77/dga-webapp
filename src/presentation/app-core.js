@@ -103,6 +103,8 @@ function setupStaticUI() {
   setupTabs();
   setupTabAriaSync();
   setupMiniModalEscape();
+  if (typeof setupDialogFocus === "function") setupDialogFocus();
+  if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();
   setupHeaderMenu();
   setupTabLayoutToggle();

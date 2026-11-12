@@ -23,6 +23,7 @@ const PAIRS = [
   ["--status-online-text", "--status-online-bg"], ["--status-offline-text", "--status-offline-bg"],
   ["--status-syncing-text", "--status-syncing-bg"], ["--status-local-text", "--status-local-bg"],
   ["--status-error", "--status-error-bg"], ["--tooltip-text", "--tooltip-bg"],
+  ["--on-accent", "--ok-solid"], ["--on-accent", "--warn-solid"], ["--on-accent", "--bad-solid"],
 ];
 
 function block(selectorRe) {

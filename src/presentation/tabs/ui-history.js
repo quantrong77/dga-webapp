@@ -125,7 +125,7 @@ function renderMeasurementRows(tbody, records) {
     const delBtn = tr.querySelector('[data-action="del"]');
     if (delBtn) {
       delBtn.addEventListener("click", async () => {
-        if (confirm("Xóa lần đo này khỏi lịch sử?")) {
+        if (confirm(confirmDeleteText("lần đo khí hòa tan (DGA)", rec))) {
           try {
             await Storage.deleteMeasurement(rec.id);
             await refreshHistoryUI();

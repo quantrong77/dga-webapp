@@ -143,7 +143,21 @@ function flagInvalidField(idOrEl) {
   try { el.focus(); } catch (_) { /* phần tử không nhận focus được: bỏ qua */ }
 }
 
+/**
+ * Kiểm tra các ô BẮT BUỘC của 1 form trước khi lưu (Bước 5). Thiếu ô nào thì 1 thông báo nêu ĐÚNG TÊN các ô thiếu
+ * + đánh dấu từng ô (viền đỏ, aria-invalid) + đưa con trỏ tới ô thiếu đầu tiên. Trả về true khi đủ.
+ * @param {Array<[any, string, string]>} fields  [giá trị, id ô, tên ô hiển thị]
+ * @param {string} [prefix]  tiền tố thông báo, VD "Dầu OLTC: "
+ */
+function requireFields(fields, prefix) {
+  const missing = fields.filter(([v]) => v === null || v === undefined || String(v).trim() === "");
+  if (!missing.length) return true;
+  notifyError(`${prefix || ""}Vui lòng nhập ${missing.map(([, , label]) => label).join(" và ")} (bắt buộc để lưu).`);
+  missing.slice().reverse().forEach(([, id]) => flagInvalidField(id)); // đảo ngược → ô thiếu ĐẦU TIÊN được focus cuối
+  return false;
+}
+
 // Export cho Node (dùng để test) — trình duyệt bỏ qua nhánh này.
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { errorMessageOf, shouldShowErrorToast, notifyError, notifyInfo, reportError, installGlobalErrorHandlers, flagInvalidField, ERROR_TOAST_DEDUPE_MS };
+  module.exports = { errorMessageOf, shouldShowErrorToast, notifyError, notifyInfo, reportError, installGlobalErrorHandlers, flagInvalidField, requireFields, ERROR_TOAST_DEDUPE_MS };
 }

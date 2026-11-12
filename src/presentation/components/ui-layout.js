@@ -217,6 +217,88 @@ function setupTabAriaSync() {
   });
 }
 
+/** Focus trong hộp thoại (Bước 5) — áp dụng chung cho mọi .mini-modal-overlay và .lightbox, không cần sửa từng hộp:
+ *  - mở hộp: nhớ phần tử đang focus, đưa focus vào ô nhập/nút đầu tiên trong hộp (trừ khi code mở hộp đã tự focus);
+ *  - Tab / Shift+Tab chỉ chạy vòng trong hộp, không lọt ra trang phía sau;
+ *  - đóng hộp: trả focus về nút đã mở hộp. */
+const DIALOG_FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function dialogFocusables(overlay) {
+  return Array.from(overlay.querySelectorAll(DIALOG_FOCUSABLE)).filter((el) => el.getClientRects().length > 0);
+}
+
+function setupDialogFocus() {
+  const overlays = Array.from(document.querySelectorAll(".mini-modal-overlay, .lightbox"));
+  const returnTo = new Map();
+  const isOpen = (o) => !o.classList.contains("hidden");
+  const onChange = (o) => {
+    if (isOpen(o)) {
+      if (returnTo.has(o)) return;
+      returnTo.set(o, document.activeElement);
+      // Chờ code mở hộp chạy xong (có thể tự focus 1 ô cụ thể, VD Đổi mật khẩu → "Mật khẩu hiện tại").
+      setTimeout(() => {
+        if (!isOpen(o) || o.contains(document.activeElement)) return;
+        const items = dialogFocusables(o);
+        const first = items.find((el) => !el.classList.contains("mini-modal-close") && !el.classList.contains("lightbox-close")) || items[0];
+        if (first) first.focus();
+      }, 0);
+    } else if (returnTo.has(o)) {
+      const prev = returnTo.get(o);
+      returnTo.delete(o);
+      if (prev && prev.isConnected && prev.getClientRects().length && typeof prev.focus === "function") prev.focus();
+    }
+  };
+  const mo = new MutationObserver((list) => list.forEach((m) => onChange(m.target)));
+  overlays.forEach((o) => mo.observe(o, { attributes: true, attributeFilter: ["class"] }));
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const open = overlays.filter(isOpen);
+    const o = open[open.length - 1];
+    if (!o) return;
+    const items = dialogFocusables(o);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (!o.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+/** Nút "Xóa form" (Bước 5): form đang có số liệu thì hỏi lại trước khi xóa trắng (trước đây bấm nhầm là mất hết số liệu
+ *  chưa lưu). Chạy ở pha capture → chặn được handler xóa form gắn sẵn trên nút. Form trống thì xóa luôn, không hỏi. */
+const CLEAR_FORM_BUTTONS = {
+  btnClearForm: "#dgaInputSplitLayout",
+  btnClearOilForm: "#oSplitLayout",
+  btnClearOltcOilForm: "#oltcFormPanel",
+  btnT3Clear: "#tio3Panel",
+  btnClearTioOilForm: null, // form TI/TU 1 pha không có id riêng → dùng .panel chứa nút
+};
+
+function formHasUserData(root) {
+  if (!root) return false;
+  return Array.from(root.querySelectorAll("input, textarea")).some((el) => {
+    if (el.disabled || el.readOnly) return false;
+    if (el.type === "file") return el.files && el.files.length > 0;
+    if (el.type === "checkbox" || el.type === "radio" || el.type === "button" || el.type === "submit") return false;
+    return el.value.trim() !== "";
+  });
+}
+
+function setupClearFormConfirm() {
+  // Gắn ở document, pha capture → luôn chạy TRƯỚC handler xóa form gắn trên chính nút (mọi trình duyệt).
+  document.addEventListener("click", (e) => {
+    const btn = e.target && e.target.closest && e.target.closest(Object.keys(CLEAR_FORM_BUTTONS).map((id) => "#" + id).join(","));
+    if (!btn) return;
+    const sel = CLEAR_FORM_BUTTONS[btn.id];
+    const root = (sel && document.querySelector(sel)) || btn.closest(".panel");
+    if (formHasUserData(root) && !confirm("Xóa trắng toàn bộ ô đã nhập ở form?\n\nSố liệu CHƯA LƯU sẽ mất.")) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
+}
+
 /** Phím Esc đóng hộp thoại nhỏ (.mini-modal-overlay: đổi mật khẩu, mật khẩu tạm) — bằng chính nút "×" của hộp,
  *  nên khi nút bị ẩn (bắt buộc đổi mật khẩu tạm) thì Esc cũng không đóng được. */
 function setupMiniModalEscape() {

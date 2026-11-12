@@ -221,6 +221,7 @@
   max-width: 360px;
   box-shadow: var(--shadow-5); /* hộp thoại: cao nhất */
 }
+.mini-modal-card h2,
 .mini-modal-card h3 {
   margin: 0 0 10px;
   font-size: 16px;

@@ -51,6 +51,20 @@ function fmtDateVN(value) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : (s ?? "");
 }
 
+/** Câu hỏi xác nhận XÓA 1 bản ghi đo/thí nghiệm (Bước 5): nêu rõ loại + ngày + thiết bị + trạm để không xóa nhầm dòng,
+ *  VD 'Xóa lần đo DGA ngày 20/10/2026 của "AT1" (Trạm 220kV Di Linh)? Không hoàn tác được.' */
+function confirmDeleteText(kind, rec) {
+  const r = rec || {};
+  // "-", "?" (dữ liệu cũ/nhập thiếu) coi như trống — giống cách tab Cảnh báo ghi "(chưa ghi ...)".
+  const val = (v) => (v === null || v === undefined || /^[\s\-?]*$/.test(String(v)) ? "" : String(v).trim());
+  const date = val(r.sample_date) ? ` ngày ${fmtDateVN(r.sample_date)}` : "";
+  const devName = val(r.thiet_bi) ? '"' + val(r.thiet_bi) + '"' : "(chưa ghi tên thiết bị)";
+  const dev = " của " + devName;
+  const st = val(r.tram) ? ` (${val(r.tram)})` : "";
+  const phase = val(r.phase) && val(r.phase) !== "chung" ? ` — pha ${val(r.phase)}` : "";
+  return `Xóa ${kind}${date}${dev}${st}${phase}?\n\nThao tác này không hoàn tác được.`;
+}
+
 function rowActionsHtml(buttons) {
   return `<div class="btn-row actions-stack">${buttons.filter(Boolean).join("")}</div>`;
 }

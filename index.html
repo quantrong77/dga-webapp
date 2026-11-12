@@ -70,7 +70,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v86-ui-guide-search") {
+          if (k !== "dga-offline-v87-ui-a11y") {
             caches.delete(k);
           }
         });
@@ -79,6 +79,8 @@
   </script>
 </head>
 <body>
+  <!-- Bước 5: người dùng bàn phím/trình đọc màn hình bỏ qua header + 10 tab, nhảy thẳng vào nội dung tab đang mở. -->
+  <a class="skip-link" href="#mainContent">Bỏ qua tới nội dung chính</a>
   <script src="src/presentation/early-layout.js"></script>
   <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
        ẩn, tham chiếu bằng <use href="#icon-..."> để không lặp lại mã SVG nhiều nơi. -->
@@ -280,7 +282,7 @@
   <div id="changePasswordOverlay" class="mini-modal-overlay hidden">
     <div class="mini-modal-card" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
       <button type="button" class="mini-modal-close" id="btnCloseChangePassword" aria-label="Đóng">&times;</button>
-      <h3 id="changePasswordTitle"><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h3>
+      <h2 id="changePasswordTitle"><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h2>
       <!-- Chế độ BẮT BUỘC (mật khẩu tạm do Admin cấp) — xem enterApp()/openChangePasswordModal() ở ui-auth.js. -->
       <p class="note hidden" id="changePasswordForcedHint">Bạn đang đăng nhập bằng <strong>mật khẩu tạm</strong> do Admin cấp.
         Vui lòng đặt mật khẩu riêng để tiếp tục sử dụng (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại").
@@ -336,7 +338,7 @@
     </div>
   </nav>
 
-  <main>
+  <main id="mainContent" tabindex="-1">
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
     <section id="tab-nhap" class="tab-panel" data-input-mode="import">
 
@@ -461,7 +463,7 @@
             </div>
           </div>
           <div class="table-scroll u-mt-8px"><table>
-            <thead><tr><th></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
+            <thead><tr><th><span class="sr-only">Chọn</span></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
             <tbody id="batchTable"></tbody>
           </table></div>
           <div class="batch-actions">
@@ -852,7 +854,7 @@
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
             <th class="num">H2</th><th class="num">CH4</th><th class="num">C2H6</th><th class="num">C2H4</th><th class="num">C2H2</th><th class="num">CO</th><th class="num">CO2</th><th class="num">N2</th><th class="num">O2</th>
-            <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="nhapSavedTable"></tbody>
         </table></div>
@@ -875,7 +877,7 @@
                  chung 1 nút bấm + 1 ô lọc cho gọn). Nội dung <option> bên dưới là mặc định
                  lúc tải trang (view "gas") — sẽ bị JS ghi đè ngay khi setupLichSuViewToggle()
                  chạy. -->
-            <select id="historyEquipmentFilter" title="Lọc theo loại thiết bị">
+            <select id="historyEquipmentFilter" title="Lọc theo loại thiết bị" aria-label="Lọc theo loại thiết bị">
               <option value="">Tất cả loại thiết bị</option>
               <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
               <option value="TU (biến điện áp)">TU (biến điện áp)</option>
@@ -948,7 +950,7 @@
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
               <th class="num">H2</th><th class="num">CH4</th><th class="num">C2H6</th><th class="num">C2H4</th><th class="num">C2H2</th><th class="num">CO</th><th class="num">CO2</th><th class="num">N2</th><th class="num">O2</th>
-              <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="historyTable"></tbody>
           </table></div>
@@ -999,7 +1001,7 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="lichsuOilHistoryTable"></tbody>
           </table></div>
@@ -1011,7 +1013,7 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="lichsuOltcHistoryTable"></tbody>
           </table></div>
@@ -1032,7 +1034,7 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
-              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="lichsuInstrumentOilHistoryTable"></tbody>
           </table></div>
@@ -1147,7 +1149,7 @@
           <!-- Bước 4b: 5 cột gọn; "Hạng mục cảnh báo" + "Khuyến cáo" mở ở dòng chi tiết (nút Chi tiết) — refreshAlertsUI(), ui-alerts.js -->
           <thead><tr>
             <th>Thiết bị</th><th>Mức cảnh báo</th><th>Chỉ tiêu vượt ngưỡng</th><th>Lần đo</th>
-            <th class="actions-col-header"></th>
+            <th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="alertsTable" class="alerts-tbody"></tbody>
         </table></div>
@@ -2389,7 +2391,7 @@
             </div>
           </div>
           <div class="table-scroll u-mt-8px"><table>
-            <thead><tr><th></th><th>File</th><th>Trạm</th><th>Thiết bị</th><th>Ngày lấy mẫu</th><th>Thùng dầu chính</th><th>OLTC</th><th>Trạng thái</th></tr></thead>
+            <thead><tr><th><span class="sr-only">Chọn</span></th><th>File</th><th>Trạm</th><th>Thiết bị</th><th>Ngày lấy mẫu</th><th>Thùng dầu chính</th><th>OLTC</th><th>Trạng thái</th></tr></thead>
             <tbody id="oBatchTable"></tbody>
           </table></div>
           <div class="batch-actions">
@@ -2589,7 +2591,7 @@
         <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Dầu MBA chính (cuộn ngang)"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="oilHistoryTable"></tbody>
         </table></div>
@@ -2720,7 +2722,7 @@
         <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Dầu OLTC (cuộn ngang)"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="oltcOilHistoryTable"></tbody>
         </table></div>
@@ -2811,7 +2813,7 @@
             </div>
           </div>
           <div class="table-scroll u-mt-8px"><table>
-            <thead><tr><th></th><th>File</th><th>Trạm</th><th>Vị trí lắp đặt</th><th>Ngày lấy mẫu</th><th>Loại</th><th>Nhà sản xuất</th><th>Số liệu</th><th>Trạng thái</th></tr></thead>
+            <thead><tr><th><span class="sr-only">Chọn</span></th><th>File</th><th>Trạm</th><th>Vị trí lắp đặt</th><th>Ngày lấy mẫu</th><th>Loại</th><th>Nhà sản xuất</th><th>Số liệu</th><th>Trạng thái</th></tr></thead>
             <tbody id="t3BatchTable"></tbody>
           </table></div>
           <div class="batch-actions">
@@ -3042,7 +3044,7 @@
         <div class="table-scroll"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="tioOilHistoryTable"></tbody>
         </table></div>
@@ -3878,7 +3880,7 @@
           <div class="table-scroll"><table>
           <thead>
           <tr>
-          <th></th>
+          <th>Lần đo</th>
           <th>H2</th>
           <th>CH4</th>
           <th>C2H6</th>
@@ -4273,7 +4275,7 @@
         <p class="auth-error hidden" id="qtNewUserError"></p>
 
         <div class="table-scroll"><table>
-          <thead><tr><th>Email</th><th>Vai trò</th><th>Trạm phụ trách</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
+          <thead><tr><th>Email</th><th>Vai trò</th><th>Trạm phụ trách</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th><span class="sr-only">Thao tác</span></th></tr></thead>
           <tbody id="usersTable"></tbody>
         </table></div>
         <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>

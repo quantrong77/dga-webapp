@@ -331,12 +331,12 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   margin-bottom: var(--space-2);
   box-shadow: var(--shadow-1);
 }
-.status-normal .status-badge { background: var(--ok); }
-.status-alert .status-badge { background: var(--warn); }
-.status-alarm .status-badge { background: var(--bad); }
-.status-legend-card.normal .status-badge { background: var(--ok); }
-.status-legend-card.alert .status-badge { background: var(--warn); }
-.status-legend-card.alarm .status-badge { background: var(--bad); }
+.status-normal .status-badge { background: var(--ok-solid); }
+.status-alert .status-badge { background: var(--warn-solid); }
+.status-alarm .status-badge { background: var(--bad-solid); }
+.status-legend-card.normal .status-badge { background: var(--ok-solid); }
+.status-legend-card.alert .status-badge { background: var(--warn-solid); }
+.status-legend-card.alarm .status-badge { background: var(--bad-solid); }
 
 .status-reasons { margin: 6px 0 var(--space-2) 18px; padding: 0; font-size: var(--text-sm); }
 .status-reasons li { margin-bottom: 3px; }
@@ -360,8 +360,8 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   color: var(--on-accent);
   white-space: nowrap;
 }
-.status-pill.status-alert { background: var(--warn); }
-.status-pill.status-alarm { background: var(--bad); }
+.status-pill.status-alert { background: var(--warn-solid); }
+.status-pill.status-alarm { background: var(--bad-solid); }
 
 
 

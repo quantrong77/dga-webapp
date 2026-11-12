@@ -581,7 +581,7 @@ Vì sao cần Δ: khí trong dầu tích lũy dần. Máy từng có khiếm khu
 
 Ví dụ (ppm):
 
-| | H2 | CH4 | C2H6 | C2H4 | C2H2 |
+| Lần đo | H2 | CH4 | C2H6 | C2H4 | C2H2 |
 |---|---|---|---|---|---|
 | Lần 1 | 100 | 50 | 40 | 20 | 0 |
 | Lần 2 | 300 | 70 | 50 | 100 | 2 |
