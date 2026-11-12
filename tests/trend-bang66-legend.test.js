@@ -40,8 +40,9 @@ describe("trendBang66LegendHtml", () => {
 });
 
 describe("Phiếu đối chiếu — vị trí chú giải và kiểu ô", () => {
-  test("chú giải đặt ngay sau tiêu đề bảng 9 dòng, trước bảng; chỉ khi có bảng tra", () => {
-    const i = SRC.indexOf("<h4>Bảng 66 — phần 9 dòng");
+  test("chú giải đặt đầu khối Bảng 66, trước bảng 9 dòng; chỉ khi có bảng tra", () => {
+    // Khối Bảng 66 (tiêu đề "Bảng 66 — tra theo 3 tỷ số"): chú giải đứng đầu khối, trước bảng 9 dòng.
+    const i = SRC.indexOf("Bảng 66 — tra theo 3 tỷ số");
     const legend = SRC.indexOf("${c9 || iec ? trendBang66LegendHtml(row.ratios) : \"\"}", i);
     const table = SRC.indexOf("${table9}", i);
     expect(i).toBeGreaterThan(0);
@@ -54,5 +55,19 @@ describe("Phiếu đối chiếu — vị trí chú giải và kiểu ô", () =>
   test("ô không nằm trong khoảng (td.chk-no) có nền, không chỉ đổi màu chữ", () => {
     const rule = CSS.slice(CSS.indexOf(".fault-check-table td.chk-no {"), CSS.indexOf("}", CSS.indexOf(".fault-check-table td.chk-no {")));
     expect(rule).toMatch(/background:/);
+  });
+});
+
+describe("Phiếu đối chiếu — trình bày trực quan", () => {
+  test("có hàng tóm tắt 6 ô, mỗi ô nhảy tới thẻ chi tiết tương ứng", () => {
+    for (const id of ["b64", "b65", "b66", "duval", "oltc", "add"]) expect(SRC).toContain(`["${id}", `);
+    expect(SRC).toContain('class="fc-summary"');
+    expect(SRC).toContain("data-fc-jump");
+  });
+  test("các bước Điều 54 là thẻ có trạng thái (không còn danh sách chữ đơn sắc)", () => {
+    expect(SRC).toContain('<ol class="fc-steps">');
+    expect(SRC).not.toContain('<ol class="dieu54-steps">');
+    const CSSx = fs.readFileSync(path.join(__dirname, "..", "src", "presentation", "styles", "style-tabs-secondary.css"), "utf8");
+    for (const st of ["st-ok", "st-warn", "st-bad", "st-info", "st-none"]) expect(CSSx).toContain(`.${st} {`);
   });
 });

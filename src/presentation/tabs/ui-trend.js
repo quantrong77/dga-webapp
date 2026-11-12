@@ -1294,35 +1294,120 @@ function renderTrendFaultCard() {
   const top69 = QD1901_BANG69.filter((r) => factor(r.gas) > 1).sort((a, b) => factor(b.gas) - factor(a.gas))[0] || null;
   const step8 = `<ul class="bang69-list">${QD1901_BANG69.map((r) => `<li class="${top69 && r.gas === top69.gas ? "match-row" : ""}"><strong>${escapeHtml(r.kind)}</strong> — ${escapeHtml(r.text)}${top69 && r.gas === top69.gas ? ` <em>← gợi ý: ${r.gas} vượt điển hình nhiều nhất (${trendFmtRatio(factor(r.gas))} lần)</em>` : ""}</li>`).join("")}</ul>`;
 
+  // ---- Trạng thái từng bước (màu: ok xanh · warn vàng · bad đỏ · info xanh dương · none xám) — chỉ để TRÌNH BÀY, không
+  //      đổi kết quả tra/đánh giá ở trên.
+  const st64 = exceed.length ? { st: "warn", v: `Vượt: ${exceed.join(", ")}` }
+    : DGA.gasesBelowTypicalLow(gases, type) ? { st: "info", v: "Thấp hơn điển hình" } : { st: "ok", v: "Trong khoảng điển hình" };
+  let st65 = { st: "none", v: "Chưa có lần đo trước" };
+  if (prevRec) {
+    const days = (new Date(rec.sample_date) - new Date(prevRec.sample_date)) / 86400000;
+    const rates = DGA.computeRateOfChange(recordGases(prevRec), gases, days, standard.rate, type);
+    const high = rates ? rates.filter((x) => x.ratePerYear > x.rangeHi) : [];
+    st65 = !rates ? { st: "none", v: "Không tính được" } : high.length ? { st: "warn", v: `Vượt: ${high.map((x) => x.gas).join(", ")}` } : { st: "ok", v: "Không vượt" };
+  }
+  const c9Match = c9 && c9.match;
+  const st66 = !c9 && !iec ? { st: "none", v: "Thiếu tỷ số" }
+    : iecMatch.length ? { st: "warn", v: iecMatch.map((r) => r.code).join(", "), sub: iecMatch.map((r) => r.label).join("; ") }
+      : c9Match && c9Match.id === 1 ? { st: "ok", v: "Bình thường", sub: "phần 9 dòng, dòng 1" }
+        : c9Match ? { st: "warn", v: `Dòng ${c9Match.id}`, sub: c9Match.label }
+          : simplified ? { st: "warn", v: `Sơ bộ: ${simplified.text}`, sub: "bảng PD/D/T" } : { st: "none", v: "Không xác định" };
+  const zoneTheme = trendFaultTheme();
+  const zoneColor = duv && zoneTheme.zone ? zoneTheme.zone[duv.zone] : null;
+  const stDuval = duv ? { st: "info", v: `Vùng ${duv.zone}`, sub: `CH4 ${duv.pctCH4.toFixed(0)}% · C2H4 ${duv.pctC2H4.toFixed(0)}% · C2H2 ${duv.pctC2H2.toFixed(0)}%`, swatch: zoneColor } : { st: "none", v: "Không tính được" };
+  const stOltc = oltc.ratio === null ? { st: "none", v: "Không tính được" }
+    : oltc.level === "likely" ? { st: "bad", v: "Nghi rõ nhiễm", sub: `C2H2/H2 = ${trendFmtRatio(oltc.ratio)} (> 3)` }
+      : oltc.level === "possible" ? { st: "warn", v: "Có thể nhiễm", sub: `C2H2/H2 = ${trendFmtRatio(oltc.ratio)} (2–3)` }
+        : { st: "ok", v: "Không nghi", sub: `C2H2/H2 = ${trendFmtRatio(oltc.ratio)} (≤ 2)` };
+  const R54 = DGA.DIEU54_ADDITIONAL_RATIOS || { o2n2_low: 0.3 };
+  const o2Low = add.o2_n2 !== null && add.o2_n2 < R54.o2n2_low;
+  const stAdd = add.co2coCase === "carbonization" ? { st: "warn", v: "Nghi giấy carbon hóa", sub: `CO2/CO = ${trendFmtRatio(add.co2_co)}` }
+    : add.co2coCase === "overheat" ? { st: "warn", v: "Nghi quá nhiệt nhẹ", sub: `CO2/CO = ${trendFmtRatio(add.co2_co)}` }
+      : o2Low ? { st: "warn", v: "Tiêu thụ oxy cao", sub: `O2/N2 = ${trendFmtRatio(add.o2_n2)}` }
+        : add.co2_co === null && add.o2_n2 === null ? { st: "none", v: "Không đủ dữ liệu" } : { st: "ok", v: "Không có dấu hiệu" };
+  const st68 = code68 ? { st: "info", v: code68 } : { st: "none", v: "Chưa xác định mã" };
+  const st69 = top69 ? { st: "info", v: `Gợi ý: ${top69.gas}` } : { st: "none", v: "Không khí nào vượt" };
+
+  const ST_TEXT = { ok: "Ổn", warn: "Cần lưu ý", bad: "Nghiêm trọng", info: "Kết quả", none: "Không xét" };
+  // Bảng 69 không có khí nào vượt điển hình: không có gợi ý, nhưng vẫn liệt kê 4 dạng để tham khảo.
+  const stepPill = (id, x) => (id === "b69" && x.st === "none" ? "Không có gợi ý" : ST_TEXT[x.st]);
+  const idp = `fc${row.seq}-`;
+  const tile = (id, label, x) => `<a class="fc-tile st-${x.st}" href="#${idp}${id}" data-fc-jump="${idp}${id}">
+      <span class="fc-tile-label">${escapeHtml(label)}</span>
+      <span class="fc-tile-value">${x.swatch ? `<i class="fc-swatch" style="background:${escapeHtml(x.swatch)}"></i>` : ""}${escapeHtml(x.v)}</span>
+      ${x.sub ? `<span class="fc-tile-sub">${escapeHtml(x.sub)}</span>` : ""}</a>`;
+  const summary = `<div class="fc-summary" role="list" aria-label="Tóm tắt kết quả đối chiếu">
+      ${[["b64", isMba ? "Giá trị điển hình (Bảng 64)" : "Giá trị điển hình", st64], ["b65", "Tốc độ tăng (Bảng 65)", st65],
+          ["b66", "Bảng 66", st66], ["duval", "Tam giác Duval", stDuval], ["oltc", "Nhiễm khí từ OLTC", stOltc],
+          ["add", "Tỷ lệ bổ sung", stAdd]].map(([id, l, x]) => `<div role="listitem">${tile(id, l, x)}</div>`).join("")}
+    </div>`;
+
+  // Chip khí đo: khí vượt giá trị điển hình tô vàng (title = giá trị điển hình).
+  const gasChips = `<div class="fc-gases">${DGA.GASES.map((g) => {
+    const over = exceed.includes(g);
+    const tip = typical[g] !== null && typical[g] !== undefined ? `Giá trị điển hình ≤ ${fmtPpm(typical[g])} ppm` : "Không có giá trị điển hình";
+    return `<span class="fc-gas${over ? " is-over" : ""}" title="${escapeHtml(tip)}"><b>${g}</b> ${fmtPpm(gases[g])}${over ? ` <small>&gt; ${fmtPpm(typical[g])}</small>` : ""}</span>`;
+  }).join("")}<span class="fc-gas-unit">ppm</span></div>`;
+
   const steps = [
-    [`Giá trị điển hình (${isMba ? "Bảng 64" : "giá trị điển hình áp dụng cho loại thiết bị"})`, step1],
-    ["Tốc độ tăng hàm lượng khí (Bảng 65)", step2],
-    ["Kiểm tra nhiễm khí từ OLTC (C2H2/H2)", step3],
-    ["Tam giác Duval 1 (Biểu đồ 3)", step5],
-    ["Tỷ lệ bổ sung (CO2/CO, O2/N2)", step6],
-    ["Lỗi điển hình (Bảng 68)", step7],
-    ["Dạng hư hỏng theo khí chính (Bảng 69, gợi ý)", step8],
+    ["b64", `Giá trị điển hình (${isMba ? "Bảng 64" : "giá trị điển hình áp dụng cho loại thiết bị"})`, step1, st64],
+    ["b65", "Tốc độ tăng hàm lượng khí (Bảng 65)", step2, st65],
+    ["oltc", "Kiểm tra nhiễm khí từ OLTC (C2H2/H2)", step3, stOltc],
+    ["duval", "Tam giác Duval 1 (Biểu đồ 3)", step5, stDuval],
+    ["add", "Tỷ lệ bổ sung (CO2/CO, O2/N2)", step6, stAdd],
+    ["b68", "Lỗi điển hình (Bảng 68)", step7, st68],
+    ["b69", "Dạng hư hỏng theo khí chính (Bảng 69, gợi ý)", step8, st69],
   ];
+  const stepCards = steps.map(([id, t, body, x], i) => `<li class="fc-step st-${x.st}${id === "b69" ? " fc-step-wide" : ""}" id="${idp}${id}">
+      <div class="fc-step-head"><span class="fc-step-num" aria-hidden="true">${i + 1}</span><strong class="fc-step-title">${t}</strong>
+        <span class="fc-pill">${escapeHtml(stepPill(id, x))}</span></div>
+      <div class="fc-step-body">${body}</div></li>`).join("");
 
   card.innerHTML = `
-    <div class="fault-card-head">
-      <h3>Phiếu đối chiếu lần đo #${row.seq} — ${trendFmtDate(row.date)}${row.applicable ? "" : ' <span class="badge-muted">tham khảo</span>'}</h3>
+    <div class="fault-card-head fc-head">
+      <div class="fc-head-title">
+        <span class="fc-kicker">Phiếu đối chiếu Điều 54 · QĐ1901</span>
+        <h3>Lần đo #${row.seq} <span class="fc-date">${trendFmtDate(row.date)}</span>${row.applicable ? "" : ' <span class="badge-muted" title="Lần đo chưa có khí nào vượt giá trị điển hình — tỷ số chỉ để tham khảo">tham khảo</span>'}</h3>
+      </div>
       <button type="button" class="btn sm ghost" id="trFaultCardClose">Đóng</button>
     </div>
-    <p class="note">${basisNote} Khí (ppm): ${DGA.GASES.map((g) => `${g} ${fmtPpm(gases[g])}`).join(" · ")}.</p>
-    <div class="ratio-rulers">
-      ${trendRatioRulerHtml("C2H2/C2H4", row.ratios.c2h2_c2h4)}
-      ${trendRatioRulerHtml("CH4/H2", row.ratios.ch4_h2)}
-      ${trendRatioRulerHtml("C2H4/C2H6", row.ratios.c2h4_c2h6)}
-    </div>
-    <h4>Bảng 66 — phần 9 dòng (mốc 0,1 – 1 – 3)</h4>
-    ${c9 || iec ? trendBang66LegendHtml(row.ratios) : ""}
-    ${table9}
-    <h4>Bảng 66 — phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599, ngưỡng hiện hành)</h4>
-    ${tableIec}
-    <h4>Các bước khác của Điều 54</h4>
-    <ol class="dieu54-steps">${steps.map(([t, b]) => `<li><strong>${t}:</strong> ${b}</li>`).join("")}</ol>
-    <p class="note">Phiếu chỉ hỗ trợ đối chiếu — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>`;
+    ${summary}
+    <section class="fc-block">
+      <h4 class="fc-block-title"><span class="fc-block-icon" aria-hidden="true">◉</span>Số liệu lần đo</h4>
+      ${gasChips}
+      <p class="note fc-basis">${basisNote}</p>
+      <div class="ratio-rulers">
+        ${trendRatioRulerHtml("C2H2/C2H4", row.ratios.c2h2_c2h4)}
+        ${trendRatioRulerHtml("CH4/H2", row.ratios.ch4_h2)}
+        ${trendRatioRulerHtml("C2H4/C2H6", row.ratios.c2h4_c2h6)}
+      </div>
+    </section>
+    <details class="fc-block fc-collapsible" id="${idp}b66" open>
+      <summary class="fc-block-title fc-toggle"><span class="fc-block-icon" aria-hidden="true">▦</span>Bảng 66 — tra theo 3 tỷ số
+        <span class="fc-pill st-${st66.st}">${escapeHtml(st66.v)}</span></summary>
+      ${c9 || iec ? trendBang66LegendHtml(row.ratios) : ""}
+      <h5 class="fc-sub">Phần 9 dòng (mốc 0,1 – 1 – 3)</h5>
+      ${table9}
+      <h5 class="fc-sub">Phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599, ngưỡng hiện hành)</h5>
+      ${tableIec}
+    </details>
+    <section class="fc-block">
+      <h4 class="fc-block-title"><span class="fc-block-icon" aria-hidden="true">☰</span>Các bước khác của Điều 54</h4>
+      <ol class="fc-steps">${stepCards}</ol>
+    </section>
+    <p class="note fc-foot">Phiếu chỉ hỗ trợ đối chiếu — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>`;
+  // Bấm ô tóm tắt → cuộn tới phần chi tiết (không đổi URL/hash của app); mở khối Bảng 66 nếu đang thu gọn.
+  card.querySelectorAll("[data-fc-jump]").forEach((lnk) => {
+    lnk.addEventListener("click", (e) => {
+      e.preventDefault();
+      const t = document.getElementById(lnk.dataset.fcJump);
+      if (!t) return;
+      if (t.tagName === "DETAILS") t.open = true;
+      t.scrollIntoView({ behavior: "smooth", block: "start" });
+      t.classList.add("fc-flash");
+      setTimeout(() => t.classList.remove("fc-flash"), 1200);
+    });
+  });
+  card.classList.add("fc-card");
   card.classList.remove("hidden");
   $("trFaultCardClose").onclick = closeTrendFaultCard;
 }

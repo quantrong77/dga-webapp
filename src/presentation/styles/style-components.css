@@ -740,6 +740,12 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 .btn-row.form-actions { margin-top: 18px; display: flex; gap: 10px; }
 /* Ô .field dạng ngang: nhãn + ô chọn cùng 1 dòng (thanh công cụ), và nhãn + ô tick canh đầu dòng. */
 .field.field-inline { flex-direction: row; align-items: center; gap: var(--space-2); margin: 0; }
+/* Màn hẹp: nhãn + ô chọn được xuống dòng, ô chọn co theo bề ngang (trước đây tràn ngang trang ở 375px, VD 2 ô chọn
+   "Thang trục tung" / "Mốc trên đồ thị" ở mục Diễn biến khiếm khuyết, tab Xu hướng). */
+@media (max-width: 600px) {
+  .field.field-inline { flex-wrap: wrap; max-width: 100%; }
+  .field.field-inline > select { flex: 1 1 180px; min-width: 0; max-width: 100%; }
+}
 .field.check-label { display: flex; flex-direction: row; align-items: flex-start; gap: var(--space-2); }
 /* Ô tick đủ lớn để bấm bằng ngón tay (Lighthouse/WCAG 2.5.8 target-size). */
 .field.check-label > input[type="checkbox"] { flex: none; width: 20px !important; height: 20px; margin: 2px; }
