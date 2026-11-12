@@ -509,3 +509,43 @@ tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 /* Đang mở khung đối chiếu BBTN (form hẹp lại): thu gọn cột để vừa 3 pha A/B/C */
 #oSplitLayout.has-preview .oil-param-table td:first-child { min-width: 150px; }
 #oSplitLayout.has-preview .oil-param-table input, #oSplitLayout.has-preview .oil-param-table select { min-width: 72px; }
+
+/* Bộ lọc chung tab Lịch sử đo (Trạm · Thiết bị · Loại thiết bị · Từ ngày · Đến ngày · Xóa lọc) — 1 hàng trên màn
+   hình rộng, tự xuống dòng khi hẹp; điện thoại: mỗi ô 1 hàng (2 ô ngày chung 1 hàng). */
+.lichsu-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.lichsu-filters-legend {
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+.lichsu-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 180px;
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+.lichsu-filter .combo-wrap { width: 100%; }
+.lichsu-filter-date { flex: 0 1 150px; }
+.lichsu-filter-clear { align-self: flex-end; }
+.lichsu-count { font-weight: var(--font-semibold); opacity: 0.85; }
+.lichsu-filter-summary { margin: 0 0 0 var(--space-2); align-self: center; }
+@media (max-width: 600px) {
+  .lichsu-filter { flex-basis: 100%; }
+  .lichsu-filter-date { flex: 1 1 40%; }
+  .lichsu-filter-summary { flex-basis: 100%; margin: var(--space-1) 0 0; }
+}

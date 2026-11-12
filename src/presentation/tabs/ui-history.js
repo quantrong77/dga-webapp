@@ -26,23 +26,18 @@ async function refreshHistoryUI() {
   _allMeasurements = all;
   // #lichsu_station/#lichsu_device (combo tự gõ-tìm, xem lichsuFilterValues() bên dưới)
   // — khớp CHÍNH XÁC Trạm/Thiết bị đang chọn, thay cho ô tìm kiếm tự do #historyFilter cũ.
-  const filter = lichsuFilterValues();
-  // #historyEquipmentFilter (xem index.html) — lọc riêng theo Loại thiết bị (TI/TU/Sứ
-  // xuyên/MBA/Kháng dầu/Khác) vì bảng này gộp chung tất cả loại thiết bị vào 1 danh
-  // sách; "" (Tất cả loại thiết bị) nghĩa là không lọc theo tiêu chí này.
-  const equipmentTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
-  const filtered = all.filter((r) =>
-    lichsuMatchesFilter(r, filter) && (!equipmentTypeFilter || r.equipment_type === equipmentTypeFilter)
-  );
+  // Bộ lọc chung (Trạm/Thiết bị/Loại thiết bị/khoảng ngày) — xem lichsuFilteredGas() bên dưới.
+  const filtered = lichsuFilteredGas();
   filtered.sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
 
   // Trạng thái rỗng: phân biệt "chưa có dữ liệu" (hướng dẫn đi nhập) với "bộ lọc không khớp" (hướng dẫn bỏ lọc) —
   // trước đây cả 2 trường hợp đều báo "Chưa có lần đo nào được lưu." dù database đang có dữ liệu.
   $("historyEmpty").textContent = all.length === 0
     ? 'Chưa có lần đo nào được lưu. Vào tab "Khí hòa tan" để nhập số liệu (hoặc kéo-thả BBTN PDF) rồi bấm "Phân tích & Lưu".'
-    : `Không có lần đo nào khớp bộ lọc hiện tại (${all.length} lần đo đã lưu). Xóa bớt Trạm / Thiết bị / Loại thiết bị ở ô lọc phía trên để xem.`;
+    : `Không có lần đo nào khớp bộ lọc hiện tại (${all.length} lần đo đã lưu). Bấm "Xóa lọc" ở bộ lọc chung phía trên để xem lại tất cả.`;
   $("historyEmpty").classList.toggle("hidden", filtered.length > 0);
   renderMeasurementRows($("historyTable"), filtered);
+  updateLichSuCounts();
   if (typeof renderNhapSavedTable === "function") renderNhapSavedTable();
 
   refreshCompareDeviceOptions();
@@ -163,38 +158,110 @@ function renderMeasurementRows(tbody, records) {
  *  .filter() một bảng (không đọc lại DOM trong từng dòng), giữ đúng quy ước hiệu năng
  *  của lichsuFilterText() cũ. */
 function lichsuFilterValues() {
+  const v = (id) => ($(id) ? $(id).value.trim() : "");
   return {
-    station: $("lichsu_station") ? $("lichsu_station").value.trim() : "",
-    device: $("lichsu_device") ? $("lichsu_device").value.trim() : "",
+    station: v("lichsu_station"),
+    device: v("lichsu_device"),
+    // Khoảng ngày lấy mẫu (bộ lọc chung) — "yyyy-mm-dd", để trống = không giới hạn.
+    from: v("lichsu_from"),
+    to: v("lichsu_to"),
   };
 }
+/** Ngày lấy mẫu chuẩn hóa "yyyy-mm-dd" để so khoảng ngày (bản ghi cũ có thể lưu dạng khác). */
+function lichsuSampleDay(rec) {
+  const s = typeof DGA !== "undefined" && DGA.formatSampleDate ? DGA.formatSampleDate(rec.sample_date) : rec.sample_date;
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(s || ""));
+  return m ? m[0] : "";
+}
 function lichsuMatchesFilter(rec, filter) {
-  return (!filter.station || (rec.tram || "").trim() === filter.station) &&
-    (!filter.device || (rec.thiet_bi || "").trim() === filter.device);
+  if (filter.station && (rec.tram || "").trim() !== filter.station) return false;
+  if (filter.device && (rec.thiet_bi || "").trim() !== filter.device) return false;
+  if (filter.from || filter.to) {
+    const day = lichsuSampleDay(rec);
+    if (!day) return false;
+    if (filter.from && day < filter.from) return false;
+    if (filter.to && day > filter.to) return false;
+  }
+  return true;
 }
 
-/** Nguồn dữ liệu để tính gợi ý cho #lichsu_station/#lichsu_device — PHỤ THUỘC view đang
- *  xem (currentLichSuView(), xem app-core.js) và lựa chọn hiện tại của
- *  #historyEquipmentFilter (Ý NGHĨA KHÁC NHAU theo view — xem
- *  populateHistoryEquipmentFilterOptions(), app-core.js): view "gas" lọc theo
- *  r.equipment_type (TI/TU/Sứ xuyên/MBA/Khác); view "oil" chọn đúng 1 trong 3 mảng dữ
- *  liệu dầu theo "Nguồn dầu" đang chọn ("main"/"oltc"/1 trong 3 loại TI/TU/Sứ xuyên —
- *  gộp CẢ 3 mảng nếu để "" = Tất cả). Nhờ vậy danh sách gợi ý Trạm/Thiết bị LUÔN khớp
- *  đúng "gom nhóm" đang chọn ở #historyEquipmentFilter — không gợi ý thiết bị/trạm
- *  không thuộc nhóm đang xem, tránh dẫn vào ngõ cụt (0 dòng kết quả). */
-function lichsuDeviceSourceRecords() {
-  const view = currentLichSuView();
-  const equipFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
-  if (view === "gas") {
-    return equipFilter ? _allMeasurements.filter((r) => r.equipment_type === equipFilter) : _allMeasurements;
-  }
-  if (equipFilter === "main") return _allOilTests;
-  if (equipFilter === "oltc") return _allOltcOilTests;
+/** Bảng Dầu theo "Loại thiết bị" của bộ lọc chung: MBA/Kháng dầu → dầu MBA chính + OLTC; TI/TU/Sứ xuyên → bảng dầu
+ *  TI/TU/Sứ xuyên (lọc đúng loại); "Khác" → không bảng dầu nào (app không có thí nghiệm dầu cho loại này);
+ *  "" → cả 3. Hàm thuần — có test. */
+function lichsuOilSourceVisibility(equipType) {
   const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
-  if (instrumentTypes.includes(equipFilter)) {
-    return (_allTioOilTests || []).filter((r) => r.equipment_type === equipFilter);
-  }
-  return [..._allOilTests, ..._allOltcOilTests, ...(_allTioOilTests || [])];
+  if (!equipType) return { main: true, oltc: true, instrument: true, instrumentType: "" };
+  if (equipType === DGA.EQUIPMENT_TYPES.MBA) return { main: true, oltc: true, instrument: false, instrumentType: "" };
+  if (instrumentTypes.includes(equipType)) return { main: false, oltc: false, instrument: true, instrumentType: equipType };
+  return { main: false, oltc: false, instrument: false, instrumentType: "" };
+}
+
+function lichsuEquipFilter() {
+  return ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
+}
+/** Lần đo khí có khớp "Loại thiết bị" của bộ lọc chung? "__none__" = bản ghi cũ chưa ghi loại thiết bị. */
+const LICHSU_NO_TYPE = "__none__";
+function lichsuGasTypeMatches(rec, eq) {
+  if (!eq) return true;
+  if (eq === LICHSU_NO_TYPE) return !rec.equipment_type;
+  return rec.equipment_type === eq;
+}
+
+/** Bản ghi khớp bộ lọc chung — dùng cho bảng và cho số đếm trên 2 nút chọn bảng. */
+function lichsuFilteredGas() {
+  const filter = lichsuFilterValues();
+  const eq = lichsuEquipFilter();
+  return _allMeasurements.filter((r) => lichsuMatchesFilter(r, filter) && lichsuGasTypeMatches(r, eq));
+}
+function lichsuFilteredOil() {
+  const filter = lichsuFilterValues();
+  const vis = lichsuOilSourceVisibility(lichsuEquipFilter());
+  const pick = (on, arr) => (on ? (arr || []).filter((r) => lichsuMatchesFilter(r, filter)) : []);
+  return {
+    main: pick(vis.main, _allOilTests),
+    oltc: pick(vis.oltc, _allOltcOilTests),
+    instrument: pick(vis.instrument, _allTioOilTests).filter((r) => !vis.instrumentType || r.equipment_type === vis.instrumentType),
+  };
+}
+
+/** Số bản ghi khớp lọc trên 2 nút "Khí hòa tan (DGA)" / "Dầu" + dòng tóm tắt bộ lọc + bật/tắt nút "Xóa lọc". */
+function updateLichSuCounts() {
+  const gasEl = $("lichsuCountGas");
+  if (!gasEl) return;
+  const oil = lichsuFilteredOil();
+  const nGas = lichsuFilteredGas().length;
+  const nOil = oil.main.length + oil.oltc.length + oil.instrument.length;
+  gasEl.textContent = `(${nGas})`;
+  $("lichsuCountOil").textContent = `(${nOil})`;
+  const f = lichsuFilterValues();
+  const eq = lichsuEquipFilter();
+  const parts = [];
+  if (f.station) parts.push(f.station);
+  if (f.device) parts.push(f.device);
+  if (eq) parts.push(eq === LICHSU_NO_TYPE ? "chưa ghi loại thiết bị" : eq);
+  if (f.from || f.to) parts.push(`${f.from ? fmtDateVN(f.from) : "…"} → ${f.to ? fmtDateVN(f.to) : "…"}`);
+  const active = parts.length > 0;
+  $("lichsuFilterSummary").textContent = active ? "Đang lọc: " + parts.join(" · ") : "";
+  $("btnLichsuClearFilters").disabled = !active;
+  const badRange = f.from && f.to && f.from > f.to;
+  $("lichsu_to").classList.toggle("is-invalid", !!badRange);
+  if (badRange) $("lichsuFilterSummary").textContent = 'Khoảng ngày chưa đúng: "Từ ngày" đang sau "Đến ngày".';
+}
+
+/** Nguồn dữ liệu để tính gợi ý cho #lichsu_station/#lichsu_device — dữ liệu khí + dầu đúng "Loại thiết bị" của bộ
+ *  lọc chung (không phụ thuộc bảng đang xem), để không gợi ý thiết bị/trạm không thuộc nhóm đang chọn. */
+function lichsuDeviceSourceRecords() {
+  // Bộ lọc chung: gợi ý từ CẢ dữ liệu khí lẫn dầu đúng Loại thiết bị đang chọn — chọn 1 thiết bị rồi chuyển bảng
+  // vẫn có nghĩa ở bảng kia.
+  const eq = lichsuEquipFilter();
+  const vis = lichsuOilSourceVisibility(eq);
+  const gas = _allMeasurements.filter((r) => lichsuGasTypeMatches(r, eq));
+  const oil = [
+    ...(vis.main ? _allOilTests : []),
+    ...(vis.oltc ? _allOltcOilTests : []),
+    ...(vis.instrument ? (_allTioOilTests || []).filter((r) => !vis.instrumentType || r.equipment_type === vis.instrumentType) : []),
+  ];
+  return [...gas, ...oil];
 }
 
 /** Danh sách gợi ý cho ô combo "Trạm biến áp" (#lichsu_station) — CHỈ liệt kê các trạm
@@ -236,6 +303,7 @@ function refreshLichSuOilTable() {
     .slice()
     .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
   renderOilTestRows("lichsuOilHistoryTable", "lichsuOilHistoryEmpty", sorted);
+  updateLichSuCounts();
 }
 
 function refreshLichSuOltcTable() {
@@ -258,16 +326,11 @@ function refreshLichSuOltcTable() {
  *  quán 100% cách tính Kết luận. */
 function refreshLichSuInstrumentOilTable() {
   if (!$("lichsuInstrumentOilHistoryTable")) return; // phòng khi gọi trước khi DOM sẵn sàng
-  const filter = lichsuFilterValues();
-  const equipTypeFilter = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
-  const instrumentTypes = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING];
-  const isInstrumentType = instrumentTypes.includes(equipTypeFilter);
-  const sorted = (_allTioOilTests || [])
-    .filter((r) => lichsuMatchesFilter(r, filter))
-    .filter((r) => !isInstrumentType || r.equipment_type === equipTypeFilter)
+  const sorted = lichsuFilteredOil().instrument
     .slice()
     .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date));
   renderTioOilTestRows("lichsuInstrumentOilHistoryTable", "lichsuInstrumentOilHistoryEmpty", sorted);
+  updateLichSuCounts();
 }
 
 // ---------------------------------------------------------------------

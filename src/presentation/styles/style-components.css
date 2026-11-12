@@ -765,3 +765,24 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   .input-toolbar-type { flex: 1 1 100%; }
   .input-toolbar-select { flex: 1; min-width: 0; }
 }
+
+/* Nút "Về đầu trang" (setupBackToTop(), ui-layout.js): góc phải dưới, nổi trên nội dung, dưới hộp thoại. */
+.back-to-top {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: var(--btn-primary-text);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+}
+.back-to-top:hover { background: var(--btn-primary-hover); }
+.back-to-top > svg { width: 22px; height: 22px; margin: 0; }
+.back-to-top.hidden { display: none; }

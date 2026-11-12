@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v90-table-topscroll") {
+          if (k !== "dga-offline-v91-lichsu-filters") {
             caches.delete(k);
           }
         });
@@ -106,6 +106,7 @@
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4.5c2.5-1.2 5.5-1.2 8 0v15c-2.5-1.2-5.5-1.2-8 0v-15zM20 4.5c-2.5-1.2-5.5-1.2-8 0v15c2.5-1.2 5.5-1.2 8 0v-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.3 15.3L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 8v5M8 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sitemap" viewBox="0 0 24 24"><circle cx="4.5" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="19" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.8 12H10M10 12V5h3.7M10 12h3.7M10 12v7h3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></symbol>
@@ -212,6 +213,8 @@
   <!-- Chỉ báo tải: vòng xoay hiện % ở GIỮA header theo chiều đứng (điện thoại: cạnh nút ⋯) — xem
        src/presentation/components/ui-busy.js. Nhãn chữ ("Đang lưu..."/"Đang cập nhật dữ liệu...") chỉ dành cho trình
        đọc màn hình + tooltip; % không nằm trong vùng aria-live để không bị đọc liên tục. -->
+  <!-- Nút "Về đầu trang" — hiện khi đã cuộn xuống (setupBackToTop(), ui-layout.js). -->
+  <button type="button" id="btnBackToTop" class="back-to-top hidden" aria-label="Về đầu trang" title="Về đầu trang"><svg class="icon-svg" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></button>
   <div id="busyIndicator" class="busy-indicator hidden" title="Đang lưu...">
     <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang lưu...</span>
     <div class="busy-ring" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
@@ -874,65 +877,65 @@
     <!-- ===================== TAB: LỊCH SỬ ĐO ===================== -->
     <section id="tab-lichsu" class="tab-panel hidden">
       <div class="panel">
-        <div class="toolbar">
-          <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</h2>
-          <div class="u-d-flex u-gap-10px u-items-center u-wrap-wrap">
-            <!-- Áp dụng cho CẢ 2 view "Khí hòa tan (DGA)"/"Dầu" — nhưng ý nghĩa các lựa
-                 chọn KHÁC NHAU theo từng view nên nội dung <option> được nạp lại bằng JS
-                 mỗi lần đổi view (xem populateHistoryEquipmentFilterOptions(), app-core.js):
-                 ở view DGA lọc theo LOẠI THIẾT BỊ (TI/TU/MBA/Sứ xuyên/Khác, vì bảng đó gộp
-                 chung mọi loại); ở view "Dầu" lọc theo NGUỒN dầu (Dầu MBA chính/Dầu OLTC,
-                 vì 2 bảng đó cột dữ liệu khác hẳn nhau nên vẫn hiện tách riêng, chỉ gộp
-                 chung 1 nút bấm + 1 ô lọc cho gọn). Nội dung <option> bên dưới là mặc định
-                 lúc tải trang (view "gas") — sẽ bị JS ghi đè ngay khi setupLichSuViewToggle()
-                 chạy. -->
-            <select id="historyEquipmentFilter" title="Lọc theo loại thiết bị" aria-label="Lọc theo loại thiết bị">
-              <option value="">Tất cả loại thiết bị</option>
-              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
-              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
-              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
-              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
-              <option value="Khác">Khác</option>
-            </select>
-            <!-- Thay ô tìm kiếm tự do #historyFilter cũ (chỉ lọc gần đúng theo substring)
-                 bằng 2 ô combo tự gõ-tìm giống #tr_station/#tr_device ở tab "Xu hướng" (xem
-                 setupCombo()/lichsuStationOptions()/lichsuDeviceOptions(), ui-history.js/
-                 app-core.js): #lichsu_station gợi ý CHỈ các trạm thực sự có dữ liệu trong
-                 đúng nhóm đang xem (view DGA/Dầu + lựa chọn ở #historyEquipmentFilter trên
-                 kia); #lichsu_device gợi ý thiết bị THUỘC đúng trạm đang chọn (để trống Trạm
-                 = gợi ý thiết bị mọi trạm, kèm tên trạm để phân biệt), và TỰ ĐỘNG lọc theo
-                 đúng "gom nhóm" ở #historyEquipmentFilter (đổi lựa chọn đó thì danh sách gợi
-                 ý thiết bị đổi theo ngay lần mở kế tiếp, không cần nạp lại gì thêm). Vẫn cho
-                 gõ tự do tên chưa có trong gợi ý như mọi combo khác trong app. -->
-            <div class="combo-wrap u-w-190px">
-              <input id="lichsu_station" type="text" placeholder="Trạm biến áp — để trống = TẤT CẢ" autocomplete="off" />
+        <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</h2>
+        <!-- BỘ LỌC CHUNG (lọc 1 lần cho cả "Khí hòa tan" và "Dầu"): Trạm, Thiết bị, Loại thiết bị, khoảng ngày lấy mẫu.
+             Chuyển qua lại 2 bảng vẫn giữ nguyên bộ lọc; 2 nút chọn bảng bên dưới hiện số bản ghi khớp lọc của từng bảng.
+             "Loại thiết bị" dùng CHUNG 1 danh sách (trước đây ở view "Dầu" ô này đổi thành "nguồn dầu" và bị đặt lại
+             "Tất cả" mỗi lần chuyển bảng); ở bảng Dầu tự quy đổi: MBA/Kháng dầu → bảng dầu MBA chính + OLTC; TI/TU/Sứ
+             xuyên → bảng dầu TI/TU/Sứ xuyên đúng loại đó — xem lichsuOilSourceVisibility(), ui-history.js. Ô Trạm/Thiết
+             bị gợi ý từ dữ liệu của CẢ 2 bảng (đúng Loại thiết bị đang chọn), không phụ thuộc bảng đang xem. -->
+        <fieldset class="lichsu-filters" aria-describedby="lichsuFilterSummary">
+          <legend class="lichsu-filters-legend">Bộ lọc chung — áp dụng cho cả Khí hòa tan và Dầu</legend>
+          <div class="lichsu-filter">
+            <label for="lichsu_station">Trạm biến áp</label>
+            <div class="combo-wrap">
+              <input id="lichsu_station" type="text" placeholder="Tất cả trạm" autocomplete="off" />
               <button type="button" id="lichsu_station_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="lichsu_station_list" class="combo-list hidden"></div>
             </div>
-            <div class="combo-wrap u-w-200px">
-              <input id="lichsu_device" type="text" placeholder="Thiết bị — gõ để tìm" autocomplete="off" />
+          </div>
+          <div class="lichsu-filter">
+            <label for="lichsu_device">Thiết bị</label>
+            <div class="combo-wrap">
+              <input id="lichsu_device" type="text" placeholder="Tất cả thiết bị — gõ để tìm" autocomplete="off" />
               <button type="button" id="lichsu_device_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
               <div id="lichsu_device_list" class="combo-list hidden"></div>
             </div>
           </div>
-        </div>
-        <!-- Chọn xem lịch sử của NGUỒN dữ liệu nào — Khí hòa tan (DGA)/Dầu (gộp chung
-             Dầu MBA chính + Dầu OLTC vào 1 nút, phân biệt tiếp bằng #historyEquipmentFilter
-             bên trên — xem ghi chú ở đó). Lựa chọn được nhớ lại giữa các lần vào app
-             (localStorage, xem setupLichSuViewToggle() ở app-core.js) — cùng quy ước với
-             các tùy chọn hiển thị khác (bố cục tab dọc/ngang, bật/tắt dự báo xu hướng).
-             Cả 2 bảng dầu ở đây CHỈ ĐỂ XEM NHANH — nút "Sửa" nhảy sang đúng tab "Dầu cách
-             điện" để sửa (xem onEditOilTest()/onEditOltcOilTest(), ui-oil.js/ui-oltc.js),
-             không lặp lại form nhập liệu ở đây. -->
-        <div class="btn-row u-mt-12px" id="lichsuTypeToggle">
+          <label class="lichsu-filter">
+            <span>Loại thiết bị</span>
+            <select id="historyEquipmentFilter">
+              <option value="">Tất cả loại thiết bị</option>
+              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
+              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
+              <option value="Khác">Khác</option>
+              <option value="__none__">(Chưa ghi loại thiết bị)</option>
+            </select>
+          </label>
+          <label class="lichsu-filter lichsu-filter-date">
+            <span>Từ ngày</span>
+            <input id="lichsu_from" type="date" />
+          </label>
+          <label class="lichsu-filter lichsu-filter-date">
+            <span>Đến ngày</span>
+            <input id="lichsu_to" type="date" />
+          </label>
+          <button type="button" class="btn ghost sm lichsu-filter-clear" id="btnLichsuClearFilters" disabled>Xóa lọc</button>
+        </fieldset>
+        <!-- Chọn bảng xem: Khí hòa tan (DGA) / Dầu (gồm Dầu MBA chính, OLTC, TI/TU/Sứ xuyên). Số trong ngoặc = số bản ghi
+             khớp bộ lọc chung ở trên (updateLichSuCounts(), ui-history.js). Lựa chọn bảng nhớ giữa các lần vào app. -->
+        <div class="btn-row u-mt-12px" id="lichsuTypeToggle" role="group" aria-label="Chọn bảng lịch sử">
           <button type="button" class="btn primary" data-lichsu-type="gas">
             <svg class="icon-svg u-w-16px u-h-16px u-mr-5px u-va-3px" aria-hidden="true"><use href="#icon-flask"></use></svg>
-            Khí hòa tan (DGA)
+            Khí hòa tan (DGA) <span class="lichsu-count" id="lichsuCountGas"></span>
           </button>
           <button type="button" class="btn ghost" data-lichsu-type="oil">
             <svg class="icon-svg u-w-16px u-h-16px u-mr-5px u-va-3px" aria-hidden="true"><use href="#icon-droplet"></use></svg>
-            Dầu
+            Dầu <span class="lichsu-count" id="lichsuCountOil"></span>
           </button>
+          <span class="note lichsu-filter-summary" id="lichsuFilterSummary" aria-live="polite"></span>
         </div>
         <!-- Đang nạp lịch sử đo từ database (ẩn khi setHistoryLoading(false), xem
              ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
@@ -3665,7 +3668,15 @@
           <summary>10. Xem lại, sửa, xóa và so sánh (tab Lịch sử đo)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
           <h3>10.1. Chọn nội dung xem</h3>
-          <p>Ở đầu tab, chọn xem <strong>Khí hòa tan (DGA)</strong> hoặc <strong>Dầu</strong> (gồm 3 bảng: dầu MBA chính / dầu OLTC / dầu TI-TU-Sứ xuyên). Dùng ô lọc <strong>Trạm/Thiết bị</strong> (gõ tự do) và bộ lọc <strong>Loại thiết bị</strong> để thu hẹp danh sách.</p>
+          <p><strong>Bộ lọc chung</strong> ở đầu tab lọc <strong>một lần cho cả 2 bảng</strong> Khí hòa tan và Dầu:</p>
+          <ul class="rec-list">
+          <li><strong>Trạm biến áp</strong>, <strong>Thiết bị</strong>: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu.</li>
+          <li><strong>Loại thiết bị</strong>: MBA/Kháng dầu, TI, TU, Sứ xuyên, Khác, hoặc <strong>(Chưa ghi loại thiết bị)</strong> cho các bản ghi cũ chưa ghi loại. Ở bảng Dầu: chọn MBA/Kháng dầu thì hiện bảng dầu MBA chính + dầu OLTC; chọn TI/TU/Sứ xuyên thì hiện bảng dầu TI/TU/Sứ xuyên đúng loại đó.</li>
+          <li><strong>Từ ngày / Đến ngày</strong>: khoảng ngày lấy mẫu (để trống 1 đầu = không giới hạn đầu đó).</li>
+          <li><strong>Xóa lọc</strong>: bỏ toàn bộ điều kiện lọc.</li>
+          </ul>
+          <p>Bên dưới bộ lọc, bấm <strong>Khí hòa tan (DGA)</strong> hoặc <strong>Dầu</strong> để chuyển bảng — bộ lọc <strong>giữ nguyên</strong> khi chuyển. Số trong ngoặc trên mỗi nút là số bản ghi khớp bộ lọc của bảng đó, nên biết trước bảng kia có dữ liệu hay không. Dòng "Đang lọc: ..." cạnh 2 nút tóm tắt các điều kiện đang áp dụng.</p>
+          <p>Bảng dài: nút tròn <strong>mũi tên lên</strong> ở góc phải dưới màn hình (hiện khi đã cuộn xuống) đưa về đầu trang ngay.</p>
           <h3>10.2. Đọc bảng lịch sử DGA</h3>
           <p>Mỗi dòng gồm: ngày, trạm, thiết bị, loại, pha, lần đo, 7 khí + N2/O2, TCG, <strong>Kết luận</strong> (kèm "⚠ Vượt ngưỡng loại bỏ" nếu có), mã <strong>Bảng 66</strong>, vùng <strong>Duval</strong>, <strong>Người nhập</strong> và các nút thao tác.</p>
           <ul class="rec-list">

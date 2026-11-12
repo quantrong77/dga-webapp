@@ -407,7 +407,16 @@ Thí nghiệm dầu sứ xuyên nhập ở khối **TI / TU / Sứ xuyên** (m�
 
 ### 10.1. Chọn nội dung xem
 
-Ở đầu tab, chọn xem **Khí hòa tan (DGA)** hoặc **Dầu** (gồm 3 bảng: dầu MBA chính / dầu OLTC / dầu TI-TU-Sứ xuyên). Dùng ô lọc **Trạm/Thiết bị** (gõ tự do) và bộ lọc **Loại thiết bị** để thu hẹp danh sách.
+**Bộ lọc chung** ở đầu tab lọc **một lần cho cả 2 bảng** Khí hòa tan và Dầu:
+
+- **Trạm biến áp**, **Thiết bị**: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu.
+- **Loại thiết bị**: MBA/Kháng dầu, TI, TU, Sứ xuyên, Khác, hoặc **(Chưa ghi loại thiết bị)** cho các bản ghi cũ chưa ghi loại. Ở bảng Dầu: chọn MBA/Kháng dầu thì hiện bảng dầu MBA chính + dầu OLTC; chọn TI/TU/Sứ xuyên thì hiện bảng dầu TI/TU/Sứ xuyên đúng loại đó.
+- **Từ ngày / Đến ngày**: khoảng ngày lấy mẫu (để trống 1 đầu = không giới hạn đầu đó).
+- **Xóa lọc**: bỏ toàn bộ điều kiện lọc.
+
+Bên dưới bộ lọc, bấm **Khí hòa tan (DGA)** hoặc **Dầu** để chuyển bảng — bộ lọc **giữ nguyên** khi chuyển. Số trong ngoặc trên mỗi nút là số bản ghi khớp bộ lọc của bảng đó, nên biết trước bảng kia có dữ liệu hay không. Dòng "Đang lọc: ..." cạnh 2 nút tóm tắt các điều kiện đang áp dụng.
+
+Bảng dài: nút tròn **mũi tên lên** ở góc phải dưới màn hình (hiện khi đã cuộn xuống) đưa về đầu trang ngay.
 
 ### 10.2. Đọc bảng lịch sử DGA
 

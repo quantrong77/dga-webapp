@@ -58,59 +58,18 @@ function setupNameplateFieldsToggle() {
  *  (giống TAB_LAYOUT_STORAGE_KEY/TREND_FORECAST_ENABLED_STORAGE_KEY ở trên), không phải
  *  dữ liệu nghiệp vụ nên KHÔNG lưu qua Storage. Đổi class .primary/.ghost trên chính nút
  *  bấm để hiện rõ đang chọn loại nào (không thêm class CSS mới, tái dùng luôn 2 biến thể
- *  nút đã có ở toàn app). View "oil" gộp CHUNG "Dầu MBA chính" + "Dầu OLTC" + "Dầu TI/TU/
- *  Sứ xuyên" (trước đây Dầu MBA chính/Dầu OLTC là 2 nút riêng, còn dầu TI/TU chưa từng
- *  hiện ở tab này) — phân biệt tiếp bằng #historyEquipmentFilter (xem
- *  populateHistoryEquipmentFilterOptions()/toggleLichSuOilSourceWraps() bên dưới), CÙNG 1
- *  ô lọc dùng lại được cho cả 2 view — ở view "gas" lọc theo LOẠI THIẾT BỊ (bảng đó gộp
- *  chung mọi loại), ở view "oil" lọc theo NGUỒN dầu (Dầu MBA chính/Dầu OLTC/Dầu TI/TU/Sứ
- *  xuyên — 3 bảng con cột dữ liệu khác hẳn nhau nên vẫn hiện tách riêng, không gộp chung
- *  1 bảng). */
+ *  nút đã có ở toàn app). View "oil" gộp "Dầu MBA chính" + "Dầu OLTC" + "Dầu TI/TU/
+ *  Sứ xuyên" (3 bảng con). Bộ lọc dùng CHUNG cho cả 2 view (Trạm/Thiết bị/Loại thiết bị/khoảng ngày) và giữ nguyên
+ *  khi chuyển view — xem lichsuFilterValues()/lichsuOilSourceVisibility() ở ui-history.js. */
 const LICHSU_VIEW_STORAGE_KEY = "dga_lichsu_view";
 
-const LICHSU_GAS_EQUIPMENT_OPTIONS = [
-  { value: "", label: "Tất cả loại thiết bị" },
-  { value: "TI (biến dòng điện)", label: "TI (biến dòng điện)" },
-  { value: "TU (biến điện áp)", label: "TU (biến điện áp)" },
-  { value: "Sứ xuyên (Bushing)", label: "Sứ xuyên (Bushing)" },
-  { value: "MBA/Kháng dầu", label: "MBA/Kháng dầu" },
-  { value: "Khác", label: "Khác" },
-];
-const LICHSU_OIL_SOURCE_OPTIONS = [
-  { value: "", label: "Tất cả (MBA chính + OLTC + TI/TU/Sứ xuyên)" },
-  { value: "main", label: "Dầu MBA chính" },
-  { value: "oltc", label: "Dầu OLTC" },
-  { value: DGA.EQUIPMENT_TYPES.TI, label: "Dầu TI (biến dòng điện)" },
-  { value: DGA.EQUIPMENT_TYPES.TU, label: "Dầu TU (biến điện áp)" },
-  { value: DGA.EQUIPMENT_TYPES.BUSHING, label: "Dầu Sứ xuyên (Bushing)" },
-];
 
-/** Nạp lại nội dung <option> của #historyEquipmentFilter theo đúng view đang xem — 2 bộ
- *  lựa chọn Ý NGHĨA KHÁC NHAU hoàn toàn (loại thiết bị vs nguồn dầu) nên không thể dùng
- *  chung 1 danh sách <option> tĩnh, phải nạp lại bằng JS mỗi lần đổi view. Luôn reset về
- *  "" (Tất cả) khi đổi view — đơn giản hơn nhớ riêng từng view, và tránh lẫn giá trị của
- *  view cũ (VD "oltc" không có nghĩa gì ở view "gas"). */
-function populateHistoryEquipmentFilterOptions(view) {
-  const select = $("historyEquipmentFilter");
-  if (!select) return;
-  const options = view === "oil" ? LICHSU_OIL_SOURCE_OPTIONS : LICHSU_GAS_EQUIPMENT_OPTIONS;
-  select.innerHTML = options.map((o) => `<option value="${o.value}">${o.label}</option>`).join("");
-}
-
-/** Ở view "Dầu": hiện 1 trong 3 (hoặc cả 3, khi #historyEquipmentFilter = "" = "Tất cả")
- *  bảng con #lichsuOilMainSubWrap/#lichsuOltcSubWrap/#lichsuInstrumentOilSubWrap theo
- *  đúng lựa chọn. 2 bảng dầu MBA/OLTC luôn được TÍNH SẴN cả 2 (xem
- *  refreshLichSuOilTable()/refreshLichSuOltcTable(), ui-history.js) nên chỉ cần ẩn/hiện
- *  DOM — nhưng bảng TI/TU/Sứ xuyên thì NGƯỢC LẠI, gộp CHUNG 1 bảng dữ liệu
- *  (_allTioOilTests) cho cả 3 loại thiết bị nên phải LỌC LẠI theo đúng loại đang chọn mỗi
- *  khi đổi lựa chọn (xem refreshLichSuInstrumentOilTable(), ui-history.js) — không thể
- *  chỉ ẩn/hiện DOM như 2 bảng kia. Gọi được trực tiếp từ sự kiện "change". */
+/** Bảng Dầu: ẩn/hiện 3 bảng con theo "Loại thiết bị" của bộ lọc chung (lichsuOilSourceVisibility(), ui-history.js). */
 function toggleLichSuOilSourceWraps() {
-  const value = ($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "";
-  const isInstrumentType = [DGA.EQUIPMENT_TYPES.TI, DGA.EQUIPMENT_TYPES.TU, DGA.EQUIPMENT_TYPES.BUSHING].includes(value);
-  $("lichsuOilMainSubWrap").classList.toggle("hidden", value !== "" && value !== "main");
-  $("lichsuOltcSubWrap").classList.toggle("hidden", value !== "" && value !== "oltc");
-  $("lichsuInstrumentOilSubWrap").classList.toggle("hidden", value !== "" && !isInstrumentType);
+  const v = lichsuOilSourceVisibility(($("historyEquipmentFilter") && $("historyEquipmentFilter").value) || "");
+  $("lichsuOilMainSubWrap").classList.toggle("hidden", !v.main);
+  $("lichsuOltcSubWrap").classList.toggle("hidden", !v.oltc);
+  $("lichsuInstrumentOilSubWrap").classList.toggle("hidden", !v.instrument);
   refreshLichSuInstrumentOilTable();
 }
 
@@ -128,7 +87,6 @@ function setLichSuView(view) {
   });
   const wraps = { gas: $("lichsuGasWrap"), oil: $("lichsuOilWrap") };
   Object.entries(wraps).forEach(([key, el]) => { if (el) el.classList.toggle("hidden", key !== view); });
-  populateHistoryEquipmentFilterOptions(view);
   try { localStorage.setItem(LICHSU_VIEW_STORAGE_KEY, view); } catch (e) { /* localStorage bị chặn (chế độ riêng tư/tắt lưu trữ) — chủ ý bỏ qua, app vẫn chạy */ }
   // Đổi bảng đang xem thì nạp lại đúng bảng đó theo bộ lọc #lichsu_station/#lichsu_device hiện tại — cả 3
   // bảng dầu chỉ tính lại từ dữ liệu ĐÃ CÓ SẴN trong bộ nhớ (_allOilTests/

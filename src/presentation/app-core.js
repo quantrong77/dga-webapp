@@ -105,6 +105,7 @@ function setupStaticUI() {
   setupMiniModalEscape();
   if (typeof setupDialogFocus === "function") setupDialogFocus();
   if (typeof setupTopScrollbars === "function") setupTopScrollbars();
+  if (typeof setupBackToTop === "function") setupBackToTop();
   if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();
   setupHeaderMenu();
@@ -470,13 +471,25 @@ function bindHistoryTrendAlertEvents() {
   ["input", "change"].forEach((evt) => {
     $("lichsu_station").addEventListener(evt, refreshAllLichSuTables);
     $("lichsu_device").addEventListener(evt, refreshAllLichSuTables);
+    $("lichsu_from").addEventListener(evt, refreshAllLichSuTables);
+    $("lichsu_to").addEventListener(evt, refreshAllLichSuTables);
   });
-  // #historyEquipmentFilter dùng CHUNG cho cả 2 view nhưng xử lý khác nhau: view "gas"
-  // cần nạp lại bảng (lọc theo loại thiết bị, xem refreshHistoryUI()); view "oil" chỉ
-  // cần ẩn/hiện 2 bảng con đã tính sẵn (lọc theo nguồn dầu, xem toggleLichSuOilSourceWraps()).
+  // Loại thiết bị (bộ lọc chung): lọc lại bảng khí + ẩn/hiện bảng con dầu đúng loại — giữ nguyên khi chuyển bảng.
   $("historyEquipmentFilter").addEventListener("change", () => {
-    if (currentLichSuView() === "gas") refreshHistoryUI();
-    else toggleLichSuOilSourceWraps();
+    refreshHistoryUI();
+    toggleLichSuOilSourceWraps();
+  });
+  $("btnLichsuClearFilters").addEventListener("click", () => {
+    ["lichsu_station", "lichsu_device", "lichsu_from", "lichsu_to", "historyEquipmentFilter"].forEach((id) => {
+      $(id).value = "";
+      $(id).classList.remove("is-invalid");
+    });
+    // Báo cho ngữ cảnh xem chung (ui-view-context.js) biết đã bỏ chọn Trạm/Thiết bị → 2 tab Xu hướng/Cảnh báo cũng bỏ lọc.
+    $("lichsu_device").dispatchEvent(new Event("change", { bubbles: true }));
+    $("lichsu_station").dispatchEvent(new Event("change", { bubbles: true }));
+    toggleLichSuOilSourceWraps();
+    refreshAllLichSuTables();
+    $("lichsu_station").focus();
   });
   // Nút "Sắp xếp lại Lần đo..." ở bảng "Lịch sử đo khí hòa tan (DGA)" — xem
   // onHistoryRenumber() ở ui-history.js.

@@ -166,6 +166,28 @@ function setupTopScrollbars() {
   new MutationObserver(updateTop).observe(document.body, { attributes: true, attributeFilter: ["class"] });
 }
 
+/** Nút "Về đầu trang" (#btnBackToTop) — hiện khi đã cuộn xuống quá ~1,5 màn hình (bảng Lịch sử đo nhiều dòng...),
+ *  bấm thì cuộn lên đầu và đưa focus về nội dung chính (người dùng bàn phím không bị kẹt ở cuối trang). */
+function setupBackToTop() {
+  const btn = document.getElementById("btnBackToTop");
+  if (!btn) return;
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    btn.classList.toggle("hidden", window.scrollY < Math.max(600, window.innerHeight * 1.5));
+  };
+  window.addEventListener("scroll", () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  btn.addEventListener("click", () => {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    const main = document.getElementById("mainContent");
+    if (main) main.focus({ preventScroll: true });
+  });
+  update();
+}
+
 function setupTabs() {
   // Nút chuyển nhanh sang tab khác (vd thông báo "Tài khoản chỉ xem": data-goto-tab="lichsu").
   document.querySelectorAll("[data-goto-tab]").forEach((el) => {
