@@ -4,12 +4,6 @@ on:
   push:
     branches:
       - main
-      # TAM THOI: deploy thu nhanh sua dang nhap Google truoc khi merge — xoa dong nay sau khi merge
-      - fix/khoi-phuc-dang-nhap-google
-      # TAM THOI: thu tab Ly-Hoa dau mo rong — xoa dong nay truoc khi merge
-      - feat/ly-hoa-dau-mo-rong
-      # TAM THOI: thu 2 tab con Nhap BBTN cu / Lap BBTN — xoa dong nay truoc khi merge
-      - feat/tach-tab-nhap-lap-bbtn
   workflow_dispatch:
 
 permissions:
