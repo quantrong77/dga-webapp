@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v94-header-search") {
+          if (k !== "dga-offline-v98-can-luu-y") {
             caches.delete(k);
           }
         });
@@ -1136,7 +1136,7 @@
           <label class="field u-maxw-320px u-flex-1-1-200px u-m-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="al_stationFilter" type="text" placeholder="Gõ để tìm trạm, để trống = TẤT CẢ trạm có cảnh báo" autocomplete="off" />
-              <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm đang có cảnh báo">▼</button>
+              <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm có thiết bị cần lưu ý/theo dõi">▼</button>
               <div id="al_stationFilter_list" class="combo-list hidden"></div>
             </div>
           </label>
@@ -1145,7 +1145,7 @@
           <label class="field u-maxw-320px u-flex-1-1-200px u-m-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
             <div class="combo-wrap">
               <input id="al_deviceFilter" type="text" placeholder="Gõ để tìm thiết bị, để trống = TẤT CẢ thiết bị" autocomplete="off" />
-              <button type="button" id="al_deviceFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị đang có cảnh báo thuộc trạm đã chọn">▼</button>
+              <button type="button" id="al_deviceFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị cần lưu ý/theo dõi thuộc trạm đã chọn">▼</button>
               <div id="al_deviceFilter_list" class="combo-list hidden"></div>
             </div>
           </label>
@@ -1190,10 +1190,10 @@
         <p class="note warn hidden" id="alertsStaleNote"></p>
 
         <div class="stat-row" id="alertsStatRow">
-          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Thiết bị đang theo dõi</div><div class="value" id="al_totalDevices">—</div></div>
-          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị đang có cảnh báo</div><div class="value" id="al_warnDevices">—</div></div>
-          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alert" aria-pressed="false" title="Bấm để chỉ xem mức Cảnh báo (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div></button>
-          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alarm" aria-pressed="false" title="Bấm để chỉ xem mức Báo động (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div></button>
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Tổng số thiết bị</div><div class="value" id="al_totalDevices">—</div></div>
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị cần lưu ý/theo dõi</div><div class="value" id="al_warnDevices" title="Thiết bị ở mức Cảnh báo hoặc Báo động (theo lần đo gần nhất) / tổng số thiết bị">—</div><div class="stat-sub" id="al_warnDevicesSub"></div></div>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alert" aria-pressed="false" title="Bấm để chỉ xem mức Cảnh báo (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div><div class="stat-sub" id="al_alertRowsSub"></div></button>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alarm" aria-pressed="false" title="Bấm để chỉ xem mức Báo động (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Thiết bị mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div><div class="stat-sub" id="al_alarmRowsSub"></div></button>
         </div>
 
         <div class="table-scroll"><table>
@@ -1240,7 +1240,7 @@
           <p class="empty-state-title">Chọn 1 thiết bị để xem xu hướng</p>
           <p class="empty-state-text">Gõ tên ở ô Thiết bị phía trên, hoặc bấm nhanh 1 thiết bị dưới đây.</p>
           <div class="quick-group hidden" id="trQuickAlerts">
-            <p class="quick-group-title">Đang có cảnh báo</p>
+            <p class="quick-group-title">Cần lưu ý/theo dõi</p>
             <div class="quick-chips" id="trQuickAlertsList"></div>
           </div>
           <div class="quick-group hidden" id="trQuickRecent">
@@ -3329,7 +3329,7 @@
           <ul class="rec-list">
           <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.</li>
           <li><strong>Giữa — Tìm nhanh thiết bị:</strong> gõ tên thiết bị hoặc tên trạm, <strong>không cần gõ dấu</strong> (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức <strong>Báo động/Cảnh báo</strong> nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi <strong>Enter</strong>) để mở <strong>Lịch sử đo</strong> của thiết bị đó; nút <strong>Xu hướng</strong> (hoặc <strong>Shift+Enter</strong>) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: <strong>Ctrl+K</strong> hoặc <strong>/</strong> để nhảy vào ô tìm, <strong>Esc</strong> để đóng.</li>
-          <li><strong>Bên phải:</strong> máy chủ đang dùng, <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị đang Cảnh báo/Báo động theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
+          <li><strong>Bên phải:</strong> máy chủ đang dùng, <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
           </ul>
           <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
@@ -3751,8 +3751,8 @@
           <div class="sm-body">
           <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.</p>
           <ul class="rec-list">
-          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động. Bấm thẻ <strong>Mức Cảnh báo</strong> hoặc <strong>Mức Báo động</strong> để chỉ xem mức đó (thẻ sáng lên); bấm lại để bỏ lọc.</li>
-          <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.</li>
+          <li><strong>Thống kê nhanh:</strong> tổng số thiết bị, số thiết bị <strong>cần lưu ý/theo dõi</strong> (= thiết bị ở mức Cảnh báo <strong>hoặc</strong> Báo động), số <strong>thiết bị</strong> mức Cảnh báo và số <strong>thiết bị</strong> mức Báo động. Mỗi thiết bị chỉ tính 1 lần ở <strong>mức nặng nhất</strong> của nó (VD khí hòa tan ở mức Cảnh báo nhưng dầu OLTC ở mức Báo động → tính vào Báo động), nên <strong>Cảnh báo + Báo động = số thiết bị cần lưu ý/theo dõi</strong>. Bảng bên dưới có thể nhiều dòng hơn số thiết bị vì mỗi nguồn dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) là 1 dòng; khi đó thẻ ghi thêm số dòng. Chuông trên thanh trên cùng và file Excel dùng cùng cách đếm này. Bấm thẻ <strong>Thiết bị mức Cảnh báo</strong> hoặc <strong>Thiết bị mức Báo động</strong> để chỉ xem các dòng ở mức đó (thẻ sáng lên); bấm lại để bỏ lọc.</li>
+          <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm có thiết bị cần lưu ý/theo dõi); để trống = tất cả.</li>
           <li>Mỗi dòng cho biết: <strong>thiết bị</strong> (kèm trạm và loại đo), <strong>mức cảnh báo</strong> (kèm kết luận, dấu "Đã hiệu chỉnh" nếu số liệu từng bị sửa), <strong>chỉ tiêu vượt ngưỡng</strong>, <strong>lần đo</strong> (kèm ngày). Thiếu tên trạm/thiết bị thì ghi <em>(chưa ghi trạm)</em> / <em>(chưa ghi tên thiết bị)</em>.</li>
           <li>Bấm <strong>Chi tiết</strong> ở cuối dòng để xem <strong>Hạng mục cảnh báo</strong> (lý do) và <strong>Khuyến cáo</strong> hành động; bấm <strong>Thu gọn</strong> để đóng. Trên điện thoại, mỗi cảnh báo hiện thành 1 thẻ.</li>
           <li><strong>Xem xu hướng:</strong> nhảy thẳng sang tab <strong>Xu hướng</strong>, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.</li>
@@ -3772,7 +3772,7 @@
           <div class="sm-body">
           <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng <strong>Tiêu chuẩn so sánh</strong> dưới đồ thị có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
           <h3>12.1. Vẽ đồ thị</h3>
-          <p>Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: <strong>Đang có cảnh báo</strong> (chấm đỏ = Báo động, vàng = Cảnh báo) và <strong>Vừa đo gần đây</strong>. Bấm 1 thiết bị là đồ thị hiện ngay.</p>
+          <p>Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: <strong>Cần lưu ý/theo dõi</strong> (chấm đỏ = Báo động, vàng = Cảnh báo) và <strong>Vừa đo gần đây</strong>. Bấm 1 thiết bị là đồ thị hiện ngay.</p>
           <ol type="1">
           <li>(Tùy chọn) Chọn <strong>Trạm biến áp</strong> để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.</li>
           <li>Chọn <strong>Thiết bị</strong>.</li>

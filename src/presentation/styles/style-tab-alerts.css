@@ -33,7 +33,7 @@
   .alert-detail { grid-template-columns: minmax(0, 1fr); }
 }
 /* Thẻ KPI lọc theo mức (button.stat-card-filter): giữ nguyên dáng thẻ, thêm trạng thái đang lọc. */
-button.stat-card-filter { font: inherit; text-align: left; cursor: pointer; width: 100%; }
+button.stat-card-filter { display: flex; flex-direction: column; justify-content: flex-start; font: inherit; text-align: left; cursor: pointer; width: 100%; }
 button.stat-card-filter:hover { border-color: var(--blue-700); }
 button.stat-card-filter[aria-pressed="true"] { border-color: var(--blue-700); box-shadow: var(--focus-ring); background: var(--blue-50); }
 
@@ -73,3 +73,7 @@ button.stat-card-filter[aria-pressed="true"] { border-color: var(--blue-700); bo
   .alerts-tbody .actions-cell > .btn-row.actions-stack { flex-direction: row; }
   .alerts-tbody > tr.alert-row-open { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 }
+
+/* Dòng phụ dưới số ở thẻ KPI (giải thích khi số dòng cảnh báo khác số thiết bị) — trống thì không chiếm chỗ. */
+.stat-sub { margin-top: 2px; font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.35; }
+.stat-sub:empty { display: none; }

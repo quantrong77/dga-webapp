@@ -34,6 +34,42 @@ function deviceIdentityKey(tram, deviceName, normalizedPhase) {
   return `${(tram || "").trim()}|||${(deviceName || "").trim()}|||${(normalizedPhase || "").trim()}`;
 }
 
+/** Thống kê cảnh báo THEO THIẾT BỊ (Trạm + Thiết bị + Pha định danh) — 1 thiết bị có thể có nhiều dòng cảnh báo,
+ *  mỗi dòng 1 nguồn dữ liệu (khí hòa tan / dầu MBA chính / dầu OLTC / dầu TI-TU). Trước đây thẻ "Mức Cảnh báo"/"Mức
+ *  Báo động" đếm SỐ DÒNG còn thẻ "Thiết bị cần lưu ý/theo dõi" (trước: "đang có cảnh báo") đếm SỐ THIẾT BỊ → 37 + 3 = 40 nhưng chỉ 39 thiết bị (1
+ *  thiết bị cảnh báo ở 2 nguồn). Nay mỗi thiết bị tính ĐÚNG 1 LẦN ở mức NẶNG NHẤT của nó (Báo động > Cảnh báo >
+ *  Bình thường) nên alarmDevices + alertDevices = số thiết bị đang có cảnh báo. Vẫn trả số dòng để hiện kèm.
+ *  Hàm thuần — dùng chung cho thẻ KPI tab Cảnh báo, file Excel và chuông ở header (có test). */
+function alertLevelSummary(rows) {
+  const rank = { alarm: 2, alert: 1, normal: 0 };
+  const byDevice = new Map();
+  const sources = new Map();
+  const rowsBy = { alarm: 0, alert: 0, normal: 0 };
+  (rows || []).forEach((a) => {
+    const lvl = rank[a.level] === undefined ? "normal" : a.level;
+    rowsBy[lvl]++;
+    const k = deviceIdentityKey(a.tram, a.deviceName, a.identityPhase);
+    if (!byDevice.has(k) || rank[lvl] > rank[byDevice.get(k)]) byDevice.set(k, lvl);
+    if (lvl !== "normal") {
+      if (!sources.has(k)) sources.set(k, new Set());
+      sources.get(k).add(a.source || "");
+    }
+  });
+  const levels = Array.from(byDevice.values());
+  return {
+    devices: byDevice.size,
+    warnDevices: levels.filter((l) => l !== "normal").length,
+    alarmDevices: levels.filter((l) => l === "alarm").length,
+    alertDevices: levels.filter((l) => l === "alert").length,
+    normalDevices: levels.filter((l) => l === "normal").length,
+    alarmRows: rowsBy.alarm,
+    alertRows: rowsBy.alert,
+    normalRows: rowsBy.normal,
+    multiSourceDevices: Array.from(sources.values()).filter((s) => s.size > 1).length,
+    deviceLevels: byDevice,
+  };
+}
+
 /** Chuẩn hóa Pha của 1 bản ghi KHÍ HÒA TAN (_allMeasurements, trường "pha") thành
  *  Pha ĐỊNH DANH THIẾT BỊ — "chung3pha" (PHA_CHUNG_3_PHA, xem PHA_OPTIONS ở dga-
  *  logic.js) nghĩa là "không tách riêng theo pha" nên quy về "", còn "A"/"B"/"C" giữ
@@ -898,14 +934,21 @@ function refreshAlertsUI() {
   const totalDevices = totalTrackedDeviceCount(station, device);
   // deviceIdentityKey() gồm cả Pha — nếu chỉ dùng Trạm+Thiết bị, cảnh báo ở TI 174 pha B
   // và TI 174 pha C (2 thiết bị vật lý khác nhau, cùng tên "thiet_bi") sẽ bị đếm gộp
-  // thành 1, làm số "Thiết bị đang có cảnh báo" thấp hơn thực tế.
-  const warnDeviceKeys = new Set(alerts.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
-  const alarmCount = alerts.filter((a) => a.level === "alarm").length;
-  const alertCount = alerts.filter((a) => a.level === "alert").length;
-  if ($("al_totalDevices")) $("al_totalDevices").textContent = String(totalDevices);
-  if ($("al_warnDevices")) $("al_warnDevices").textContent = `${warnDeviceKeys.size} / ${totalDevices}`;
-  if ($("al_alertCount")) $("al_alertCount").textContent = String(alertCount);
-  if ($("al_alarmCount")) $("al_alarmCount").textContent = String(alarmCount);
+  // thành 1, làm số "Thiết bị cần lưu ý/theo dõi" thấp hơn thực tế.
+  // Đếm THEO THIẾT BỊ, mỗi thiết bị 1 lần ở mức nặng nhất (alertLevelSummary()) → Cảnh báo + Báo động = số thiết bị
+  // cần lưu ý/theo dõi. Số DÒNG (1 dòng / nguồn dữ liệu) hiện kèm khi khác số thiết bị.
+  const sum = alertLevelSummary(alerts);
+  const setText = (id, v) => { if ($(id)) $(id).textContent = v; };
+  setText("al_totalDevices", String(totalDevices));
+  setText("al_warnDevices", `${sum.warnDevices} / ${totalDevices}`);
+  setText("al_alertCount", String(sum.alertDevices));
+  setText("al_alarmCount", String(sum.alarmDevices));
+  setText("al_warnDevicesSub", sum.multiSourceDevices ? `${sum.multiSourceDevices} thiết bị có ≥ 2 nguồn cần lưu ý` : "");
+  // Dòng mức Cảnh báo thuộc thiết bị đã tính vào Báo động (vì có nguồn khác ở mức Báo động).
+  const alertRowsOfAlarmDevices = alerts.filter((a) => a.level === "alert" &&
+    sum.deviceLevels.get(deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)) === "alarm").length;
+  setText("al_alertRowsSub", alertRowsOfAlarmDevices ? `+${alertRowsOfAlarmDevices} dòng ở thiết bị đã tính Báo động` : sum.alertRows !== sum.alertDevices ? `${sum.alertRows} dòng` : "");
+  setText("al_alarmRowsSub", sum.alarmRows !== sum.alarmDevices ? `${sum.alarmRows} dòng báo động` : "");
   const staleNote = $("alertsStaleNote");
   if (staleNote) {
     const staleN = alerts.filter((a) => a.isLatest === false).length;
@@ -1093,10 +1136,9 @@ async function onExportAlertsExcel(rows) {
 
   const now = new Date();
   const optText = (id) => { const el = $(id); return el && el.selectedIndex >= 0 ? el.options[el.selectedIndex].textContent : ""; };
-  const alarmCount = sorted.filter((a) => a.level === "alarm").length;
-  const alertCount = sorted.filter((a) => a.level === "alert").length;
-  const normalCount = sorted.filter((a) => a.level === "normal").length;
-  const deviceKeys = new Set(sorted.map((a) => deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)));
+  // Thống kê theo THIẾT BỊ (mức nặng nhất) — cộng lại đúng bằng "Số thiết bị"; số dòng ghi kèm nếu khác.
+  const sum = alertLevelSummary(sorted);
+  const withRows = (devices, rowsN) => (rowsN !== devices ? `${devices} thiết bị (${rowsN} dòng)` : `${devices} thiết bị`);
 
   const HEADER = [
     "Trạm", "Thiết bị", "Pha", "Loại đo", "Mức cảnh báo", "Tình trạng", "Chỉ tiêu vượt ngưỡng",
@@ -1107,10 +1149,11 @@ async function onExportAlertsExcel(rows) {
     ["BÁO CÁO TÌNH TRẠNG THIẾT BỊ — Đánh giá Dầu cách điện (QĐ1901/EVNNPT)"],
     [`Ngày xuất: ${now.toLocaleString("vi-VN")}  |  Trạm: ${optText("xl_station")}  |  Thiết bị: ${optText("xl_device")}  |  Pha: ${optText("xl_phase")}  |  Loại: ${optText("xl_type")}`],
     [
-      `Số thiết bị: ${deviceKeys.size}`,
-      `Báo động (ALARM): ${alarmCount}`,
-      `Cảnh báo (ALERT): ${alertCount}`,
-      `Không có cảnh báo: ${normalCount}`,
+      `Số thiết bị: ${sum.devices}`,
+      `Cần lưu ý/theo dõi: ${sum.warnDevices} thiết bị`,
+      `Báo động (ALARM): ${withRows(sum.alarmDevices, sum.alarmRows)}`,
+      `Cảnh báo (ALERT): ${withRows(sum.alertDevices, sum.alertRows)}`,
+      `Không có cảnh báo: ${sum.normalDevices} thiết bị`,
     ],
     [],
     HEADER,
