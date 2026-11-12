@@ -70,7 +70,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v87-ui-a11y") {
+          if (k !== "dga-offline-v88-busy-ring") {
             caches.delete(k);
           }
         });
@@ -208,10 +208,18 @@
 
   <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <!-- Chỉ báo xoay khi đang lưu/xóa/tải dữ liệu — xem src/presentation/components/ui-busy.js. -->
-  <div id="busyIndicator" class="busy-indicator hidden" role="status" aria-live="polite">
-    <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg>
-    <span id="busyIndicatorText">Đang lưu...</span>
+  <!-- Chỉ báo tải: vòng xoay hiện % ở GIỮA header theo chiều đứng (điện thoại: cạnh nút ⋯) — xem
+       src/presentation/components/ui-busy.js. Nhãn chữ ("Đang lưu..."/"Đang cập nhật dữ liệu...") chỉ dành cho trình
+       đọc màn hình + tooltip; % không nằm trong vùng aria-live để không bị đọc liên tục. -->
+  <div id="busyIndicator" class="busy-indicator hidden" title="Đang lưu...">
+    <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang lưu...</span>
+    <div class="busy-ring" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
+      <svg class="busy-ring-svg" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="busy-ring-track" cx="18" cy="18" r="15.5" />
+        <circle class="busy-ring-bar" id="busyRingBar" cx="18" cy="18" r="15.5" pathLength="100" stroke-dasharray="0 100" />
+      </svg>
+      <span class="busy-ring-pct" id="busyRingPct" aria-hidden="true">0%</span>
+    </div>
   </div>
 
   <!-- Banner đỏ CHẾ ĐỘ THỬ NGHIỆM (localStorage) — hiện ở initApp() (app-core.js) khi config.js

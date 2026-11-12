@@ -321,27 +321,62 @@ input:disabled, select:disabled, textarea:disabled {
   background: var(--blue-100);
 }
 
-/* Chỉ báo xoay "Đang lưu..." ở giữa cạnh trên màn hình (src/presentation/components/ui-busy.js), nổi trên cả modal và toast. */
+/* Chỉ báo tải (src/presentation/components/ui-busy.js): vòng xoay + % ở giữa header THEO CHIỀU ĐỨNG — --busy-top do JS
+   đo từ header (header dính đỉnh trang nên luôn đúng chỗ khi cuộn); chưa đo được (màn hình đăng nhập) thì 28px.
+   Màn hình rộng: giữa theo chiều ngang (khoảng trống giữa 2 cụm nút). Điện thoại: ngay bên trái nút ⋯ để không che
+   tên app. Nổi trên cả modal và toast. */
 .busy-indicator {
   position: fixed;
-  top: 14px;
+  top: var(--busy-top, 28px);
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 1100;
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  max-width: calc(100vw - 32px);
-  padding: var(--space-2) var(--space-4);
-  background: var(--surface);
-  color: var(--blue-900);
-  border: 1px solid var(--blue-700);
-  border-radius: var(--radius-full);
-  box-shadow: var(--shadow-md);
-  font-size: 13px;
-  font-weight: 600;
+  pointer-events: none;
 }
 .busy-indicator.hidden { display: none; }
+.busy-ring {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+.busy-ring-svg {
+  position: absolute;
+  inset: 3px;
+  width: 34px;
+  height: 34px;
+  animation: busy-ring-spin 1.1s linear infinite;
+}
+.busy-ring-track { fill: none; stroke: var(--blue-100); stroke-width: 3.5; }
+.busy-ring-bar {
+  fill: none;
+  stroke: var(--blue-700);
+  stroke-width: 3.5;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dasharray 0.25s ease-out;
+}
+.busy-ring-pct {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 10.5px;
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--blue-900);
+}
+/* Đang GHI (lưu/xóa/tải file lên): vòng màu đỏ EVN để phân biệt với tải dữ liệu thường. */
+body.is-saving .busy-ring-bar { stroke: var(--evn-red); }
+@keyframes busy-ring-spin { to { transform: rotate(360deg); } }
+@media (max-width: 760px) {
+  .busy-indicator { left: auto; right: 64px; transform: translateY(-50%); }
+}
 body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: progress; }
 
 #t3Dropzone { margin-bottom: 14px; }
