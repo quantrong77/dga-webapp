@@ -70,7 +70,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v85-ui-input-toolbar") {
+          if (k !== "dga-offline-v86-ui-guide-search") {
             caches.delete(k);
           }
         });
@@ -3106,9 +3106,12 @@
           từng công việc cụ thể: nhập số liệu, đọc kết quả, xem cảnh báo, xuất biên bản... Bấm vào từng mục dưới
           đây để xem chi tiết.</p>
         <div class="mindmap-controls">
+          <!-- Tìm trong hướng dẫn (Bước 4e) — setupUserGuideSearch(), ui-guides.js -->
+          <input type="search" id="guideSearch" class="guide-search" placeholder="Tìm trong hướng dẫn — VD: xuất Excel, Bảng 63, Viewer" aria-label="Tìm trong hướng dẫn" aria-describedby="guideSearchCount" autocomplete="off" />
           <button type="button" class="btn ghost" id="btnGuideExpandAll">Mở tất cả</button>
           <button type="button" class="btn ghost" id="btnGuideCollapseAll">Thu gọn tất cả</button>
         </div>
+        <p class="note guide-search-count hidden" id="guideSearchCount" aria-live="polite"></p>
         <div class="mm-branches" id="userGuideRoot">
         <!-- USER-GUIDE:BEGIN — sinh tự động bởi scripts/build-user-guide.js từ user_manual.md, KHÔNG sửa tay -->
         <details class="mm-node">
@@ -3270,9 +3273,14 @@
           </tr>
           </tbody>
           </table></div>
+          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm máy chủ đang dùng, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Đổi mật khẩu và <strong>tài khoản · Đăng xuất</strong>. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
           <h3>3.2. Giao diện sáng hoặc tối</h3>
-          <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải để đổi giao diện. Giao diện tối dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành.</p>
+          <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải (trên điện thoại: trong menu <strong>⋯</strong>) để đổi giao diện. Giao diện tối nền xanh navy đậm, dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành. Màu sắc theo nhận diện EVNNPT (xanh EVN, đỏ, vàng), dải 3 màu pha A vàng · B xanh lá · C đỏ dưới thanh trên cùng.</p>
+          <p><strong>Chọn Trạm/Thiết bị một lần cho 3 tab xem:</strong> chọn Trạm/Thiết bị ở <strong>Lịch sử đo</strong>, <strong>Xu hướng</strong> hoặc <strong>Cảnh báo</strong> thì sang 2 tab kia đã lọc sẵn đúng thiết bị đó; xóa ô ở 1 tab cũng bỏ lọc ở cả 3. Form nhập ở Khí hòa tan / Lý-Hóa dầu <strong>không</strong> bị điền theo, để tránh nhập nhầm số liệu vào thiết bị đang xem. Lựa chọn chỉ nhớ trong lần mở app này.</p>
+          <p><strong>Ngày trong các bảng</strong> hiển thị dạng ngày/tháng/năm (VD 20/10/2026); ô nhập ngày và file xuất vẫn giữ định dạng chuẩn.</p>
+          <p><strong>Thu gọn hướng dẫn:</strong> nhiều mục có nút <strong>con mắt</strong> (ở tiêu đề mục hoặc thanh công cụ đầu tab) để ẩn/hiện các đoạn hướng dẫn, giải thích; app nhớ lựa chọn của từng mục.</p>
+          <p><strong>Tìm trong hướng dẫn:</strong> ở tab <strong>Hướng dẫn</strong>, gõ từ khóa vào ô tìm kiếm (không cần gõ dấu, VD "xuat excel"). Chỉ các mục có từ khóa được giữ lại và mở sẵn, chỗ khớp được tô vàng; nhấn Esc hoặc xóa ô để trở lại như cũ.</p>
           <h3>3.3. Thanh tab ngang hoặc dọc</h3>
           <p>Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển giữa <strong>thanh tab ngang</strong> (mặc định) và <strong>thanh tab dọc bên trái</strong>. Ở chế độ dọc, bấm mũi tên để <strong>thu gọn</strong> (chỉ còn biểu tượng; rê chuột để xem tên tab). App nhớ lựa chọn của bạn.</p>
           <h3>3.4. Thanh tiêu đề cố định (Sticky Header)</h3>
@@ -3676,9 +3684,10 @@
           <div class="sm-body">
           <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.</p>
           <ul class="rec-list">
-          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.</li>
+          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động. Bấm thẻ <strong>Mức Cảnh báo</strong> hoặc <strong>Mức Báo động</strong> để chỉ xem mức đó (thẻ sáng lên); bấm lại để bỏ lọc.</li>
           <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.</li>
-          <li>Mỗi dòng cho biết: thiết bị, loại đo, mức cảnh báo, tình trạng, khí/chỉ tiêu vượt ngưỡng, lý do và khuyến cáo hành động.</li>
+          <li>Mỗi dòng cho biết: <strong>thiết bị</strong> (kèm trạm và loại đo), <strong>mức cảnh báo</strong> (kèm kết luận, dấu "Đã hiệu chỉnh" nếu số liệu từng bị sửa), <strong>chỉ tiêu vượt ngưỡng</strong>, <strong>lần đo</strong> (kèm ngày). Thiếu tên trạm/thiết bị thì ghi <em>(chưa ghi trạm)</em> / <em>(chưa ghi tên thiết bị)</em>.</li>
+          <li>Bấm <strong>Chi tiết</strong> ở cuối dòng để xem <strong>Hạng mục cảnh báo</strong> (lý do) và <strong>Khuyến cáo</strong> hành động; bấm <strong>Thu gọn</strong> để đóng. Trên điện thoại, mỗi cảnh báo hiện thành 1 thẻ.</li>
           <li><strong>Xem xu hướng:</strong> nhảy thẳng sang tab <strong>Xu hướng</strong>, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.</li>
           <li><strong>Xuất Excel:</strong> bấm nút mở hộp thoại chọn phạm vi rồi tải file <code>.xlsx</code>:</li>
           <li><strong>Trạm ▸ Thiết bị ▸ Pha</strong>: chọn theo bậc (ô sau chỉ liệt kê theo ô trước), hoặc để "Tất cả".</li>
@@ -3696,6 +3705,7 @@
           <div class="sm-body">
           <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng <strong>Tiêu chuẩn so sánh</strong> dưới đồ thị có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
           <h3>12.1. Vẽ đồ thị</h3>
+          <p>Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: <strong>Đang có cảnh báo</strong> (chấm đỏ = Báo động, vàng = Cảnh báo) và <strong>Vừa đo gần đây</strong>. Bấm 1 thiết bị là đồ thị hiện ngay.</p>
           <ol type="1">
           <li>(Tùy chọn) Chọn <strong>Trạm biến áp</strong> để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.</li>
           <li>Chọn <strong>Thiết bị</strong>.</li>

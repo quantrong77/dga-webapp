@@ -502,6 +502,8 @@ footer.app-footer {
 
 .mindmap-controls {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
   margin-bottom: 14px;
 }
@@ -862,3 +864,10 @@ a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
 #trFaultBody tr.unticked-row td:not(:first-child) {
   opacity: 0.45;
 }
+
+/* Ô tìm trong hướng dẫn (Bước 4e). */
+.guide-search { flex: 1 1 280px; max-width: 480px; }
+.guide-search-count { margin: -6px 0 10px; }
+.guide-search-count.hidden,
+.mm-node.hidden { display: none; }
+::highlight(guide-search) { background-color: var(--evn-yellow); color: #000; }

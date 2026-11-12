@@ -118,6 +118,7 @@ function setupStaticUI() {
   setupSampleMethods();
   setupSamplingLightbox();
   setupUserGuideExpandCollapse();
+  if (typeof setupUserGuideSearch === "function") setupUserGuideSearch();
   setupFeedbackDropzone();
   setupFeedbackPaste();
   setupFeedbackLightbox();

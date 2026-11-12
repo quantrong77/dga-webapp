@@ -114,11 +114,21 @@ Giao diện được phân bố khoa học thành hai khu vực điều hướng
 | **Phản hồi** | Gửi góp ý cho ứng dụng |
 | **Quản trị** | Quản lý người dùng, Cấu hình (Tiêu chuẩn & Quy định), Bản sao Supabase — **chỉ Admin** mới thấy |
 
+**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ và nút **⋯**. Bấm **⋯** để mở menu gồm máy chủ đang dùng, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Đổi mật khẩu và **tài khoản · Đăng xuất**. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
+
 > **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
 
 ### 3.2. Giao diện sáng hoặc tối
 
-Bấm **biểu tượng mặt trăng/mặt trời** ở góc trên bên phải để đổi giao diện. Giao diện tối dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành.
+Bấm **biểu tượng mặt trăng/mặt trời** ở góc trên bên phải (trên điện thoại: trong menu **⋯**) để đổi giao diện. Giao diện tối nền xanh navy đậm, dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành. Màu sắc theo nhận diện EVNNPT (xanh EVN, đỏ, vàng), dải 3 màu pha A vàng · B xanh lá · C đỏ dưới thanh trên cùng.
+
+**Chọn Trạm/Thiết bị một lần cho 3 tab xem:** chọn Trạm/Thiết bị ở **Lịch sử đo**, **Xu hướng** hoặc **Cảnh báo** thì sang 2 tab kia đã lọc sẵn đúng thiết bị đó; xóa ô ở 1 tab cũng bỏ lọc ở cả 3. Form nhập ở Khí hòa tan / Lý-Hóa dầu **không** bị điền theo, để tránh nhập nhầm số liệu vào thiết bị đang xem. Lựa chọn chỉ nhớ trong lần mở app này.
+
+**Ngày trong các bảng** hiển thị dạng ngày/tháng/năm (VD 20/10/2026); ô nhập ngày và file xuất vẫn giữ định dạng chuẩn.
+
+**Thu gọn hướng dẫn:** nhiều mục có nút **con mắt** (ở tiêu đề mục hoặc thanh công cụ đầu tab) để ẩn/hiện các đoạn hướng dẫn, giải thích; app nhớ lựa chọn của từng mục.
+
+**Tìm trong hướng dẫn:** ở tab **Hướng dẫn**, gõ từ khóa vào ô tìm kiếm (không cần gõ dấu, VD "xuat excel"). Chỉ các mục có từ khóa được giữ lại và mở sẵn, chỗ khớp được tô vàng; nhấn Esc hoặc xóa ô để trở lại như cũ.
 
 ### 3.3. Thanh tab ngang hoặc dọc
 
@@ -429,9 +439,10 @@ Bảng kết quả gồm: giá trị trước, sau, chênh lệch (Δ), **tốc 
 
 Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.
 
-- **Thống kê nhanh:** tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.
+- **Thống kê nhanh:** tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động. Bấm thẻ **Mức Cảnh báo** hoặc **Mức Báo động** để chỉ xem mức đó (thẻ sáng lên); bấm lại để bỏ lọc.
 - **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.
-- Mỗi dòng cho biết: thiết bị, loại đo, mức cảnh báo, tình trạng, khí/chỉ tiêu vượt ngưỡng, lý do và khuyến cáo hành động.
+- Mỗi dòng cho biết: **thiết bị** (kèm trạm và loại đo), **mức cảnh báo** (kèm kết luận, dấu "Đã hiệu chỉnh" nếu số liệu từng bị sửa), **chỉ tiêu vượt ngưỡng**, **lần đo** (kèm ngày). Thiếu tên trạm/thiết bị thì ghi *(chưa ghi trạm)* / *(chưa ghi tên thiết bị)*.
+- Bấm **Chi tiết** ở cuối dòng để xem **Hạng mục cảnh báo** (lý do) và **Khuyến cáo** hành động; bấm **Thu gọn** để đóng. Trên điện thoại, mỗi cảnh báo hiện thành 1 thẻ.
 - **Xem xu hướng:** nhảy thẳng sang tab **Xu hướng**, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.
 - **Xuất Excel:** bấm nút mở hộp thoại chọn phạm vi rồi tải file `.xlsx`:
   - **Trạm ▸ Thiết bị ▸ Pha**: chọn theo bậc (ô sau chỉ liệt kê theo ô trước), hoặc để "Tất cả".
@@ -449,6 +460,8 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 > **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng **Tiêu chuẩn so sánh** dưới đồ thị có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
 
 ### 12.1. Vẽ đồ thị
+
+Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Đang có cảnh báo** (chấm đỏ = Báo động, vàng = Cảnh báo) và **Vừa đo gần đây**. Bấm 1 thiết bị là đồ thị hiện ngay.
 
 1. (Tùy chọn) Chọn **Trạm biến áp** để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.
 2. Chọn **Thiết bị**.

@@ -109,6 +109,13 @@ main {
   margin: 0 auto;
   padding: var(--space-5);
 }
+/* Bước 4d: 3 tab nhiều số liệu (Xu hướng, Lịch sử đo, Cảnh báo) dùng thêm bề ngang trên màn hình rộng — đồ thị rộng hơn,
+   bảng ít phải cuộn ngang. Các tab nhập liệu/hướng dẫn giữ 1180px cho dòng chữ không quá dài. */
+@media (min-width: 1320px) {
+  main:has(> #tab-xuhuong:not(.hidden)),
+  main:has(> #tab-lichsu:not(.hidden)),
+  main:has(> #tab-canhbao:not(.hidden)) { max-width: 1440px; }
+}
 body.tabs-sidebar main {
   grid-column: 2;
   grid-row: 2;

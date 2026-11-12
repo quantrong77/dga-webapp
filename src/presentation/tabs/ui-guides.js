@@ -126,6 +126,84 @@ function setupUserGuideExpandCollapse() {
   }
 }
 
+/** Ô "Tìm trong hướng dẫn" (#guideSearch, Bước 4e): lọc các mục lớn của tab Hướng dẫn theo từ khóa — KHÔNG phân biệt
+ *  dấu/hoa thường ("xuat excel" khớp "Xuất Excel"). Mục khớp được mở ra (cả mục con chứa từ khóa), mục không khớp tạm
+ *  ẩn; tô sáng chỗ khớp đúng chữ (CSS Custom Highlight API, trình duyệt cũ thì bỏ qua phần tô sáng). Xóa ô = trở lại
+ *  như ban đầu (hiện hết, thu gọn hết). */
+function guideFold(s) {
+  return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase();
+}
+
+function setupUserGuideSearch() {
+  const input = $("guideSearch");
+  const root = $("userGuideRoot");
+  const countEl = $("guideSearchCount");
+  if (!input || !root) return;
+  const top = () => Array.from(root.children).filter((el) => el.matches("details.mm-node"));
+  const canHighlight = typeof CSS !== "undefined" && CSS.highlights && typeof Highlight !== "undefined";
+
+  function highlight(q) {
+    if (!canHighlight) return;
+    CSS.highlights.delete("guide-search");
+    if (!q) return;
+    const ranges = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const fq = guideFold(q);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      // Bỏ dấu không đổi số ký tự với hầu hết chữ tiếng Việt dựng sẵn (NFC) → vị trí trong chuỗi đã bỏ dấu khớp vị trí gốc.
+      const raw = n.nodeValue;
+      const folded = guideFold(raw);
+      if (folded.length !== raw.length) continue;
+      let i = folded.indexOf(fq);
+      while (i >= 0 && ranges.length < 500) {
+        const r = new Range();
+        r.setStart(n, i);
+        r.setEnd(n, i + fq.length);
+        ranges.push(r);
+        i = folded.indexOf(fq, i + fq.length);
+      }
+    }
+    if (ranges.length) CSS.highlights.set("guide-search", new Highlight(...ranges));
+  }
+
+  let timer = null;
+  function apply() {
+    const q = input.value.trim();
+    const fq = guideFold(q);
+    let hits = 0;
+    top().forEach((node) => {
+      if (!fq) {
+        node.classList.remove("hidden");
+        node.open = false;
+        node.querySelectorAll("details.mm-node").forEach((d) => (d.open = false));
+        return;
+      }
+      const match = guideFold(node.textContent).includes(fq);
+      node.classList.toggle("hidden", !match);
+      node.open = match;
+      if (match) {
+        hits++;
+        node.querySelectorAll("details.mm-node").forEach((d) => (d.open = guideFold(d.textContent).includes(fq)));
+      }
+    });
+    if (countEl) {
+      countEl.classList.toggle("hidden", !fq);
+      countEl.textContent = !fq ? "" : hits ? `${hits} mục có "${q}"` : `Không thấy "${q}" — thử từ khác (VD: tên tab, tên bảng, tên nút).`;
+    }
+    highlight(q);
+  }
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    timer = setTimeout(apply, 150);
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && input.value) {
+      input.value = "";
+      apply();
+    }
+  });
+}
+
 /** Lightbox phóng to ảnh hướng dẫn (tab "Quy trình lấy mẫu") — dùng chung 1 lightbox
  *  cho mọi ảnh (5 sơ đồ Hình 2-5 + thư viện ảnh thực tế): mỗi nút ".qt-img-btn" khai
  *  báo ảnh gốc/chú thích qua data-full/data-caption, bấm vào sẽ nạp động lên lightbox. */
