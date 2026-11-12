@@ -93,3 +93,11 @@ describe("trendStdKeyAtChartPoint — chú thích (legend) dưới đồ thị",
     expect(trendStdKeyAtChartPoint(chart, 140, 406)).toBe("gas:C2H4");
   });
 });
+
+describe('Ô "Tất cả khí" ở mục Chọn thông số cần vẽ', () => {
+  test("chỉ gồm 7 khí thành phần, có trạng thái một phần (indeterminate)", () => {
+    expect(SRC).toContain('const gasComponentKeys = DGA.GASES.map((g) => "gas:" + g);');
+    expect(SRC).toContain('buildChecks("trParamsGas", [...gasComponentKeys, "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"], gasComponentKeys)');
+    expect(SRC).toMatch(/master\.indeterminate = n > 0 && n < allKeys\.length/);
+  });
+});

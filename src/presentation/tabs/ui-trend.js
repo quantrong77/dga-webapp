@@ -343,9 +343,15 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
   $("trParamsOilWrap").classList.toggle("hidden", !hasOil);
   $("trParamsOltcWrap").classList.toggle("hidden", !hasOltc);
 
-  const buildChecks = (containerId, keys) => {
+  const buildChecks = (containerId, keys, allKeys) => {
     const el = $(containerId);
-    el.innerHTML = keys.map((key) => {
+    // Ô "Tất cả khí" (đầu hàng chip khí hòa tan): tick/bỏ tick cùng lúc 7 khí thành phần (DGA.GASES). Không gồm N2/O2
+    // (hàng chục nghìn ppm — đè dẹt các khí khác trên cùng trục) và 2 chỉ tiêu tổng hợp TCG / Tổng khí hòa tan.
+    // Tick 1 phần → trạng thái "đang chọn một phần" (indeterminate).
+    const allChip = allKeys && allKeys.length
+      ? `<label class="chk chk-all" title="Tick/bỏ tick cùng lúc ${allKeys.length} khí thành phần (${allKeys.map((k) => TREND_PARAM_DEFS[k].label).join(", ")}). N2, O2, TCG, Tổng khí hòa tan chọn riêng."><input type="checkbox" data-trend-all="1" /> Tất cả khí (${allKeys.length})</label>`
+      : "";
+    el.innerHTML = allChip + keys.map((key) => {
       const def = TREND_PARAM_DEFS[key];
       const checked = _trendSelectedParams.has(key) ? "checked" : "";
       // Icon cạnh tên khí CHỈ áp dụng cho 7 khí chính trong DGA.GASES — N2/O2/TCG/Bảng 63
@@ -356,16 +362,37 @@ function renderTrendParamCheckboxes(gasRecords, oilRecords, oltcRecords) {
       const std = key.startsWith("gas:") ? ` data-std-key="${key}" title="Chuột phải để xem tiêu chuẩn của ${escapeHtml(def.label)}"` : "";
       return `<label class="chk"${std}><input type="checkbox" data-trend-key="${key}" ${checked} /> ${icon}${escapeHtml(def.label)}</label>`;
     }).join("");
+    const master = el.querySelector("input[data-trend-all]");
+    const syncMaster = () => {
+      if (!master) return;
+      const n = allKeys.filter((k) => _trendSelectedParams.has(k)).length;
+      master.checked = n === allKeys.length;
+      master.indeterminate = n > 0 && n < allKeys.length;
+      master.setAttribute("aria-checked", master.indeterminate ? "mixed" : String(master.checked));
+    };
     el.querySelectorAll("input[data-trend-key]").forEach((cb) => {
       cb.addEventListener("change", () => {
         if (cb.checked) _trendSelectedParams.add(cb.dataset.trendKey);
         else _trendSelectedParams.delete(cb.dataset.trendKey);
+        syncMaster();
         renderTrendChart(gasRecords, oilRecords, oltcRecords);
       });
     });
+    if (master) {
+      master.addEventListener("change", () => {
+        allKeys.forEach((k) => (master.checked ? _trendSelectedParams.add(k) : _trendSelectedParams.delete(k)));
+        el.querySelectorAll("input[data-trend-key]").forEach((cb) => {
+          if (allKeys.includes(cb.dataset.trendKey)) cb.checked = master.checked;
+        });
+        syncMaster();
+        renderTrendChart(gasRecords, oilRecords, oltcRecords);
+      });
+      syncMaster();
+    }
   };
 
-  if (hasGas) buildChecks("trParamsGas", [...DGA.GASES.map((g) => "gas:" + g), "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"]);
+  const gasComponentKeys = DGA.GASES.map((g) => "gas:" + g);
+  if (hasGas) buildChecks("trParamsGas", [...gasComponentKeys, "gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"], gasComponentKeys);
   // Chỉ liệt kê chỉ tiêu bổ sung mà thiết bị này THỰC SỰ có số liệu (tránh danh sách dài toàn ô trống)
   const oilExtKeys = TREND_OIL_EXT_DEFS().filter((d) => oilRecords.some((r) => r[d.field] !== null && r[d.field] !== undefined && r[d.field] !== ""))
     .map((d) => "oil:" + d.key);

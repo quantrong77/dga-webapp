@@ -198,6 +198,16 @@ footer.app-footer {
   width: auto;
   margin: 0;
 }
+/* Ô "Tất cả khí" đầu hàng chip khí hòa tan: chữ đậm, viền đứt — phân biệt với chip 1 khí; vạch ngăn với các chip sau. */
+.trend-checks label.chk.chk-all {
+  font-weight: var(--font-bold);
+  border-style: dashed;
+  margin-right: 6px;
+}
+.trend-checks label.chk.chk-all:has(input:indeterminate) {
+  background: color-mix(in srgb, var(--blue-100) 50%, var(--surface));
+  border-color: var(--blue-700);
+}
 .trend-chart-wrap {
   position: relative;
   height: 420px;

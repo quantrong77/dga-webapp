@@ -483,7 +483,7 @@ Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Cần lưu ý/theo d�
 1. (Tùy chọn) Chọn **Trạm biến áp** để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.
 2. Chọn **Thiết bị**.
 3. Nếu thiết bị có dữ liệu từ nhiều pha, tick các pha muốn so sánh ở **"Lọc theo pha"** — mỗi pha một đường riêng.
-4. Ở **"Chọn thông số cần vẽ"**, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị.
+4. Ở **"Chọn thông số cần vẽ"**, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị. Ô **"Tất cả khí (7)"** đầu hàng khí hòa tan tick/bỏ tick cùng lúc 7 khí thành phần (H2, CH4, C2H6, C2H4, C2H2, CO, CO2); N2, O2, TCG và Tổng hàm lượng khí hòa tan vẫn chọn riêng vì khác thang giá trị. Khi chỉ tick một phần, ô này hiện dấu "–".
 
 **Nhận biết từng đường:**
 
