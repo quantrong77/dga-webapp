@@ -4,12 +4,13 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v70-gop-main";
+const CACHE_NAME = "dga-offline-v71-gop-main-zalo-tai-trang";
 
 const PRECACHE_ASSETS = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
+  "./src/presentation/boot-guard.js",
   "./src/presentation/early-layout.js",
   "./config.js",
   "./src/data/drivers/storage-core.js",

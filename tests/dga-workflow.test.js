@@ -45,7 +45,7 @@ test("SVG dựng ra không có NaN, có chỉ số dưới cho công thức khí
 test("index.html có khung lưu đồ và nạp script/CSS", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
   expect(html).toContain('id="dgaWorkflowSvg"');
-  expect(html).toContain('<script src="src/presentation/tabs/ui-dga-workflow.js"></script>');
+  expect(html).toContain('<script src="src/presentation/tabs/ui-dga-workflow.js" defer></script>');
   expect(html).toContain('href="src/presentation/styles/style-dga-workflow.css"');
 });
 

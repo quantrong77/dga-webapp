@@ -131,6 +131,8 @@ async function init() {
   setupTheme();
   setupAuthForms();
   setupChangePassword();
+  // Mọi script đã chạy và giao diện đã gắn sự kiện -> tắt bộ chống "trang trắng" (boot-guard.js).
+  if (window.DGA_BOOT) window.DGA_BOOT.done();
 
   if (!Auth.enabled) {
     $("authOverlay").classList.add("hidden");

@@ -161,7 +161,7 @@ Hai tab con dùng **chung một form** — đổi tab con không mất số li�
 
 ### Bước 1 — Chọn loại thiết bị
 
-Ở ô **Loại thiết bị** trên cùng, chọn: TI, TU, MBA/Kháng dầu, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — **hãy chọn đúng**.
+Ở ô **Loại thiết bị** trên cùng, chọn: MBA/Kháng dầu (mặc định), TI, TU, Sứ xuyên (Bushing) hoặc Khác. Lựa chọn này quyết định bảng ngưỡng và phương pháp chẩn đoán được dùng — **hãy chọn đúng**.
 
 ### Bước 2 — Điền khối "Thí nghiệm khí hòa tan trong dầu cách điện"
 

@@ -1,5 +1,25 @@
 /* src/presentation/components/ui-utils.js — Tiện ích định dạng, kiểm tra tính hợp lệ và xử lý chuỗi hiển thị HTML. */
 
+/** Nạp 1 thư viện <script> cổ điển KHI CẦN (không tải lúc mở trang cho màn hình đầu hiện nhanh). Gọi nhiều
+ *  lần chỉ tải 1 lần; lỗi mạng thì lần gọi sau thử tải lại. Trả Promise xong khi script đã chạy. */
+const _scriptLoads = {};
+function loadScriptOnce(src) {
+  if (!_scriptLoads[src]) {
+    _scriptLoads[src] = new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = () => resolve();
+      s.onerror = () => {
+        delete _scriptLoads[src];
+        s.remove();
+        reject(new Error("Không tải được " + src));
+      };
+      document.head.appendChild(s);
+    });
+  }
+  return _scriptLoads[src];
+}
+
 function escapeHtml(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
