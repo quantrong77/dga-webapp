@@ -209,3 +209,30 @@ function toggleMbaSubtypeField() {
   const isMba = $("f_loai").value === DGA.EQUIPMENT_TYPES.MBA;
   $("f_mbasubtype_wrap").classList.toggle("hidden", !isMba);
 }
+
+/** Nút icon con mắt ẩn/hiện HƯỚNG DẪN/GIẢI THÍCH của 1 mục — dùng chung: nút `[data-guide-toggle="khóa"]` (thường đặt
+ *  trong <h2>) bật/tắt mọi phần tử `[data-guide="khóa"]` (đoạn ghi chú, chú thích hình, bảng ý nghĩa mã...). Chỉ thêm/bỏ
+ *  class .guide-collapsed — KHÔNG đụng class .hidden mà code khác dùng để hiện/ẩn ghi chú theo ngữ cảnh. Mặc định HIỆN;
+ *  lựa chọn nhớ theo từng khóa trong localStorage (sở thích giao diện, không lưu qua Storage). */
+const GUIDE_HIDDEN_STORAGE_PREFIX = "dga_guide_hidden_";
+
+function setupGuideToggles(root) {
+  (root || document).querySelectorAll("[data-guide-toggle]").forEach((btn) => {
+    const key = btn.dataset.guideToggle;
+    const iconUse = btn.querySelector("use");
+    const applyState = (hidden) => {
+      document.querySelectorAll(`[data-guide="${key}"]`).forEach((el) => el.classList.toggle("guide-collapsed", hidden));
+      btn.setAttribute("aria-pressed", hidden ? "true" : "false");
+      btn.title = hidden ? "Hiện hướng dẫn" : "Ẩn hướng dẫn";
+      if (iconUse) iconUse.setAttribute("href", hidden ? "#icon-eye-off" : "#icon-eye");
+    };
+    let saved = null;
+    try { saved = localStorage.getItem(GUIDE_HIDDEN_STORAGE_PREFIX + key); } catch (e) { /* localStorage bị chặn — bỏ qua */ }
+    applyState(saved === "1");
+    btn.addEventListener("click", () => {
+      const nowHidden = btn.getAttribute("aria-pressed") !== "true";
+      applyState(nowHidden);
+      try { localStorage.setItem(GUIDE_HIDDEN_STORAGE_PREFIX + key, nowHidden ? "1" : "0"); } catch (e) { /* localStorage bị chặn — bỏ qua */ }
+    });
+  });
+}

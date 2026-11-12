@@ -432,12 +432,36 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 
 ## 12. Xem xu hướng và dự báo (tab Xu hướng)
 
+> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng **Tiêu chuẩn so sánh** dưới đồ thị có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
+
 ### 12.1. Vẽ đồ thị
 
 1. (Tùy chọn) Chọn **Trạm biến áp** để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.
 2. Chọn **Thiết bị**.
 3. Nếu thiết bị có dữ liệu từ nhiều pha, tick các pha muốn so sánh ở **"Lọc theo pha"** — mỗi pha một đường riêng.
 4. Ở **"Chọn thông số cần vẽ"**, tick các thông số muốn xem chung một đồ thị: 7 khí, N2, O2, TCG, Tổng hàm lượng khí hòa tan, và độ ẩm/tgδ/điện áp chọc thủng của dầu chính và dầu OLTC. Mỗi thông số dùng một trục tung phù hợp đơn vị.
+
+**Nhận biết từng đường:**
+
+- Ký hiệu thông số (H2, CH4, C2H2, TCG, Ẩm, BDV…) hiện ở cuối mỗi đường khi còn chỗ. Khi tách theo pha, ký hiệu kèm pha, ví dụ **H2·A**.
+- Nhiều đường sát hoặc chồng nhau thì một số ký hiệu bị ẩn để không đè lên nhau. Chạm (điện thoại) hoặc click (máy tính) vào đường: đường đó đậm lên, các đường khác mờ đi, và ký hiệu hiện ngay tại chỗ chạm.
+- Chạm lại đúng chỗ đó để chuyển sang đường đang bị chồng bên dưới. Chạm vào vùng trống để bỏ chọn.
+
+**Hai chỉ tiêu tổng hợp** (app tự tính từ số liệu của từng lần đo):
+
+| Chỉ tiêu | Cách tính | Đánh giá |
+|---|---|---|
+| **TCG — Tổng lượng khí cháy** (ppm) | H2 + CH4 + C2H6 + C2H4 + C2H2 + CO. Không cộng CO2 (không cháy), N2, O2 | QĐ1901 và IEC 60599 không quy định ngưỡng TCG — app chỉ vẽ để theo dõi xu hướng |
+| **Tổng hàm lượng khí hòa tan** (%) — Bảng 63, Điều 54 | (H2 + CH4 + C2H6 + C2H4 + C2H2 + CO + CO2 + N2 + O2) ÷ 10.000 (1% = 10.000 ppm). Cần nhập **cả N2 lẫn O2**; lần đo thiếu thì đồ thị bỏ trống điểm đó | 110–220 kV: < 1%; 500 kV: < 0,5% |
+
+**Khi nào đánh giá Bảng 63:** chỉ kết luận đạt/không đạt với **dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu** (tick ô tương ứng và chọn cấp điện áp ở form Khí hòa tan, mục 4). Với dầu đang vận hành định kỳ, giá trị chỉ để tham khảo.
+
+**Tiêu chuẩn so sánh của thông số khí đang vẽ:** ngay dưới đồ thị, khi đang tick ít nhất một thông số khí, app hiện bảng tiêu chuẩn của đúng các thông số đó. Bảng này có **nút con mắt riêng** để ẩn/hiện, không phụ thuộc nút của mục "Chọn thông số cần vẽ".
+
+- **7 khí chính:** giá trị điển hình đang áp dụng cho thiết bị (theo loại thiết bị/nhà sản xuất của lần đo gần nhất — cùng nguồn với tab Khí hòa tan), ngưỡng loại bỏ nếu nhà sản xuất có cấu hình, và tốc độ tăng điển hình Bảng 65 (chỉ áp dụng chính thức cho MBA; loại khác ghi "tham khảo").
+- **N2, O2:** không có ngưỡng riêng; dùng cho tỷ lệ O2/N2 (~0,5 là bình thường ở thiết bị tiếp xúc không khí, < 0,3 là tiêu thụ oxy quá mức) và Bảng 63.
+- **TCG:** ghi rõ QĐ1901/IEC 60599 không quy định ngưỡng; kèm mốc **IEEE C57.104-2008** để tham khảo (≤ 720 ppm điều kiện 1; 721–1.920 điều kiện 2; 1.921–4.630 điều kiện 3; > 4.630 điều kiện 4 — bản 2019 đã bỏ cách phân loại này).
+- **Tổng hàm lượng khí hòa tan:** ngưỡng 2 cấp điện áp (in đậm cấp của thiết bị nếu đã chọn khi nhập), và cho biết lần đo gần nhất có thuộc trường hợp dầu mới/sau thay, lọc dầu hay không.
 
 Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu chính / dầu OLTC).
 
@@ -469,6 +493,93 @@ Lọc hoặc thay dầu làm nồng độ khí hòa tan giảm đột ngột, n�
 - Chọn **Không xử lý dầu**: chuỗi số liệu giữ nguyên, app không hỏi lại lần đo đó.
 - Các lần xử lý dầu đã ghi nhận được liệt kê ở tab Xu hướng, kèm nút **Đổi** để bỏ xác nhận. Cũng có thể chọn trực tiếp ở ô **Xử lý dầu trước lần đo này** khi nhập hoặc sửa lần đo.
 - Chỉ **Admin** hoặc **người đã nhập lần đo** mới xác nhận được.
+
+### 12.4. Diễn biến loại khiếm khuyết (Bảng 66 và tam giác Duval)
+
+Ba tỷ số C2H2/C2H4, CH4/H2, C2H4/C2H6 và tam giác Duval cho biết **loại** khiếm khuyết, không cho biết mức độ. Mức độ xem ở nồng độ và tốc độ tăng. Theo dõi chúng theo thời gian giúp thấy khiếm khuyết có **đổi bản chất** không, ví dụ quá nhiệt nóng dần lên hay xuất hiện phóng điện.
+
+Bảng 66 Điều 54 QĐ1901 gồm 2 phần, app tra cả hai:
+
+- **Phần 9 dòng** (mốc 0,1 – 1 – 3): bình thường, phóng điện cục bộ năng lượng thấp/cao, phóng điện năng lượng thấp/cao, khuyết tật nhiệt <150 °C, 150–300 °C, 300–700 °C, >700 °C. Văn bản không nói rõ biên, app quy ước **cận dưới tính vào, cận trên không tính** (ví dụ "0,1–1" là 0,1 ≤ tỷ số < 1). Tổ hợp không khớp dòng nào ghi **Ngoài bảng**.
+- **Phần PD/D1/D2/T1/T2/T3** (= Table 1 IEC 60599), mốc chi tiết 0,1 · 0,2 · 0,5 · 0,6 · 1 · 2 · 2,5 · 4, kèm chú thích ᵃ NS (không có ý nghĩa, dù giá trị bao nhiêu) và ᵇ (C2H2 tăng có thể cho thấy điểm nóng vượt 1000 °C).
+- **Bảng sơ bộ PD/D/T** ngay dưới: theo Điều 54, khi tỷ lệ không nằm trong giới hạn của phần PD/D1/D2/T1/T2/T3 thì dùng bảng này để xác định sơ bộ PD (CH4/H2 < 0,2), D (C2H2/C2H4 > 0,2) hay T (C2H2/C2H4 < 0,2). Trong bảng chi tiết và dải mã, lần đo như vậy ghi "Ngoài bảng → sơ bộ D" (hoặc PD, T).
+
+Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi thiết bị có số liệu khí hòa tan, gồm:
+
+- **Đồ thị 3 tỷ số** theo thời gian, vẽ chung một trục tung. Ô **Thang trục tung** chọn **Logarit 0,01–10** (mặc định, cùng thang với Biểu đồ 1, 2 Điều 54) hoặc **Tuyến tính 0–10**; app nhớ lựa chọn. Ô **Vạch mốc** chọn bộ vạch đứt ngang (app nhớ lựa chọn):
+  - **Phần 9 dòng Bảng 66**: các mốc **0,1 – 1 – 3**, bên cạnh ghi mốc đó dùng cho tỷ số nào (C2H2/C2H4 dùng 0,1 và 3; CH4/H2 dùng 0,1 và 1; C2H4/C2H6 dùng 1 và 3).
+  - **Phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ**: mốc chi tiết của từng tỷ số, vạch và nhãn **cùng màu với đường tỷ số** dùng mốc đó (C2H2/C2H4: 0,1 · 0,2 · 0,6 · 1 · 2,5; CH4/H2: 0,1 · 0,2 · 0,5 · 1 và ngưỡng PD theo loại thiết bị; C2H4/C2H6: 0,2 · 1 · 2 · 4). Bấm tên tỷ số ở chú giải trên đồ thị để ẩn bớt, chỉ còn vạch của tỷ số cần xem.
+
+  Tỷ số lớn hơn 10 vẽ **▲** ở đỉnh.
+- **Dải mã** ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn **9 dòng** / **IEC** / **Duval**. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.
+- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.
+- **Bảng từng lần đo**: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
+- **Chọn lần đo hiển thị**: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên đồ thị và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Đổi thiết bị hoặc pha thì tick lại hết.
+- **Ý nghĩa mã khiếm khuyết** ngay dưới tam giác:
+
+  | Mã | Dạng khiếm khuyết |
+  |---|---|
+  | PD | Phóng điện cục bộ dạng corona (bọt khí, khoang rỗng trong cách điện ngâm dầu) |
+  | D1 | Phóng điện năng lượng thấp: tia lửa, phóng điện bề mặt, lỗ châm/vết cháy nhỏ trên giấy |
+  | D2 | Phóng điện năng lượng cao: hồ quang, phóng điện xuyên thủng, ngắn mạch vòng dây |
+  | T1 | Quá nhiệt dưới 300 °C: quá tải, giấy cách điện bị nung nóng |
+  | T2 | Quá nhiệt 300–700 °C: tiếp xúc xấu ở mối nối/bộ chuyển nấc, dòng xoáy |
+  | T3 | Quá nhiệt trên 700 °C: dòng tuần hoàn trong lõi/vỏ thùng, chạm lõi nhiều điểm |
+  | D+T | Hỗn hợp phóng điện và quá nhiệt (ranh giới không phân định rõ trên tam giác Duval) |
+  | Ngoài bảng | Tổ hợp 3 tỷ số không khớp dòng/mã nào của Bảng 66 — xem vùng Duval |
+
+**Phiếu đối chiếu từng lần đo:** bấm vào một điểm trên đồ thị, một ô ở dải mã, hoặc một dòng trong bảng để mở phiếu của lần đo đó. Phiếu gồm:
+
+1. **3 thước** (log 0,01–10, chia theo mốc 0,1 – 1 – 3) có vạch chỉ vị trí từng tỷ số.
+2. **Bảng 66 phần 9 dòng** dựng lại đúng như quy định: ô xanh ✓ là tỷ số nằm trong khoảng của ô, ô xám là không; dòng khớp đủ 3 ô được viền xanh, kèm cột ví dụ điển hình.
+3. **Bảng 66 phần PD/D1/D2/T1/T2/T3** theo cùng cách, kèm chú thích ᵃ, ᵇ như quy định (ô NS = không xét).
+4. **Bảng sơ bộ PD/D/T** cũng tô ô đạt/không đạt. Bảng này chỉ dùng để kết luận khi không khớp mã nào ở bảng trên; nếu đã khớp, phiếu hiện mờ và ghi "không áp dụng".
+5. **Các bước khác của Điều 54** theo thứ tự: giá trị điển hình (Bảng 64), tốc độ tăng so với lần đo trước (Bảng 65), kiểm tra nhiễm khí từ OLTC (C2H2/H2 > 2–3), vùng Duval (Bảng 67), tỷ lệ bổ sung CO2/CO và O2/N2, lỗi điển hình (Bảng 68) theo mã tìm được, và dạng hư hỏng theo khí chính (Bảng 69). Ở Bảng 69 app tô dòng có khí chính vượt giá trị điển hình nhiều nhất — đây chỉ là **gợi ý**, Điều 54 không quy định cách chọn.
+
+Cách đọc:
+
+- **Điểm rỗng** (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.
+- **Tam giác ▽ ở đáy** (thang log): tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.
+- **Tính trên**: chọn tính tỷ số trên **Giá trị đo** hay **Phần tăng giữa 2 lần đo (Δ)** — xem mục ngay dưới.
+- Thiết bị có nhiều pha: chọn từng pha ở ô **Pha**.
+
+**Tính trên giá trị đo hay phần tăng giữa 2 lần đo (Δ):**
+
+| Tùy chọn | Số liệu dùng để tính 3 tỷ số và điểm Duval |
+|---|---|
+| **Giá trị đo** (mặc định) | Nồng độ khí đo được ở chính lần đo đó |
+| **Phần tăng (Δ)** | Lần đo này **trừ** lần đo ngay trước, tính riêng từng khí |
+
+Vì sao cần Δ: khí trong dầu tích lũy dần. Máy từng có khiếm khuyết cũ (ví dụ phát nóng nhẹ nhiều năm trước) vẫn còn nhiều khí cũ trong dầu. Khi xuất hiện khiếm khuyết **mới**, khí mới sinh ra bị "pha loãng" vào khí cũ, tỷ số tính trên giá trị đo bị kéo về phía khiếm khuyết cũ. Δ chỉ giữ lượng khí **sinh ra giữa 2 lần đo**, nên phản ánh khiếm khuyết **đang hoạt động**. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể.
+
+Ví dụ (ppm):
+
+| | H2 | CH4 | C2H6 | C2H4 | C2H2 |
+|---|---|---|---|---|---|
+| Lần 1 | 100 | 50 | 40 | 20 | 0 |
+| Lần 2 | 300 | 70 | 50 | 100 | 2 |
+| **Δ** | 200 | 20 | 10 | 80 | 2 |
+
+| Tỷ số của lần 2 | Giá trị đo | Δ |
+|---|---|---|
+| C2H2/C2H4 | 0,02 | 0,025 |
+| CH4/H2 | 0,23 | 0,10 |
+| C2H4/C2H6 | **2,0** | **8,0** |
+
+Tính trên giá trị đo, C2H4/C2H6 chỉ là 2. Tính trên Δ, tỷ số này lên tới 8: khí mới sinh ra chủ yếu là C2H4, dấu hiệu nhiệt cao hơn hẳn so với những gì giá trị đo thể hiện.
+
+App xử lý như sau:
+
+- **Lần đo đầu tiên** của thiết bị/pha không có lần trước để trừ, nên không có điểm Δ.
+- **Lần đo ngay sau lọc/thay dầu** (đã xác nhận ở mục 12.3) bị bỏ qua: phép trừ ra số âm, không có ý nghĩa.
+- **Cặp không có khí cháy nào tăng** (H2, CH4, C2H6, C2H4, C2H2 đều giảm hoặc giữ nguyên) bị bỏ qua.
+- Tỷ số có **Δ tử số âm** hoặc **Δ mẫu số ≤ 0** thì không tính (ví dụ CH4 giảm thì bỏ trống CH4/H2). Thiếu 1 trong 3 tỷ số thì không tra được mã Bảng 66. Điểm Duval cần Δ của CH4, C2H4, C2H2 đều ≥ 0.
+- Mỗi điểm ghi theo khoảng ngày, ví dụ **"Δ 12/03/2025 → 20/09/2025"**, trên đồ thị, bảng và phiếu đối chiếu.
+- Trong phiếu đối chiếu chỉ **tỷ số** tính trên Δ. Các bước kiểm tra **nồng độ** theo Điều 54 (giá trị điển hình Bảng 64, tốc độ tăng Bảng 65…) vẫn dùng giá trị đo của lần đo sau, vì ngưỡng nồng độ áp dụng cho lượng khí thực có trong dầu.
+
+Khi nào dùng: xem bình thường bằng **Giá trị đo** (đúng cách đọc Bảng 66 theo Điều 54). Bật **Δ** khi thấy khí tăng mạnh giữa 2 lần đo, để biết khí mới sinh ra thuộc dạng khiếm khuyết nào. Δ chỉ đáng tin khi lượng tăng đủ lớn so với sai số đo — khí chỉ nhích vài ppm thì tỷ số Δ dao động mạnh, không nên dùng để kết luận.
+
+> Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599. Phiếu đối chiếu chỉ hỗ trợ — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).
 
 ---
 
@@ -604,7 +715,7 @@ Thư mục `mobile/` chứa bản giao diện tối ưu cho điện thoại (m�
 
 **Cùng số liệu, cùng kết luận:** bản di động dùng **chính bộ logic đánh giá của bản web** (file `mobile/dga-logic.js` được sinh tự động từ logic web, không sửa tay), nên ngưỡng QĐ1901/IEC 60599:2022, chẩn đoán Bảng 66/Table A.10 (sứ xuyên), Tam giác Duval, trạng thái tổng thể và đánh giá dầu đều giống hệt. **Cấu hình quy định** do Admin chỉnh ở bản web cũng được bản di động tự áp dụng khi mở app.
 
-Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu chuẩn** (Admin ghi được, người dùng thường chỉ xem) và **Quản trị** (chỉ Admin). Các phần **chỉ có trên bản web**: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem `mobile/README.md`.
+Bản di động gồm các tab: **DGA**, **Dầu**, **Xu hướng**, **Tiêu chuẩn** (Admin ghi được, người dùng thường chỉ xem) và **Quản trị** (chỉ Admin). Các phần **chỉ có trên bản web**: nhập N2/O2 và Tổng hàm lượng khí hòa tan (Bảng 63), dự báo xu hướng, diễn biến loại khiếm khuyết (Bảng 66 / tam giác Duval), so sánh với nhóm thiết bị tương tự, ca tương tự, tab Cảnh báo, Cấu hình quy định, nhập hàng loạt BBTN, tab con Nhập BBTN cũ / Lập BBTN (tự điền thông số kỹ thuật), đọc và xuất BBTN dầu cách điện (lý-hóa dầu MBA, dầu 3 pha TI/TU/Sứ xuyên). Chi tiết xem `mobile/README.md`.
 
 ---
 

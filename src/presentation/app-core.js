@@ -369,6 +369,7 @@ function bindInputFormEvents() {
   setupTabLayoutToggle();
   setupSidebarCollapseToggle();
   setupTrendForecastToggle();
+  setupGuideToggles();
   $("btnExportBbtn").addEventListener("click", onExportBbtn);
   $("btnExportTechReport").addEventListener("click", onExportTechReport);
   // Tùy chọn nhập liệu thứ 2 (bên cạnh nhập rời từng BBTN ở trên): nhập hàng loạt
@@ -545,6 +546,12 @@ function bindHistoryTrendAlertEvents() {
   // quả, nên gọi lại onTrendDeviceChange() y hệt cách #tr_station làm ở trên (đơn giản, dữ liệu
   // nhỏ nên không cần tối ưu chỉ vẽ lại phần dự báo).
   $("tr_forecastYears").addEventListener("input", onTrendDeviceChange);
+  // Diễn biến loại khiếm khuyết (Bảng 66/Duval, ui-trend.js): đổi cơ sở tính hoặc pha chỉ vẽ lại phần đó.
+  $("tr_faultBasis").addEventListener("change", () => { if (_trendLastArgs) renderTrendFaultEvolution(_trendLastArgs[0]); });
+  $("tr_faultPhase").addEventListener("change", (e) => {
+    _trendFaultPhase = e.target.value;
+    if (_trendLastArgs) renderTrendFaultEvolution(_trendLastArgs[0]);
+  });
   // Checkbox "Hiện dự báo xu hướng tương lai" (#tr_forecastEnabled) — bật/tắt hẳn cả
   // đường nét đứt trên đồ thị lẫn bảng dự báo bên dưới (xem renderTrendChart() ở
   // ui-trend.js); trạng thái tick là SỞ THÍCH GIAO DIỆN, lưu qua setupTrendForecastToggle()
