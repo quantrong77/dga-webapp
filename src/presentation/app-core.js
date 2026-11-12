@@ -529,6 +529,7 @@ function bindHistoryTrendAlertEvents() {
     getOptions: () => trendDeviceOptions(),
   });
   $("tr_device").addEventListener("change", onTrendDeviceChange);
+  if (typeof setupTrendQuickPick === "function") setupTrendQuickPick();
   ["input", "change"].forEach((evt) => $("tr_station").addEventListener(evt, () => {
     updateTrendEmptyNote();
     onTrendDeviceChange();

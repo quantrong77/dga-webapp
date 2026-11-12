@@ -209,6 +209,68 @@ function trendDistinctStationsIn(gasRecords, oilRecords, oltcRecords) {
   return Array.from(set);
 }
 
+/** Trạng thái rỗng khi chưa chọn thiết bị (#trQuickPick, Bước 3c): gợi ý bấm nhanh (1) thiết bị có LẦN ĐO MỚI NHẤT đang
+ *  Báo động/Cảnh báo (collectAllAlerts(), tab Cảnh báo — chỉ nguồn khí/dầu MBA/dầu OLTC mà tab này vẽ được) và (2) thiết
+ *  bị vừa đo gần đây. Bấm 1 thiết bị = điền Trạm + Thiết bị rồi vẽ ngay, nhớ làm ngữ cảnh xem chung (ui-view-context.js). */
+const TREND_QUICK_MAX = 8;
+function renderTrendQuickPick() {
+  const box = $("trQuickPick");
+  if (!box) return;
+  const hasData = _allMeasurements.length + _allOilTests.length + _allOltcOilTests.length > 0;
+  box.classList.toggle("hidden", !hasData);
+  if (!hasData) return;
+  const key = (st, dev) => st + "\u0000" + dev;
+  const chip = (st, dev, extraClass, title) => `<button type="button" class="quick-chip ${extraClass || ""}" data-st="${escapeHtml(st)}" data-dev="${escapeHtml(dev)}" title="${escapeHtml(title || "")}"><span class="quick-chip-dev">${escapeHtml(dev)}</span>${st ? `<span class="quick-chip-st">${escapeHtml(st)}</span>` : ""}</button>`;
+
+  // (1) Đang cảnh báo — Báo động trước, rồi Cảnh báo; mỗi thiết bị 1 lần.
+  const alertSeen = new Set();
+  let alertItems = [];
+  try {
+    const alerts = typeof collectAllAlerts === "function" ? collectAllAlerts() : [];
+    alerts
+      .filter((a) => ["gas", "oil", "oltc"].includes(a.source) && (a.level === "alarm" || a.level === "alert") && a.isLatest !== false && a.deviceName)
+      .sort((a, b) => (a.level === b.level ? 0 : a.level === "alarm" ? -1 : 1))
+      .forEach((a) => {
+        const k = key(a.tram || "", a.deviceName);
+        if (alertSeen.has(k)) return;
+        alertSeen.add(k);
+        alertItems.push(chip(a.tram || "", a.deviceName, "lvl-" + a.level, a.level === "alarm" ? "Báo động (ALARM)" : "Cảnh báo (ALERT)"));
+      });
+  } catch (e) { alertItems = []; }
+  $("trQuickAlertsList").innerHTML = alertItems.slice(0, TREND_QUICK_MAX).join("");
+  $("trQuickAlerts").classList.toggle("hidden", alertItems.length === 0);
+
+  // (2) Vừa đo gần đây — theo ngày lấy mẫu mới nhất, bỏ thiết bị đã có ở nhóm (1).
+  const recentSeen = new Set(alertSeen);
+  const recent = [..._allMeasurements, ..._allOilTests, ..._allOltcOilTests]
+    .filter((r) => trendDeviceName(r))
+    .sort((a, b) => new Date(b.sample_date) - new Date(a.sample_date))
+    .filter((r) => {
+      const k = key(trendStationName(r) || "", trendDeviceName(r));
+      if (recentSeen.has(k)) return false;
+      recentSeen.add(k);
+      return true;
+    })
+    .slice(0, TREND_QUICK_MAX)
+    .map((r) => chip(trendStationName(r) || "", trendDeviceName(r), "", "Đo ngày " + fmtDateVN(r.sample_date)));
+  $("trQuickRecentList").innerHTML = recent.join("");
+  $("trQuickRecent").classList.toggle("hidden", recent.length === 0);
+}
+
+function setupTrendQuickPick() {
+  const box = $("trQuickPick");
+  if (!box) return;
+  box.addEventListener("click", (e) => {
+    const btn = e.target.closest(".quick-chip");
+    if (!btn) return;
+    $("tr_station").value = btn.dataset.st || "";
+    $("tr_device").value = btn.dataset.dev || "";
+    if (typeof setViewContext === "function") setViewContext(btn.dataset.st, btn.dataset.dev);
+    updateTrendEmptyNote();
+    onTrendDeviceChange();
+  });
+}
+
 function onTrendDeviceChange() {
   const device = $("tr_device").value;
   ["trHistGasWrap", "trHistOilWrap", "trHistOltcWrap", "trFaultWrap"].forEach((id) => $(id).classList.add("hidden"));
@@ -216,8 +278,10 @@ function onTrendDeviceChange() {
   if (!device) {
     $("trContentWrap").classList.add("hidden");
     destroyTrendChart();
+    renderTrendQuickPick();
     return;
   }
+  if ($("trQuickPick")) $("trQuickPick").classList.add("hidden");
   $("trContentWrap").classList.remove("hidden");
 
   const { gasRecords, oilRecords, oltcRecords } = trendRecordsForDevice(device);

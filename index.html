@@ -69,7 +69,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v77-ui-dropzone") {
+          if (k !== "dga-offline-v78-ui-empty-state") {
             caches.delete(k);
           }
         });
@@ -1177,6 +1177,20 @@
           </label>
         </div>
         <p class="note hidden" id="trEmpty">Chưa có dữ liệu nào được lưu (khí hòa tan / dầu MBA / dầu OLTC) để vẽ xu hướng.</p>
+        <!-- Trạng thái rỗng khi chưa chọn thiết bị: gợi ý bấm nhanh thiết bị đang cảnh báo / vừa đo — renderTrendQuickPick(), ui-trend.js -->
+        <div class="empty-state hidden" id="trQuickPick">
+          <svg class="icon-svg empty-state-icon" aria-hidden="true"><use href="#icon-trend"></use></svg>
+          <p class="empty-state-title">Chọn 1 thiết bị để xem xu hướng</p>
+          <p class="empty-state-text">Gõ tên ở ô Thiết bị phía trên, hoặc bấm nhanh 1 thiết bị dưới đây.</p>
+          <div class="quick-group hidden" id="trQuickAlerts">
+            <p class="quick-group-title">Đang có cảnh báo</p>
+            <div class="quick-chips" id="trQuickAlertsList"></div>
+          </div>
+          <div class="quick-group hidden" id="trQuickRecent">
+            <p class="quick-group-title">Vừa đo gần đây</p>
+            <div class="quick-chips" id="trQuickRecentList"></div>
+          </div>
+        </div>
         <p class="note hidden u-c-bad u-fw-600" id="trDeviceAmbiguousNote"></p>
       </div>
 
