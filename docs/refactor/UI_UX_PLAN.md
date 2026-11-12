@@ -93,7 +93,7 @@ Mọi cặp chữ/nền phải đạt WCAG AA (≥ 4,5:1), kiểm tra bằng `np
 
 Sau mỗi bước: chạy `npm test` và `lint`, cập nhật tên cache trong `sw.js`, commit, báo cáo kèm ảnh, rồi **dừng chờ duyệt**.
 
-**Thử trên GitHub Pages:** Pages giờ chỉ triển khai từ `main`. Muốn thử nhánh này thì thêm lại tạm trigger cho `refactor/ui-ux` (gỡ trước khi gộp), hoặc thử bằng máy chủ nội bộ.
+**Đã gộp vào `main` (12/11/2026)** — gỡ trigger deploy tạm của `refactor/ui-ux`; Pages triển khai lại từ `main`.
 
 ---
 
