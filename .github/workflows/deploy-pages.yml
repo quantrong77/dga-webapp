@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+      # TAM THOI: thu nhanh refactor UI/UX tren Pages — xoa dong nay truoc khi merge vao main
+      - refactor/ui-ux
   workflow_dispatch:
 
 permissions:
