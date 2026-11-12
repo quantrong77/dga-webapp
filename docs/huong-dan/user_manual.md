@@ -126,6 +126,8 @@ Bấm **biểu tượng mặt trăng/mặt trời** ở góc trên bên phải (
 
 **Ngày trong các bảng** hiển thị dạng ngày/tháng/năm (VD 20/10/2026); ô nhập ngày và file xuất vẫn giữ định dạng chuẩn.
 
+**Bảng rộng hơn màn hình** (VD Lịch sử đo khí hòa tan, 21 cột): có thêm **thanh cuộn ngang màu xanh ở ngay trên bảng**, dính dưới thanh tab khi cuộn trang xuống, nên không phải kéo xuống cuối bảng mới cuộn ngang được. Cột Ngày và cột nút thao tác luôn hiện khi cuộn. Muốn thấy hết cột cùng lúc: dùng màn hình rộng (từ khoảng 1600px là đủ), hoặc chuyển thanh tab sang dạng dọc rồi **thu gọn sidebar** (nút mũi tên ở đầu sidebar) để bảng dùng hết bề ngang, hoặc thu nhỏ trang trình duyệt (Ctrl + phím −).
+
 **Thu gọn hướng dẫn:** nhiều mục có nút **con mắt** (ở tiêu đề mục hoặc thanh công cụ đầu tab) để ẩn/hiện các đoạn hướng dẫn, giải thích; app nhớ lựa chọn của từng mục.
 
 **Tìm trong hướng dẫn:** ở tab **Hướng dẫn**, gõ từ khóa vào ô tìm kiếm (không cần gõ dấu, VD "xuat excel"). Chỉ các mục có từ khóa được giữ lại và mở sẵn, chỗ khớp được tô vàng; nhấn Esc hoặc xóa ô để trở lại như cũ.

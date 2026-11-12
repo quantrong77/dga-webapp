@@ -134,6 +134,25 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+/* Thanh cuộn ngang phụ PHÍA TRÊN bảng rộng (setupTopScrollbars(), ui-layout.js) — dính dưới header + thanh tab khi
+   cuộn trang, nên bảng dài vẫn cuộn ngang được mà không phải kéo xuống đáy bảng. Dày hơn thanh mặc định cho dễ kéo. */
+.table-scroll-top {
+  position: sticky;
+  top: calc(var(--header-height, 60px) + var(--tabs-height, 0px));
+  z-index: 4;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 14px;
+  margin-bottom: 2px;
+  background: var(--surface);
+  scrollbar-width: auto;
+  scrollbar-color: var(--blue-700) var(--surface-sunken);
+}
+.table-scroll-top > div { height: 1px; }
+.table-scroll-top.hidden { display: none; }
+.table-scroll-top::-webkit-scrollbar { height: 12px; }
+.table-scroll-top::-webkit-scrollbar-track { background: var(--surface-sunken); }
+.table-scroll-top::-webkit-scrollbar-thumb { background: var(--blue-700); border: 2px solid var(--surface-sunken); }
 
 table {
   width: 100%;
@@ -491,3 +510,8 @@ tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 /* Đang mở khung đối chiếu BBTN (form hẹp lại): thu gọn cột để vừa 3 pha A/B/C */
 #oSplitLayout.has-preview .oil-param-table td:first-child { min-width: 150px; }
 #oSplitLayout.has-preview .oil-param-table input, #oSplitLayout.has-preview .oil-param-table select { min-width: 72px; }
+
+/* Bảng Lịch sử đo (nhiều cột): đệm ngang ô gọn hơn (12px → 8px mỗi bên) — bảng khí hòa tan 21 cột hẹp lại ~170px,
+   màn hình 1440px gần như không còn phải cuộn ngang. */
+#tab-lichsu .table-scroll th,
+#tab-lichsu .table-scroll td { padding-left: var(--space-2); padding-right: var(--space-2); }

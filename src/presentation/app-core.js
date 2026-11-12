@@ -104,6 +104,7 @@ function setupStaticUI() {
   setupTabAriaSync();
   setupMiniModalEscape();
   if (typeof setupDialogFocus === "function") setupDialogFocus();
+  if (typeof setupTopScrollbars === "function") setupTopScrollbars();
   if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();
   setupHeaderMenu();

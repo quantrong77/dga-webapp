@@ -114,7 +114,7 @@ main {
 @media (min-width: 1320px) {
   main:has(> #tab-xuhuong:not(.hidden)),
   main:has(> #tab-lichsu:not(.hidden)),
-  main:has(> #tab-canhbao:not(.hidden)) { max-width: 1440px; }
+  main:has(> #tab-canhbao:not(.hidden)) { max-width: 1880px; }
 }
 body.tabs-sidebar main {
   grid-column: 2;
@@ -137,6 +137,9 @@ body.tabs-sidebar main {
   margin: 0;
   max-width: none;
 }
+/* Bố cục sidebar: main LUÔN dãn hết cột lưới — kể cả 3 tab dữ liệu (luật :has() ở trên có độ ưu tiên cao hơn
+   "body.tabs-sidebar main" nên trước đây vẫn bị chặn 1440px trên màn hình rộng dù đã thu gọn sidebar). */
+body.tabs-sidebar main#mainContent { max-width: none; }
 /* footer.app-footer là phần tử THỨ 4 trong <body> (sau header/nav.tabs/main) nhưng
    grid-template-rows ở trên chỉ khai báo 2 hàng ("auto 1fr") — nếu không chỉ định rõ vị
    trí, CSS Grid sẽ tự xếp footer vào hàng ẩn (implicit) thứ 3 nhưng VẪN ở cột 1 (cùng cột

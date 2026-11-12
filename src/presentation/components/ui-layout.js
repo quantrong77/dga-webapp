@@ -107,6 +107,65 @@ function setupStickyHeaderObserver() {
   }
 }
 
+/** Thanh cuộn ngang PHÍA TRÊN bảng (mọi .table-scroll trong <main>). Bảng nhiều cột (VD Lịch sử đo khí hòa tan:
+ *  21 cột, ~1560px) rộng hơn khung → trước đây chỉ có thanh cuộn ở ĐÁY bảng, bảng dài phải kéo xuống cuối mới cuộn
+ *  ngang được. Thanh trên đồng bộ 2 chiều với thanh dưới, DÍNH ngay dưới header + thanh tab khi cuộn trang
+ *  (--sticky-top), chỉ hiện khi bảng thực sự bị khuất. Bề rộng bảng đổi (đổi bộ lọc, nạp dữ liệu, đổi cỡ cửa
+ *  sổ, mở/thu sidebar) → ResizeObserver cập nhật lại. */
+function attachTopScrollbar(sc) {
+  if (!sc || sc.dataset.topScroll) return;
+  sc.dataset.topScroll = "1";
+  const bar = document.createElement("div");
+  bar.className = "table-scroll-top hidden";
+  bar.setAttribute("aria-hidden", "true"); // thanh phụ cho chuột; bàn phím/trình đọc dùng chính khung bảng
+  bar.tabIndex = -1;
+  const inner = document.createElement("div");
+  bar.appendChild(inner);
+  sc.parentNode.insertBefore(bar, sc);
+  let syncing = null;
+  bar.addEventListener("scroll", () => {
+    if (syncing === "sc") { syncing = null; return; }
+    syncing = "bar";
+    sc.scrollLeft = bar.scrollLeft;
+  }, { passive: true });
+  sc.addEventListener("scroll", () => {
+    if (syncing === "bar") { syncing = null; return; }
+    syncing = "sc";
+    bar.scrollLeft = sc.scrollLeft;
+  }, { passive: true });
+  const update = () => {
+    const overflow = sc.scrollWidth - sc.clientWidth > 1 && sc.clientWidth > 0;
+    bar.classList.toggle("hidden", !overflow);
+    if (!overflow) return;
+    inner.style.width = sc.scrollWidth + "px";
+    bar.scrollLeft = sc.scrollLeft;
+  };
+  if (typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(update);
+    ro.observe(sc);
+    if (sc.firstElementChild) ro.observe(sc.firstElementChild);
+  } else {
+    window.addEventListener("resize", update);
+  }
+  update();
+}
+
+function setupTopScrollbars() {
+  document.querySelectorAll("main .table-scroll").forEach(attachTopScrollbar);
+  // Độ cao phần dính ở đỉnh trang (header + thanh tab ngang) — chỗ thanh cuộn trên bảng dính vào khi cuộn trang.
+  // Bố cục sidebar (màn hình > 800px): thanh tab nằm bên trái, không chiếm chiều cao phía trên.
+  const nav = document.querySelector("nav.tabs");
+  const updateTop = () => {
+    const sidebar = document.body.classList.contains("tabs-sidebar") && window.innerWidth > 800;
+    const h = nav && !sidebar ? Math.round(nav.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--tabs-height", h + "px");
+  };
+  updateTop();
+  if (nav && typeof ResizeObserver !== "undefined") new ResizeObserver(updateTop).observe(nav);
+  window.addEventListener("resize", updateTop);
+  new MutationObserver(updateTop).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+}
+
 function setupTabs() {
   // Nút chuyển nhanh sang tab khác (vd thông báo "Tài khoản chỉ xem": data-goto-tab="lichsu").
   document.querySelectorAll("[data-goto-tab]").forEach((el) => {
