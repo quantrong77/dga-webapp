@@ -703,3 +703,28 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 .server-status-title { display: flex; align-items: center; gap: 6px; font-weight: var(--font-semibold); }
 .server-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--status-online-dot); }
 .server-status-sub { margin-top: var(--space-1); font-size: 11px; color: var(--text-secondary); }
+
+/* Bước 4a — thanh công cụ đầu tab nhập liệu: tab con · Loại thiết bị · nút con mắt hướng dẫn, 1 hàng (xuống dòng khi hẹp). */
+.input-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-3);
+}
+.input-toolbar .input-subtabs { margin-bottom: 0; }
+.input-toolbar-type {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+.input-toolbar-icon.icon-svg { width: 16px; height: 16px; margin-right: 0; color: var(--blue-700); }
+.input-toolbar-select { min-width: 200px; font-weight: var(--font-semibold); color: var(--text-primary); }
+.input-toolbar-guide { margin-left: auto; }
+@media (max-width: 600px) {
+  .input-toolbar-type { flex: 1 1 100%; }
+  .input-toolbar-select { flex: 1; min-width: 0; }
+}
