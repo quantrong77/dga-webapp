@@ -52,6 +52,40 @@ function setupSidebarCollapseToggle() {
   });
 }
 
+/** Menu "⋯" của header trên điện thoại (≤ 800px): mở/đóng #headerMenu (.header-tools). Đóng khi bấm ra ngoài, bấm 1 mục,
+ *  nhấn Esc, hoặc khi màn hình rộng ra (máy tính hiện thẳng các nút trên header, xem style-base.css). */
+function setupHeaderMenu() {
+  const btn = document.getElementById("btnHeaderMenu");
+  const menu = document.getElementById("headerMenu");
+  if (!btn || !menu) return;
+  const setOpen = (open) => {
+    menu.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.setAttribute("aria-label", open ? "Đóng menu" : "Mở menu");
+  };
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(!menu.classList.contains("open"));
+  });
+  menu.addEventListener("click", (e) => {
+    if (e.target.closest("button")) setOpen(false);
+  });
+  document.addEventListener("click", (e) => {
+    if (menu.classList.contains("open") && !menu.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menu.classList.contains("open")) {
+      setOpen(false);
+      btn.focus();
+    }
+  });
+  if (window.matchMedia) {
+    const mq = window.matchMedia("(min-width: 801px)");
+    const onChange = () => { if (mq.matches) setOpen(false); };
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+  }
+}
+
 function setupStickyHeaderObserver() {
   const header = document.querySelector("header.app-header");
   if (!header || !document.documentElement) return;

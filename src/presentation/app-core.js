@@ -103,6 +103,7 @@ function setupStaticUI() {
   setupTabAriaSync();
   setupMiniModalEscape();
   setupStickyHeaderObserver();
+  setupHeaderMenu();
   setupTabLayoutToggle();
   setupSidebarCollapseToggle();
   setupCauHinhSubtabs();

@@ -69,7 +69,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v73-ui-utilities") {
+          if (k !== "dga-offline-v74-ui-header") {
             caches.delete(k);
           }
         });
@@ -133,6 +133,7 @@
       <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3 7 7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-external-link" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></symbol>
       <symbol id="icon-gear-loader" viewBox="6 10 100 92">
         <g class="gear-loader-big"><path fill="var(--gear-gray)" d="M 80.16 61.85 L 86.57 60.80 L 86.57 71.20 L 80.16 70.15 L 79.62 72.65 L 78.83 75.09 L 77.79 77.43 L 83.60 80.35 L 77.48 88.77 L 72.92 84.14 L 71.01 85.85 L 68.93 87.36 L 66.72 88.65 L 69.71 94.42 L 59.81 97.64 L 58.83 91.21 L 56.28 91.47 L 53.72 91.47 L 51.17 91.21 L 50.19 97.64 L 40.29 94.42 L 43.28 88.65 L 41.07 87.36 L 38.99 85.85 L 37.08 84.14 L 32.52 88.77 L 26.40 80.35 L 32.21 77.43 L 31.17 75.09 L 30.38 72.65 L 29.84 70.15 L 23.43 71.20 L 23.43 60.80 L 29.84 61.85 L 30.38 59.35 L 31.17 56.91 L 32.21 54.57 L 26.40 51.65 L 32.52 43.23 L 37.08 47.86 L 38.99 46.15 L 41.07 44.64 L 43.28 43.35 L 40.29 37.58 L 50.19 34.36 L 51.17 40.79 L 53.72 40.53 L 56.28 40.53 L 58.83 40.79 L 59.81 34.36 L 69.71 37.58 L 66.72 43.35 L 68.93 44.64 L 71.01 46.15 L 72.92 47.86 L 77.48 43.23 L 83.60 51.65 L 77.79 54.57 L 78.83 56.91 L 79.62 59.35 Z"/></g>
         <g class="gear-loader-blue"><path fill="var(--blue-700)" d="M 43.69 29.96 L 47.61 29.15 L 47.61 36.85 L 43.69 36.04 L 42.86 38.74 L 41.54 41.24 L 44.88 43.43 L 39.43 48.88 L 37.24 45.54 L 34.74 46.86 L 32.04 47.69 L 32.85 51.61 L 25.15 51.61 L 25.96 47.69 L 23.26 46.86 L 20.76 45.54 L 18.57 48.88 L 13.12 43.43 L 16.46 41.24 L 15.14 38.74 L 14.31 36.04 L 10.39 36.85 L 10.39 29.15 L 14.31 29.96 L 15.14 27.26 L 16.46 24.76 L 13.12 22.57 L 18.57 17.12 L 20.76 20.46 L 23.26 19.14 L 25.96 18.31 L 25.15 14.39 L 32.85 14.39 L 32.04 18.31 L 34.74 19.14 L 37.24 20.46 L 39.43 17.12 L 44.88 22.57 L 41.54 24.76 L 42.86 27.26 Z"/></g>
@@ -218,50 +219,57 @@
   </div>
 
   <header class="app-header">
+    <!-- Nhóm công cụ: máy tính hiện thẳng trên header (display: contents); điện thoại (≤ 800px) gom vào menu "⋯"
+         (#btnHeaderMenu, setupHeaderMenu() ở ui-layout.js). -->
+    <div class="header-tools" id="headerMenu">
     <div class="header-left">
       <button type="button" id="btnToggleTabLayout" class="header-icon-btn" data-tooltip="Đổi bố cục tab" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg><span class="hdr-label">Đổi bố cục tab</span>
       </button>
       <!-- <button> (không phải <span> như trước) — khi đã cấu hình link quản lý (xem
            databaseManagementUrl() ở storage.js), bấm vào mở Google Sheet/Supabase
            Dashboard ở tab mới, xem setupStorageBadgeLink() ở app-core.js. Nếu chưa cấu
            hình link thì vẫn hiển thị bình thường, bấm vào không có gì xảy ra. -->
       <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
-      <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
-        <span class="sync-dot"></span>
-        <span id="syncStatusText">Đã đồng bộ</span>
-      </button>
-    </div>
-    <div class="header-center">
-      <div class="app-title-row">
-        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
-        <h1>Đánh giá Dầu cách điện</h1>
-      </div>
     </div>
     <div class="header-right">
       <!-- Nhóm công cụ & quản trị đưa lên Menu bar: Giới thiệu, Phản hồi, Quản trị -->
       <button type="button" class="header-icon-btn tab-btn" data-tab="about" id="navAbout" title="Giới thiệu" aria-label="Giới thiệu" data-tooltip="Giới thiệu">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg><span class="hdr-label">Giới thiệu</span>
       </button>
       <button type="button" class="header-icon-btn tab-btn" data-tab="phanhoi" id="navPhanHoi" title="Phản hồi" aria-label="Phản hồi" data-tooltip="Phản hồi">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-feedback"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-feedback"></use></svg><span class="hdr-label">Phản hồi</span>
       </button>
       <!-- Quản trị — chỉ hiện với Admin (hoặc khi không bật Auth, xem initApp() ở app-core.js) -->
       <button type="button" class="header-icon-btn tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị" aria-label="Quản trị" data-tooltip="Quản trị">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="hdr-label">Quản trị</span>
       </button>
 
       <div class="header-divider" aria-hidden="true"></div>
 
       <!-- Tùy chọn giao diện & tài khoản -->
       <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối" data-tooltip="Giao diện tối">
-        <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg><span class="hdr-label" id="themeLabel">Giao diện tối</span>
       </button>
       <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu" aria-label="Đổi mật khẩu" data-tooltip="Đổi mật khẩu">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span class="hdr-label">Đổi mật khẩu</span>
       </button>
       <button type="button" id="userBadge" class="badge user-badge hidden" title="Bấm để đăng xuất"></button>
     </div>
+    </div>
+    <div class="header-center">
+      <div class="app-title-row">
+        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
+        <h1>Đánh giá Dầu cách điện</h1>
+        <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
+          <span class="sync-dot"></span>
+          <span id="syncStatusText">Đã đồng bộ</span>
+        </button>
+      </div>
+    </div>
+    <button type="button" id="btnHeaderMenu" class="header-icon-btn header-menu-btn" aria-expanded="false" aria-controls="headerMenu" aria-label="Mở menu" title="Menu">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg>
+    </button>
   </header>
 
   <!-- ===================== MODAL: ĐỔI MẬT KHẨU =====================
