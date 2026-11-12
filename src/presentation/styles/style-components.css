@@ -148,10 +148,43 @@ input:disabled, select:disabled, textarea:disabled {
 /* Nút con mắt ẩn/hiện hướng dẫn của 1 mục (setupGuideToggles(), app-views.js) — nằm cuối <h2>, đẩy sang phải. */
 .panel h2 .guide-toggle-btn { margin-left: auto; }
 .guide-collapsed { display: none !important; }
-/* Ghi chú tiêu chuẩn dưới đồ thị Xu hướng (#trStdWrap) — tiêu đề + nút con mắt riêng. */
-.trend-std { margin-top: var(--space-3); }
-.trend-std-title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 6px; }
-.trend-std table td, .trend-std table th { font-size: var(--text-xs); vertical-align: top; }
+/* Tab Xu hướng — ô tiêu chuẩn 1 thông số khí (#trStdPopover), mở bằng chuột phải vào tên khí. */
+.std-popover {
+  position: fixed;
+  z-index: 90;
+  width: min(380px, calc(100vw - 16px));
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-5);
+  font-size: var(--text-sm);
+}
+.std-popover.hidden { display: none; }
+.std-pop-head { display: flex; align-items: baseline; gap: var(--space-2); margin-bottom: var(--space-2); }
+.std-pop-head strong { font-size: var(--text-base); }
+.std-pop-sub { color: var(--text-secondary); font-size: var(--text-xs); }
+.std-pop-close {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.std-pop-close:hover { background: var(--surface-sunken); }
+.std-pop-rows { display: grid; grid-template-columns: auto 1fr; gap: 4px var(--space-3); margin: 0 0 var(--space-2); }
+.std-pop-rows dt { color: var(--text-secondary); }
+.std-pop-rows dd { margin: 0; }
+.std-pop-src, .std-pop-basis { margin: 0; font-size: var(--text-xs); color: var(--text-secondary); line-height: 1.45; }
+.std-pop-src span { font-weight: var(--font-semibold); color: var(--text-primary); }
+.std-pop-basis { margin-top: 4px; font-style: italic; }
+label.chk[data-std-key] { cursor: context-menu; }
 .info-popover {
   position: relative;
   padding: var(--space-3) 34px var(--space-3) 14px;

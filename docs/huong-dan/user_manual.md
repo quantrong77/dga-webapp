@@ -474,7 +474,7 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 
 ## 12. Xem xu hướng và dự báo (tab Xu hướng)
 
-> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng **Tiêu chuẩn so sánh** dưới đồ thị có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
+> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
 
 ### 12.1. Vẽ đồ thị
 
@@ -500,7 +500,7 @@ Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Cần lưu ý/theo d�
 
 **Khi nào đánh giá Bảng 63:** chỉ kết luận đạt/không đạt với **dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu** (tick ô tương ứng và chọn cấp điện áp ở form Khí hòa tan, mục 4). Với dầu đang vận hành định kỳ, giá trị chỉ để tham khảo.
 
-**Tiêu chuẩn so sánh của thông số khí đang vẽ:** ngay dưới đồ thị, khi đang tick ít nhất một thông số khí, app hiện bảng tiêu chuẩn của đúng các thông số đó. Bảng này có **nút con mắt riêng** để ẩn/hiện, không phụ thuộc nút của mục "Chọn thông số cần vẽ".
+**Xem tiêu chuẩn của 1 thông số khí:** bấm **chuột phải** vào tên khí — ở ô chọn trong mục "Chọn thông số cần vẽ", hoặc vào **nhãn tên khí / đường** trên đồ thị. Một ô thông tin hiện ngay tại con trỏ, gồm **Giá trị điển hình**, **Tốc độ gia tăng điển hình**, ngưỡng loại bỏ của nhà sản xuất (nếu có) và **Nguồn / ghi chú**. Trên điện thoại: **giữ ngón tay** trên tên khí; bàn phím: phím **Menu** hoặc **Shift+F10** khi đang chọn ô. Đóng bằng nút ×, phím Esc hoặc bấm ra ngoài. (Thay cho bảng "Tiêu chuẩn so sánh của thông số khí đang vẽ" dưới đồ thị trước đây.) Nội dung theo từng loại thông số:
 
 - **7 khí chính:** giá trị điển hình đang áp dụng cho thiết bị (theo loại thiết bị/nhà sản xuất của lần đo gần nhất — cùng nguồn với tab Khí hòa tan), ngưỡng loại bỏ nếu nhà sản xuất có cấu hình, và tốc độ tăng điển hình Bảng 65 (chỉ áp dụng chính thức cho MBA; loại khác ghi "tham khảo").
 - **N2, O2:** không có ngưỡng riêng; dùng cho tỷ lệ O2/N2 (~0,5 là bình thường ở thiết bị tiếp xúc không khí, < 0,3 là tiêu thụ oxy quá mức) và Bảng 63.

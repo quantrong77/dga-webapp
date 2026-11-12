@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v100-thu-tu-loc-chu-giai-bang66") {
+          if (k !== "dga-offline-v101-tieu-chuan-chuot-phai") {
             caches.delete(k);
           }
         });
@@ -1266,6 +1266,9 @@
           <p class="u-m-0-0-4px"><strong>Tổng hàm lượng khí hòa tan</strong> (%, Bảng 63 Điều 54 QĐ1901) = (H2 + CH4 +
             C2H6 + C2H4 + C2H2 + CO + CO2 + N2 + O2) ÷ 10.000 (1% = 10.000 ppm). Chỉ tính được ở lần đo có nhập <strong>cả N2
             lẫn O2</strong>; lần đo thiếu thì đồ thị bỏ trống điểm đó.</p>
+          <p class="u-m-0-0-4px"><strong>Xem tiêu chuẩn của 1 khí:</strong> bấm <strong>chuột phải</strong> vào tên khí (ô chọn bên dưới
+            hoặc nhãn/đường trên đồ thị) — hiện giá trị điển hình, tốc độ gia tăng điển hình, ngưỡng loại bỏ của NSX (nếu có) và
+            nguồn. Trên điện thoại: giữ ngón tay trên tên khí. Bàn phím: phím Menu hoặc Shift+F10 khi đang chọn ô.</p>
           <p class="u-m-0"><strong>Khi nào đánh giá Bảng 63:</strong> chỉ kết luận đạt/không đạt với <strong>dầu mới đưa vào
             vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu</strong> (ô tick ở form Khí hòa tan). Ngưỡng: 110–220 kV
             &lt; 1%, 500 kV &lt; 0,5%. Dầu đang vận hành định kỳ: giá trị chỉ để tham khảo, theo dõi xu hướng.</p>
@@ -1292,12 +1295,12 @@
         <!-- Nhãn ký hiệu cạnh đường + chạm để chọn đường — trendLineLabelsPlugin/onTrendChartClick, ui-trend.js -->
         <p class="note hidden u-mt-6px" id="trChartHint" data-guide="trend-chart">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
           mỗi đường khi còn chỗ. Đường sát hoặc chồng nhau: chạm/click vào đường để hiện ký hiệu (chạm lại cùng chỗ để
-          chuyển sang đường chồng bên dưới); chạm vùng trống để bỏ chọn.</p>
-        <!-- Tiêu chuẩn so sánh của các thông số khí đang vẽ — renderTrendStandardsNote(), ui-trend.js -->
-        <div id="trStdWrap" class="trend-std hidden">
-          <p class="section-title trend-std-title">Tiêu chuẩn so sánh của thông số khí đang vẽ<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-standards" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện ghi chú tiêu chuẩn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></p>
-          <div id="trStdBody" data-guide="trend-standards"></div>
-        </div>
+          chuyển sang đường chồng bên dưới); chạm vùng trống để bỏ chọn. <strong>Chuột phải vào nhãn hoặc đường của 1 khí</strong>
+          để xem tiêu chuẩn (giá trị điển hình, tốc độ gia tăng điển hình, nguồn).</p>
+        <!-- Tiêu chuẩn của 1 thông số khí: CHUỘT PHẢI vào tên khí (chip ở trên hoặc nhãn/đường trên đồ thị), giữ ngón tay trên
+             điện thoại, hoặc phím Menu / Shift+F10 trên chip — thay bảng "Tiêu chuẩn so sánh của thông số khí đang vẽ" trước
+             đây. Nội dung: trendStandardInfo(); vị trí + đóng/mở: showTrendStdPopover()/setupTrendStdPopover(), ui-trend.js. -->
+        <div id="trStdPopover" class="std-popover hidden" role="dialog" aria-modal="false" aria-labelledby="trStdPopTitle"></div>
         <p class="note hidden u-mt-10px" id="trChartEmpty">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
           thiết bị có nhiều pha, cũng cần tick ít nhất 1 pha ở mục "Lọc theo pha".</p>
         <p class="note hidden u-mt-10px" id="trChartNoLib">Không tải được thư viện vẽ đồ thị (Chart.js) — có
@@ -3771,7 +3774,7 @@
         <details class="mm-node">
           <summary>12. Xem xu hướng và dự báo (tab Xu hướng)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
-          <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng <strong>Tiêu chuẩn so sánh</strong> dưới đồ thị có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
+          <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
           <h3>12.1. Vẽ đồ thị</h3>
           <p>Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: <strong>Cần lưu ý/theo dõi</strong> (chấm đỏ = Báo động, vàng = Cảnh báo) và <strong>Vừa đo gần đây</strong>. Bấm 1 thiết bị là đồ thị hiện ngay.</p>
           <ol type="1">
@@ -3809,7 +3812,7 @@
           </tbody>
           </table></div>
           <p><strong>Khi nào đánh giá Bảng 63:</strong> chỉ kết luận đạt/không đạt với <strong>dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu</strong> (tick ô tương ứng và chọn cấp điện áp ở form Khí hòa tan, mục 4). Với dầu đang vận hành định kỳ, giá trị chỉ để tham khảo.</p>
-          <p><strong>Tiêu chuẩn so sánh của thông số khí đang vẽ:</strong> ngay dưới đồ thị, khi đang tick ít nhất một thông số khí, app hiện bảng tiêu chuẩn của đúng các thông số đó. Bảng này có <strong>nút con mắt riêng</strong> để ẩn/hiện, không phụ thuộc nút của mục "Chọn thông số cần vẽ".</p>
+          <p><strong>Xem tiêu chuẩn của 1 thông số khí:</strong> bấm <strong>chuột phải</strong> vào tên khí — ở ô chọn trong mục "Chọn thông số cần vẽ", hoặc vào <strong>nhãn tên khí / đường</strong> trên đồ thị. Một ô thông tin hiện ngay tại con trỏ, gồm <strong>Giá trị điển hình</strong>, <strong>Tốc độ gia tăng điển hình</strong>, ngưỡng loại bỏ của nhà sản xuất (nếu có) và <strong>Nguồn / ghi chú</strong>. Trên điện thoại: <strong>giữ ngón tay</strong> trên tên khí; bàn phím: phím <strong>Menu</strong> hoặc <strong>Shift+F10</strong> khi đang chọn ô. Đóng bằng nút ×, phím Esc hoặc bấm ra ngoài. (Thay cho bảng "Tiêu chuẩn so sánh của thông số khí đang vẽ" dưới đồ thị trước đây.) Nội dung theo từng loại thông số:</p>
           <ul class="rec-list">
           <li><strong>7 khí chính:</strong> giá trị điển hình đang áp dụng cho thiết bị (theo loại thiết bị/nhà sản xuất của lần đo gần nhất — cùng nguồn với tab Khí hòa tan), ngưỡng loại bỏ nếu nhà sản xuất có cấu hình, và tốc độ tăng điển hình Bảng 65 (chỉ áp dụng chính thức cho MBA; loại khác ghi "tham khảo").</li>
           <li><strong>N2, O2:</strong> không có ngưỡng riêng; dùng cho tỷ lệ O2/N2 (~0,5 là bình thường ở thiết bị tiếp xúc không khí, &lt; 0,3 là tiêu thụ oxy quá mức) và Bảng 63.</li>
