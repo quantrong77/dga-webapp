@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v103-tick-tat-ca-khi") {
+          if (k !== "dga-offline-v104-duval-chu-thich") {
             caches.delete(k);
           }
         });
@@ -1391,7 +1391,8 @@
           <figure class="trend-duval">
             <svg id="trDuvalSvg" role="img" aria-label="Quỹ đạo các lần đo trên tam giác Duval 1"></svg>
             <figcaption class="note" data-guide="trend-fault">Tam giác Duval 1 (Bảng 67): các lần đo đang tick nối theo thứ tự thời gian, số = thứ
-              tự trong bảng dưới, điểm viền đậm = lần đo gần nhất trong số đang tick.</figcaption>
+              tự trong bảng dưới, điểm viền đậm = lần đo gần nhất trong số đang tick. <strong>Trỏ chuột</strong> (điện thoại:
+              chạm) vào 1 vùng để xem ý nghĩa mã của vùng đó.</figcaption>
             <p class="section-title u-m-10px-0-4px" data-guide="trend-fault">Ý nghĩa mã khiếm khuyết</p>
             <!-- renderTrendFaultCodeLegend(), ui-trend.js -->
             <ul class="fault-code-legend" id="trFaultCodeLegend" data-guide="trend-fault"></ul>
@@ -3863,7 +3864,7 @@
           <p>Tỷ số lớn hơn 10 vẽ <strong>▲</strong> ở đỉnh.</p>
           <ul class="rec-list">
           <li><strong>Dải mã</strong> ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn <strong>9 dòng</strong> / <strong>IEC</strong> / <strong>Duval</strong>. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.</li>
-          <li><strong>Tam giác Duval 1</strong> với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.</li>
+          <li><strong>Tam giác Duval 1</strong> với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick. <strong>Trỏ chuột vào 1 vùng</strong> (PD, T1, T2, T3, D1, D2, D+T) — trên điện thoại: chạm vào vùng — để vùng đó đậm lên và hiện ô chú thích <strong>ý nghĩa của mã</strong>, kèm các lần đo đang tick nằm trong vùng đó (VD "1 lần đo đang tick nằm trong vùng này: #2"). Rời chuột hoặc chạm ra ngoài tam giác để ẩn.</li>
           <li><strong>Bảng từng lần đo</strong>: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ <strong>(đổi)</strong>.</li>
           <li><strong>Chọn lần đo hiển thị</strong>: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên đồ thị và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Đổi thiết bị hoặc pha thì tick lại hết.</li>
           <li><strong>Ý nghĩa mã khiếm khuyết</strong> ngay dưới tam giác:</li>

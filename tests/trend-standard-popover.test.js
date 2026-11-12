@@ -101,3 +101,22 @@ describe('Ô "Tất cả khí" ở mục Chọn thông số cần vẽ', () => {
     expect(SRC).toMatch(/master\.indeterminate = n > 0 && n < allKeys\.length/);
   });
 });
+
+describe("Tam giác Duval — trỏ vào vùng hiện ý nghĩa mã (trendDuvalZoneTipHtml)", () => {
+  const { trendDuvalZoneTipHtml } = load();
+  const rows = [{ seq: 1, duval: { zone: "T3" } }, { seq: 2, duval: { zone: "D1" } }, { seq: 3, duval: { zone: "T3" } }, { seq: 4, duval: null }];
+  test("mã + ý nghĩa + các lần đo nằm trong vùng", () => {
+    const html = trendDuvalZoneTipHtml("T3", rows);
+    expect(html).toContain('<strong class="duval-tip-code">T3</strong>');
+    expect(html).toContain("Quá nhiệt t &gt; 700 °C");
+    expect(html).toContain("2 lần đo đang tick nằm trong vùng này: #1, #3");
+  });
+  test("vùng D+T (khóa DT) và vùng không có lần đo nào", () => {
+    const html = trendDuvalZoneTipHtml("DT", rows);
+    expect(html).toContain(">D+T<");
+    expect(html).toContain("Không có lần đo đang tick nằm trong vùng này");
+  });
+  test("mã lạ → rỗng", () => {
+    expect(trendDuvalZoneTipHtml("XX", rows)).toBe("");
+  });
+});
