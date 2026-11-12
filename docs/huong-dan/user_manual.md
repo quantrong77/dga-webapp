@@ -432,6 +432,8 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 
 ## 12. Xem xu hướng và dự báo (tab Xu hướng)
 
+> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
+
 ### 12.1. Vẽ đồ thị
 
 1. (Tùy chọn) Chọn **Trạm biến áp** để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.
@@ -522,8 +524,44 @@ Cách đọc:
 
 - **Điểm rỗng** (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.
 - **Tam giác ▽ ở đáy** (thang log): tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.
-- **Tính trên → Phần tăng giữa 2 lần đo (Δ)**: tỷ số tính trên lượng khí tăng thêm giữa hai lần đo liên tiếp. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể, để tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. App bỏ qua cặp có lọc/thay dầu ở giữa và cặp không có khí nào tăng. Trong phiếu đối chiếu, các bước kiểm tra nồng độ vẫn dùng giá trị đo của lần đo sau.
+- **Tính trên**: chọn tính tỷ số trên **Giá trị đo** hay **Phần tăng giữa 2 lần đo (Δ)** — xem mục ngay dưới.
 - Thiết bị có nhiều pha: chọn từng pha ở ô **Pha**.
+
+**Tính trên giá trị đo hay phần tăng giữa 2 lần đo (Δ):**
+
+| Tùy chọn | Số liệu dùng để tính 3 tỷ số và điểm Duval |
+|---|---|
+| **Giá trị đo** (mặc định) | Nồng độ khí đo được ở chính lần đo đó |
+| **Phần tăng (Δ)** | Lần đo này **trừ** lần đo ngay trước, tính riêng từng khí |
+
+Vì sao cần Δ: khí trong dầu tích lũy dần. Máy từng có khiếm khuyết cũ (ví dụ phát nóng nhẹ nhiều năm trước) vẫn còn nhiều khí cũ trong dầu. Khi xuất hiện khiếm khuyết **mới**, khí mới sinh ra bị "pha loãng" vào khí cũ, tỷ số tính trên giá trị đo bị kéo về phía khiếm khuyết cũ. Δ chỉ giữ lượng khí **sinh ra giữa 2 lần đo**, nên phản ánh khiếm khuyết **đang hoạt động**. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể.
+
+Ví dụ (ppm):
+
+| | H2 | CH4 | C2H6 | C2H4 | C2H2 |
+|---|---|---|---|---|---|
+| Lần 1 | 100 | 50 | 40 | 20 | 0 |
+| Lần 2 | 300 | 70 | 50 | 100 | 2 |
+| **Δ** | 200 | 20 | 10 | 80 | 2 |
+
+| Tỷ số của lần 2 | Giá trị đo | Δ |
+|---|---|---|
+| C2H2/C2H4 | 0,02 | 0,025 |
+| CH4/H2 | 0,23 | 0,10 |
+| C2H4/C2H6 | **2,0** | **8,0** |
+
+Tính trên giá trị đo, C2H4/C2H6 chỉ là 2. Tính trên Δ, tỷ số này lên tới 8: khí mới sinh ra chủ yếu là C2H4, dấu hiệu nhiệt cao hơn hẳn so với những gì giá trị đo thể hiện.
+
+App xử lý như sau:
+
+- **Lần đo đầu tiên** của thiết bị/pha không có lần trước để trừ, nên không có điểm Δ.
+- **Lần đo ngay sau lọc/thay dầu** (đã xác nhận ở mục 12.3) bị bỏ qua: phép trừ ra số âm, không có ý nghĩa.
+- **Cặp không có khí cháy nào tăng** (H2, CH4, C2H6, C2H4, C2H2 đều giảm hoặc giữ nguyên) bị bỏ qua.
+- Tỷ số có **Δ tử số âm** hoặc **Δ mẫu số ≤ 0** thì không tính (ví dụ CH4 giảm thì bỏ trống CH4/H2). Thiếu 1 trong 3 tỷ số thì không tra được mã Bảng 66. Điểm Duval cần Δ của CH4, C2H4, C2H2 đều ≥ 0.
+- Mỗi điểm ghi theo khoảng ngày, ví dụ **"Δ 12/03/2025 → 20/09/2025"**, trên đồ thị, bảng và phiếu đối chiếu.
+- Trong phiếu đối chiếu chỉ **tỷ số** tính trên Δ. Các bước kiểm tra **nồng độ** theo Điều 54 (giá trị điển hình Bảng 64, tốc độ tăng Bảng 65…) vẫn dùng giá trị đo của lần đo sau, vì ngưỡng nồng độ áp dụng cho lượng khí thực có trong dầu.
+
+Khi nào dùng: xem bình thường bằng **Giá trị đo** (đúng cách đọc Bảng 66 theo Điều 54). Bật **Δ** khi thấy khí tăng mạnh giữa 2 lần đo, để biết khí mới sinh ra thuộc dạng khiếm khuyết nào. Δ chỉ đáng tin khi lượng tăng đủ lớn so với sai số đo — khí chỉ nhích vài ppm thì tỷ số Δ dao động mạnh, không nên dùng để kết luận.
 
 > Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599. Phiếu đối chiếu chỉ hỗ trợ — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).
 

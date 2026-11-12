@@ -369,6 +369,7 @@ function bindInputFormEvents() {
   setupTabLayoutToggle();
   setupSidebarCollapseToggle();
   setupTrendForecastToggle();
+  setupGuideToggles();
   $("btnExportBbtn").addEventListener("click", onExportBbtn);
   $("btnExportTechReport").addEventListener("click", onExportTechReport);
   // Tùy chọn nhập liệu thứ 2 (bên cạnh nhập rời từng BBTN ở trên): nhập hàng loạt

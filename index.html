@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v66-bang66-so-bo") {
+          if (k !== "dga-offline-v68-an-hien-huong-dan") {
             caches.delete(k);
           }
         });
@@ -1118,8 +1118,8 @@
     <!-- ===================== TAB: XU HƯỚNG (ĐỒ THỊ THEO THỜI GIAN) ===================== -->
     <section id="tab-xuhuong" class="tab-panel hidden">
       <div class="panel">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng theo thời gian</h2>
-        <p class="note">Gõ để tìm và chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA chính, dầu
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Xu hướng theo thời gian<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-select" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
+        <p class="note" data-guide="trend-select">Gõ để tìm và chọn 1 thiết bị để xem toàn bộ lịch sử đã lưu (khí hòa tan, dầu MBA chính, dầu
           OLTC) và vẽ đồ thị xu hướng cho các thông số bạn chọn — biểu đồ luôn thể hiện toàn bộ lịch sử của thiết bị
           đó. Gõ/chọn trước 1 Trạm biến áp để ô Thiết bị chỉ gợi ý các thiết bị thuộc trạm đó (đỡ phải dò tên trong
           danh sách dài); để trống Trạm để xem thiết bị của TẤT CẢ các trạm như trước.</p>
@@ -1146,12 +1146,12 @@
       <div class="panel hidden" id="trContentWrap">
         <div id="trPhaseWrap" class="hidden" style="margin-bottom:18px;">
           <p class="section-title" style="margin-top:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Lọc theo pha</p>
-          <p class="note" style="margin:0 0 8px;">Thiết bị này có dữ liệu từ nhiều pha — tick các pha muốn so sánh, mỗi
+          <p class="note" data-guide="trend-chart" style="margin:0 0 8px;">Thiết bị này có dữ liệu từ nhiều pha — tick các pha muốn so sánh, mỗi
             pha sẽ vẽ thành 1 đường riêng trên đồ thị để đối chiếu với nhau.</p>
           <div class="trend-checks" id="trPhaseChecks"></div>
         </div>
 
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-ruler"></use></svg>Chọn thông số cần vẽ</h2>
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-ruler"></use></svg>Chọn thông số cần vẽ<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-chart" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
         <div id="trParamsGasWrap" class="hidden">
           <p class="section-title" style="margin-top:0;">Khí hòa tan (ppm)</p>
           <div class="trend-checks" id="trParamsGas"></div>
@@ -1172,7 +1172,7 @@
           <canvas id="trendChart"></canvas>
         </div>
         <!-- Nhãn ký hiệu cạnh đường + chạm để chọn đường — trendLineLabelsPlugin/onTrendChartClick, ui-trend.js -->
-        <p class="note hidden" id="trChartHint" style="margin-top:6px;">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
+        <p class="note hidden" id="trChartHint" data-guide="trend-chart" style="margin-top:6px;">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
           mỗi đường khi còn chỗ. Đường sát hoặc chồng nhau: chạm/click vào đường để hiện ký hiệu (chạm lại cùng chỗ để
           chuyển sang đường chồng bên dưới); chạm vùng trống để bỏ chọn.</p>
         <p class="note hidden" id="trChartEmpty" style="margin-top:10px;">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
@@ -1186,8 +1186,8 @@
         </label>
 
         <div id="trForecastWrap" class="hidden" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--gray-300);">
-          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Dự báo xu hướng</h2>
-          <p class="note">Bốn phương pháp, dự báo từ đường đã khớp (không neo vào 1 lần đo đơn lẻ):
+          <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Dự báo xu hướng<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-forecast" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
+          <p class="note" data-guide="trend-forecast">Bốn phương pháp, dự báo từ đường đã khớp (không neo vào 1 lần đo đơn lẻ):
             <strong>hồi quy tuyến tính OLS</strong> kèm khoảng dự báo 95% và kiểm định t cho độ dốc;
             <strong>độ dốc Sen + kiểm định Mann–Kendall</strong> (phi tham số, ít bị ảnh hưởng bởi lần đo bất thường —
             dùng cho đường nét đứt trên đồ thị); <strong>Sen + Mann–Kendall trên giai đoạn gần đây</strong> (các lần đo
@@ -1215,8 +1215,8 @@
       <!-- Diễn biến LOẠI khiếm khuyết: 3 tỷ số Bảng 66 theo thời gian + quỹ đạo trên tam giác Duval —
            renderTrendFaultEvolution(), ui-trend.js; số liệu: DGA.buildFaultEvolution() (dga-logic-gas.js) -->
       <div class="panel hidden" id="trFaultWrap">
-        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Diễn biến loại khiếm khuyết (Bảng 66 &amp; tam giác Duval)</h2>
-        <p class="note">Tỷ số khí cho biết <strong>loại</strong> khiếm khuyết (PD, D1, D2, T1, T2, T3), không cho biết
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Diễn biến loại khiếm khuyết (Bảng 66 &amp; tam giác Duval)<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-fault" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
+        <p class="note" data-guide="trend-fault">Tỷ số khí cho biết <strong>loại</strong> khiếm khuyết (PD, D1, D2, T1, T2, T3), không cho biết
           mức độ — mức độ xem ở nồng độ và tốc độ tăng phía trên. Theo dõi theo thời gian để thấy khiếm khuyết có
           <strong>đổi bản chất</strong> không (vd T2 → T3, hoặc xuất hiện phóng điện). Điểm <strong>rỗng</strong> là lần đo
           chưa có khí nào vượt giá trị điển hình: tỷ số chỉ để tham khảo (Điều 54 QĐ1901, mục 6.1(c) IEC 60599).
@@ -1251,9 +1251,12 @@
             <select id="tr_faultPhase" autocomplete="off"></select>
           </label>
         </div>
-        <p class="note hidden" id="trFaultDeltaNote" style="margin-top:8px;">Phần tăng (Δ) = lần đo trừ lần đo ngay trước,
-          bỏ qua cặp có lọc/thay dầu ở giữa. IEC 60599 khuyến nghị tính tỷ số trên phần tăng khi khí tăng đáng kể, để
-          tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. Cặp nào không có khí tăng thì bỏ qua.</p>
+        <p class="note hidden" id="trFaultDeltaNote" data-guide="trend-fault" style="margin-top:8px;">Phần tăng (Δ) = lần đo
+          trừ lần đo ngay trước, tính riêng từng khí. IEC 60599 khuyến nghị tính tỷ số trên phần tăng khi khí tăng đáng kể,
+          để tách khí do khiếm khuyết <strong>đang hoạt động</strong> khỏi khí cũ còn tích lũy trong dầu. Không có điểm Δ cho
+          lần đo đầu tiên, lần đo ngay sau lọc/thay dầu, và cặp không có khí cháy nào tăng. Tỷ số có tử số giảm hoặc mẫu số
+          không tăng thì không tính. Phiếu đối chiếu vẫn kiểm tra nồng độ (Bảng 64, 65…) trên giá trị đo của lần đo sau.
+          Khí chỉ nhích vài ppm thì tỷ số Δ dao động mạnh — không nên dựa vào để kết luận.</p>
         <p class="note hidden" id="trFaultEmpty" style="margin-top:8px;">Chưa có lần đo nào tính được tỷ số.</p>
         <p class="note hidden" id="trFaultNoneTicked" style="margin-top:8px;">Chưa tick lần đo nào ở bảng bên dưới — tick
           các lần đo muốn xem (hoặc ô ở tiêu đề cột để chọn hết).</p>
@@ -1261,14 +1264,14 @@
           <div class="trend-ratio-wrap"><canvas id="trRatioChart"></canvas></div>
           <figure class="trend-duval">
             <svg id="trDuvalSvg" role="img" aria-label="Quỹ đạo các lần đo trên tam giác Duval 1"></svg>
-            <figcaption class="note">Tam giác Duval 1 (Bảng 67): các lần đo đang tick nối theo thứ tự thời gian, số = thứ
+            <figcaption class="note" data-guide="trend-fault">Tam giác Duval 1 (Bảng 67): các lần đo đang tick nối theo thứ tự thời gian, số = thứ
               tự trong bảng dưới, điểm viền đậm = lần đo gần nhất trong số đang tick.</figcaption>
-            <p class="section-title" style="margin:10px 0 4px;">Ý nghĩa mã khiếm khuyết</p>
+            <p class="section-title" data-guide="trend-fault" style="margin:10px 0 4px;">Ý nghĩa mã khiếm khuyết</p>
             <!-- renderTrendFaultCodeLegend(), ui-trend.js -->
-            <ul class="fault-code-legend" id="trFaultCodeLegend"></ul>
+            <ul class="fault-code-legend" id="trFaultCodeLegend" data-guide="trend-fault"></ul>
           </figure>
         </div>
-        <p class="note" style="margin-top:12px;">Tick/bỏ tick ở cột đầu để chọn lần đo hiện trên biểu đồ tỷ số và tam giác
+        <p class="note" data-guide="trend-fault" style="margin-top:12px;">Tick/bỏ tick ở cột đầu để chọn lần đo hiện trên biểu đồ tỷ số và tam giác
           Duval; ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Bấm vào một dòng để mở phiếu đối chiếu lần đo đó.</p>
         <div class="table-scroll" style="margin-top:6px;">
           <table>
@@ -3574,6 +3577,7 @@
         <details class="mm-node">
           <summary>12. Xem xu hướng và dự báo (tab Xu hướng)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
+          <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
           <h3>12.1. Vẽ đồ thị</h3>
           <ol type="1">
           <li>(Tùy chọn) Chọn <strong>Trạm biến áp</strong> để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.</li>
@@ -3690,9 +3694,105 @@
           <ul class="rec-list">
           <li><strong>Điểm rỗng</strong> (hoặc dòng chữ nhạt, ghi "Tham khảo"): lần đo chưa có khí nào vượt giá trị điển hình. Theo Điều 54 QĐ1901 và mục 6.1(c) IEC 60599, tỷ số lúc này chỉ để tham khảo. Ở nồng độ thấp, sai số đo cũng đủ làm tỷ số dao động mạnh.</li>
           <li><strong>Tam giác ▽ ở đáy</strong> (thang log): tỷ số nhỏ hơn 0,01, kể cả khi tử số bằng 0 (KPH). Mẫu số bằng 0 thì không tính tỷ số đó.</li>
-          <li><strong>Tính trên → Phần tăng giữa 2 lần đo (Δ)</strong>: tỷ số tính trên lượng khí tăng thêm giữa hai lần đo liên tiếp. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể, để tách khí do khiếm khuyết đang hoạt động khỏi khí cũ còn trong dầu. App bỏ qua cặp có lọc/thay dầu ở giữa và cặp không có khí nào tăng. Trong phiếu đối chiếu, các bước kiểm tra nồng độ vẫn dùng giá trị đo của lần đo sau.</li>
+          <li><strong>Tính trên</strong>: chọn tính tỷ số trên <strong>Giá trị đo</strong> hay <strong>Phần tăng giữa 2 lần đo (Δ)</strong> — xem mục ngay dưới.</li>
           <li>Thiết bị có nhiều pha: chọn từng pha ở ô <strong>Pha</strong>.</li>
           </ul>
+          <p><strong>Tính trên giá trị đo hay phần tăng giữa 2 lần đo (Δ):</strong></p>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Tùy chọn</th>
+          <th>Số liệu dùng để tính 3 tỷ số và điểm Duval</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>Giá trị đo</strong> (mặc định)</td>
+          <td>Nồng độ khí đo được ở chính lần đo đó</td>
+          </tr>
+          <tr>
+          <td><strong>Phần tăng (Δ)</strong></td>
+          <td>Lần đo này <strong>trừ</strong> lần đo ngay trước, tính riêng từng khí</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p>Vì sao cần Δ: khí trong dầu tích lũy dần. Máy từng có khiếm khuyết cũ (ví dụ phát nóng nhẹ nhiều năm trước) vẫn còn nhiều khí cũ trong dầu. Khi xuất hiện khiếm khuyết <strong>mới</strong>, khí mới sinh ra bị "pha loãng" vào khí cũ, tỷ số tính trên giá trị đo bị kéo về phía khiếm khuyết cũ. Δ chỉ giữ lượng khí <strong>sinh ra giữa 2 lần đo</strong>, nên phản ánh khiếm khuyết <strong>đang hoạt động</strong>. IEC 60599 khuyến nghị cách này khi khí tăng đáng kể.</p>
+          <p>Ví dụ (ppm):</p>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th></th>
+          <th>H2</th>
+          <th>CH4</th>
+          <th>C2H6</th>
+          <th>C2H4</th>
+          <th>C2H2</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>Lần 1</td>
+          <td>100</td>
+          <td>50</td>
+          <td>40</td>
+          <td>20</td>
+          <td>0</td>
+          </tr>
+          <tr>
+          <td>Lần 2</td>
+          <td>300</td>
+          <td>70</td>
+          <td>50</td>
+          <td>100</td>
+          <td>2</td>
+          </tr>
+          <tr>
+          <td><strong>Δ</strong></td>
+          <td>200</td>
+          <td>20</td>
+          <td>10</td>
+          <td>80</td>
+          <td>2</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Tỷ số của lần 2</th>
+          <th>Giá trị đo</th>
+          <th>Δ</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td>C2H2/C2H4</td>
+          <td>0,02</td>
+          <td>0,025</td>
+          </tr>
+          <tr>
+          <td>CH4/H2</td>
+          <td>0,23</td>
+          <td>0,10</td>
+          </tr>
+          <tr>
+          <td>C2H4/C2H6</td>
+          <td><strong>2,0</strong></td>
+          <td><strong>8,0</strong></td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p>Tính trên giá trị đo, C2H4/C2H6 chỉ là 2. Tính trên Δ, tỷ số này lên tới 8: khí mới sinh ra chủ yếu là C2H4, dấu hiệu nhiệt cao hơn hẳn so với những gì giá trị đo thể hiện.</p>
+          <p>App xử lý như sau:</p>
+          <ul class="rec-list">
+          <li><strong>Lần đo đầu tiên</strong> của thiết bị/pha không có lần trước để trừ, nên không có điểm Δ.</li>
+          <li><strong>Lần đo ngay sau lọc/thay dầu</strong> (đã xác nhận ở mục 12.3) bị bỏ qua: phép trừ ra số âm, không có ý nghĩa.</li>
+          <li><strong>Cặp không có khí cháy nào tăng</strong> (H2, CH4, C2H6, C2H4, C2H2 đều giảm hoặc giữ nguyên) bị bỏ qua.</li>
+          <li>Tỷ số có <strong>Δ tử số âm</strong> hoặc <strong>Δ mẫu số ≤ 0</strong> thì không tính (ví dụ CH4 giảm thì bỏ trống CH4/H2). Thiếu 1 trong 3 tỷ số thì không tra được mã Bảng 66. Điểm Duval cần Δ của CH4, C2H4, C2H2 đều ≥ 0.</li>
+          <li>Mỗi điểm ghi theo khoảng ngày, ví dụ <strong>"Δ 12/03/2025 → 20/09/2025"</strong>, trên đồ thị, bảng và phiếu đối chiếu.</li>
+          <li>Trong phiếu đối chiếu chỉ <strong>tỷ số</strong> tính trên Δ. Các bước kiểm tra <strong>nồng độ</strong> theo Điều 54 (giá trị điển hình Bảng 64, tốc độ tăng Bảng 65…) vẫn dùng giá trị đo của lần đo sau, vì ngưỡng nồng độ áp dụng cho lượng khí thực có trong dầu.</li>
+          </ul>
+          <p>Khi nào dùng: xem bình thường bằng <strong>Giá trị đo</strong> (đúng cách đọc Bảng 66 theo Điều 54). Bật <strong>Δ</strong> khi thấy khí tăng mạnh giữa 2 lần đo, để biết khí mới sinh ra thuộc dạng khiếm khuyết nào. Δ chỉ đáng tin khi lượng tăng đủ lớn so với sai số đo — khí chỉ nhích vài ppm thì tỷ số Δ dao động mạnh, không nên dùng để kết luận.</p>
           <p class="sm-note">Mã Bảng 66 ở đây tra thẳng Bảng 66 cho mọi loại thiết bị (ngưỡng PD theo loại thiết bị). Với sứ xuyên, kết luận chính thức ở tab Khí hòa tan dùng Table A.10 IEC 60599. Phiếu đối chiếu chỉ hỗ trợ — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>
 
           </div>

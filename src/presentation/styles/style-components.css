@@ -142,6 +142,9 @@ input:disabled, select:disabled, textarea:disabled {
   background: var(--blue-100);
 }
 .field-icon-toggle-btn .icon-svg { width: 15px; height: 15px; margin-right: 0; }
+/* Nút con mắt ẩn/hiện hướng dẫn của 1 mục (setupGuideToggles(), app-views.js) — nằm cuối <h2>, đẩy sang phải. */
+.panel h2 .guide-toggle-btn { margin-left: auto; }
+.guide-collapsed { display: none !important; }
 .info-popover {
   position: relative;
   padding: var(--space-3) 34px var(--space-3) 14px;
