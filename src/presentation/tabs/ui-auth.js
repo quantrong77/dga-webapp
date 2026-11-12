@@ -126,6 +126,11 @@ function editLogBadgeHtml(rec) {
   return `<span class="edit-log-badge" title="${escapeHtml(title)}">✎ ${entries.length} lần sửa</span>`;
 }
 
+/** Hiện khung giao diện chính (header, tab, nội dung) — ẩn trong lúc khởi động/đăng nhập, xem boot-guard.js. */
+function appShellReady() {
+  document.documentElement.classList.remove("app-booting");
+}
+
 async function init() {
   setupBusyIndicator();
   setupTheme();
@@ -136,6 +141,7 @@ async function init() {
 
   if (!Auth.enabled) {
     $("authOverlay").classList.add("hidden");
+    appShellReady();
     await initApp();
     return;
   }
@@ -155,6 +161,7 @@ async function init() {
  *  khác cho tới lúc đó (requireSession(), Code.gs), nên initApp() chỉ chạy sau khi đổi xong. */
 async function enterApp() {
   $("authOverlay").classList.add("hidden");
+  appShellReady();
   if (Auth.current && Auth.current.mustChangePassword) {
     openChangePasswordModal(true);
     return;

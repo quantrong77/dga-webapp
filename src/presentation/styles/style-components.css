@@ -708,6 +708,8 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 /* Ô .field dạng ngang: nhãn + ô chọn cùng 1 dòng (thanh công cụ), và nhãn + ô tick canh đầu dòng. */
 .field.field-inline { flex-direction: row; align-items: center; gap: var(--space-2); margin: 0; }
 .field.check-label { display: flex; flex-direction: row; align-items: flex-start; gap: var(--space-2); }
+/* Ô tick đủ lớn để bấm bằng ngón tay (Lighthouse/WCAG 2.5.8 target-size). */
+.field.check-label > input[type="checkbox"] { flex: none; width: 20px !important; height: 20px; margin: 2px; }
 /* Khối nhập hàng loạt BBTN (tab Khí hòa tan, Lý-Hóa dầu): hàng tùy chọn, nhãn tùy chọn, dòng tóm tắt, hàng nút. */
 .batch-options { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center; }
 .batch-option-label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: var(--font-semibold); color: var(--gray-600); }

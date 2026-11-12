@@ -273,3 +273,13 @@
    hiểu lầm là đang hoạt động bình thường. Rê chuột vào badge (title=) xem chi tiết lỗi. */
 .badge.error { background: var(--status-error-bg); color: var(--status-error); }
 
+/* Bước 6 — đang khởi động / chưa đăng nhập (html.app-booting, boot-guard.js): chỉ nền xanh như màn hình đăng nhập,
+   không dựng header/tab/nội dung phía sau → không giật hình, đỡ việc cho trình duyệt trên điện thoại. */
+html.app-booting body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--evn-navy), var(--header-bg));
+}
+html.app-booting body > header.app-header,
+html.app-booting body > nav.tabs,
+html.app-booting body > main,
+html.app-booting body > footer.app-footer { display: none; }
