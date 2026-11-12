@@ -1170,6 +1170,26 @@ function trendCheckCell(c) {
   return `<td class="${c.ok ? "chk-ok" : "chk-no"}">${c.ok ? "✓ " : ""}${escapeHtml(c.text)}</td>`;
 }
 
+/** Chú giải các bảng tra Bảng 66 trong phiếu đối chiếu (đặt NGAY TRÊN bảng đầu tiên, trước đây là 1 câu chữ ở cuối
+ *  phiếu, cách xa bảng và không nói ô được so với cái gì). Nói rõ: mỗi ô = 1 KHOẢNG giá trị của 1 tỷ số, so với tỷ số
+ *  CỦA LẦN ĐO NÀY (ghi luôn 3 giá trị); kèm ô mẫu đúng kiểu hiển thị trong bảng. Hàm thuần (có test). */
+function trendBang66LegendHtml(ratios) {
+  const r = ratios || {};
+  const val = (x) => (x && x.value !== null && x.value !== undefined ? trendFmtRatio(x.value) : "—");
+  return `<div class="chk-legend" role="note">
+      <p class="chk-legend-lead"><strong>Cách đọc các bảng dưới:</strong> mỗi ô là 1 khoảng giá trị của tỷ số ở đầu cột, đem so với
+        tỷ số của lần đo này: <strong class="chk-ratio">C2H2/C2H4 = ${val(r.c2h2_c2h4)}</strong> · <strong class="chk-ratio">CH4/H2 = ${val(r.ch4_h2)}</strong> ·
+        <strong class="chk-ratio">C2H4/C2H6 = ${val(r.c2h4_c2h6)}</strong>.</p>
+      <ul class="chk-legend-keys">
+        <li class="chk-key"><span class="chk-sample chk-ok">✓ 0,1–1</span> tỷ số <strong>nằm trong</strong> khoảng của ô</li>
+        <li class="chk-key"><span class="chk-sample chk-no">&lt; 0,1</span> <strong>không nằm trong</strong> khoảng</li>
+        <li class="chk-key"><span class="chk-sample chk-ns">NS</span> không xét tỷ số này</li>
+        <li class="chk-key"><span class="chk-sample chk-row">← khớp</span> dòng có đủ các ô ✓ (khung xanh) = dạng khiếm khuyết khớp</li>
+      </ul>
+      <p class="chk-legend-foot">Phần 9 dòng: cận dưới tính vào, cận trên không tính (VD tỷ số đúng 0,1 thuộc ô "0,1–1", không thuộc ô "&lt; 0,1").</p>
+    </div>`;
+}
+
 function renderTrendFaultCard() {
   const card = $("trFaultCard");
   const view = _trendFaultView;
@@ -1302,13 +1322,13 @@ function renderTrendFaultCard() {
       ${trendRatioRulerHtml("C2H4/C2H6", row.ratios.c2h4_c2h6)}
     </div>
     <h4>Bảng 66 — phần 9 dòng (mốc 0,1 – 1 – 3)</h4>
+    ${c9 || iec ? trendBang66LegendHtml(row.ratios) : ""}
     ${table9}
     <h4>Bảng 66 — phần PD/D1/D2/T1/T2/T3 (Table 1 IEC 60599, ngưỡng hiện hành)</h4>
     ${tableIec}
     <h4>Các bước khác của Điều 54</h4>
     <ol class="dieu54-steps">${steps.map(([t, b]) => `<li><strong>${t}:</strong> ${b}</li>`).join("")}</ol>
-    <p class="note">Ô xanh ✓ = tỷ số nằm trong khoảng của ô; ô xám = không nằm trong; NS = không xét. Quy ước biên phần 9 dòng:
-      cận dưới tính vào, cận trên không tính. Phiếu chỉ hỗ trợ đối chiếu — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>`;
+    <p class="note">Phiếu chỉ hỗ trợ đối chiếu — kết luận theo đánh giá tổng hợp (Điều 3 QĐ1901).</p>`;
   card.classList.remove("hidden");
   $("trFaultCardClose").onclick = closeTrendFaultCard;
 }

@@ -321,7 +321,10 @@ footer.app-footer {
   font-weight: 700;
   white-space: nowrap;
 }
+/* Ô KHÔNG nằm trong khoảng: nền xám thật (trước chỉ có chữ xám, nền như ô thường → chú giải "ô xám" không khớp với
+   gì trên màn hình). Pha 14% màu chữ phụ vào nền thẻ: xám rõ ở cả giao diện sáng lẫn tối, chữ vẫn đạt tương phản AA. */
 .fault-check-table td.chk-no {
+  background: color-mix(in srgb, var(--text-secondary) 14%, var(--surface));
   color: var(--text-secondary);
   white-space: nowrap;
 }
@@ -876,3 +879,38 @@ a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
 .guide-search-count.hidden,
 .mm-node.hidden { display: none; }
 ::highlight(guide-search) { background-color: var(--evn-yellow); color: #000; }
+
+/* Phiếu đối chiếu lần đo (tab Xu hướng): chú giải ô của các bảng tra Bảng 66 — trendBang66LegendHtml(), ui-trend.js. */
+.fault-check-table tbody tr:nth-child(even) { background: transparent; }
+.chk-legend {
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.chk-legend p { margin: 0; }
+.chk-ratio { color: var(--text-primary); }
+.chk-legend-keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 6px 0;
+  padding: 0;
+  list-style: none;
+}
+.chk-key { display: inline-flex; align-items: center; gap: 6px; }
+.chk-sample {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.chk-sample.chk-ok { background: var(--ok-bg); color: var(--ok); font-weight: 700; }
+.chk-sample.chk-no { background: color-mix(in srgb, var(--text-secondary) 14%, var(--surface)); color: var(--text-secondary); }
+.chk-sample.chk-ns { background: var(--surface); color: var(--text-secondary); font-style: italic; }
+.chk-sample.chk-row { background: var(--surface); border: 2px solid var(--ok); color: var(--text-primary); font-weight: 700; }
