@@ -556,7 +556,7 @@ Mục này nằm dưới phần dự báo ở tab Xu hướng, tự hiện khi t
 
   Tỷ số lớn hơn 10 vẽ **▲** ở đỉnh.
 - **Dải mã** ngay dưới trục thời gian: mỗi lần đo một ô màu, 3 làn **9 dòng** / **IEC** / **Duval**. Nhìn ngang thấy ngay lần đo nào đổi loại. Ô nhạt là lần đo chỉ để tham khảo.
-- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick.
+- **Tam giác Duval 1** với các lần đo nối theo thứ tự thời gian. Số trên điểm là thứ tự trong bảng; điểm viền đậm là lần đo gần nhất trong số đang tick. **Trỏ chuột vào 1 vùng** (PD, T1, T2, T3, D1, D2, D+T) — trên điện thoại: chạm vào vùng — để vùng đó đậm lên và hiện ô chú thích **ý nghĩa của mã**, kèm các lần đo đang tick nằm trong vùng đó (VD "1 lần đo đang tick nằm trong vùng này: #2"). Rời chuột hoặc chạm ra ngoài tam giác để ẩn.
 - **Bảng từng lần đo**: 3 tỷ số, mã Bảng 66 (9 dòng), mã Bảng 66 (IEC), vùng Duval và điều kiện áp dụng. Lần đo mà mã IEC khác lần đo đủ điều kiện trước đó được in đậm kèm chữ **(đổi)**.
 - **Chọn lần đo hiển thị**: tick/bỏ tick ở cột đầu của bảng để chọn lần đo nào hiện trên đồ thị và quỹ đạo Duval (mặc định tick hết). Ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Đổi thiết bị hoặc pha thì tick lại hết.
 - **Ý nghĩa mã khiếm khuyết** ngay dưới tam giác:

@@ -1456,6 +1456,76 @@ function renderTrendFaultCodeLegend(th) {
   }).join("") + '<li><span class="fault-code-swatch"></span><strong>Ngoài bảng</strong> — (chỉ cột Bảng 66) tổ hợp 3 tỷ số không khớp mã nào của Bảng 66; xem vùng Duval.</li>';
 }
 
+/** Nội dung ô chú thích khi trỏ vào 1 vùng của tam giác Duval: mã + ý nghĩa (TREND_FAULT_CODE_NOTES, cùng nội dung với
+ *  danh sách "Ý nghĩa mã khiếm khuyết" bên cạnh) + các lần đo đang tick nằm trong vùng đó. Hàm thuần (có test). */
+function trendDuvalZoneTipHtml(zoneKey, rows) {
+  const note = TREND_FAULT_CODE_NOTES.find((n) => n.key === zoneKey);
+  if (!note) return "";
+  const inZone = (rows || []).filter((r) => r.duval && r.duval.zone === note.code);
+  const here = inZone.length
+    ? `<span class="duval-tip-here">${inZone.length} lần đo đang tick nằm trong vùng này: ${inZone.map((r) => "#" + r.seq).join(", ")}</span>`
+    : '<span class="duval-tip-here is-empty">Không có lần đo đang tick nằm trong vùng này</span>';
+  return `<strong class="duval-tip-code">${escapeHtml(note.code)}</strong> ${escapeHtml(note.text)}${here}`;
+}
+
+let _trendDuvalRows = [];
+
+/** Gắn 1 lần cho #trDuvalSvg: rê chuột (máy tính) hoặc chạm (điện thoại) vào vùng → hiện ô chú thích ngay cạnh con trỏ,
+ *  tô đậm vùng đó; rời khỏi vùng / chạm chỗ khác → ẩn. Điểm đo vẽ đè lên trên vẫn giữ chú thích riêng (<title>). */
+function setupTrendDuvalZoneTip(svg) {
+  if (!svg || svg.dataset.zoneTip) return;
+  svg.dataset.zoneTip = "1";
+  const fig = svg.closest("figure") || svg.parentElement;
+  let tip = document.getElementById("trDuvalTip");
+  if (!tip) {
+    tip = document.createElement("div");
+    tip.id = "trDuvalTip";
+    tip.className = "duval-tip hidden";
+    tip.setAttribute("role", "tooltip");
+    fig.appendChild(tip);
+  }
+  let current = null;
+  const hide = () => {
+    tip.classList.add("hidden");
+    if (current) current.classList.remove("is-hover");
+    current = null;
+  };
+  const show = (poly, clientX, clientY) => {
+    if (current !== poly) {
+      if (current) current.classList.remove("is-hover");
+      current = poly;
+      poly.classList.add("is-hover");
+      tip.innerHTML = trendDuvalZoneTipHtml(poly.dataset.zone, _trendDuvalRows);
+    }
+    tip.classList.remove("hidden");
+    const box = fig.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    const h = tip.offsetHeight;
+    let left = clientX - box.left + 14;
+    if (left + w > box.width) left = Math.max(0, clientX - box.left - w - 14);
+    let top = clientY - box.top + 14;
+    if (top + h > box.height) top = Math.max(0, clientY - box.top - h - 14);
+    tip.style.left = left + "px";
+    tip.style.top = top + "px";
+  };
+  const zoneAt = (e) => (e.target && e.target.closest ? e.target.closest("polygon.duval-zone") : null);
+  svg.addEventListener("pointermove", (e) => {
+    const z = zoneAt(e);
+    if (z) show(z, e.clientX, e.clientY);
+    else hide();
+  });
+  svg.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") hide(); });
+  // Điện thoại: chạm vào vùng để xem; chạm ra ngoài tam giác để ẩn.
+  svg.addEventListener("pointerdown", (e) => {
+    if (e.pointerType !== "touch") return;
+    const z = zoneAt(e);
+    if (z) show(z, e.clientX, e.clientY);
+    else hide();
+  });
+  document.addEventListener("pointerdown", (e) => { if (!svg.contains(e.target) && !tip.contains(e.target)) hide(); }, true);
+  window.addEventListener("scroll", hide, { passive: true });
+}
+
 /** Tam giác Duval 1 phẳng (2D) + quỹ đạo các lần đo theo thời gian. Vùng lấy từ d54DuvalZones() (Bảng 67 hiện hành). */
 function renderTrendDuval(rows) {
   const svg = $("trDuvalSvg");
@@ -1477,13 +1547,16 @@ function renderTrendDuval(rows) {
     d54DuvalZones().forEach((z) => {
       const color = th.zone[z.key];
       const pts = z.poly.map(([a, e]) => P(a, e).map((n) => n.toFixed(2)).join(",")).join(" ");
-      svg.appendChild(trendSvg("polygon", { points: pts, fill: color, "fill-opacity": 0.3, stroke: color, "stroke-opacity": 0.7, "stroke-width": 0.3 }));
+      svg.appendChild(trendSvg("polygon", { points: pts, fill: color, "fill-opacity": 0.3, stroke: color, "stroke-opacity": 0.7, "stroke-width": 0.3, class: "duval-zone", "data-zone": z.key }));
       const [la, le] = z.label || [1, 1];
       // PD: vùng rất nhỏ sát đỉnh CH4 — ghi nhãn lệch sang phải đỉnh.
       const [lx, ly] = z.label ? P(la, le) : [P(0, 0)[0] + 3, P(0, 0)[1] + 2];
-      svg.appendChild(trendSvg("text", { x: lx, y: ly, "font-size": 4, "font-weight": 700, fill: th.text, "fill-opacity": 0.75, "text-anchor": z.label ? "middle" : "start", "dominant-baseline": "middle" }, z.code));
+      svg.appendChild(trendSvg("text", { x: lx, y: ly, "font-size": 4, "font-weight": 700, fill: th.text, "fill-opacity": 0.75, "text-anchor": z.label ? "middle" : "start", "dominant-baseline": "middle", "pointer-events": "none" }, z.code));
     });
   }
+  // Trỏ chuột / chạm vào 1 vùng → ô chú thích ý nghĩa mã (trendDuvalZoneTipHtml()); đếm các lần đo đang tick nằm trong vùng.
+  _trendDuvalRows = rows;
+  setupTrendDuvalZoneTip(svg);
   const cCH4 = P(0, 0), cC2H4 = P(0, 100), cC2H2 = P(100, 0);
   svg.appendChild(trendSvg("polygon", { points: [cCH4, cC2H4, cC2H2].map((p) => p.join(",")).join(" "), fill: "none", stroke: th.muted, "stroke-width": 0.4 }));
   const corner = (p, text, dx, dy, anchor) => svg.appendChild(trendSvg("text", { x: p[0] + dx, y: p[1] + dy, "font-size": 4, "font-weight": 600, fill: th.text, "text-anchor": anchor }, text));
