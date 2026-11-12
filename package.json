@@ -13,6 +13,8 @@
     "build-guide:check": "node scripts/build-user-guide.js --check",
     "extract-images": "node scripts/extract-md-images.js",
     "lint": "eslint .",
+    "ui:snap": "node scripts/ui-snapshots.js",
+    "check:contrast": "node scripts/check-contrast.js",
     "lint:fix": "eslint . --fix",
     "lint:css": "stylelint \"src/presentation/styles/**/*.css\"",
     "lint:css:fix": "stylelint \"src/presentation/styles/**/*.css\" --fix",
