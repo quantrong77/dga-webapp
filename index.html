@@ -69,7 +69,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v78-ui-empty-state") {
+          if (k !== "dga-offline-v82-ui-skeleton") {
             caches.delete(k);
           }
         });
@@ -163,12 +163,12 @@
       </div>
 
       <div id="authLoginForm">
-        <div id="authServerStatusBadge" class="hidden u-bg-xeff6ff u-b-1px-solid-xbfdbfe u-r-8px u-p-10px-14px u-mb-14px u-fs-12px u-c-x1e40af u-ta-left u-lh-1_4">
-          <div class="u-fw-600 u-d-flex u-items-center u-gap-6px">
-            <span class="u-d-inline-block u-w-8px u-h-8px u-r-50pct u-bg-x10b981"></span>
+        <div id="authServerStatusBadge" class="hidden server-status-box">
+          <div class="server-status-title">
+            <span class="server-status-dot" aria-hidden="true"></span>
             Máy chủ CSDL Nội bộ (On-Premise Localhost)
           </div>
-          <div class="u-mt-4px u-c-x475569 u-fs-11px">
+          <div class="server-status-sub">
             Tài khoản Admin mặc định: <b>admin@ptc3.evnnpt.vn</b> | Mật khẩu: <b>admin123456</b>
           </div>
         </div>
@@ -431,9 +431,9 @@
             <p class="note hidden" id="bbtnImportNote"></p>
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
-            <div class="u-d-flex u-gap-16px u-wrap-wrap u-items-center">
+            <div class="batch-options">
               <button type="button" class="btn sm ghost" id="btnBatchChooseFolder">Chọn cả thư mục...</button>
-              <label class="u-d-flex u-items-center u-gap-6px u-fs-12_5px u-fw-600 u-c-gray-600">
+              <label class="batch-option-label">
                 <input type="checkbox" id="batchAttachPdf" checked /> Đính kèm PDF gốc vào từng lần đo
               </label>
             </div>
@@ -451,8 +451,8 @@
         <p class="note hidden" id="batchSkippedNote"></p>
 
         <div id="batchPreviewWrap" class="hidden u-mt-16px">
-          <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
-            <div class="u-fs-13px u-fw-700 u-c-blue-900" id="batchSummaryText">—</div>
+          <div class="bar-between">
+            <div class="batch-summary" id="batchSummaryText">—</div>
             <div class="u-d-flex u-gap-8px">
               <button type="button" class="btn sm ghost" id="btnBatchSelectAll">Chọn tất cả hợp lệ</button>
               <button type="button" class="btn sm ghost" id="btnBatchSelectNone">Bỏ chọn tất cả</button>
@@ -462,7 +462,7 @@
             <thead><tr><th></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
             <tbody id="batchTable"></tbody>
           </table></div>
-          <div class="u-mt-14px u-d-flex u-items-center u-gap-14px u-wrap-wrap">
+          <div class="batch-actions">
             <button type="button" class="btn primary" id="btnBatchSave">Lưu các lần đo đã chọn</button>
             <!-- Sắp xếp lại "Lần đo" của ĐÚNG thiết bị đang chọn ở form phía trên (Trạm+
                  Thiết bị, cả 3 Pha) theo đúng thứ tự thời gian — dùng khi BBTN vừa nhập có
@@ -527,7 +527,7 @@
               </select>
             </label>
           </div>
-          <label class="field u-items-flex-start u-dir-row u-gap-8px u-d-flex" id="f_mbasubtype_wrap">
+          <label class="field check-label" id="f_mbasubtype_wrap">
             <input class="u-w-auto u-mt-4px" id="f_mbasubtype" type="checkbox" />
             <span>Ngăn OLTC (thông dầu/khí với thùng chính)</span>
           </label>
@@ -587,7 +587,7 @@
             </select>
           </label>
         </div>
-        <label class="field u-items-flex-start u-dir-row u-gap-8px u-d-flex">
+        <label class="field check-label">
           <input class="u-w-auto u-mt-4px" id="f_bang63_applicable" type="checkbox" />
           <span>Dầu mới đưa vào vận hành lần đầu / sau sửa chữa có thay dầu hoặc lọc dầu (điều kiện áp dụng Bảng 63)</span>
         </label>
@@ -629,7 +629,7 @@
              xuất "Báo cáo phân tích kỹ thuật", dữ liệu vẫn còn nguyên khi bấm lại để hiện.
              aria-pressed="true" = đang ẨN (icon-eye-off) — đổi icon/title bằng JS, xem
              setupNameplateFieldsToggle() ở app-core.js (kiểu giống ẩn/hiện mật khẩu). -->
-        <div class="section-title u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
+        <div class="section-title bar-between">
           <span>Thông số kỹ thuật thiết bị (tùy chọn — dùng khi xuất Báo cáo phân tích kỹ thuật)</span>
           <button type="button" id="btnToggleNameplateFields" class="field-icon-toggle-btn" aria-pressed="false" title="Ẩn phần này">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
@@ -682,8 +682,8 @@
         </div>
         </div>
 
-        <p class="note hidden u-c-warn u-fw-600" id="editingMeasurementNote">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div class="u-mt-18px u-d-flex u-gap-10px u-wrap-wrap u-items-center">
+        <p class="note hidden text-warn-strong" id="editingMeasurementNote">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions u-wrap-wrap u-items-center">
           <button class="btn primary" id="btnAnalyze">Phân tích &amp; Lưu</button>
           <button class="btn ghost" id="btnClearForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditMeasurement">Hủy sửa</button>
@@ -698,7 +698,7 @@
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             Biên bản đối chiếu
           </span>
-          <span class="badge u-bg-xe0f2fe u-c-x0369a1 u-fs-11px u-p-2px-8px u-r-9999px" id="bbtnPreviewBadge">Đã tải file</span>
+          <span class="badge file-loaded-badge" id="bbtnPreviewBadge">Đã tải file</span>
           <span class="bbtn-preview-filename" id="bbtnPreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
             <button type="button" class="btn xs ghost" id="btnBbtnNewTab" title="Mở file ở tab mới">
@@ -720,7 +720,7 @@
   </div><!-- /#dgaInputSplitLayout -->
 
       <div class="panel hidden" id="resultsPanel">
-        <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
+        <div class="bar-between">
           <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>2. Kết quả đánh giá</h2>
           <div class="u-d-flex u-gap-10px u-wrap-wrap">
             <button type="button" class="btn ghost mode-lap" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
@@ -924,8 +924,9 @@
         <!-- Đang nạp lịch sử đo từ database (ẩn khi setHistoryLoading(false), xem
              ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
              dưới trong khi dữ liệu thật vẫn đang tải. -->
-        <div class="loading-hint hidden u-mt-14px" id="historyLoadingHint">
+        <div class="loading-hint has-skeleton hidden u-mt-14px" id="historyLoadingHint" role="status">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu...
+          <span class="skeleton-rows" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
         </div>
       </div>
 
@@ -1067,8 +1068,9 @@
         <!-- Đang nạp dữ liệu khí/dầu MBA/dầu OLTC để tổng hợp cảnh báo (ẩn khi
              setAlertsLoading(false), xem ui-alerts.js) — tránh hiện "chưa có cảnh báo"
              nhầm lẫn trong lúc dữ liệu thật vẫn đang tải lúc mới vào app. -->
-        <div class="loading-hint hidden" id="alertsLoadingHint">
+        <div class="loading-hint has-skeleton hidden" id="alertsLoadingHint" role="status">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu...
+          <span class="skeleton-rows" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
         </div>
 
         <!-- Lọc theo Trạm biến áp — combo tự gõ-tìm giống #tr_station ở tab "Xu hướng"
@@ -1295,25 +1297,25 @@
           PD/D1/D2/T1/T2/T3, <strong>Duval</strong> = tam giác Duval 1. Bấm vào điểm, dải mã hoặc dòng trong bảng để mở
           <strong>phiếu đối chiếu</strong> lần đo đó với Điều 54.</p>
         <div class="toolbar toolbar-start u-gap-16px u-wrap-wrap">
-          <label class="field u-dir-row u-items-center u-gap-8px u-m-0">Tính trên
+          <label class="field field-inline">Tính trên
             <select id="tr_faultBasis" autocomplete="off">
               <option value="abs" selected>Giá trị đo</option>
               <option value="delta">Phần tăng giữa 2 lần đo (Δ)</option>
             </select>
           </label>
-          <label class="field u-dir-row u-items-center u-gap-8px u-m-0">Thang trục tung
+          <label class="field field-inline">Thang trục tung
             <select id="tr_faultScale" autocomplete="off">
               <option value="log" selected>Logarit 0,01–10 (như Biểu đồ 1, 2 Điều 54)</option>
               <option value="linear">Tuyến tính 0–10</option>
             </select>
           </label>
-          <label class="field u-dir-row u-items-center u-gap-8px u-m-0">Vạch mốc
+          <label class="field field-inline">Vạch mốc
             <select id="tr_faultMarks" autocomplete="off">
               <option value="code9" selected>Phần 9 dòng Bảng 66 (0,1 – 1 – 3)</option>
               <option value="iec">Phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ (mốc chi tiết, theo màu từng tỷ số)</option>
             </select>
           </label>
-          <label class="field hidden u-dir-row u-items-center u-gap-8px u-m-0" id="trFaultPhaseWrap">Pha
+          <label class="field hidden field-inline" id="trFaultPhaseWrap">Pha
             <select id="tr_faultPhase" autocomplete="off"></select>
           </label>
         </div>
@@ -2360,9 +2362,9 @@
             </div>
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
-            <div class="u-d-flex u-gap-16px u-wrap-wrap u-items-center">
+            <div class="batch-options">
               <button type="button" class="btn sm ghost" id="oBatchChooseFolder">Chọn cả thư mục...</button>
-              <label class="u-d-flex u-items-center u-gap-6px u-fs-12_5px u-fw-600 u-c-gray-600">
+              <label class="batch-option-label">
                 <input type="checkbox" id="oBatchAttach" checked /> Đính kèm file gốc vào từng biên bản
               </label>
             </div>
@@ -2376,8 +2378,8 @@
         <input id="oBatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
         <p class="note hidden" id="oBatchSkippedNote"></p>
         <div id="oBatchPreviewWrap" class="hidden u-mt-16px">
-          <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
-            <div class="u-fs-13px u-fw-700 u-c-blue-900" id="oBatchSummaryText">—</div>
+          <div class="bar-between">
+            <div class="batch-summary" id="oBatchSummaryText">—</div>
             <div class="u-d-flex u-gap-8px">
               <button type="button" class="btn sm ghost" id="oBatchSelectAll">Chọn tất cả hợp lệ</button>
               <button type="button" class="btn sm ghost" id="oBatchSelectNone">Bỏ chọn tất cả</button>
@@ -2387,7 +2389,7 @@
             <thead><tr><th></th><th>File</th><th>Trạm</th><th>Thiết bị</th><th>Ngày lấy mẫu</th><th>Thùng dầu chính</th><th>OLTC</th><th>Trạng thái</th></tr></thead>
             <tbody id="oBatchTable"></tbody>
           </table></div>
-          <div class="u-mt-14px u-d-flex u-items-center u-gap-14px u-wrap-wrap">
+          <div class="batch-actions">
             <button type="button" class="btn primary" id="oBatchSave">Lưu các biên bản đã chọn</button>
             <span class="note u-m-0" id="oBatchProgressText"></span>
           </div>
@@ -2476,7 +2478,7 @@
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
           </label>
-          <label class="field hidden u-items-flex-start u-dir-row u-gap-8px u-d-flex" id="o_membrane_wrap">
+          <label class="field hidden check-label" id="o_membrane_wrap">
             <input class="u-w-auto u-mt-4px" id="o_membrane" type="checkbox" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV)</span>
           </label>
@@ -2516,8 +2518,8 @@
              1 cột "Kết quả" (thùng dầu chung) hoặc 3 cột Pha A/B/C (thùng dầu riêng từng pha). -->
         <div id="o_paramTableWrap"></div>
 
-        <p class="note hidden u-c-warn u-fw-600" id="editingOilTestNote">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div class="u-mt-18px u-d-flex u-gap-10px">
+        <p class="note hidden text-warn-strong" id="editingOilTestNote">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions">
           <button class="btn primary" id="btnAnalyzeOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearOilForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditOilTest">Hủy sửa</button>
@@ -2525,7 +2527,7 @@
       </div>
 
       <div class="panel hidden" id="oilResultsPanel">
-        <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
+        <div class="bar-between">
           <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
           <button type="button" class="btn ghost mode-lap" id="btnExportMbaOilBbtnMain" title="Tới khối Xuất Biên bản thí nghiệm"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
@@ -2555,7 +2557,7 @@
            src/data/io/mba-oil-bbtn-export.js, assets/template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
            không lưu vào cơ sở dữ liệu. -->
       <div class="panel hidden mode-lap" id="oilBbtnExportPanel">
-        <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
+        <div class="bar-between">
           <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất Biên bản thí nghiệm dầu cách điện (docx)</h2>
           <button type="button" class="btn primary" id="btnExportMbaOilBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
@@ -2670,7 +2672,7 @@
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
           </label>
-          <label class="field ot-inherit-field hidden u-items-flex-start u-dir-row u-gap-8px u-d-flex" id="ot_membrane_wrap">
+          <label class="field ot-inherit-field hidden check-label" id="ot_membrane_wrap">
             <input class="u-w-auto u-mt-4px" id="ot_membrane" type="checkbox" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV, khi Dầu mới)</span>
           </label>
@@ -2687,8 +2689,8 @@
              hoặc 3 cột Pha A/B/C (một pha / điểm không trung tính). -->
         <div id="ot_paramTableWrap"></div>
 
-        <p class="note hidden u-c-warn u-fw-600" id="editingOltcOilTestNote">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div class="u-mt-18px u-d-flex u-gap-10px">
+        <p class="note hidden text-warn-strong" id="editingOltcOilTestNote">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions">
           <button class="btn primary" id="btnAnalyzeOltcOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearOltcOilForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditOltcOilTest">Hủy sửa</button>
@@ -2696,7 +2698,7 @@
       </div>
 
       <div class="panel hidden" id="oltcOilResultsPanel">
-        <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
+        <div class="bar-between">
           <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
           <button type="button" class="btn ghost mode-lap" id="btnExportMbaOilBbtnOltc"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
@@ -2732,7 +2734,7 @@
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             Biên bản đối chiếu
           </span>
-          <span class="badge u-bg-xe0f2fe u-c-x0369a1 u-fs-11px u-p-2px-8px u-r-9999px" id="oPreviewBadge">Đã tải file</span>
+          <span class="badge file-loaded-badge" id="oPreviewBadge">Đã tải file</span>
           <span class="bbtn-preview-filename" id="oPreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
             <button type="button" class="btn xs ghost" id="btnOilPreviewNewTab" title="Mở file ở tab mới">
@@ -2783,9 +2785,9 @@
             <p class="note hidden" id="t3ImportNote" role="status"></p>
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
-            <div class="u-d-flex u-gap-16px u-wrap-wrap u-items-center">
+            <div class="batch-options">
               <button type="button" class="btn sm ghost" id="t3BatchChooseFolder">Chọn cả thư mục...</button>
-              <label class="u-d-flex u-items-center u-gap-6px u-fs-12_5px u-fw-600 u-c-gray-600">
+              <label class="batch-option-label">
                 <input type="checkbox" id="t3BatchAttach" checked /> Đính kèm PDF gốc vào từng biên bản
               </label>
             </div>
@@ -2798,8 +2800,8 @@
         <input id="t3BatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
         <p class="note hidden" id="t3BatchSkippedNote"></p>
         <div id="t3BatchPreviewWrap" class="hidden u-mt-16px">
-          <div class="u-d-flex u-items-center u-justify-space-between u-gap-10px u-wrap-wrap">
-            <div class="u-fs-13px u-fw-700 u-c-blue-900" id="t3BatchSummaryText">—</div>
+          <div class="bar-between">
+            <div class="batch-summary" id="t3BatchSummaryText">—</div>
             <div class="u-d-flex u-gap-8px">
               <button type="button" class="btn sm ghost" id="t3BatchSelectAll">Chọn tất cả hợp lệ</button>
               <button type="button" class="btn sm ghost" id="t3BatchSelectNone">Bỏ chọn tất cả</button>
@@ -2809,7 +2811,7 @@
             <thead><tr><th></th><th>File</th><th>Trạm</th><th>Vị trí lắp đặt</th><th>Ngày lấy mẫu</th><th>Loại</th><th>Nhà sản xuất</th><th>Số liệu</th><th>Trạng thái</th></tr></thead>
             <tbody id="t3BatchTable"></tbody>
           </table></div>
-          <div class="u-mt-14px u-d-flex u-items-center u-gap-14px u-wrap-wrap">
+          <div class="batch-actions">
             <button type="button" class="btn primary" id="t3BatchSave">Lưu các biên bản đã chọn</button>
             <span class="note u-m-0" id="t3BatchProgressText"></span>
           </div>
@@ -2875,8 +2877,8 @@
         <label class="field">Kết luận (để trống thì app tự viết sau khi đánh giá; sửa được trước khi xuất)
           <textarea id="t3_ketluan" rows="3"></textarea>
         </label>
-        <p class="note hidden u-c-warn u-fw-600" id="t3EditingNote">Đang mở biên bản đã lưu — bấm "Đánh giá &amp; Lưu 3 pha" để cập nhật đúng các bản ghi này.</p>
-        <div class="u-mt-18px u-d-flex u-gap-10px u-wrap-wrap">
+        <p class="note hidden text-warn-strong" id="t3EditingNote">Đang mở biên bản đã lưu — bấm "Đánh giá &amp; Lưu 3 pha" để cập nhật đúng các bản ghi này.</p>
+        <div class="form-actions u-wrap-wrap">
           <button type="button" class="btn primary" id="btnT3Analyze">Đánh giá &amp; Lưu 3 pha</button>
           <button type="button" class="btn ghost mode-lap" id="btnT3Export"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
           <button type="button" class="btn ghost" id="btnT3Clear">Xóa form</button>
@@ -2887,7 +2889,7 @@
             <thead><tr><th>Hạng mục</th><th><span class="phase-dot a"></span>Pha A</th><th><span class="phase-dot b"></span>Pha B</th><th><span class="phase-dot c"></span>Pha C</th><th>Giới hạn</th><th>Đánh giá</th><th>Trên BBTN</th></tr></thead>
             <tbody id="t3ResultTable"></tbody>
           </table></div>
-          <p class="note hidden u-c-warn u-fw-600" id="t3MismatchNote"></p>
+          <p class="note hidden text-warn-strong" id="t3MismatchNote"></p>
         </div>
       </div>
     </div><!-- /.dga-input-main-col -->
@@ -2899,7 +2901,7 @@
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             Biên bản đối chiếu (3 pha)
           </span>
-          <span class="badge u-bg-xe0f2fe u-c-x0369a1 u-fs-11px u-p-2px-8px u-r-9999px" id="t3PreviewBadge">Đã tải file</span>
+          <span class="badge file-loaded-badge" id="t3PreviewBadge">Đã tải file</span>
           <span class="bbtn-preview-filename" id="t3PreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
             <button type="button" class="btn xs ghost" id="btnT3NewTab" title="Mở file ở tab mới">
@@ -2998,8 +3000,8 @@
           <label class="field">Điện áp chọc thủng (kV) <input id="tio_bdv" type="number" min="0" step="0.1" /></label>
         </div>
 
-        <p class="note hidden u-c-warn u-fw-600" id="editingTioOilTestNote">Đang SỬA thí nghiệm dầu TI/TU đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div class="u-mt-18px u-d-flex u-gap-10px">
+        <p class="note hidden text-warn-strong" id="editingTioOilTestNote">Đang SỬA thí nghiệm dầu TI/TU đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions">
           <button class="btn primary" id="btnAnalyzeTioOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearTioOilForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditTioOilTest">Hủy sửa</button>
@@ -4309,7 +4311,7 @@
             chọn nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định (riêng
             TI/TU sẽ báo "Chưa có tiêu chuẩn nhà sản xuất").</p>
         </div>
-        <p class="note hidden u-c-warn u-fw-600" id="editingStandardNote">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
+        <p class="note hidden text-warn-strong" id="editingStandardNote">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
 
         <div class="grid u-mt-10px">
           <label class="field">Loại tiêu chuẩn

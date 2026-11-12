@@ -659,3 +659,44 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   background: var(--bad);
 }
 .quick-chip.lvl-alert::before { background: var(--warn); }
+
+/* Bước 3d — các tổ hợp class tiện ích u-* hay lặp được đặt tên theo chỗ dùng (giá trị giữ nguyên như trước). */
+.bar-between,
+.section-title.bar-between { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.text-warn-strong,
+.note.text-warn-strong { color: var(--warn); font-weight: var(--font-semibold); }
+.form-actions,
+.btn-row.form-actions { margin-top: 18px; display: flex; gap: 10px; }
+/* Ô .field dạng ngang: nhãn + ô chọn cùng 1 dòng (thanh công cụ), và nhãn + ô tick canh đầu dòng. */
+.field.field-inline { flex-direction: row; align-items: center; gap: var(--space-2); margin: 0; }
+.field.check-label { display: flex; flex-direction: row; align-items: flex-start; gap: var(--space-2); }
+/* Khối nhập hàng loạt BBTN (tab Khí hòa tan, Lý-Hóa dầu): hàng tùy chọn, nhãn tùy chọn, dòng tóm tắt, hàng nút. */
+.batch-options { display: flex; gap: var(--space-4); flex-wrap: wrap; align-items: center; }
+.batch-option-label { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: var(--font-semibold); color: var(--gray-600); }
+.batch-summary { font-size: 13px; font-weight: var(--font-bold); color: var(--blue-900); }
+.batch-actions { margin-top: 14px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+/* Badge "Đã tải file" cạnh khung xem BBTN — trước dùng mã màu xanh viết cứng (#e0f2fe/#0369a1) nên chói trên giao diện
+   tối; nay theo token --blue-100/--blue-700 (tự đổi theo giao diện, tương phản AA — npm run check:contrast). */
+.badge.file-loaded-badge {
+  font-size: 11px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--blue-100);
+  color: var(--blue-700);
+}
+/* Khung "Máy chủ CSDL Nội bộ" ở màn hình đăng nhập (#authServerStatusBadge, ui-auth.js) — trước dùng mã màu viết cứng. */
+.server-status-box {
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--blue-50);
+  color: var(--blue-800);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  text-align: left;
+}
+.server-status-box.hidden { display: none; }
+.server-status-title { display: flex; align-items: center; gap: 6px; font-weight: var(--font-semibold); }
+.server-status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--status-online-dot); }
+.server-status-sub { margin-top: var(--space-1); font-size: 11px; color: var(--text-secondary); }
