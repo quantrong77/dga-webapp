@@ -89,7 +89,8 @@ function renderUserHeader() {
   document.body.classList.toggle("role-viewer", !!(Auth.enabled && Auth.current && Auth.current.role === "viewer"));
   if (Auth.enabled && Auth.current) {
     const roleLabel = Auth.current.role === "admin" ? "Admin" : Auth.current.role === "viewer" ? "Viewer" : "User";
-    $("userBadge").textContent = `${Auth.current.email} — ${roleLabel}`;
+    const roleText = { Admin: "Quản trị viên", Viewer: "Chỉ xem", User: "Người dùng" }[roleLabel] || roleLabel;
+    if (typeof renderUserChip === "function") renderUserChip(Auth.current.email, roleText);
     $("userBadge").classList.remove("hidden");
     $("btnOpenChangePassword").classList.remove("hidden");
     $("navQuanTri").classList.toggle("hidden", Auth.current.role !== "admin");
@@ -106,6 +107,7 @@ function setupStaticUI() {
   if (typeof setupDialogFocus === "function") setupDialogFocus();
   if (typeof setupTopScrollbars === "function") setupTopScrollbars();
   if (typeof setupBackToTop === "function") setupBackToTop();
+  if (typeof setupHeader === "function") setupHeader();
   if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();
   setupHeaderMenu();

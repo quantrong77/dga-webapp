@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v91-lichsu-filters";
+const CACHE_NAME = "dga-offline-v94-header-search";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -75,6 +75,7 @@ const PRECACHE_ASSETS = [
   "./src/presentation/components/ui-location-picker.js",
   "./src/presentation/components/ui-dropzone.js",
   "./src/presentation/components/ui-layout.js",
+  "./src/presentation/components/ui-header.js",
   "./src/presentation/components/ui-view-context.js",
   "./src/presentation/components/ui-busy.js",
   "./src/presentation/components/ui-theme.js",

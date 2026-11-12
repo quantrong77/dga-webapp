@@ -200,8 +200,10 @@ function setupTabs() {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".tab-panel").forEach((p) => p.classList.add("hidden"));
-      btn.classList.add("active");
       const targetTab = btn.dataset.tab;
+      // Mọi nút trỏ cùng 1 tab cùng sáng (VD chuông cảnh báo ở header + tab "Cảnh báo" ở thanh tab).
+      document.querySelectorAll(`.tab-btn[data-tab="${targetTab}"]`).forEach((b) => b.classList.add("active"));
+      btn.classList.add("active");
       if (targetTab === "cauhinh") {
         const qtPanel = $("tab-quantri");
         if (qtPanel) qtPanel.classList.remove("hidden");

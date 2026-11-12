@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v91-lichsu-filters") {
+          if (k !== "dga-offline-v94-header-search") {
             caches.delete(k);
           }
         });
@@ -106,6 +106,12 @@
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4.5c2.5-1.2 5.5-1.2 8 0v15c-2.5-1.2-5.5-1.2-8 0v-15zM20 4.5c-2.5-1.2-5.5-1.2-8 0v15c2.5-1.2 5.5-1.2 8 0v-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.3 15.3L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 8v5M8 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+      <symbol id="icon-maximize" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-minimize" viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-menu" viewBox="0 0 24 24"><path d="M4 6.5h16M4 12h16M4 17.5h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+      <symbol id="icon-logout" viewBox="0 0 24 24"><path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M15 8l4 4-4 4M19 12H10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sitemap" viewBox="0 0 24 24"><circle cx="4.5" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="19" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.8 12H10M10 12V5h3.7M10 12h3.7M10 12v7h3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
@@ -233,22 +239,50 @@
     sẽ <strong>mất vĩnh viễn</strong> khi xóa lịch sử duyệt web. Không nhập dữ liệu thật.
   </div>
 
+  <!-- Header 3 cột (máy tính): [☰ · logo · tên app · đồng bộ] — [Tìm nhanh thiết bị] — [máy chủ · chuông cảnh báo ·
+       Giới thiệu · Phản hồi · Quản trị · sáng/tối · toàn màn hình | tài khoản ▾]. Điện thoại (≤ 800px): 1 dòng
+       [logo · tên · đồng bộ · 🔍 · ⋯]; 🔍 mở ô tìm trùm lên header, ⋯ mở menu các nút còn lại.
+       JS: ui-header.js (tìm nhanh, chuông, toàn màn hình, menu tài khoản), ui-layout.js (menu ⋯, đổi bố cục tab). -->
   <header class="app-header">
-    <!-- Nhóm công cụ: máy tính hiện thẳng trên header (display: contents); điện thoại (≤ 800px) gom vào menu "⋯"
+    <div class="header-brand header-center">
+      <button type="button" id="btnToggleTabLayout" class="header-icon-btn header-hamburger" data-tooltip="Đổi bố cục tab" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)" aria-label="Đổi bố cục thanh tab">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-menu"></use></svg>
+      </button>
+      <div class="app-title-row">
+        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
+        <div class="app-title-block">
+          <h1>Đánh giá Dầu cách điện</h1>
+          <span class="app-subtitle">QĐ1901/EVNNPT</span>
+        </div>
+        <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
+          <span class="sync-dot"></span>
+          <span id="syncStatusText">Đã đồng bộ</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tìm nhanh thiết bị (setupQuickSearch(), ui-header.js) — combobox + listbox, Ctrl+K hoặc "/" để focus. -->
+    <div class="header-search" id="headerSearch" role="search">
+      <svg class="icon-svg header-search-icon" aria-hidden="true"><use href="#icon-search"></use></svg>
+      <input type="search" id="quickSearch" placeholder="Tìm thiết bị, trạm…" autocomplete="off" spellcheck="false"
+        role="combobox" aria-expanded="false" aria-controls="quickSearchList" aria-autocomplete="list" aria-label="Tìm nhanh thiết bị hoặc trạm biến áp" aria-keyshortcuts="Control+K /" />
+      <kbd class="header-search-kbd" aria-hidden="true">Ctrl K</kbd>
+      <button type="button" id="btnQuickSearchClose" class="header-search-close" aria-label="Đóng tìm kiếm">&times;</button>
+      <div id="quickSearchList" class="quick-search-list hidden" role="listbox" aria-label="Thiết bị tìm thấy"></div>
+    </div>
+    <button type="button" id="btnQuickSearchOpen" class="header-icon-btn header-search-btn" aria-label="Tìm nhanh thiết bị" title="Tìm nhanh thiết bị">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-search"></use></svg>
+    </button>
+
+    <!-- Nhóm công cụ: máy tính hiện thẳng trên header (display: contents); điện thoại gom vào menu "⋯"
          (#btnHeaderMenu, setupHeaderMenu() ở ui-layout.js). -->
     <div class="header-tools" id="headerMenu">
-    <div class="header-left">
-      <button type="button" id="btnToggleTabLayout" class="header-icon-btn" data-tooltip="Đổi bố cục tab" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg><span class="hdr-label">Đổi bố cục tab</span>
-      </button>
-      <!-- <button> (không phải <span> như trước) — khi đã cấu hình link quản lý (xem
-           databaseManagementUrl() ở storage.js), bấm vào mở Google Sheet/Supabase
-           Dashboard ở tab mới, xem setupStorageBadgeLink() ở app-core.js. Nếu chưa cấu
-           hình link thì vẫn hiển thị bình thường, bấm vào không có gì xảy ra. -->
-      <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
-    </div>
     <div class="header-right">
-      <!-- Nhóm công cụ & quản trị đưa lên Menu bar: Giới thiệu, Phản hồi, Quản trị -->
+      <!-- <button>: khi đã cấu hình link quản lý database, bấm mở Google Sheet/Supabase Dashboard (setupStorageBadgeLink()). -->
+      <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
+      <button type="button" class="header-icon-btn tab-btn header-alert-btn" data-tab="canhbao" id="btnHeaderAlerts" title="Cảnh báo" data-tooltip="Cảnh báo">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-bell"></use></svg><span class="hdr-count hidden" id="headerAlertCount" aria-hidden="true"></span><span class="hdr-label">Cảnh báo</span><span class="sr-only" id="headerAlertSr"></span>
+      </button>
       <button type="button" class="header-icon-btn tab-btn" data-tab="about" id="navAbout" title="Giới thiệu" aria-label="Giới thiệu" data-tooltip="Giới thiệu">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg><span class="hdr-label">Giới thiệu</span>
       </button>
@@ -259,28 +293,33 @@
       <button type="button" class="header-icon-btn tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị" aria-label="Quản trị" data-tooltip="Quản trị">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="hdr-label">Quản trị</span>
       </button>
-
-      <div class="header-divider" aria-hidden="true"></div>
-
-      <!-- Tùy chọn giao diện & tài khoản -->
       <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối" data-tooltip="Giao diện tối">
         <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg><span class="hdr-label" id="themeLabel">Giao diện tối</span>
       </button>
-      <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu" aria-label="Đổi mật khẩu" data-tooltip="Đổi mật khẩu">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span class="hdr-label">Đổi mật khẩu</span>
+      <button type="button" id="btnFullscreen" class="header-icon-btn header-fullscreen-btn" title="Toàn màn hình" aria-label="Toàn màn hình" data-tooltip="Toàn màn hình" aria-pressed="false">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-maximize"></use></svg><span class="hdr-label">Toàn màn hình</span>
       </button>
-      <button type="button" id="userBadge" class="badge user-badge hidden" title="Bấm để đăng xuất"></button>
-    </div>
-    </div>
-    <div class="header-center">
-      <div class="app-title-row">
-        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
-        <h1>Đánh giá Dầu cách điện</h1>
-        <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
-          <span class="sync-dot"></span>
-          <span id="syncStatusText">Đã đồng bộ</span>
+
+      <div class="header-divider" aria-hidden="true"></div>
+
+      <!-- Tài khoản: avatar chữ cái + email + vai trò; bấm mở menu Đổi mật khẩu / Đăng xuất (setupUserMenu(), ui-header.js). -->
+      <div class="user-menu-wrap">
+        <button type="button" id="userBadge" class="user-chip hidden" aria-haspopup="true" aria-expanded="false" aria-controls="userMenu">
+          <span class="user-avatar" id="userAvatar" aria-hidden="true"></span>
+          <span class="user-meta"><span class="user-name" id="userName"></span><span class="user-role" id="userRole"></span></span>
+          <svg class="icon-svg user-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg>
         </button>
+        <div id="userMenu" class="user-menu">
+          <div class="user-menu-head" id="userMenuEmail"></div>
+          <button type="button" id="btnOpenChangePassword" class="user-menu-item hidden">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span>Đổi mật khẩu</span>
+          </button>
+          <button type="button" id="btnLogout" class="user-menu-item">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-logout"></use></svg><span>Đăng xuất</span>
+          </button>
+        </div>
       </div>
+    </div>
     </div>
     <button type="button" id="btnHeaderMenu" class="header-icon-btn header-menu-btn" aria-expanded="false" aria-controls="headerMenu" aria-label="Mở menu" title="Menu">
       <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg>
@@ -3214,8 +3253,7 @@
           <li>Nếu app có bật <strong>Đăng nhập bằng Google</strong>, nút này hiện ở đầu hộp thoại — bấm và chọn tài khoản Google.</li>
           <li>Lần sau mở lại app, phiên đăng nhập được <strong>tự khôi phục</strong>.</li>
           </ol>
-          <p><strong>Đổi mật khẩu:</strong> người dùng đã đăng nhập có thể đổi mật khẩu qua nút đổi mật khẩu ở góc trên.</p>
-          <p><strong>Đăng xuất:</strong> bấm vào <strong>tên/email của bạn</strong> ở góc trên bên phải → xác nhận.</p>
+          <p><strong>Đổi mật khẩu / Đăng xuất:</strong> bấm vào <strong>khối tài khoản</strong> (vòng tròn chữ cái + email + vai trò) ở góc trên bên phải → menu có <strong>Đổi mật khẩu</strong> và <strong>Đăng xuất</strong> (đăng xuất có hỏi xác nhận). Trên điện thoại 2 mục này nằm đầu menu <strong>⋯</strong>.</p>
           <p class="sm-note">Nếu Admin cấp tài khoản hoặc đặt lại mật khẩu cho bạn, bạn nhận được một <strong>mật khẩu tạm</strong>. Ở lần đăng nhập đầu, app <strong>bắt buộc đổi sang mật khẩu riêng</strong> (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại") rồi mới dùng được.  Nhập sai mật khẩu <strong>5 lần liên tiếp</strong>, đăng nhập bằng mật khẩu của tài khoản đó bị <strong>tạm khóa 15 phút</strong>.</p>
 
           </div>
@@ -3287,7 +3325,13 @@
           </tr>
           </tbody>
           </table></div>
-          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm máy chủ đang dùng, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Đổi mật khẩu và <strong>tài khoản · Đăng xuất</strong>. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
+          <p><strong>Thanh trên cùng (máy tính):</strong></p>
+          <ul class="rec-list">
+          <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.</li>
+          <li><strong>Giữa — Tìm nhanh thiết bị:</strong> gõ tên thiết bị hoặc tên trạm, <strong>không cần gõ dấu</strong> (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức <strong>Báo động/Cảnh báo</strong> nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi <strong>Enter</strong>) để mở <strong>Lịch sử đo</strong> của thiết bị đó; nút <strong>Xu hướng</strong> (hoặc <strong>Shift+Enter</strong>) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: <strong>Ctrl+K</strong> hoặc <strong>/</strong> để nhảy vào ô tìm, <strong>Esc</strong> để đóng.</li>
+          <li><strong>Bên phải:</strong> máy chủ đang dùng, <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị đang Cảnh báo/Báo động theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
+          </ul>
+          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
           <h3>3.2. Giao diện sáng hoặc tối</h3>
           <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải (trên điện thoại: trong menu <strong>⋯</strong>) để đổi giao diện. Giao diện tối nền xanh navy đậm, dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành. Màu sắc theo nhận diện EVNNPT (xanh EVN, đỏ, vàng), dải 3 màu pha A vàng · B xanh lá · C đỏ dưới thanh trên cùng.</p>
@@ -4676,6 +4720,7 @@
   <script src="src/presentation/components/ui-location-picker.js" defer></script>
   <script src="src/presentation/components/ui-dropzone.js" defer></script>
   <script src="src/presentation/components/ui-layout.js" defer></script>
+  <script src="src/presentation/components/ui-header.js" defer></script>
   <script src="src/presentation/components/ui-view-context.js" defer></script>
   <script src="src/presentation/components/ui-busy.js" defer></script>
   <script src="src/presentation/components/ui-theme.js" defer></script>
