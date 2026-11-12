@@ -750,6 +750,22 @@ function goToTrendForDevice(tram, thietBi, exceededKeys, phase) {
   if (typeof onTrendDeviceChange === "function") onTrendDeviceChange();
 }
 
+// Bộ đếm id dòng chi tiết (aria-controls của nút "Chi tiết") — chỉ cần duy nhất trong trang.
+let alertRowSeq = 0;
+
+/** Thẻ KPI "Mức Cảnh báo"/"Mức Báo động" (.stat-card-filter) bấm để lọc nhanh theo mức — đặt ô "Loại cảnh báo" rồi vẽ
+ *  lại; bấm lại thẻ đang lọc thì bỏ lọc. Gọi 1 lần lúc khởi động (bindHistoryTrendAlertEvents(), app-core.js). */
+function setupAlertKpiFilters() {
+  document.querySelectorAll(".stat-card-filter").forEach((card) => {
+    card.addEventListener("click", () => {
+      const sel = $("al_typeFilter");
+      if (!sel) return;
+      sel.value = sel.value === card.dataset.alertFilter ? "" : card.dataset.alertFilter;
+      refreshAlertsUI();
+    });
+  });
+}
+
 // Cache kết quả lần refreshAlertsUI() gần nhất (danh sách cảnh báo đang hiển thị trên bảng).
 let _lastAlerts = [];
 
@@ -791,24 +807,28 @@ function refreshAlertsUI() {
     const exceededHtml = (a.exceededItems || []).length === 0
       ? "—"
       : a.exceededItems.map((g) =>
-          `<span class="pill bad" style="margin:0 3px 3px 0;">${a.source === "gas" && DGA.GASES.includes(g) ? gasLabelIcon(g) : ""}${escapeHtml(g)}</span>`
+          `<span class="pill bad alert-exceed-pill">${a.source === "gas" && DGA.GASES.includes(g) ? gasLabelIcon(g) : ""}${escapeHtml(g)}</span>`
         ).join("");
     const editBadge = (typeof editLogBadgeHtml === "function" && a.record) ? editLogBadgeHtml(a.record) : "";
-    const editedPill = a.isEdited ? `<span class="pill muted" style="margin-left:4px; font-size:10px;" title="${escapeHtml(a.editLog ? 'Log chỉnh sửa:\n' + a.editLog : 'Đã hiệu chỉnh số liệu')}">✎ Đã hiệu chỉnh</span>` : "";
+    const editedPill = a.isEdited ? `<span class="pill muted alert-edited-pill" title="${escapeHtml(a.editLog ? 'Log chỉnh sửa:\n' + a.editLog : 'Đã hiệu chỉnh số liệu')}">✎ Đã hiệu chỉnh</span>` : "";
 
     if (a.isLatest === false) tr.classList.add("alert-row-stale");
+    tr.classList.add("alert-row");
+    // Bước 4b: 5 cột gọn. Trạm/Loại đo gộp dưới tên thiết bị; ngày gộp vào cột Lần đo; "Hạng mục cảnh báo" + "Khuyến
+    // cáo" (chữ dài, trước làm mỗi dòng cao ~250px) chuyển xuống dòng chi tiết, mở bằng nút "Chi tiết".
+    const detailId = `alertDetail${alertRowSeq++}`;
+    const missing = (v, text) => (String(v || "").trim() && !/^[-–—?]$/.test(String(v).trim()) ? escapeHtml(v) : `<span class="alert-missing">${text}</span>`);
     tr.innerHTML = `
-      <td>${escapeHtml(a.tram || "—")}</td>
-      <td>${escapeHtml(a.thietBiLabel)}</td>
-      <td>${sourceIcon(a.source)}${escapeHtml(a.sourceLabel)}</td>
-      <td>${alertLevelPill(a.level, a.levelLabel)}</td>
-      <td>${a.statusHtml}${editedPill}</td>
-      <td style="max-width:160px;">${exceededHtml}</td>
-      <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
-      <td style="font-size:12px; max-width:280px; white-space:pre-line;">${escapeHtml(a.action)}</td>
-      <td style="min-width:120px;">${alertLanDoHtml(a)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
-      <td class="nowrap-cell">${escapeHtml(fmtDateVN(a.sampleDate))}</td>
-      <td class="actions-cell">${rowActionsHtml([
+      <td class="alert-device-cell">
+        <div class="alert-device-name">${missing(a.thietBiLabel && !/^[?]/.test(a.thietBiLabel) ? a.thietBiLabel : "", "(chưa ghi tên thiết bị)")}</div>
+        <div class="alert-device-meta">${missing(a.tram, "(chưa ghi trạm)")} · ${sourceIcon(a.source)}${escapeHtml(a.sourceLabel)}</div>
+      </td>
+      <td class="alert-level-cell">${alertLevelPill(a.level, a.levelLabel)}<div class="alert-status-line">${a.statusHtml}${editedPill}</div></td>
+      <td class="alert-exceed-cell">${exceededHtml}</td>
+      <td class="alert-lando-cell">${alertLanDoHtml(a)}<div class="alert-date">${escapeHtml(fmtDateVN(a.sampleDate))}</div>${editBadge ? `<div class="alert-editbadge">${editBadge}</div>` : ""}</td>
+      <td class="actions-cell">
+        <button type="button" class="btn xs ghost alert-detail-toggle" aria-expanded="false" aria-controls="${detailId}">Chi tiết</button>
+        ${rowActionsHtml([
         a.record && rowActionBtn("view", "eye",
           a.record.bbtn_url && a.source !== "gas" ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm"
             : a.record.bbtn_url ? "Xem số liệu cạnh BBTN đính kèm để đối chiếu" : "Xem chi tiết số liệu và chẩn đoán lần đo này",
@@ -818,6 +838,21 @@ function refreshAlertsUI() {
         rowActionBtn("trend", "trend", "Xem xu hướng của thiết bị này", { cls: "btn-action-alert" }),
       ])}</td>
     `;
+    const detailTr = document.createElement("tr");
+    detailTr.className = "alert-detail-row hidden";
+    detailTr.id = detailId;
+    detailTr.innerHTML = `<td colspan="5"><div class="alert-detail">
+      <div><p class="alert-detail-title">Hạng mục cảnh báo</p><div class="alert-detail-text">${a.reasons.map((r) => escapeHtml(r)).join("<br>") || "—"}</div></div>
+      <div><p class="alert-detail-title">Khuyến cáo</p><div class="alert-detail-text alert-detail-action">${escapeHtml(a.action || "—")}</div></div>
+    </div></td>`;
+    const toggle = tr.querySelector(".alert-detail-toggle");
+    toggle.addEventListener("click", () => {
+      const open = toggle.getAttribute("aria-expanded") !== "true";
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.textContent = open ? "Thu gọn" : "Chi tiết";
+      detailTr.classList.toggle("hidden", !open);
+      tr.classList.toggle("alert-row-open", open);
+    });
     const viewBtn = tr.querySelector('[data-action="view"]');
     if (viewBtn && a.record) {
       viewBtn.addEventListener("click", () => {
@@ -853,7 +888,11 @@ function refreshAlertsUI() {
       });
     }
     tbody.appendChild(tr);
+    tbody.appendChild(detailTr);
   });
+  // Thẻ KPI lọc theo mức: đang lọc đúng mức đó thì sáng lên.
+  const typeVal = $("al_typeFilter") ? $("al_typeFilter").value : "";
+  document.querySelectorAll(".stat-card-filter").forEach((c) => c.setAttribute("aria-pressed", c.dataset.alertFilter === typeVal ? "true" : "false"));
 
   const totalDevices = totalTrackedDeviceCount(station, device);
   // deviceIdentityKey() gồm cả Pha — nếu chỉ dùng Trạm+Thiết bị, cảnh báo ở TI 174 pha B

@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v82-ui-skeleton";
+const CACHE_NAME = "dga-offline-v84-ui-alerts";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -47,6 +47,7 @@ const PRECACHE_ASSETS = [
   "./src/presentation/styles/style-components.css",
   "./src/presentation/styles/style-tab-feedback.css",
   "./src/presentation/styles/style-tab-tables.css",
+  "./src/presentation/styles/style-tab-alerts.css",
   "./src/presentation/styles/style-tabs-secondary.css",
   "./src/presentation/styles/style-tab-regulation-config.css",
   "./src/presentation/styles/style-dieu54-charts.css",

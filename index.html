@@ -42,6 +42,7 @@
   <link rel="stylesheet" href="src/presentation/styles/style-components.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tab-feedback.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tab-tables.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-tab-alerts.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tabs-secondary.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tab-regulation-config.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-dieu54-charts.css" />
@@ -69,7 +70,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v82-ui-skeleton") {
+          if (k !== "dga-offline-v84-ui-alerts") {
             caches.delete(k);
           }
         });
@@ -1137,17 +1138,17 @@
         <div class="stat-row" id="alertsStatRow">
           <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Thiết bị đang theo dõi</div><div class="value" id="al_totalDevices">—</div></div>
           <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị đang có cảnh báo</div><div class="value" id="al_warnDevices">—</div></div>
-          <div class="stat-card"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div></div>
-          <div class="stat-card"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div></div>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alert" aria-pressed="false" title="Bấm để chỉ xem mức Cảnh báo (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div></button>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alarm" aria-pressed="false" title="Bấm để chỉ xem mức Báo động (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div></button>
         </div>
 
         <div class="table-scroll"><table>
+          <!-- Bước 4b: 5 cột gọn; "Hạng mục cảnh báo" + "Khuyến cáo" mở ở dòng chi tiết (nút Chi tiết) — refreshAlertsUI(), ui-alerts.js -->
           <thead><tr>
-            <th>Trạm</th><th>Thiết bị</th><th>Loại đo</th><th>Cảnh báo</th><th>Tình trạng</th>
-            <th>Chỉ tiêu vượt ngưỡng</th><th>Hạng mục cảnh báo</th><th>Khuyến cáo</th><th>Lần đo</th>
-            <th>Ngày thí nghiệm</th><th class="actions-col-header"></th>
+            <th>Thiết bị</th><th>Mức cảnh báo</th><th>Chỉ tiêu vượt ngưỡng</th><th>Lần đo</th>
+            <th class="actions-col-header"></th>
           </tr></thead>
-          <tbody id="alertsTable"></tbody>
+          <tbody id="alertsTable" class="alerts-tbody"></tbody>
         </table></div>
         <p class="note hidden" id="alertsEmpty">Chưa phát hiện thiết bị nào đang ở mức Cảnh báo/Báo động — tất cả
           thiết bị đã có dữ liệu đều đang ở mức Bình thường (theo lần đo gần nhất của từng thiết bị).</p>

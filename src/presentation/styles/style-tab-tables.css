@@ -259,7 +259,11 @@ tbody tr:hover { background: var(--blue-100); }
   margin-bottom: var(--space-4);
 }
 @media (max-width: 800px) { .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 420px) { .stat-row { grid-template-columns: minmax(0, 1fr); } }
+/* Bước 4b: điện thoại rất hẹp vẫn 2 cột (trước 1 cột → 4 thẻ chiếm cả màn hình), thẻ gọn lại. */
+@media (max-width: 420px) {
+  .stat-row { gap: var(--space-2); }
+  .stat-row .stat-card { padding: var(--space-3); }
+}
 
 .stat-card {
   background: var(--surface);

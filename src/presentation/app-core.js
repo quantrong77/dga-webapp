@@ -577,6 +577,7 @@ function bindHistoryTrendAlertEvents() {
   }));
   ["input", "change"].forEach((evt) => $("al_deviceFilter").addEventListener(evt, refreshAlertsUI));
   ["al_typeFilter", "al_dataFilter"].forEach((id) => { if ($(id)) $(id).addEventListener("change", refreshAlertsUI); });
+  if (typeof setupAlertKpiFilters === "function") setupAlertKpiFilters();
 }
 
 document.addEventListener("DOMContentLoaded", init);

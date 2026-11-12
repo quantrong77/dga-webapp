@@ -55,6 +55,9 @@ input, select, textarea {
   line-height: var(--leading-normal);
   box-shadow: var(--input-inset);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+  /* Không bao giờ tràn khung (Bước 4b): ô chọn có lựa chọn dài từng tràn khỏi thẻ trên điện thoại. */
+  max-width: 100%;
+  min-width: 0;
 }
 
 input:focus, select:focus, textarea:focus {
