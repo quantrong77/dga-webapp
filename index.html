@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v69-tieu-chuan-xu-huong") {
+          if (k !== "dga-offline-v70-gop-main") {
             caches.delete(k);
           }
         });
@@ -319,6 +319,18 @@
   <main>
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
     <section id="tab-nhap" class="tab-panel" data-input-mode="import">
+
+      <!-- Tài khoản Viewer (chỉ xem): ẩn toàn bộ vùng nhập liệu của tab này — CSS .role-viewer (style-components.css),
+           class gắn ở renderUserHeader() (app-core.js). Quyền thật vẫn chặn ở server (requireWriter, Code.gs). -->
+      <div class="panel viewer-readonly-note" role="note">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>Tài khoản chỉ xem</h2>
+        <p>Tài khoản Viewer không nhập hoặc lập biên bản khí hòa tan. Xem số liệu đã lưu ở các tab:</p>
+        <div class="btn-row">
+          <button type="button" class="btn ghost" data-goto-tab="lichsu">Lịch sử đo</button>
+          <button type="button" class="btn ghost" data-goto-tab="xuhuong">Xu hướng</button>
+          <button type="button" class="btn ghost" data-goto-tab="canhbao">Cảnh báo</button>
+        </div>
+      </div>
       <!-- Panel "Loại thiết bị" RIÊNG ở đầu tab, dạng ".toolbar" (tiêu đề trái/control
            phải) — TÁCH KHỎI vùng nhập liệu "Thông tin lần đo" bên dưới, cùng khuôn mẫu
            đã dùng ở tab "Dầu cách điện" (#dau_equipmenttype) để đồng nhất giao diện
@@ -470,20 +482,32 @@
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
-            <div class="combo-wrap">
-              <input id="f_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
-              <button type="button" id="f_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
-              <div id="f_tram_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
-            <div class="combo-wrap">
-              <input id="f_thietbi" type="text" placeholder="VD: TI174 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
-              <button type="button" id="f_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
-              <div id="f_thietbi_list" class="combo-list hidden"></div>
-            </div>
-          </label>
+          <!-- Vị trí thiết bị: Trạm ▸ Thiết bị ▸ Pha — bộ chọn bậc thang dùng chung (setupLocationPicker(), ui-location-picker.js) -->
+          <div class="location-path field-wide" role="group" aria-label="Vị trí thiết bị" id="f_location">
+            <span class="location-path-title">Vị trí thiết bị</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
+              <div class="combo-wrap">
+                <input id="f_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+                <button type="button" id="f_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+                <div id="f_tram_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
+              <div class="combo-wrap">
+                <input id="f_thietbi" type="text" placeholder="VD: TI174 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+                <button type="button" id="f_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+                <div id="f_thietbi_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+              <select id="f_pha">
+                <option>A</option><option>B</option><option>C</option>
+                <option value="chung3pha">Chung</option>
+              </select>
+            </label>
+          </div>
           <label class="field" id="f_mbasubtype_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
             <input id="f_mbasubtype" type="checkbox" style="width:auto; margin-top:4px;" />
             <span>Ngăn OLTC (thông dầu/khí với thùng chính)</span>
@@ -491,12 +515,6 @@
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn)
             <select id="f_nsx">
               <option value="">— Không có / dùng tiêu chuẩn chặt hơn QĐ1901/IEC60599 —</option>
-            </select>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
-            <select id="f_pha">
-              <option>A</option><option>B</option><option>C</option>
-              <option value="chung3pha">Chung</option>
             </select>
           </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-hash"></use></svg>Lần đo
@@ -1016,7 +1034,7 @@
               <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-history"></use></svg>
               Làm mới
             </button>
-            <button type="button" class="btn ghost" id="btnExportAlertsExcel" disabled title="Xuất danh sách cảnh báo đang hiển thị ra file Excel (.xlsx)">
+            <button type="button" class="btn ghost" id="btnExportAlertsExcel" title="Xuất Excel theo Trạm, Thiết bị, Pha, Loại cảnh báo — gồm cả thiết bị không có cảnh báo nếu chọn">
             <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-download"></use></svg>
             Xuất Excel
             </button>
@@ -2220,6 +2238,18 @@
 
     <!-- ===================== TAB: DẦU CÁCH ĐIỆN (MBA/Kháng dầu) ===================== -->
     <section id="tab-dau" class="tab-panel hidden" data-input-mode="import">
+
+      <!-- Tài khoản Viewer (chỉ xem): ẩn toàn bộ vùng nhập liệu của tab này — CSS .role-viewer (style-components.css),
+           class gắn ở renderUserHeader() (app-core.js). Quyền thật vẫn chặn ở server (requireWriter, Code.gs). -->
+      <div class="panel viewer-readonly-note" role="note">
+        <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>Tài khoản chỉ xem</h2>
+        <p>Tài khoản Viewer không nhập hoặc lập biên bản lý-hóa dầu. Xem số liệu đã lưu ở các tab:</p>
+        <div class="btn-row">
+          <button type="button" class="btn ghost" data-goto-tab="lichsu">Lịch sử đo</button>
+          <button type="button" class="btn ghost" data-goto-tab="xuhuong">Xu hướng</button>
+          <button type="button" class="btn ghost" data-goto-tab="canhbao">Cảnh báo</button>
+        </div>
+      </div>
       <!-- Chọn "Loại thiết bị" giống tab "DGA" (#f_loai) — CHỈ ẩn/hiện đúng (các) khối
            nhập liệu liên quan để đỡ phải cuộn qua cả 3 khối (MBA+OLTC/TI-TU) cùng lúc,
            KHÔNG phải 1 trường dữ liệu của bản ghi. Lựa chọn được nhớ lại giữa các lần vào
@@ -2360,38 +2390,45 @@
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu Trạm/Thiết bị...
         </div>
         <div class="grid">
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
-            <div class="combo-wrap">
-              <input id="o_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
-              <button type="button" id="o_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
-              <div id="o_tram_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
-            <div class="combo-wrap">
-              <input id="o_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
-              <button type="button" id="o_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
-              <div id="o_thietbi_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field">
-            <span class="field-label-row"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Điểm lấy mẫu
-              <button type="button" class="info-icon-btn" aria-controls="o_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu" title="Giải thích Điểm lấy mẫu">i</button>
-            </span>
-            <select id="o_samplepoint"></select>
-          </label>
+          <!-- Vị trí thiết bị: Trạm ▸ Thiết bị ▸ Pha — bộ chọn bậc thang dùng chung (setupLocationPicker(), ui-location-picker.js) -->
+          <div class="location-path field-wide" role="group" aria-label="Vị trí thiết bị" id="o_location">
+            <span class="location-path-title">Vị trí thiết bị</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
+              <div class="combo-wrap">
+                <input id="o_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+                <button type="button" id="o_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+                <div id="o_tram_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
+              <div class="combo-wrap">
+                <input id="o_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+                <button type="button" id="o_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+                <div id="o_thietbi_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field">
+              <span class="field-label-row"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Điểm lấy mẫu
+                <button type="button" class="info-icon-btn" aria-controls="o_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu" title="Giải thích Điểm lấy mẫu">i</button>
+              </span>
+              <select id="o_samplepoint"></select>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field hidden" id="o_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+              <select id="o_phase">
+                <option value="A">Pha A</option>
+                <option value="B">Pha B</option>
+                <option value="C">Pha C</option>
+              </select>
+            </label>
+          </div>
           <div class="info-popover field-wide hidden" id="o_samplepoint_info">
             <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
             <p><strong>Thùng dầu chung 3 pha:</strong> đa số MBA/Kháng dầu (nhất là ≤220kV) có kết cấu 1 thùng dầu DÙNG CHUNG cho cả 3 pha — chỉ cần 1 mẫu dầu đại diện cho cả thiết bị.</p>
             <p><strong>Thùng dầu riêng từng pha:</strong> một số MBA/Kháng 500kV kết cấu 3 pha RỜI (mỗi pha 1 máy/1 thùng dầu vật lý riêng) — khi đó cần lấy mẫu và nhập kết quả RIÊNG cho từng pha A/B/C, tương tự cách khí hòa tan (DGA) đã tách theo pha.</p>
           </div>
-          <label class="field hidden" id="o_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
-            <select id="o_phase">
-              <option value="A">Pha A</option>
-              <option value="B">Pha B</option>
-              <option value="C">Pha C</option>
-            </select>
-          </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
             <select id="o_voltage_class"></select>
           </label>
@@ -2547,38 +2584,45 @@
         </label>
         <p class="note oltc-inherit-summary" id="ot_inheritSummary"></p>
         <div class="grid">
-          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
-            <div class="combo-wrap">
-              <input id="ot_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
-              <button type="button" id="ot_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
-              <div id="ot_tram_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
-            <div class="combo-wrap">
-              <input id="ot_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
-              <button type="button" id="ot_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
-              <div id="ot_thietbi_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field">
-            <span class="field-label-row"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Điểm lấy mẫu OLTC
-              <button type="button" class="info-icon-btn" aria-controls="ot_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu OLTC" title="Giải thích Điểm lấy mẫu OLTC">i</button>
-            </span>
-            <select id="ot_samplepoint"></select>
-          </label>
+          <!-- Vị trí thiết bị: Trạm ▸ Thiết bị ▸ Pha — bộ chọn bậc thang dùng chung (setupLocationPicker(), ui-location-picker.js) -->
+          <div class="location-path field-wide" role="group" aria-label="Vị trí thiết bị" id="ot_location">
+            <span class="location-path-title">Vị trí thiết bị</span>
+            <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
+              <div class="combo-wrap">
+                <input id="ot_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+                <button type="button" id="ot_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+                <div id="ot_tram_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
+              <div class="combo-wrap">
+                <input id="ot_thietbi" type="text" placeholder="VD: MBA T1 — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+                <button type="button" id="ot_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+                <div id="ot_thietbi_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field">
+              <span class="field-label-row"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-sample"></use></svg>Điểm lấy mẫu OLTC
+                <button type="button" class="info-icon-btn" aria-controls="ot_samplepoint_info" aria-expanded="false" aria-label="Giải thích Điểm lấy mẫu OLTC" title="Giải thích Điểm lấy mẫu OLTC">i</button>
+              </span>
+              <select id="ot_samplepoint"></select>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field hidden" id="ot_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+              <select id="ot_phase">
+                <option value="A">Pha A</option>
+                <option value="B">Pha B</option>
+                <option value="C">Pha C</option>
+              </select>
+            </label>
+          </div>
           <div class="info-popover field-wide hidden" id="ot_samplepoint_info">
             <button type="button" class="info-popover-close" aria-label="Đóng">&times;</button>
             <p><strong>Điểm cuối trung tính (neutral point end):</strong> với MBA 3 pha đấu sao (Y), điểm trung tính là điểm chung nơi 3 đầu cuộn dây gặp nhau (thường nối đất). Nếu OLTC được đặt ở đầu cuộn dây phía điểm trung tính — nơi điện áp so với đất thấp nhất — thì 3 pha có thể dùng CHUNG một khoang dầu/buồng dập hồ quang duy nhất, vì không cần cách điện pha-pha lớn ở vị trí đó. Do dùng chung khoang, khi lấy mẫu dầu chỉ cần 1 mẫu đại diện cho cả 3 pha, và ngưỡng đánh giá theo Bảng 49 là cố định, không phân theo cấp điện áp MBA.</p>
             <p><strong>Điểm không trung tính (line end / một pha):</strong> nếu OLTC đặt ở đầu dây phía đường dây (không phải điểm trung tính), điện áp tại đó cao hơn nhiều nên mỗi pha A/B/C cần khoang dầu và buồng dập hồ quang RIÊNG, phải lấy mẫu riêng từng pha. Trường hợp MBA 1 pha thì OLTC vốn chỉ có 1 pha nên cũng xếp vào nhóm này. Ngưỡng Bảng 49 cho kiểu này phân theo cấp điện áp MBA (≤35kV / 110kV / 220kV / 500kV).</p>
           </div>
-          <label class="field hidden" id="ot_phase_wrap"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
-            <select id="ot_phase">
-              <option value="A">Pha A</option>
-              <option value="B">Pha B</option>
-              <option value="C">Pha C</option>
-            </select>
-          </label>
           <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-bolt"></use></svg>Cấp điện áp MBA
             <select id="ot_voltage_class"></select>
           </label>
@@ -2870,26 +2914,32 @@
               <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
             </select>
           </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
-            <div class="combo-wrap">
-              <input id="tio_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
-              <button type="button" id="tio_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
-              <div id="tio_tram_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
-            <div class="combo-wrap">
-              <input id="tio_thietbi" type="text" placeholder="VD: TI T1 pha A — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
-              <button type="button" id="tio_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
-              <div id="tio_thietbi_list" class="combo-list hidden"></div>
-            </div>
-          </label>
-          <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
-            <select id="tio_phase">
-              <option>A</option><option>B</option><option>C</option>
-              <option value="chung3pha">Chung</option>
-            </select>
-          </label>
+          <!-- Vị trí thiết bị: Trạm ▸ Thiết bị ▸ Pha — bộ chọn bậc thang dùng chung (setupLocationPicker(), ui-location-picker.js) -->
+          <div class="location-path field-wide" role="group" aria-label="Vị trí thiết bị" id="tio_location">
+            <span class="location-path-title">Vị trí thiết bị</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm
+              <div class="combo-wrap">
+                <input id="tio_tram" type="text" placeholder="Gõ để tìm, bấm ▼ để chọn, hoặc nhập trạm mới" autocomplete="off" />
+                <button type="button" id="tio_tram_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
+                <div id="tio_tram_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị (tên/mã)
+              <div class="combo-wrap">
+                <input id="tio_thietbi" type="text" placeholder="VD: TI T1 pha A — gõ để tìm, bấm ▼ để chọn, hoặc nhập thiết bị mới" autocomplete="off" />
+                <button type="button" id="tio_thietbi_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
+                <div id="tio_thietbi_list" class="combo-list hidden"></div>
+              </div>
+            </label>
+            <span class="location-sep" aria-hidden="true">▸</span>
+            <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Pha
+              <select id="tio_phase">
+                <option>A</option><option>B</option><option>C</option>
+                <option value="chung3pha">Chung</option>
+              </select>
+            </label>
+          </div>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (bắt buộc để đánh giá)
             <select id="tio_nsx">
               <option value="">— Chọn nhà sản xuất —</option>
@@ -3208,6 +3258,15 @@
           <ul class="rec-list">
           <li><strong>Nhập BBTN cũ</strong> — kéo thả BBTN (PDF) để tự điền form và đối chiếu ở khung bên cạnh, nhập hàng loạt nhiều BBTN của cùng 1 thiết bị, và bảng <strong>Số liệu đã lưu</strong> ở cuối trang: các lần đo đã lưu của đúng Trạm/Thiết bị đang nhập ở form (có nút Xem/Sửa/Xóa như tab Lịch sử đo).</li>
           <li><strong>Lập BBTN</strong> — nhập tay số liệu mới, bấm <strong>Phân tích &amp; Lưu</strong> rồi <strong>Xuất BBTN (docx)</strong> / báo cáo phân tích kỹ thuật ở khối kết quả.</li>
+          </ul>
+          <p><strong>Vị trí thiết bị (Trạm ▸ Thiết bị ▸ Pha):</strong> ở đầu form của cả 2 tab con (và ở mọi form của tab Lý-Hóa dầu: dầu MBA, OLTC, TI/TU) có 1 hàng riêng chọn theo bậc:</p>
+          <ul class="rec-list">
+          <li>Chọn <strong>Trạm</strong> trước: ô <strong>Thiết bị</strong> chỉ gợi ý các thiết bị của trạm đó.</li>
+          <li>Chọn <strong>Thiết bị</strong> khi chưa ghi trạm: app tự điền trạm (nếu thiết bị chỉ thuộc 1 trạm).</li>
+          <li>Ô <strong>Pha</strong> ghi số lần đo đã có ở từng pha, ví dụ "A (3 lần đo)". Thiết bị chỉ có số liệu ở đúng 1 pha thì app tự chọn pha đó.</li>
+          <li>Đổi sang trạm khác mà thiết bị đang ghi không thuộc trạm đó: ô Thiết bị được xóa để chọn lại.</li>
+          <li>Vẫn gõ được trạm/thiết bị <strong>mới</strong> chưa có trong dữ liệu.</li>
+          <li>Dầu MBA và dầu OLTC: hàng này gồm cả <strong>Điểm lấy mẫu</strong>; ô Pha chỉ hiện khi lấy mẫu riêng từng pha.</li>
           </ul>
           <p>Ở <strong>Lập BBTN</strong>, chọn <strong>Trạm</strong> và <strong>Thiết bị</strong>: nếu thiết bị đã có dữ liệu lưu trước đây (lần đo khí hòa tan, thí nghiệm dầu), app <strong>tự điền thông số kỹ thuật</strong> (kiểu máy, năm sản xuất, điện áp định mức, số chế tạo, loại dầu...) vào các ô <strong>còn trống</strong> và ghi rõ lấy từ lần lưu nào — ô bạn đã gõ không bị ghi đè; đổi sang thiết bị khác thì các ô app tự điền được thay theo thiết bị mới. Thiết bị mới thì nhập tay, hoặc kéo thả file PDF/Word cũ (BBTN, lý lịch thiết bị) vào ô <strong>"Nhập thông số kỹ thuật từ file"</strong> — app chỉ lấy thông số kỹ thuật, không đọc số liệu đo và không đính kèm file. Nếu còn file BBTN đã chọn ở tab Nhập BBTN cũ, Lập BBTN hiện dòng <strong>"Biên bản đính kèm khi lưu"</strong> kèm nút Bỏ file.</p>
           <p>Hai tab con dùng <strong>chung một form</strong> — đổi tab con không mất số liệu đang nhập. Bấm Sửa/Xem một bản ghi từ tab Lịch sử đo, Cảnh báo hay bảng Số liệu đã lưu thì app tự mở tab con <strong>Nhập BBTN cũ</strong>.</p>
@@ -3583,7 +3642,12 @@
           <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.</li>
           <li>Mỗi dòng cho biết: thiết bị, loại đo, mức cảnh báo, tình trạng, khí/chỉ tiêu vượt ngưỡng, lý do và khuyến cáo hành động.</li>
           <li><strong>Xem xu hướng:</strong> nhảy thẳng sang tab <strong>Xu hướng</strong>, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.</li>
-          <li><strong>Xuất Excel:</strong> tải file <code>.xlsx</code> gồm thống kê tổng quan và toàn bộ danh sách đang hiển thị (theo bộ lọc Trạm hiện tại). Nút này chỉ bấm được khi có dữ liệu.</li>
+          <li><strong>Xuất Excel:</strong> bấm nút mở hộp thoại chọn phạm vi rồi tải file <code>.xlsx</code>:</li>
+          <li><strong>Trạm ▸ Thiết bị ▸ Pha</strong>: chọn theo bậc (ô sau chỉ liệt kê theo ô trước), hoặc để "Tất cả".</li>
+          <li><strong>Loại cảnh báo</strong>: <strong>Tất cả (kể cả thiết bị không có cảnh báo)</strong>, <strong>Tất cả cảnh báo</strong>, <strong>Chỉ thiết bị không có cảnh báo</strong>, hoặc từng mức/loại đo/hạng mục như ô lọc trên bảng.</li>
+          <li><strong>Chỉ số liệu mới nhất của từng thiết bị</strong> (mặc định bật): bỏ các cảnh báo cũ đã có lần đo mới hơn.</li>
+          <li>Hộp thoại báo trước số dòng sẽ xuất. File gồm dòng thống kê và cột Pha; thiết bị không có cảnh báo ghi mức "BÌNH THƯỜNG" (hoặc "CHƯA ĐỦ DỮ LIỆU" với dầu).</li>
+          <li><strong>User</strong> chỉ xuất được dữ liệu các <strong>trạm phụ trách</strong> do Admin gán (mục 16.2); chưa được gán trạm nào thì chưa xuất được. <strong>Admin</strong> xuất được tất cả. <strong>Viewer</strong> không có nút này.</li>
           </ul>
           <p><strong>Gợi ý thói quen:</strong> mở tab này mỗi ngày/tuần để nắm các thiết bị cần theo dõi ngay, không phải mở từng thiết bị.</p>
 
@@ -3940,6 +4004,12 @@
           <td style="text-align: center;">✔</td>
           </tr>
           <tr>
+          <td>Xuất Excel (tab Cảnh báo)</td>
+          <td style="text-align: center;">✘</td>
+          <td style="text-align: center;">Chỉ các <strong>trạm phụ trách</strong> do Admin gán</td>
+          <td style="text-align: center;">✔ (mọi trạm)</td>
+          </tr>
+          <tr>
           <td>Gửi ý kiến phản hồi kèm ảnh minh họa</td>
           <td style="text-align: center;">✔</td>
           <td style="text-align: center;">✔</td>
@@ -3971,6 +4041,7 @@
           </tr>
           </tbody>
           </table></div>
+          <p>Với <strong>Viewer</strong>, tab <strong>Khí hòa tan</strong> và <strong>Lý-Hóa dầu</strong> không hiện vùng nhập liệu (2 tab con Nhập BBTN cũ / Lập BBTN), chỉ hiện thông báo "Tài khoản chỉ xem" kèm nút chuyển sang Lịch sử đo, Xu hướng, Cảnh báo.</p>
           <p>Mỗi bản ghi khi lưu đều tự động ghi nhận <strong>người tạo, người sửa cuối cùng và thời điểm thực hiện</strong> (cột "Người nhập" ở bảng Lịch sử đo). Mọi thao tác kiểm tra quyền đều được máy chủ (Apps Script / Supabase) xác thực độc lập.</p>
           <h3>16.2. Hướng dẫn chi tiết các tính năng trong mục Quản trị</h3>
           <p>Biểu tượng <strong>Quản trị</strong> trên thanh Menu bar ở đầu trang chỉ hiển thị khi tài khoản đang đăng nhập có vai trò <strong>Admin</strong>. Khi mở mục Quản trị, hệ thống cung cấp 3 subtab tác nghiệp chuyên biệt:</p>
@@ -3983,6 +4054,7 @@
           <li><em>Lưu ý quan trọng:</em> Mật khẩu tạm chỉ hiển thị <strong>duy nhất 1 lần</strong>, ứng dụng không lưu lại mật khẩu này. Admin nên gửi email tài khoản qua tin nhắn và đọc mật khẩu tạm qua cuộc gọi (không gửi chung cả hai trong cùng một tin nhắn). Khi người dùng đăng nhập lần đầu bằng mật khẩu tạm, hệ thống sẽ <strong>bắt buộc đổi sang mật khẩu cá nhân</strong> mới được phép vào sử dụng ứng dụng.</li>
           <li><strong>Danh sách tài khoản:</strong> Bảng hiển thị thông tin toàn bộ tài khoản: Email, Vai trò hiện tại, Ngày đăng ký và Thời điểm đăng nhập gần nhất.</li>
           <li><strong>Đổi vai trò người dùng:</strong> Admin có thể thay đổi trực tiếp vai trò của bất kỳ tài khoản nào (User ⇄ Viewer ⇄ Admin) thông qua menu chọn tại cột Vai trò.</li>
+          <li><strong>Trạm phụ trách:</strong> cột <strong>Trạm phụ trách</strong> cho biết user được xuất Excel dữ liệu của trạm nào. Bấm <strong>Gán trạm</strong> → tìm và tick các trạm (có nút chọn các trạm đang hiện / bỏ chọn tất cả) → <strong>Lưu</strong>. Danh sách trạm lấy từ danh mục trạm và các trạm đã có trong dữ liệu đo. Gán trạm <strong>chỉ giới hạn xuất Excel</strong> — user vẫn xem được dữ liệu mọi trạm. Admin không cần gán. Nếu cột ghi "(máy chủ chưa hỗ trợ)" thì cần triển khai lại bản Apps Script (Code.gs) mới.</li>
           <li><strong>Đặt lại mật khẩu (Reset password):</strong> Khi người dùng quên mật khẩu hoặc cần cấp lại, bấm nút đặt lại mật khẩu ở dòng tương ứng → hệ thống tạo mật khẩu tạm mới để Admin gửi cho người dùng.</li>
           <li><strong>Xóa người dùng:</strong> Bấm nút xóa (kèm hộp thoại xác nhận) để thu hồi quyền truy cập của tài khoản không còn hoạt động.</li>
           <li><strong>Cơ chế tự bảo vệ:</strong> Dòng tài khoản của chính Admin đang đăng nhập sẽ tự động bị khóa ô chọn vai trò và ẩn nút xóa, ngăn ngừa tình huống Admin vô tình tự hạ quyền hoặc tự xóa tài khoản của chính mình.</li>
@@ -4153,7 +4225,7 @@
         <p class="auth-error hidden" id="qtNewUserError"></p>
 
         <div class="table-scroll"><table>
-          <thead><tr><th>Email</th><th>Vai trò</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
+          <thead><tr><th>Email</th><th>Vai trò</th><th>Trạm phụ trách</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
           <tbody id="usersTable"></tbody>
         </table></div>
         <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
@@ -4396,6 +4468,54 @@
     </div>
   </div>
 
+  <!-- Admin gán Trạm phụ trách cho 1 user — openStationAssignDialog(), ui-admin.js. Danh sách trạm giới hạn
+       XUẤT EXCEL của user (tab Cảnh báo); user vẫn xem được dữ liệu mọi trạm. -->
+  <div id="stationAssignOverlay" class="mini-modal-overlay hidden">
+    <div class="mini-modal-card wide-modal" role="dialog" aria-modal="true" aria-labelledby="stationAssignTitle">
+      <button type="button" class="mini-modal-close" id="btnCloseStationAssign" aria-label="Đóng">&times;</button>
+      <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-pin"></use></svg><span id="stationAssignTitle">Trạm phụ trách</span></h3>
+      <p class="note">User chỉ <strong>xuất Excel</strong> được dữ liệu của các trạm được tick (vẫn xem được mọi trạm).
+        Admin không cần gán — luôn xuất được tất cả.</p>
+      <input type="search" id="stationAssignSearch" placeholder="Tìm trạm..." autocomplete="off" />
+      <div class="btn-row" style="margin:8px 0;">
+        <button type="button" class="btn xs ghost" id="btnStationAssignAll">Chọn các trạm đang hiện</button>
+        <button type="button" class="btn xs ghost" id="btnStationAssignNone">Bỏ chọn tất cả</button>
+        <span class="note" id="stationAssignCount" style="margin:0 0 0 auto;"></span>
+      </div>
+      <div class="check-list" id="stationAssignList"></div>
+      <p class="auth-error hidden" id="stationAssignError"></p>
+      <button type="button" class="btn primary" id="btnSaveStationAssign" style="width:100%; margin-top:10px;">Lưu</button>
+    </div>
+  </div>
+
+  <!-- Xuất Excel tab Cảnh báo theo tùy chọn — openAlertsExportDialog(), ui-alerts.js. User chỉ xuất được các
+       Trạm Admin gán cho mình; Admin (hoặc khi tắt đăng nhập) xuất được tất cả. Viewer không thấy nút này. -->
+  <div id="alertsExportOverlay" class="mini-modal-overlay hidden">
+    <div class="mini-modal-card wide-modal" role="dialog" aria-modal="true" aria-labelledby="alertsExportTitle">
+      <button type="button" class="mini-modal-close" id="btnCloseAlertsExport" aria-label="Đóng">&times;</button>
+      <h3><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg><span id="alertsExportTitle">Xuất Excel</span></h3>
+      <p class="note" id="alertsExportScope"></p>
+      <div class="location-path" role="group" aria-label="Phạm vi xuất">
+        <span class="location-path-title">Phạm vi</span>
+        <label class="field">Trạm<select id="xl_station"></select></label>
+        <span class="location-sep" aria-hidden="true">▸</span>
+        <label class="field">Thiết bị<select id="xl_device"></select></label>
+        <span class="location-sep" aria-hidden="true">▸</span>
+        <label class="field">Pha<select id="xl_phase"></select></label>
+      </div>
+      <label class="field" style="margin-top:10px;">Loại cảnh báo
+        <select id="xl_type"></select>
+      </label>
+      <label class="field" style="margin-top:10px; flex-direction:row; align-items:center; gap:8px; display:flex;">
+        <input type="checkbox" id="xl_latestOnly" style="width:auto;" checked />
+        Chỉ số liệu mới nhất của từng thiết bị (bỏ các cảnh báo cũ đã có lần đo mới hơn)
+      </label>
+      <p class="note" id="alertsExportPreview" style="margin-top:8px;"></p>
+      <p class="auth-error hidden" id="alertsExportError"></p>
+      <button type="button" class="btn primary" id="btnDoAlertsExport" style="width:100%; margin-top:10px;">Xuất file Excel</button>
+    </div>
+  </div>
+
   <footer class="app-footer">
     Công cụ hỗ trợ tham khảo — không thay thế nguyên tắc đánh giá tổng thể tại Điều 3, QĐ1901/EVNNPT.
     Dữ liệu: <span id="footerStorageInfo">—</span>
@@ -4482,6 +4602,7 @@
   <script src="src/presentation/components/ui-utils.js"></script>
   <script src="src/presentation/components/ui-terms.js"></script>
   <script src="src/presentation/components/ui-combobox.js"></script>
+  <script src="src/presentation/components/ui-location-picker.js"></script>
   <script src="src/presentation/components/ui-dropzone.js"></script>
   <script src="src/presentation/components/ui-layout.js"></script>
   <script src="src/presentation/components/ui-busy.js"></script>

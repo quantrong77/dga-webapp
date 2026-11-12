@@ -107,6 +107,9 @@ const Auth = {
         role: data.role,
         hasPassword: !!data.hasPassword,
         mustChangePassword: !!data.mustChangePassword,
+        // Trạm phụ trách (Admin gán) — giới hạn xuất Excel của user, xem exportAllowedStations() (ui-alerts.js).
+        // Server cũ chưa có trường này → undefined (khác [] = đã nâng cấp nhưng chưa được gán trạm nào).
+        stations: Array.isArray(data.stations) ? data.stations : undefined,
       };
       authLsSet(this.current);
       return this.current;
@@ -130,6 +133,11 @@ const Auth = {
 
   async setUserRole(email, role) {
     return await gsheetPost("setUserRole", { email, role });
+  },
+
+  /** Admin gán danh sách Trạm phụ trách cho 1 user (ghi đè). */
+  async setUserStations(email, stations) {
+    return await gsheetPost("setUserStations", { email, stations });
   },
 
   async deleteUser(email) {

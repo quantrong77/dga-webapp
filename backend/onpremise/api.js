@@ -131,6 +131,7 @@ async function handleApiRequest(req, res, urlObj) {
         role: user.role,
         hasPassword: Boolean(user.password_hash),
         mustChangePassword: String(user.must_change_password) === "1",
+        stations: auth.normalizeStations(user.stations),
       });
     }
     if (action === "changePassword") {
@@ -147,6 +148,9 @@ async function handleApiRequest(req, res, urlObj) {
     }
     if (action === "setUserRole") {
       return jsonResponse(res, auth.setUserRole(token, body.email, body.role));
+    }
+    if (action === "setUserStations") {
+      return jsonResponse(res, auth.setUserStations(token, body.email, body.stations));
     }
     if (action === "deleteUser") {
       return jsonResponse(res, auth.deleteUser(token, body.email));

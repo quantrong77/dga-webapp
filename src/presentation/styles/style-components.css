@@ -512,3 +512,93 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
     grid-template-areas: "t1" "z1" "x1" "t2" "z2" "x2";
   }
 }
+
+/* Bộ chọn "Vị trí thiết bị" Trạm ▸ Thiết bị ▸ Pha (ui-location-picker.js) — 1 hàng riêng ở đầu mọi form nhập liệu */
+.location-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) 6px;
+  padding: var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface-sunken);
+}
+.location-path-title {
+  flex: 0 0 100%;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+.location-path > .field {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.location-sep {
+  flex: none;
+  align-self: flex-end;
+  padding-bottom: 10px;
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+}
+/* Ô Pha ẩn (dầu lấy mẫu chung 3 pha) → ẩn luôn mũi tên trước nó */
+.location-sep:has(+ .field.hidden) {
+  display: none;
+}
+@media (max-width: 600px) {
+  .location-path > .field { flex-basis: 100%; }
+  .location-sep { display: none; }
+}
+
+/* Tài khoản Viewer (chỉ xem): ẩn vùng nhập liệu ở tab Khí hòa tan, Lý-Hóa dầu và nút Xuất Excel (body.role-viewer,
+   gắn ở renderUserHeader(), app-core.js). Chỉ là hiển thị — server vẫn từ chối mọi thao tác ghi của Viewer. */
+.viewer-readonly-note {
+  display: none;
+}
+.role-viewer .viewer-readonly-note {
+  display: block;
+}
+.role-viewer #tab-nhap > :not(.viewer-readonly-note),
+.role-viewer #tab-dau > :not(.viewer-readonly-note),
+.role-viewer #btnExportAlertsExcel {
+  display: none !important;
+}
+
+/* Hộp thoại rộng hơn mini-modal mặc định (Gán trạm phụ trách, Xuất Excel) */
+.mini-modal-card.wide-modal {
+  max-width: 560px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+.wide-modal .location-path {
+  margin-top: var(--space-2);
+}
+.check-list {
+  max-height: 280px;
+  overflow-y: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 6px 10px;
+}
+.check-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  font-size: 0.9rem;
+}
+.check-list label.hidden {
+  display: none;
+}
+.check-list input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+.wide-modal .location-path > .field {
+  flex-basis: 130px;
+}
+#stationAssignSearch {
+  width: 100%;
+}
