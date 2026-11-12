@@ -432,7 +432,7 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 
 ## 12. Xem xu hướng và dự báo (tab Xu hướng)
 
-> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
+> **Thu gọn hướng dẫn:** cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng **Tiêu chuẩn so sánh** dưới đồ thị có nút **con mắt**. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.
 
 ### 12.1. Vẽ đồ thị
 
@@ -446,6 +446,22 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 - Ký hiệu thông số (H2, CH4, C2H2, TCG, Ẩm, BDV…) hiện ở cuối mỗi đường khi còn chỗ. Khi tách theo pha, ký hiệu kèm pha, ví dụ **H2·A**.
 - Nhiều đường sát hoặc chồng nhau thì một số ký hiệu bị ẩn để không đè lên nhau. Chạm (điện thoại) hoặc click (máy tính) vào đường: đường đó đậm lên, các đường khác mờ đi, và ký hiệu hiện ngay tại chỗ chạm.
 - Chạm lại đúng chỗ đó để chuyển sang đường đang bị chồng bên dưới. Chạm vào vùng trống để bỏ chọn.
+
+**Hai chỉ tiêu tổng hợp** (app tự tính từ số liệu của từng lần đo):
+
+| Chỉ tiêu | Cách tính | Đánh giá |
+|---|---|---|
+| **TCG — Tổng lượng khí cháy** (ppm) | H2 + CH4 + C2H6 + C2H4 + C2H2 + CO. Không cộng CO2 (không cháy), N2, O2 | QĐ1901 và IEC 60599 không quy định ngưỡng TCG — app chỉ vẽ để theo dõi xu hướng |
+| **Tổng hàm lượng khí hòa tan** (%) — Bảng 63, Điều 54 | (H2 + CH4 + C2H6 + C2H4 + C2H2 + CO + CO2 + N2 + O2) ÷ 10.000 (1% = 10.000 ppm). Cần nhập **cả N2 lẫn O2**; lần đo thiếu thì đồ thị bỏ trống điểm đó | 110–220 kV: < 1%; 500 kV: < 0,5% |
+
+**Khi nào đánh giá Bảng 63:** chỉ kết luận đạt/không đạt với **dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu** (tick ô tương ứng và chọn cấp điện áp ở form Khí hòa tan, mục 4). Với dầu đang vận hành định kỳ, giá trị chỉ để tham khảo.
+
+**Tiêu chuẩn so sánh của thông số khí đang vẽ:** ngay dưới đồ thị, khi đang tick ít nhất một thông số khí, app hiện bảng tiêu chuẩn của đúng các thông số đó. Bảng này có **nút con mắt riêng** để ẩn/hiện, không phụ thuộc nút của mục "Chọn thông số cần vẽ".
+
+- **7 khí chính:** giá trị điển hình đang áp dụng cho thiết bị (theo loại thiết bị/nhà sản xuất của lần đo gần nhất — cùng nguồn với tab Khí hòa tan), ngưỡng loại bỏ nếu nhà sản xuất có cấu hình, và tốc độ tăng điển hình Bảng 65 (chỉ áp dụng chính thức cho MBA; loại khác ghi "tham khảo").
+- **N2, O2:** không có ngưỡng riêng; dùng cho tỷ lệ O2/N2 (~0,5 là bình thường ở thiết bị tiếp xúc không khí, < 0,3 là tiêu thụ oxy quá mức) và Bảng 63.
+- **TCG:** ghi rõ QĐ1901/IEC 60599 không quy định ngưỡng; kèm mốc **IEEE C57.104-2008** để tham khảo (≤ 720 ppm điều kiện 1; 721–1.920 điều kiện 2; 1.921–4.630 điều kiện 3; > 4.630 điều kiện 4 — bản 2019 đã bỏ cách phân loại này).
+- **Tổng hàm lượng khí hòa tan:** ngưỡng 2 cấp điện áp (in đậm cấp của thiết bị nếu đã chọn khi nhập), và cho biết lần đo gần nhất có thuộc trường hợp dầu mới/sau thay, lọc dầu hay không.
 
 Phía dưới có **bảng số liệu thô** của từng nguồn (khí / dầu chính / dầu OLTC).
 

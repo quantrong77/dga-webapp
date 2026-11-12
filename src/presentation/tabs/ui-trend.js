@@ -1371,6 +1371,70 @@ function trendPoints(records, valueOf) {
     .map((r) => ({ x: new Date(r.sample_date).getTime(), y: Number(valueOf(r)) }));
 }
 
+/** Ghi chú TIÊU CHUẨN cho các thông số khí đang tick (#trStdWrap, dưới đồ thị): 7 khí — ngưỡng đang áp dụng cho thiết bị
+ *  (resolveStandard(), cùng nguồn với tab Khí hòa tan/dự báo, theo lần đo GẦN NHẤT) + tốc độ tăng Bảng 65 + ngưỡng loại bỏ
+ *  NSX nếu có; N2/O2 — không có ngưỡng riêng; TCG — QĐ1901/IEC 60599 không quy định, ghi mốc IEEE C57.104-2008 để tham khảo;
+ *  Bảng 63 — ngưỡng theo cấp điện áp + điều kiện áp dụng. Chỉ hiển thị, không đổi cách đánh giá. */
+function renderTrendStandardsNote(selectedKeys, gasRecords) {
+  const wrap = $("trStdWrap");
+  const body = $("trStdBody");
+  if (!wrap || !body) return;
+  const gasKeys = DGA.GASES.map((g) => "gas:" + g).concat(["gas:N2", "gas:O2", "gas:TCG", "gas:BANG63"])
+    .filter((k) => selectedKeys.includes(k));
+  if (gasKeys.length === 0 || !gasRecords || gasRecords.length === 0) {
+    wrap.classList.add("hidden");
+    body.innerHTML = "";
+    return;
+  }
+  const latest = gasRecords[gasRecords.length - 1];
+  const equipmentType = latest.equipment_type;
+  const isMba = equipmentType === DGA.EQUIPMENT_TYPES.MBA;
+  const std = DGA.resolveStandard(
+    { equipmentType, manufacturer: latest.manufacturer, mbaSubtype: latest.mba_subtype ?? latest.mbaSubtype ?? null },
+    typeof toManufacturerStandardsForLogic === "function" ? toManufacturerStandardsForLogic(_allStandards) : []
+  );
+  const vn = (v) => Number(v).toLocaleString("vi-VN");
+  const R = DGA.DIEU54_ADDITIONAL_RATIOS || { o2n2_low: 0.3, o2n2_normal: 0.5 };
+  const rateCite = (DGA.REGULATION_CITATIONS && DGA.REGULATION_CITATIONS.BANG65_RATE) || "Bảng 65, Điều 54 QĐ1901";
+  const lastWith = (pred) => { for (let i = gasRecords.length - 1; i >= 0; i--) if (pred(gasRecords[i])) return gasRecords[i]; return null; };
+  const has = (v) => v !== undefined && v !== null && v !== "";
+  const rows = [];
+  gasKeys.forEach((key) => {
+    const field = key.slice(4);
+    if (DGA.GASES.includes(field)) {
+      const lim = std.limits[field];
+      const rate = std.rate && std.rate[field];
+      const cond = std.condemning && std.condemning[field];
+      const parts = [has(lim) ? `Giá trị điển hình ≤ <strong>${vn(lim)}</strong> ppm` : "Không có ngưỡng"];
+      if (has(cond)) parts.push(`Loại bỏ (NSX): ${vn(cond)} ppm`);
+      if (rate) parts.push(`Tốc độ tăng điển hình ${vn(rate[0])}–${vn(rate[1])} ppm/năm (${rateCite}${isMba ? "" : ", tham khảo"})`);
+      rows.push([field, parts.join("<br>"), escapeHtml(std.sourceLabel)]);
+    } else if (field === "N2" || field === "O2") {
+      rows.push([field, "Không có ngưỡng riêng",
+        `Dùng cho tỷ lệ O2/N2 (Điều 54: ~${vn(R.o2n2_normal)} là bình thường ở thiết bị tiếp xúc không khí; &lt; ${vn(R.o2n2_low)} là tiêu thụ oxy quá mức) và Tổng hàm lượng khí hòa tan (Bảng 63).`]);
+    } else if (field === "TCG") {
+      rows.push(["TCG", "QĐ1901 và IEC 60599 <strong>không quy định</strong> ngưỡng TCG — app không đánh giá đạt/không đạt, chỉ theo dõi xu hướng.",
+        "Tham khảo IEEE C57.104-2008 (TDCG, cùng 6 khí): ≤ 720 ppm điều kiện 1; 721–1.920 điều kiện 2; 1.921–4.630 điều kiện 3; &gt; 4.630 điều kiện 4. Bản IEEE C57.104-2019 đã bỏ cách phân loại này."]);
+    } else if (field === "BANG63") {
+      const vRec = lastWith((r) => has(r.bang63_voltage_class));
+      const vc = vRec ? String(vRec.bang63_voltage_class) : null;
+      const lims = DGA.QD1901_BANG63_TDGC;
+      const fmtLim = (k, label) => (vc === k ? `<strong>${label}: &lt; ${vn(lims[k])}%</strong> (cấp của thiết bị)` : `${label}: &lt; ${vn(lims[k])}%`);
+      const ap = latest.bang63_applicable;
+      const applicable = ap === true || String(ap).toLowerCase() === "true";
+      rows.push(["Tổng khí hòa tan", `${fmtLim("110-220", "110–220 kV")}<br>${fmtLim("500", "500 kV")}`,
+        "Bảng 63, Điều 54 QĐ1901. Chỉ đánh giá với dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu. " +
+        (applicable ? "Lần đo gần nhất <strong>thuộc</strong> trường hợp này." : "Lần đo gần nhất không đánh dấu trường hợp này — giá trị chỉ để tham khảo.") +
+        " Cần nhập cả N2 lẫn O2."]);
+    }
+  });
+  body.innerHTML = `<div class="table-scroll"><table><thead><tr><th>Thông số</th><th>Tiêu chuẩn</th><th>Nguồn / ghi chú</th></tr></thead><tbody>${
+    rows.map((r) => `<tr><td><strong>${escapeHtml(r[0])}</strong></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")
+  }</tbody></table></div><p class="note" style="margin:4px 0 0;">Ngưỡng 7 khí lấy theo loại thiết bị/nhà sản xuất của lần đo gần nhất (${escapeHtml(equipmentType || "chưa rõ loại")}), cùng nguồn với đánh giá ở tab Khí hòa tan.</p>`;
+  wrap.classList.remove("hidden");
+}
+
+
 function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
   _trendLastArgs = [gasRecords, oilRecords, oltcRecords];
   // Phần diễn biến loại khiếm khuyết (Bảng 66/Duval) — độc lập với thông số đang tick, không cần Chart.js cho bảng.
@@ -1397,6 +1461,7 @@ function renderTrendChart(gasRecords, oilRecords, oltcRecords) {
 
   destroyTrendChart();
   _trendSelected = null;
+  renderTrendStandardsNote(selectedKeys, gasRecords);
   // Dòng hướng dẫn nhãn/chạm chọn đường chỉ hiện khi đồ thị thực sự được vẽ (bật lại ngay trước new Chart).
   $("trChartHint")?.classList.add("hidden");
 

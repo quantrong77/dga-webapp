@@ -58,7 +58,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v68-an-hien-huong-dan") {
+          if (k !== "dga-offline-v69-tieu-chuan-xu-huong") {
             caches.delete(k);
           }
         });
@@ -1152,6 +1152,16 @@
         </div>
 
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-ruler"></use></svg>Chọn thông số cần vẽ<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-chart" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
+        <div class="note" data-guide="trend-chart" style="margin:0 0 10px;">
+          <p style="margin:0 0 4px;"><strong>TCG — Tổng lượng khí cháy</strong> (ppm) = H2 + CH4 + C2H6 + C2H4 + C2H2 + CO.
+            Không cộng CO2 (không cháy), N2, O2.</p>
+          <p style="margin:0 0 4px;"><strong>Tổng hàm lượng khí hòa tan</strong> (%, Bảng 63 Điều 54 QĐ1901) = (H2 + CH4 +
+            C2H6 + C2H4 + C2H2 + CO + CO2 + N2 + O2) ÷ 10.000 (1% = 10.000 ppm). Chỉ tính được ở lần đo có nhập <strong>cả N2
+            lẫn O2</strong>; lần đo thiếu thì đồ thị bỏ trống điểm đó.</p>
+          <p style="margin:0;"><strong>Khi nào đánh giá Bảng 63:</strong> chỉ kết luận đạt/không đạt với <strong>dầu mới đưa vào
+            vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu</strong> (ô tick ở form Khí hòa tan). Ngưỡng: 110–220 kV
+            &lt; 1%, 500 kV &lt; 0,5%. Dầu đang vận hành định kỳ: giá trị chỉ để tham khảo, theo dõi xu hướng.</p>
+        </div>
         <div id="trParamsGasWrap" class="hidden">
           <p class="section-title" style="margin-top:0;">Khí hòa tan (ppm)</p>
           <div class="trend-checks" id="trParamsGas"></div>
@@ -1175,6 +1185,11 @@
         <p class="note hidden" id="trChartHint" data-guide="trend-chart" style="margin-top:6px;">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
           mỗi đường khi còn chỗ. Đường sát hoặc chồng nhau: chạm/click vào đường để hiện ký hiệu (chạm lại cùng chỗ để
           chuyển sang đường chồng bên dưới); chạm vùng trống để bỏ chọn.</p>
+        <!-- Tiêu chuẩn so sánh của các thông số khí đang vẽ — renderTrendStandardsNote(), ui-trend.js -->
+        <div id="trStdWrap" class="trend-std hidden">
+          <p class="section-title trend-std-title">Tiêu chuẩn so sánh của thông số khí đang vẽ<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-standards" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện ghi chú tiêu chuẩn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></p>
+          <div id="trStdBody" data-guide="trend-standards"></div>
+        </div>
         <p class="note hidden" id="trChartEmpty" style="margin-top:10px;">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
           thiết bị có nhiều pha, cũng cần tick ít nhất 1 pha ở mục "Lọc theo pha".</p>
         <p class="note hidden" id="trChartNoLib" style="margin-top:10px;">Không tải được thư viện vẽ đồ thị (Chart.js) — có
@@ -3577,7 +3592,7 @@
         <details class="mm-node">
           <summary>12. Xem xu hướng và dự báo (tab Xu hướng)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
-          <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
+          <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng <strong>Tiêu chuẩn so sánh</strong> dưới đồ thị có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
           <h3>12.1. Vẽ đồ thị</h3>
           <ol type="1">
           <li>(Tùy chọn) Chọn <strong>Trạm biến áp</strong> để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.</li>
@@ -3590,6 +3605,36 @@
           <li>Ký hiệu thông số (H2, CH4, C2H2, TCG, Ẩm, BDV…) hiện ở cuối mỗi đường khi còn chỗ. Khi tách theo pha, ký hiệu kèm pha, ví dụ <strong>H2·A</strong>.</li>
           <li>Nhiều đường sát hoặc chồng nhau thì một số ký hiệu bị ẩn để không đè lên nhau. Chạm (điện thoại) hoặc click (máy tính) vào đường: đường đó đậm lên, các đường khác mờ đi, và ký hiệu hiện ngay tại chỗ chạm.</li>
           <li>Chạm lại đúng chỗ đó để chuyển sang đường đang bị chồng bên dưới. Chạm vào vùng trống để bỏ chọn.</li>
+          </ul>
+          <p><strong>Hai chỉ tiêu tổng hợp</strong> (app tự tính từ số liệu của từng lần đo):</p>
+          <div class="table-scroll"><table>
+          <thead>
+          <tr>
+          <th>Chỉ tiêu</th>
+          <th>Cách tính</th>
+          <th>Đánh giá</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr>
+          <td><strong>TCG — Tổng lượng khí cháy</strong> (ppm)</td>
+          <td>H2 + CH4 + C2H6 + C2H4 + C2H2 + CO. Không cộng CO2 (không cháy), N2, O2</td>
+          <td>QĐ1901 và IEC 60599 không quy định ngưỡng TCG — app chỉ vẽ để theo dõi xu hướng</td>
+          </tr>
+          <tr>
+          <td><strong>Tổng hàm lượng khí hòa tan</strong> (%) — Bảng 63, Điều 54</td>
+          <td>(H2 + CH4 + C2H6 + C2H4 + C2H2 + CO + CO2 + N2 + O2) ÷ 10.000 (1% = 10.000 ppm). Cần nhập <strong>cả N2 lẫn O2</strong>; lần đo thiếu thì đồ thị bỏ trống điểm đó</td>
+          <td>110–220 kV: &lt; 1%; 500 kV: &lt; 0,5%</td>
+          </tr>
+          </tbody>
+          </table></div>
+          <p><strong>Khi nào đánh giá Bảng 63:</strong> chỉ kết luận đạt/không đạt với <strong>dầu mới đưa vào vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu</strong> (tick ô tương ứng và chọn cấp điện áp ở form Khí hòa tan, mục 4). Với dầu đang vận hành định kỳ, giá trị chỉ để tham khảo.</p>
+          <p><strong>Tiêu chuẩn so sánh của thông số khí đang vẽ:</strong> ngay dưới đồ thị, khi đang tick ít nhất một thông số khí, app hiện bảng tiêu chuẩn của đúng các thông số đó. Bảng này có <strong>nút con mắt riêng</strong> để ẩn/hiện, không phụ thuộc nút của mục "Chọn thông số cần vẽ".</p>
+          <ul class="rec-list">
+          <li><strong>7 khí chính:</strong> giá trị điển hình đang áp dụng cho thiết bị (theo loại thiết bị/nhà sản xuất của lần đo gần nhất — cùng nguồn với tab Khí hòa tan), ngưỡng loại bỏ nếu nhà sản xuất có cấu hình, và tốc độ tăng điển hình Bảng 65 (chỉ áp dụng chính thức cho MBA; loại khác ghi "tham khảo").</li>
+          <li><strong>N2, O2:</strong> không có ngưỡng riêng; dùng cho tỷ lệ O2/N2 (~0,5 là bình thường ở thiết bị tiếp xúc không khí, &lt; 0,3 là tiêu thụ oxy quá mức) và Bảng 63.</li>
+          <li><strong>TCG:</strong> ghi rõ QĐ1901/IEC 60599 không quy định ngưỡng; kèm mốc <strong>IEEE C57.104-2008</strong> để tham khảo (≤ 720 ppm điều kiện 1; 721–1.920 điều kiện 2; 1.921–4.630 điều kiện 3; &gt; 4.630 điều kiện 4 — bản 2019 đã bỏ cách phân loại này).</li>
+          <li><strong>Tổng hàm lượng khí hòa tan:</strong> ngưỡng 2 cấp điện áp (in đậm cấp của thiết bị nếu đã chọn khi nhập), và cho biết lần đo gần nhất có thuộc trường hợp dầu mới/sau thay, lọc dầu hay không.</li>
           </ul>
           <p>Phía dưới có <strong>bảng số liệu thô</strong> của từng nguồn (khí / dầu chính / dầu OLTC).</p>
           <p class="sm-note">Nếu không có mạng hoặc thư viện vẽ đồ thị (Chart.js) tải lỗi, đồ thị sẽ ẩn kèm thông báo — kiểm tra kết nối và tải lại trang. Các bảng số liệu và bảng dự báo vẫn dùng được.</p>

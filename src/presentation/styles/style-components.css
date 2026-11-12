@@ -145,6 +145,10 @@ input:disabled, select:disabled, textarea:disabled {
 /* Nút con mắt ẩn/hiện hướng dẫn của 1 mục (setupGuideToggles(), app-views.js) — nằm cuối <h2>, đẩy sang phải. */
 .panel h2 .guide-toggle-btn { margin-left: auto; }
 .guide-collapsed { display: none !important; }
+/* Ghi chú tiêu chuẩn dưới đồ thị Xu hướng (#trStdWrap) — tiêu đề + nút con mắt riêng. */
+.trend-std { margin-top: var(--space-3); }
+.trend-std-title { display: flex; align-items: center; gap: var(--space-2); margin: 0 0 6px; }
+.trend-std table td, .trend-std table th { font-size: var(--text-xs); vertical-align: top; }
 .info-popover {
   position: relative;
   padding: var(--space-3) 34px var(--space-3) 14px;
