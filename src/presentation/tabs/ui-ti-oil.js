@@ -216,7 +216,7 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${tioEquipmentTypeShort(equipmentType)}</td>

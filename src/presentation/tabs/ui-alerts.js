@@ -807,7 +807,7 @@ function refreshAlertsUI() {
       <td style="font-size:12px; max-width:320px;">${a.reasons.map((r) => escapeHtml(r)).join("<br>")}</td>
       <td style="font-size:12px; max-width:280px; white-space:pre-line;">${escapeHtml(a.action)}</td>
       <td style="min-width:120px;">${alertLanDoHtml(a)}${editBadge ? `<div style="margin-top:3px;">${editBadge}</div>` : ""}</td>
-      <td>${escapeHtml(a.sampleDate)}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(a.sampleDate))}</td>
       <td class="actions-cell">${rowActionsHtml([
         a.record && rowActionBtn("view", "eye",
           a.record.bbtn_url && a.source !== "gas" ? "Xem biên bản thí nghiệm (BBTN) đã đính kèm"

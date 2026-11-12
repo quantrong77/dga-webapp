@@ -316,14 +316,14 @@ function renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords) {
 
   $("trHistGasTable").innerHTML = gasRecords.slice().reverse().map((r) => `
     <tr>
-      <td>${escapeHtml(DGA.formatSampleDate(r.sample_date))}</td><td>${escapeHtml(DGA.phaLabel(r.pha) || "—")}</td><td>${escapeHtml(r.lan_do ?? "—")}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(r.sample_date))}</td><td>${escapeHtml(DGA.phaLabel(r.pha) || "—")}</td><td>${escapeHtml(r.lan_do ?? "—")}</td>
       ${DGA.GASES.map((g) => `<td>${escapeHtml(recordGases(r)[g] ?? "—")}</td>`).join("")}
     </tr>
   `).join("");
 
   $("trHistOilTable").innerHTML = oilRecords.slice().reverse().map((r) => `
     <tr>
-      <td>${escapeHtml(DGA.formatSampleDate(r.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(r.sample_date))}</td>
       <td>${r.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}</td>
       <td>${escapeHtml(r.moisture_ppm ?? "—")}</td><td>${escapeHtml(r.tgd_90c_percent ?? "—")}</td><td>${escapeHtml(r.bdv_kv ?? "—")}</td>
     </tr>
@@ -331,7 +331,7 @@ function renderTrendHistoryTables(gasRecords, oilRecords, oltcRecords) {
 
   $("trHistOltcTable").innerHTML = oltcRecords.slice().reverse().map((r) => `
     <tr>
-      <td>${escapeHtml(DGA.formatSampleDate(r.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(r.sample_date))}</td>
       <td>${escapeHtml(oltcSamplePointLabel(r.oltc_sample_point))}</td>
       <td>${r.phase ? escapeHtml(r.phase) : "—"}</td>
       <td>${r.oil_state === "new" ? "Dầu mới" : "Dầu vận hành"}</td>

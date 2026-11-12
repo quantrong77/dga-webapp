@@ -69,7 +69,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v75-ui-view-context") {
+          if (k !== "dga-offline-v76-ui-tables") {
             caches.delete(k);
           }
         });
@@ -849,8 +849,8 @@
         <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Khí hòa tan (cuộn ngang)"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
-            <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
-            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th class="num">H2</th><th class="num">CH4</th><th class="num">C2H6</th><th class="num">C2H4</th><th class="num">C2H2</th><th class="num">CO</th><th class="num">CO2</th><th class="num">N2</th><th class="num">O2</th>
+            <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
           </tr></thead>
           <tbody id="nhapSavedTable"></tbody>
         </table></div>
@@ -944,8 +944,8 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
-              <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
-              <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th class="num">H2</th><th class="num">CH4</th><th class="num">C2H6</th><th class="num">C2H4</th><th class="num">C2H2</th><th class="num">CO</th><th class="num">CO2</th><th class="num">N2</th><th class="num">O2</th>
+              <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
             </tr></thead>
             <tbody id="historyTable"></tbody>
           </table></div>

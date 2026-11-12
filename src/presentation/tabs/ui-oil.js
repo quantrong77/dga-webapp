@@ -448,7 +448,7 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
     const evalResult = DGA.evaluateOilRecord(rec, oilStandardsForLogic, _allOilTests);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(oilSamplePointLabel(rec.oil_sample_point || "chung"))}</td>

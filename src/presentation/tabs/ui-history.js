@@ -76,17 +76,17 @@ function renderMeasurementRows(tbody, records) {
     const editedMap = parseEditedFields(rec.edited_fields);
     const gasCellHtml = (field, value) => {
       const oldVal = editedMap.get(field);
-      if (oldVal === undefined) return `<td>${escapeHtml(value ?? "—")}</td>`;
+      if (oldVal === undefined) return `<td class="num">${escapeHtml(value ?? "—")}</td>`;
       const editedAtText = rec.edited_at ? new Date(rec.edited_at).toLocaleString("vi-VN") : "?";
       const title = `Giá trị trước khi sửa: ${oldVal === "" ? "(trống)" : oldVal} — đã sửa lúc ${editedAtText}`;
-      return `<td class="cell-edited-warn" title="${escapeHtml(title)}">${escapeHtml(value ?? "—")}</td>`;
+      return `<td class="num cell-edited-warn" title="${escapeHtml(title)}">${escapeHtml(value ?? "—")}</td>`;
     };
     const n2 = rec.n2 ?? rec.N2 ?? null;
     const o2 = rec.o2 ?? rec.O2 ?? null;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td class="nowrap-cell">${escapeHtml(rec.equipment_type)}</td>
@@ -95,10 +95,10 @@ function renderMeasurementRows(tbody, records) {
       ${DGA.GASES.map((g) => gasCellHtml(g, gases[g])).join("")}
       ${gasCellHtml("N2", n2)}
       ${gasCellHtml("O2", o2)}
-      <td>${tcg.toFixed(1)}</td>
+      <td class="num">${tcg.toFixed(1)}</td>
       <td>${overall === "Đạt" ? verdictPill("Đạt") : verdictPill("Không đạt")}${condemnBad ? ' <span class="pill bad">⚠ Loại bỏ</span>' : ""}</td>
-      <td style="font-size:12px;">${diagnosis}</td>
-      <td style="font-size:12px;">${duval ? duval.zone : "—"}</td>
+      <td class="diag-cell">${diagnosis}</td>
+      <td class="diag-cell diag-cell-short">${duval ? duval.zone : "—"}</td>
       <td>${ownerCellHtml(rec)}${editLogBadgeHtml(rec)}</td>
       <td class="actions-cell">${rowActionsHtml([
         rowActionBtn("viewbbtn", "eye",

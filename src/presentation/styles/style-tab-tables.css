@@ -146,6 +146,19 @@ th, td {
   border-bottom: 1px solid var(--border);
   text-align: left;
 }
+/* Cột chẩn đoán (Bảng 66, Duval) ở bảng Lịch sử: đủ rộng để chẩn đoán nằm 2–3 dòng thay vì 6–7 dòng làm cả dòng
+   bảng cao vọt (Bước 3a). */
+.diag-cell {
+  font-size: var(--text-xs);
+  min-width: 200px;
+}
+.diag-cell.diag-cell-short { min-width: 80px; }
+/* Cột số (class num ở th/td, Bước 3a): canh phải để so hàng trên/dưới dễ (table đã có tabular-nums). */
+th.num,
+td.num {
+  text-align: right;
+  white-space: nowrap;
+}
 .nowrap-cell {
   white-space: nowrap;
 }
@@ -201,6 +214,7 @@ tbody tr:nth-child(even) { background: var(--table-stripe); }
 tbody tr:hover { background: var(--blue-100); }
 
 .pill {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -362,6 +376,11 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   align-items: center;
   gap: var(--space-1);
 }
+/* Bước 3a: màn hình rộng (≥ 1024px) dư bề ngang → xếp NGANG cho dòng thấp còn ~1/3 (3 nút dọc làm mỗi dòng cao
+   ~115px); màn hình hẹp vẫn xếp 1 cột dọc để cột hẹp, bảng ít phải cuộn ngang. */
+@media (min-width: 1024px) {
+  .actions-cell .btn-row.actions-stack { flex-direction: row; }
+}
 
 .btn-action-alert,
 .btn-action-hist,
@@ -468,4 +487,3 @@ tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 /* Đang mở khung đối chiếu BBTN (form hẹp lại): thu gọn cột để vừa 3 pha A/B/C */
 #oSplitLayout.has-preview .oil-param-table td:first-child { min-width: 150px; }
 #oSplitLayout.has-preview .oil-param-table input, #oSplitLayout.has-preview .oil-param-table select { min-width: 72px; }
-

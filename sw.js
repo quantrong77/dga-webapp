@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v75-ui-view-context";
+const CACHE_NAME = "dga-offline-v76-ui-tables";
 
 const PRECACHE_ASSETS = [
   "./",

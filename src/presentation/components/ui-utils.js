@@ -42,6 +42,15 @@ function rowActionBtn(action, icon, tip, opts) {
 
 /** Khung chứa các nút rowActionBtn() xếp thành 1 cột dọc — bỏ qua phần tử rỗng (nút bị ẩn
  *  do không đủ quyền, VD Sửa/Xóa). */
+/** Ngày hiển thị trong BẢNG: "yyyy-mm-dd" (hoặc chuỗi ISO) → "dd/mm/yyyy" theo thói quen đọc của người dùng Việt Nam.
+ *  CHỈ dùng để hiển thị — ô nhập <input type="date">, sắp xếp và file xuất (Excel/BBTN) vẫn dùng "yyyy-mm-dd".
+ *  Giá trị không nhận ra thì giữ nguyên. */
+function fmtDateVN(value) {
+  const s = typeof DGA !== "undefined" && DGA.formatSampleDate ? DGA.formatSampleDate(value) : value;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s ?? "").trim());
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : (s ?? "");
+}
+
 function rowActionsHtml(buttons) {
   return `<div class="btn-row actions-stack">${buttons.filter(Boolean).join("")}</div>`;
 }
