@@ -59,6 +59,9 @@ function decorate(html) {
   if (!out.includes('<ul class="rec-list">')) {
     out = out.replace(/<ul>/g, '<ul class="rec-list">');
   }
+  // Cột canh giữa của bảng Markdown (|:---:|): marked sinh style="text-align: center;" → đổi sang class tiện ích
+  // (style-utilities.css), không để style viết thẳng trong index.html.
+  out = out.replace(/ style="text-align: center;"/g, ' class="u-ta-center"');
   return out.replace(/<a\s+href="#[^"]*">([\s\S]*?)<\/a>/g, "$1");
 }
 
