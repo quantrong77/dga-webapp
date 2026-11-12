@@ -296,20 +296,20 @@ input:disabled, select:disabled, textarea:disabled {
   font-size: var(--text-sm);
   color: var(--gray-700);
 }
-/* Mọi ô kéo-thả: input bên trong đang focus → viền trên ô (input trong suốt nên không tự hiện viền). */
-.file-dropzone:focus-within { outline: 2px solid var(--blue-700); outline-offset: 2px; }
-#bbtnDropzone.file-dropzone:focus,
-#bbtnDropzone.file-dropzone:focus-within,
-#bbtnDropzone.file-dropzone.is-focused,
-#batchDropzone.file-dropzone:focus,
-#batchDropzone.file-dropzone:focus-within,
-#batchDropzone.file-dropzone.is-focused,
-#oDropzone.file-dropzone:focus-within,
-#oBatchDropzone.file-dropzone:focus,
-#oBatchDropzone.file-dropzone:focus-within,
-#t3Dropzone.file-dropzone:focus-within,
-#t3BatchDropzone.file-dropzone:focus,
-#t3BatchDropzone.file-dropzone:focus-within {
+/* Mọi ô kéo-thả: input bên trong đang focus BẰNG BÀN PHÍM → viền trên ô (input trong suốt nên không tự hiện viền).
+   Dùng :has(:focus-visible) thay :focus-within (Bước 3b): app tự focus ô BBTN sau khi đăng nhập (app-core.js) cho người
+   dùng bàn phím; dùng chuột thì không tô đậm nữa — trước đây ô trông như đang "được chọn", khác hẳn ô bên cạnh. */
+.file-dropzone:has(:focus-visible) { outline: 2px solid var(--blue-700); outline-offset: 2px; }
+#bbtnDropzone.file-dropzone:focus-visible,
+#bbtnDropzone.file-dropzone:has(:focus-visible),
+#batchDropzone.file-dropzone:focus-visible,
+#batchDropzone.file-dropzone:has(:focus-visible),
+#oDropzone.file-dropzone:has(:focus-visible),
+#oBatchDropzone.file-dropzone:focus-visible,
+#oBatchDropzone.file-dropzone:has(:focus-visible),
+#t3Dropzone.file-dropzone:has(:focus-visible),
+#t3BatchDropzone.file-dropzone:focus-visible,
+#t3BatchDropzone.file-dropzone:has(:focus-visible) {
   outline: 2px solid var(--blue-700);
   outline-offset: 2px;
   border-color: var(--blue-700);
