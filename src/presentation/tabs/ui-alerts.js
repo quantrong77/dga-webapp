@@ -36,7 +36,7 @@ function deviceIdentityKey(tram, deviceName, normalizedPhase) {
 
 /** Thống kê cảnh báo THEO THIẾT BỊ (Trạm + Thiết bị + Pha định danh) — 1 thiết bị có thể có nhiều dòng cảnh báo,
  *  mỗi dòng 1 nguồn dữ liệu (khí hòa tan / dầu MBA chính / dầu OLTC / dầu TI-TU). Trước đây thẻ "Mức Cảnh báo"/"Mức
- *  Báo động" đếm SỐ DÒNG còn thẻ "Thiết bị đang có cảnh báo" đếm SỐ THIẾT BỊ → 37 + 3 = 40 nhưng chỉ 39 thiết bị (1
+ *  Báo động" đếm SỐ DÒNG còn thẻ "Thiết bị cần lưu ý/theo dõi" (trước: "đang có cảnh báo") đếm SỐ THIẾT BỊ → 37 + 3 = 40 nhưng chỉ 39 thiết bị (1
  *  thiết bị cảnh báo ở 2 nguồn). Nay mỗi thiết bị tính ĐÚNG 1 LẦN ở mức NẶNG NHẤT của nó (Báo động > Cảnh báo >
  *  Bình thường) nên alarmDevices + alertDevices = số thiết bị đang có cảnh báo. Vẫn trả số dòng để hiện kèm.
  *  Hàm thuần — dùng chung cho thẻ KPI tab Cảnh báo, file Excel và chuông ở header (có test). */
@@ -934,16 +934,16 @@ function refreshAlertsUI() {
   const totalDevices = totalTrackedDeviceCount(station, device);
   // deviceIdentityKey() gồm cả Pha — nếu chỉ dùng Trạm+Thiết bị, cảnh báo ở TI 174 pha B
   // và TI 174 pha C (2 thiết bị vật lý khác nhau, cùng tên "thiet_bi") sẽ bị đếm gộp
-  // thành 1, làm số "Thiết bị đang có cảnh báo" thấp hơn thực tế.
+  // thành 1, làm số "Thiết bị cần lưu ý/theo dõi" thấp hơn thực tế.
   // Đếm THEO THIẾT BỊ, mỗi thiết bị 1 lần ở mức nặng nhất (alertLevelSummary()) → Cảnh báo + Báo động = số thiết bị
-  // đang có cảnh báo. Số DÒNG (1 dòng / nguồn dữ liệu) hiện kèm khi khác số thiết bị.
+  // cần lưu ý/theo dõi. Số DÒNG (1 dòng / nguồn dữ liệu) hiện kèm khi khác số thiết bị.
   const sum = alertLevelSummary(alerts);
   const setText = (id, v) => { if ($(id)) $(id).textContent = v; };
   setText("al_totalDevices", String(totalDevices));
   setText("al_warnDevices", `${sum.warnDevices} / ${totalDevices}`);
   setText("al_alertCount", String(sum.alertDevices));
   setText("al_alarmCount", String(sum.alarmDevices));
-  setText("al_warnDevicesSub", sum.multiSourceDevices ? `${sum.multiSourceDevices} thiết bị cảnh báo ở ≥ 2 nguồn` : "");
+  setText("al_warnDevicesSub", sum.multiSourceDevices ? `${sum.multiSourceDevices} thiết bị có ≥ 2 nguồn cần lưu ý` : "");
   // Dòng mức Cảnh báo thuộc thiết bị đã tính vào Báo động (vì có nguồn khác ở mức Báo động).
   const alertRowsOfAlarmDevices = alerts.filter((a) => a.level === "alert" &&
     sum.deviceLevels.get(deviceIdentityKey(a.tram, a.deviceName, a.identityPhase)) === "alarm").length;
@@ -1150,6 +1150,7 @@ async function onExportAlertsExcel(rows) {
     [`Ngày xuất: ${now.toLocaleString("vi-VN")}  |  Trạm: ${optText("xl_station")}  |  Thiết bị: ${optText("xl_device")}  |  Pha: ${optText("xl_phase")}  |  Loại: ${optText("xl_type")}`],
     [
       `Số thiết bị: ${sum.devices}`,
+      `Cần lưu ý/theo dõi: ${sum.warnDevices} thiết bị`,
       `Báo động (ALARM): ${withRows(sum.alarmDevices, sum.alarmRows)}`,
       `Cảnh báo (ALERT): ${withRows(sum.alertDevices, sum.alertRows)}`,
       `Không có cảnh báo: ${sum.normalDevices} thiết bị`,

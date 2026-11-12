@@ -71,7 +71,7 @@ function quickSearchSources() {
   ];
 }
 
-/** Chuông cảnh báo ở header: số thiết bị đang Cảnh báo/Báo động theo LẦN ĐO MỚI NHẤT (không theo bộ lọc tab Cảnh báo).
+/** Chuông cảnh báo ở header: số thiết bị cần lưu ý/theo dõi (mức Cảnh báo/Báo động) theo LẦN ĐO MỚI NHẤT (không theo bộ lọc tab Cảnh báo).
  *  Gọi từ refreshAlertsUI() (ui-alerts.js) với toàn bộ cảnh báo. Đồng thời nhớ mức của từng thiết bị cho ô tìm nhanh. */
 function updateHeaderAlerts(allAlerts) {
   const current = (allAlerts || []).filter((a) => a.isLatest !== false && (a.level === "alarm" || a.level === "alert"));
@@ -85,7 +85,7 @@ function updateHeaderAlerts(allAlerts) {
   const badge = document.getElementById("headerAlertCount");
   const btn = document.getElementById("btnHeaderAlerts");
   if (!badge || !btn) return;
-  // Số trên chuông: CÙNG cách đếm với thẻ "Thiết bị đang có cảnh báo" ở tab Cảnh báo (alertLevelSummary(), theo
+  // Số trên chuông: CÙNG cách đếm với thẻ "Thiết bị cần lưu ý/theo dõi" ở tab Cảnh báo (alertLevelSummary(), theo
   // Trạm + Thiết bị + Pha, mỗi thiết bị 1 lần) — không lệch số giữa 2 nơi.
   const sum = typeof alertLevelSummary === "function" ? alertLevelSummary(current) : null;
   const n = sum ? sum.warnDevices : levels.size;
@@ -94,11 +94,11 @@ function updateHeaderAlerts(allAlerts) {
   badge.classList.toggle("hidden", n === 0);
   badge.classList.toggle("is-alert-only", n > 0 && nAlarm === 0);
   // Tên đọc = chữ hiển thị "Cảnh báo" (.hdr-label) + chi tiết chỉ cho trình đọc màn hình (#headerAlertSr).
-  const detail = n === 0 ? ": không có thiết bị nào đang cảnh báo" : `: ${n} thiết bị đang cảnh báo${nAlarm ? ` (${nAlarm} Báo động)` : ""}`;
+  const detail = n === 0 ? ": không có thiết bị nào cần lưu ý/theo dõi" : `: ${n} thiết bị cần lưu ý/theo dõi${nAlarm ? ` (${nAlarm} Báo động)` : ""}`;
   const sr = document.getElementById("headerAlertSr");
   if (sr) sr.textContent = detail;
   btn.title = "Cảnh báo" + detail;
-  btn.setAttribute("data-tooltip", n === 0 ? "Cảnh báo" : `${n} thiết bị cảnh báo`);
+  btn.setAttribute("data-tooltip", n === 0 ? "Cảnh báo" : `${n} thiết bị cần lưu ý`);
 }
 
 function qsEscape(s) {

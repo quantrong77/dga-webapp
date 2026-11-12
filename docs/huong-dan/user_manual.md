@@ -116,7 +116,7 @@ Giao diện được phân bố khoa học thành hai khu vực điều hướng
 
 - **Bên trái:** nút **☰** (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.
 - **Giữa — Tìm nhanh thiết bị:** gõ tên thiết bị hoặc tên trạm, **không cần gõ dấu** (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức **Báo động/Cảnh báo** nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi **Enter**) để mở **Lịch sử đo** của thiết bị đó; nút **Xu hướng** (hoặc **Shift+Enter**) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: **Ctrl+K** hoặc **/** để nhảy vào ô tìm, **Esc** để đóng.
-- **Bên phải:** máy chủ đang dùng, **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị đang Cảnh báo/Báo động theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
+- **Bên phải:** máy chủ đang dùng, **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
 
 **Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút **kính lúp** (mở ô tìm nhanh thiết bị) và nút **⋯**. Bấm **⋯** để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
 
@@ -454,8 +454,8 @@ Bảng kết quả gồm: giá trị trước, sau, chênh lệch (Δ), **tốc 
 
 Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị** (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức **Cảnh báo** hoặc **Báo động**. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.
 
-- **Thống kê nhanh:** tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số **thiết bị** mức Cảnh báo và số **thiết bị** mức Báo động. Mỗi thiết bị chỉ tính 1 lần ở **mức nặng nhất** của nó (VD khí hòa tan ở mức Cảnh báo nhưng dầu OLTC ở mức Báo động → tính vào Báo động), nên **Cảnh báo + Báo động = số thiết bị đang có cảnh báo**. Bảng bên dưới có thể nhiều dòng hơn số thiết bị vì mỗi nguồn dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) là 1 dòng; khi đó thẻ ghi thêm số dòng. Chuông trên thanh trên cùng và file Excel dùng cùng cách đếm này. Bấm thẻ **Thiết bị mức Cảnh báo** hoặc **Thiết bị mức Báo động** để chỉ xem các dòng ở mức đó (thẻ sáng lên); bấm lại để bỏ lọc.
-- **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.
+- **Thống kê nhanh:** tổng số thiết bị, số thiết bị **cần lưu ý/theo dõi** (= thiết bị ở mức Cảnh báo **hoặc** Báo động), số **thiết bị** mức Cảnh báo và số **thiết bị** mức Báo động. Mỗi thiết bị chỉ tính 1 lần ở **mức nặng nhất** của nó (VD khí hòa tan ở mức Cảnh báo nhưng dầu OLTC ở mức Báo động → tính vào Báo động), nên **Cảnh báo + Báo động = số thiết bị cần lưu ý/theo dõi**. Bảng bên dưới có thể nhiều dòng hơn số thiết bị vì mỗi nguồn dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) là 1 dòng; khi đó thẻ ghi thêm số dòng. Chuông trên thanh trên cùng và file Excel dùng cùng cách đếm này. Bấm thẻ **Thiết bị mức Cảnh báo** hoặc **Thiết bị mức Báo động** để chỉ xem các dòng ở mức đó (thẻ sáng lên); bấm lại để bỏ lọc.
+- **Lọc theo Trạm biến áp:** gõ hoặc chọn trạm (chỉ gợi ý các trạm có thiết bị cần lưu ý/theo dõi); để trống = tất cả.
 - Mỗi dòng cho biết: **thiết bị** (kèm trạm và loại đo), **mức cảnh báo** (kèm kết luận, dấu "Đã hiệu chỉnh" nếu số liệu từng bị sửa), **chỉ tiêu vượt ngưỡng**, **lần đo** (kèm ngày). Thiếu tên trạm/thiết bị thì ghi *(chưa ghi trạm)* / *(chưa ghi tên thiết bị)*.
 - Bấm **Chi tiết** ở cuối dòng để xem **Hạng mục cảnh báo** (lý do) và **Khuyến cáo** hành động; bấm **Thu gọn** để đóng. Trên điện thoại, mỗi cảnh báo hiện thành 1 thẻ.
 - **Xem xu hướng:** nhảy thẳng sang tab **Xu hướng**, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.
@@ -476,7 +476,7 @@ Tab này **tự rà soát lần đo/thí nghiệm gần nhất của từng thi�
 
 ### 12.1. Vẽ đồ thị
 
-Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Đang có cảnh báo** (chấm đỏ = Báo động, vàng = Cảnh báo) và **Vừa đo gần đây**. Bấm 1 thiết bị là đồ thị hiện ngay.
+Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: **Cần lưu ý/theo dõi** (chấm đỏ = Báo động, vàng = Cảnh báo) và **Vừa đo gần đây**. Bấm 1 thiết bị là đồ thị hiện ngay.
 
 1. (Tùy chọn) Chọn **Trạm biến áp** để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.
 2. Chọn **Thiết bị**.
