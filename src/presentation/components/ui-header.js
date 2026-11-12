@@ -74,7 +74,8 @@ function quickSearchSources() {
 /** Chuông cảnh báo ở header: số thiết bị đang Cảnh báo/Báo động theo LẦN ĐO MỚI NHẤT (không theo bộ lọc tab Cảnh báo).
  *  Gọi từ refreshAlertsUI() (ui-alerts.js) với toàn bộ cảnh báo. Đồng thời nhớ mức của từng thiết bị cho ô tìm nhanh. */
 function updateHeaderAlerts(allAlerts) {
-  const current = (allAlerts || []).filter((a) => a.isLatest !== false);
+  const current = (allAlerts || []).filter((a) => a.isLatest !== false && (a.level === "alarm" || a.level === "alert"));
+  // Mức cho ô tìm nhanh: theo Trạm + Thiết bị (gộp pha), lấy mức nặng nhất.
   const levels = new Map();
   current.forEach((a) => {
     const k = qsKey(a.tram, a.deviceName);
@@ -84,8 +85,11 @@ function updateHeaderAlerts(allAlerts) {
   const badge = document.getElementById("headerAlertCount");
   const btn = document.getElementById("btnHeaderAlerts");
   if (!badge || !btn) return;
-  const nAlarm = Array.from(levels.values()).filter((l) => l === "alarm").length;
-  const n = levels.size;
+  // Số trên chuông: CÙNG cách đếm với thẻ "Thiết bị đang có cảnh báo" ở tab Cảnh báo (alertLevelSummary(), theo
+  // Trạm + Thiết bị + Pha, mỗi thiết bị 1 lần) — không lệch số giữa 2 nơi.
+  const sum = typeof alertLevelSummary === "function" ? alertLevelSummary(current) : null;
+  const n = sum ? sum.warnDevices : levels.size;
+  const nAlarm = sum ? sum.alarmDevices : Array.from(levels.values()).filter((l) => l === "alarm").length;
   badge.textContent = n > 99 ? "99+" : String(n);
   badge.classList.toggle("hidden", n === 0);
   badge.classList.toggle("is-alert-only", n > 0 && nAlarm === 0);

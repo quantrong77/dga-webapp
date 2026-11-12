@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v94-header-search") {
+          if (k !== "dga-offline-v97-alert-kpi") {
             caches.delete(k);
           }
         });
@@ -1191,9 +1191,9 @@
 
         <div class="stat-row" id="alertsStatRow">
           <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Thiết bị đang theo dõi</div><div class="value" id="al_totalDevices">—</div></div>
-          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị đang có cảnh báo</div><div class="value" id="al_warnDevices">—</div></div>
-          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alert" aria-pressed="false" title="Bấm để chỉ xem mức Cảnh báo (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div></button>
-          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alarm" aria-pressed="false" title="Bấm để chỉ xem mức Báo động (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div></button>
+          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị đang có cảnh báo</div><div class="value" id="al_warnDevices">—</div><div class="stat-sub" id="al_warnDevicesSub"></div></div>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alert" aria-pressed="false" title="Bấm để chỉ xem mức Cảnh báo (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div><div class="stat-sub" id="al_alertRowsSub"></div></button>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alarm" aria-pressed="false" title="Bấm để chỉ xem mức Báo động (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Thiết bị mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div><div class="stat-sub" id="al_alarmRowsSub"></div></button>
         </div>
 
         <div class="table-scroll"><table>
@@ -3751,7 +3751,7 @@
           <div class="sm-body">
           <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.</p>
           <ul class="rec-list">
-          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động. Bấm thẻ <strong>Mức Cảnh báo</strong> hoặc <strong>Mức Báo động</strong> để chỉ xem mức đó (thẻ sáng lên); bấm lại để bỏ lọc.</li>
+          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số <strong>thiết bị</strong> mức Cảnh báo và số <strong>thiết bị</strong> mức Báo động. Mỗi thiết bị chỉ tính 1 lần ở <strong>mức nặng nhất</strong> của nó (VD khí hòa tan ở mức Cảnh báo nhưng dầu OLTC ở mức Báo động → tính vào Báo động), nên <strong>Cảnh báo + Báo động = số thiết bị đang có cảnh báo</strong>. Bảng bên dưới có thể nhiều dòng hơn số thiết bị vì mỗi nguồn dữ liệu (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU) là 1 dòng; khi đó thẻ ghi thêm số dòng. Chuông trên thanh trên cùng và file Excel dùng cùng cách đếm này. Bấm thẻ <strong>Thiết bị mức Cảnh báo</strong> hoặc <strong>Thiết bị mức Báo động</strong> để chỉ xem các dòng ở mức đó (thẻ sáng lên); bấm lại để bỏ lọc.</li>
           <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.</li>
           <li>Mỗi dòng cho biết: <strong>thiết bị</strong> (kèm trạm và loại đo), <strong>mức cảnh báo</strong> (kèm kết luận, dấu "Đã hiệu chỉnh" nếu số liệu từng bị sửa), <strong>chỉ tiêu vượt ngưỡng</strong>, <strong>lần đo</strong> (kèm ngày). Thiếu tên trạm/thiết bị thì ghi <em>(chưa ghi trạm)</em> / <em>(chưa ghi tên thiết bị)</em>.</li>
           <li>Bấm <strong>Chi tiết</strong> ở cuối dòng để xem <strong>Hạng mục cảnh báo</strong> (lý do) và <strong>Khuyến cáo</strong> hành động; bấm <strong>Thu gọn</strong> để đóng. Trên điện thoại, mỗi cảnh báo hiện thành 1 thẻ.</li>
