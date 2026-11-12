@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v98-can-luu-y") {
+          if (k !== "dga-offline-v99-lichsu-thu-tu-loc") {
             caches.delete(k);
           }
         });
@@ -917,7 +917,7 @@
     <section id="tab-lichsu" class="tab-panel hidden">
       <div class="panel">
         <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</h2>
-        <!-- BỘ LỌC CHUNG (lọc 1 lần cho cả "Khí hòa tan" và "Dầu"): Trạm, Thiết bị, Loại thiết bị, khoảng ngày lấy mẫu.
+        <!-- BỘ LỌC CHUNG (lọc 1 lần cho cả "Khí hòa tan" và "Dầu"), trái → phải: Loại thiết bị → Trạm → Thiết bị → khoảng ngày.
              Chuyển qua lại 2 bảng vẫn giữ nguyên bộ lọc; 2 nút chọn bảng bên dưới hiện số bản ghi khớp lọc của từng bảng.
              "Loại thiết bị" dùng CHUNG 1 danh sách (trước đây ở view "Dầu" ô này đổi thành "nguồn dầu" và bị đặt lại
              "Tất cả" mỗi lần chuyển bảng); ở bảng Dầu tự quy đổi: MBA/Kháng dầu → bảng dầu MBA chính + OLTC; TI/TU/Sứ
@@ -925,6 +925,18 @@
              bị gợi ý từ dữ liệu của CẢ 2 bảng (đúng Loại thiết bị đang chọn), không phụ thuộc bảng đang xem. -->
         <fieldset class="lichsu-filters" aria-describedby="lichsuFilterSummary">
           <legend class="lichsu-filters-legend">Bộ lọc chung — áp dụng cho cả Khí hòa tan và Dầu</legend>
+          <label class="lichsu-filter">
+            <span>Loại thiết bị</span>
+            <select id="historyEquipmentFilter">
+              <option value="">Tất cả loại thiết bị</option>
+              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
+              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
+              <option value="Khác">Khác</option>
+              <option value="__none__">(Chưa ghi loại thiết bị)</option>
+            </select>
+          </label>
           <div class="lichsu-filter">
             <label for="lichsu_station">Trạm biến áp</label>
             <div class="combo-wrap">
@@ -941,18 +953,6 @@
               <div id="lichsu_device_list" class="combo-list hidden"></div>
             </div>
           </div>
-          <label class="lichsu-filter">
-            <span>Loại thiết bị</span>
-            <select id="historyEquipmentFilter">
-              <option value="">Tất cả loại thiết bị</option>
-              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
-              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
-              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
-              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
-              <option value="Khác">Khác</option>
-              <option value="__none__">(Chưa ghi loại thiết bị)</option>
-            </select>
-          </label>
           <label class="lichsu-filter lichsu-filter-date">
             <span>Từ ngày</span>
             <input id="lichsu_from" type="date" />
@@ -3713,9 +3713,10 @@
           <div class="sm-body">
           <h3>10.1. Chọn nội dung xem</h3>
           <p><strong>Bộ lọc chung</strong> ở đầu tab lọc <strong>một lần cho cả 2 bảng</strong> Khí hòa tan và Dầu:</p>
+          <p>Các ô lọc xếp từ trái qua phải theo thứ tự chọn: <strong>Loại thiết bị → Trạm biến áp → Thiết bị → Từ ngày / Đến ngày</strong>.</p>
           <ul class="rec-list">
-          <li><strong>Trạm biến áp</strong>, <strong>Thiết bị</strong>: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu.</li>
           <li><strong>Loại thiết bị</strong>: MBA/Kháng dầu, TI, TU, Sứ xuyên, Khác, hoặc <strong>(Chưa ghi loại thiết bị)</strong> cho các bản ghi cũ chưa ghi loại. Ở bảng Dầu: chọn MBA/Kháng dầu thì hiện bảng dầu MBA chính + dầu OLTC; chọn TI/TU/Sứ xuyên thì hiện bảng dầu TI/TU/Sứ xuyên đúng loại đó.</li>
+          <li><strong>Trạm biến áp</strong>, <strong>Thiết bị</strong>: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu, chỉ gồm trạm/thiết bị thuộc <strong>Loại thiết bị</strong> đã chọn; ô Thiết bị chỉ gợi ý thiết bị của trạm đã chọn.</li>
           <li><strong>Từ ngày / Đến ngày</strong>: khoảng ngày lấy mẫu (để trống 1 đầu = không giới hạn đầu đó).</li>
           <li><strong>Xóa lọc</strong>: bỏ toàn bộ điều kiện lọc.</li>
           </ul>

@@ -413,8 +413,10 @@ Thí nghiệm dầu sứ xuyên nhập ở khối **TI / TU / Sứ xuyên** (m�
 
 **Bộ lọc chung** ở đầu tab lọc **một lần cho cả 2 bảng** Khí hòa tan và Dầu:
 
-- **Trạm biến áp**, **Thiết bị**: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu.
+Các ô lọc xếp từ trái qua phải theo thứ tự chọn: **Loại thiết bị → Trạm biến áp → Thiết bị → Từ ngày / Đến ngày**.
+
 - **Loại thiết bị**: MBA/Kháng dầu, TI, TU, Sứ xuyên, Khác, hoặc **(Chưa ghi loại thiết bị)** cho các bản ghi cũ chưa ghi loại. Ở bảng Dầu: chọn MBA/Kháng dầu thì hiện bảng dầu MBA chính + dầu OLTC; chọn TI/TU/Sứ xuyên thì hiện bảng dầu TI/TU/Sứ xuyên đúng loại đó.
+- **Trạm biến áp**, **Thiết bị**: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu, chỉ gồm trạm/thiết bị thuộc **Loại thiết bị** đã chọn; ô Thiết bị chỉ gợi ý thiết bị của trạm đã chọn.
 - **Từ ngày / Đến ngày**: khoảng ngày lấy mẫu (để trống 1 đầu = không giới hạn đầu đó).
 - **Xóa lọc**: bỏ toàn bộ điều kiện lọc.
 

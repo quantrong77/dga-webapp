@@ -236,9 +236,10 @@ function updateLichSuCounts() {
   const f = lichsuFilterValues();
   const eq = lichsuEquipFilter();
   const parts = [];
+  // Cùng thứ tự với các ô lọc (trái → phải): Loại thiết bị → Trạm → Thiết bị → khoảng ngày.
+  if (eq) parts.push(eq === LICHSU_NO_TYPE ? "chưa ghi loại thiết bị" : eq);
   if (f.station) parts.push(f.station);
   if (f.device) parts.push(f.device);
-  if (eq) parts.push(eq === LICHSU_NO_TYPE ? "chưa ghi loại thiết bị" : eq);
   if (f.from || f.to) parts.push(`${f.from ? fmtDateVN(f.from) : "…"} → ${f.to ? fmtDateVN(f.to) : "…"}`);
   const active = parts.length > 0;
   $("lichsuFilterSummary").textContent = active ? "Đang lọc: " + parts.join(" · ") : "";

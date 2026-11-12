@@ -112,3 +112,40 @@ describe('"(Chưa ghi loại thiết bị)" — bản ghi cũ không có equipme
     expect(el("lichsuFilterSummary").textContent).toBe("Đang lọc: chưa ghi loại thiết bị");
   });
 });
+
+describe("Thứ tự ô lọc chung (trái → phải): Loại thiết bị → Trạm → Thiết bị → Từ ngày → Đến ngày", () => {
+  test("index.html", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+    const box = html.slice(html.indexOf('<fieldset class="lichsu-filters"'), html.indexOf("</fieldset>", html.indexOf('<fieldset class="lichsu-filters"')));
+    const order = ['id="historyEquipmentFilter"', 'id="lichsu_station"', 'id="lichsu_device"', 'id="lichsu_from"', 'id="lichsu_to"'].map((m) => box.indexOf(m));
+    expect(order.every((i) => i > 0)).toBe(true);
+    expect(order).toEqual([...order].sort((a, b) => a - b));
+  });
+  test('dòng "Đang lọc" liệt kê cùng thứ tự', () => {
+    const { ctx, el } = load();
+    vm.runInContext("_allMeasurements = []; _allOilTests = []; _allOltcOilTests = [];", ctx);
+    el("historyEquipmentFilter").value = "MBA/Kháng dầu";
+    el("lichsu_station").value = "T1";
+    el("lichsu_device").value = "AT1";
+    ctx.updateLichSuCounts();
+    expect(el("lichsuFilterSummary").textContent).toBe("Đang lọc: MBA/Kháng dầu · T1 · AT1");
+  });
+});
+
+describe("Cấu trúc khung lọc chung", () => {
+  test("mỗi ô lọc là con TRỰC TIẾP của <fieldset> (không lồng nhau)", () => {
+    const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+    const a = html.indexOf('<fieldset class="lichsu-filters"');
+    const box = html.slice(html.indexOf(">", a) + 1, html.indexOf("</fieldset>", a));
+    // Đi qua các thẻ div/label, ghi lại độ sâu lúc mở mỗi phần tử class "lichsu-filter".
+    const depths = [];
+    let depth = 0;
+    for (const m of box.matchAll(/<(\/?)(div|label)\b([^>]*)>/g)) {
+      if (m[1]) { depth--; continue; }
+      if (/class="lichsu-filter[\s"]/.test(m[3])) depths.push(depth);
+      depth++;
+    }
+    expect(depth).toBe(0);
+    expect(depths).toEqual([0, 0, 0, 0, 0]);
+  });
+});
