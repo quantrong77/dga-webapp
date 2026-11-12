@@ -4,6 +4,11 @@
    tab "Quy trình đánh giá" — 2 tab này xen kẽ nhau trong file gốc nên gộp chung 1 file
    để KHÔNG thay đổi thứ tự cascade), và tab "Giới thiệu" (About). */
 
+/* Bảng Lịch sử đo (nhiều cột): đệm ngang ô gọn hơn (12px → 8px mỗi bên) — bảng khí hòa tan 21 cột hẹp lại ~170px,
+   màn hình 1440px gần như không còn phải cuộn ngang. */
+#tab-lichsu .table-scroll :is(th, td) { padding-left: var(--space-2); padding-right: var(--space-2); }
+
+
 /* ===================== Tab "Quy trình đánh giá" ===================== */
 .process-flow {
   position: relative;
