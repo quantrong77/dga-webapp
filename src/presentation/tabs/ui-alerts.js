@@ -724,6 +724,8 @@ function goToTrendForDevice(tram, thietBi, exceededKeys, phase) {
   const deviceSel = $("tr_device");
   if (stationSel) stationSel.value = tram || "";
   if (deviceSel) deviceSel.value = thietBi || "";
+  // Nhớ làm ngữ cảnh xem chung (ui-view-context.js): sang Lịch sử đo / Cảnh báo vẫn đúng thiết bị này.
+  if (typeof setViewContext === "function") setViewContext(tram, thietBi);
   // Tự TICK sẵn đúng (các) thông số đã khiến thiết bị này bị liệt vào danh sách Cảnh
   // báo (vd "gas:H2", "oil:moisture" — xem exceededKeys ở computeGasAlerts()/
   // computeOilAlerts()/computeOltcOilAlerts() trên) — _trendSelectedParams (ui-trend.js)

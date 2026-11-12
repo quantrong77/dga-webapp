@@ -72,6 +72,7 @@ async function initApp() {
   setupStationDeviceCombos();
   bindInputFormEvents();
   bindHistoryTrendAlertEvents();
+  if (typeof setupViewContext === "function") setupViewContext();
   enhanceAllDropzonesA11y();
   toggleMbaSubtypeField();
   toggleStandardTypeFields();

@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v74-ui-header";
+const CACHE_NAME = "dga-offline-v75-ui-view-context";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -74,6 +74,7 @@ const PRECACHE_ASSETS = [
   "./src/presentation/components/ui-location-picker.js",
   "./src/presentation/components/ui-dropzone.js",
   "./src/presentation/components/ui-layout.js",
+  "./src/presentation/components/ui-view-context.js",
   "./src/presentation/components/ui-busy.js",
   "./src/presentation/components/ui-theme.js",
   "./src/presentation/tabs/ui-guides.js",
