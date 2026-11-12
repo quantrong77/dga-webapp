@@ -23,6 +23,7 @@ function renderThemeButton() {
   btn.title = label;
   btn.setAttribute("aria-label", label);
   btn.setAttribute("data-tooltip", toDark ? "Giao diện tối" : "Giao diện sáng");
+  if ($("themeLabel")) $("themeLabel").textContent = toDark ? "Giao diện tối" : "Giao diện sáng";
   $("themeIconUse").setAttribute("href", toDark ? "#icon-moon" : "#icon-sun");
 }
 

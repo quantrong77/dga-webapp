@@ -52,6 +52,40 @@ function setupSidebarCollapseToggle() {
   });
 }
 
+/** Menu "⋯" của header trên điện thoại (≤ 800px): mở/đóng #headerMenu (.header-tools). Đóng khi bấm ra ngoài, bấm 1 mục,
+ *  nhấn Esc, hoặc khi màn hình rộng ra (máy tính hiện thẳng các nút trên header, xem style-base.css). */
+function setupHeaderMenu() {
+  const btn = document.getElementById("btnHeaderMenu");
+  const menu = document.getElementById("headerMenu");
+  if (!btn || !menu) return;
+  const setOpen = (open) => {
+    menu.classList.toggle("open", open);
+    btn.setAttribute("aria-expanded", open ? "true" : "false");
+    btn.setAttribute("aria-label", open ? "Đóng menu" : "Mở menu");
+  };
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setOpen(!menu.classList.contains("open"));
+  });
+  menu.addEventListener("click", (e) => {
+    if (e.target.closest("button")) setOpen(false);
+  });
+  document.addEventListener("click", (e) => {
+    if (menu.classList.contains("open") && !menu.contains(e.target)) setOpen(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menu.classList.contains("open")) {
+      setOpen(false);
+      btn.focus();
+    }
+  });
+  if (window.matchMedia) {
+    const mq = window.matchMedia("(min-width: 801px)");
+    const onChange = () => { if (mq.matches) setOpen(false); };
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+  }
+}
+
 function setupStickyHeaderObserver() {
   const header = document.querySelector("header.app-header");
   if (!header || !document.documentElement) return;
@@ -71,6 +105,87 @@ function setupStickyHeaderObserver() {
   } else if (typeof window !== "undefined") {
     window.addEventListener("resize", updateHeight);
   }
+}
+
+/** Thanh cuộn ngang PHÍA TRÊN bảng (mọi .table-scroll trong <main>). Bảng nhiều cột (VD Lịch sử đo khí hòa tan:
+ *  21 cột, ~1560px) rộng hơn khung → trước đây chỉ có thanh cuộn ở ĐÁY bảng, bảng dài phải kéo xuống cuối mới cuộn
+ *  ngang được. Thanh trên đồng bộ 2 chiều với thanh dưới, DÍNH ngay dưới header + thanh tab khi cuộn trang
+ *  (--sticky-top), chỉ hiện khi bảng thực sự bị khuất. Bề rộng bảng đổi (đổi bộ lọc, nạp dữ liệu, đổi cỡ cửa
+ *  sổ, mở/thu sidebar) → ResizeObserver cập nhật lại. */
+function attachTopScrollbar(sc) {
+  if (!sc || sc.dataset.topScroll) return;
+  sc.dataset.topScroll = "1";
+  const bar = document.createElement("div");
+  bar.className = "table-scroll-top hidden";
+  bar.setAttribute("aria-hidden", "true"); // thanh phụ cho chuột; bàn phím/trình đọc dùng chính khung bảng
+  bar.tabIndex = -1;
+  const inner = document.createElement("div");
+  bar.appendChild(inner);
+  sc.parentNode.insertBefore(bar, sc);
+  let syncing = null;
+  bar.addEventListener("scroll", () => {
+    if (syncing === "sc") { syncing = null; return; }
+    syncing = "bar";
+    sc.scrollLeft = bar.scrollLeft;
+  }, { passive: true });
+  sc.addEventListener("scroll", () => {
+    if (syncing === "bar") { syncing = null; return; }
+    syncing = "sc";
+    bar.scrollLeft = sc.scrollLeft;
+  }, { passive: true });
+  const update = () => {
+    const overflow = sc.scrollWidth - sc.clientWidth > 1 && sc.clientWidth > 0;
+    bar.classList.toggle("hidden", !overflow);
+    if (!overflow) return;
+    inner.style.width = sc.scrollWidth + "px";
+    bar.scrollLeft = sc.scrollLeft;
+  };
+  if (typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(update);
+    ro.observe(sc);
+    if (sc.firstElementChild) ro.observe(sc.firstElementChild);
+  } else {
+    window.addEventListener("resize", update);
+  }
+  update();
+}
+
+function setupTopScrollbars() {
+  document.querySelectorAll("main .table-scroll").forEach(attachTopScrollbar);
+  // Độ cao phần dính ở đỉnh trang (header + thanh tab ngang) — chỗ thanh cuộn trên bảng dính vào khi cuộn trang.
+  // Bố cục sidebar (màn hình > 800px): thanh tab nằm bên trái, không chiếm chiều cao phía trên.
+  const nav = document.querySelector("nav.tabs");
+  const updateTop = () => {
+    const sidebar = document.body.classList.contains("tabs-sidebar") && window.innerWidth > 800;
+    const h = nav && !sidebar ? Math.round(nav.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--tabs-height", h + "px");
+  };
+  updateTop();
+  if (nav && typeof ResizeObserver !== "undefined") new ResizeObserver(updateTop).observe(nav);
+  window.addEventListener("resize", updateTop);
+  new MutationObserver(updateTop).observe(document.body, { attributes: true, attributeFilter: ["class"] });
+}
+
+/** Nút "Về đầu trang" (#btnBackToTop) — hiện khi đã cuộn xuống quá ~1,5 màn hình (bảng Lịch sử đo nhiều dòng...),
+ *  bấm thì cuộn lên đầu và đưa focus về nội dung chính (người dùng bàn phím không bị kẹt ở cuối trang). */
+function setupBackToTop() {
+  const btn = document.getElementById("btnBackToTop");
+  if (!btn) return;
+  let ticking = false;
+  const update = () => {
+    ticking = false;
+    btn.classList.toggle("hidden", window.scrollY < Math.max(600, window.innerHeight * 1.5));
+  };
+  window.addEventListener("scroll", () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  btn.addEventListener("click", () => {
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+    const main = document.getElementById("mainContent");
+    if (main) main.focus({ preventScroll: true });
+  });
+  update();
 }
 
 function setupTabs() {
@@ -181,6 +296,88 @@ function setupTabAriaSync() {
   document.addEventListener("click", (e) => {
     if (e.target && e.target.closest && e.target.closest('.tab-btn, [role="tab"]')) syncTabAria();
   });
+}
+
+/** Focus trong hộp thoại (Bước 5) — áp dụng chung cho mọi .mini-modal-overlay và .lightbox, không cần sửa từng hộp:
+ *  - mở hộp: nhớ phần tử đang focus, đưa focus vào ô nhập/nút đầu tiên trong hộp (trừ khi code mở hộp đã tự focus);
+ *  - Tab / Shift+Tab chỉ chạy vòng trong hộp, không lọt ra trang phía sau;
+ *  - đóng hộp: trả focus về nút đã mở hộp. */
+const DIALOG_FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+function dialogFocusables(overlay) {
+  return Array.from(overlay.querySelectorAll(DIALOG_FOCUSABLE)).filter((el) => el.getClientRects().length > 0);
+}
+
+function setupDialogFocus() {
+  const overlays = Array.from(document.querySelectorAll(".mini-modal-overlay, .lightbox"));
+  const returnTo = new Map();
+  const isOpen = (o) => !o.classList.contains("hidden");
+  const onChange = (o) => {
+    if (isOpen(o)) {
+      if (returnTo.has(o)) return;
+      returnTo.set(o, document.activeElement);
+      // Chờ code mở hộp chạy xong (có thể tự focus 1 ô cụ thể, VD Đổi mật khẩu → "Mật khẩu hiện tại").
+      setTimeout(() => {
+        if (!isOpen(o) || o.contains(document.activeElement)) return;
+        const items = dialogFocusables(o);
+        const first = items.find((el) => !el.classList.contains("mini-modal-close") && !el.classList.contains("lightbox-close")) || items[0];
+        if (first) first.focus();
+      }, 0);
+    } else if (returnTo.has(o)) {
+      const prev = returnTo.get(o);
+      returnTo.delete(o);
+      if (prev && prev.isConnected && prev.getClientRects().length && typeof prev.focus === "function") prev.focus();
+    }
+  };
+  const mo = new MutationObserver((list) => list.forEach((m) => onChange(m.target)));
+  overlays.forEach((o) => mo.observe(o, { attributes: true, attributeFilter: ["class"] }));
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const open = overlays.filter(isOpen);
+    const o = open[open.length - 1];
+    if (!o) return;
+    const items = dialogFocusables(o);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (!o.contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+    else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+/** Nút "Xóa form" (Bước 5): form đang có số liệu thì hỏi lại trước khi xóa trắng (trước đây bấm nhầm là mất hết số liệu
+ *  chưa lưu). Chạy ở pha capture → chặn được handler xóa form gắn sẵn trên nút. Form trống thì xóa luôn, không hỏi. */
+const CLEAR_FORM_BUTTONS = {
+  btnClearForm: "#dgaInputSplitLayout",
+  btnClearOilForm: "#oSplitLayout",
+  btnClearOltcOilForm: "#oltcFormPanel",
+  btnT3Clear: "#tio3Panel",
+  btnClearTioOilForm: null, // form TI/TU 1 pha không có id riêng → dùng .panel chứa nút
+};
+
+function formHasUserData(root) {
+  if (!root) return false;
+  return Array.from(root.querySelectorAll("input, textarea")).some((el) => {
+    if (el.disabled || el.readOnly) return false;
+    if (el.type === "file") return el.files && el.files.length > 0;
+    if (el.type === "checkbox" || el.type === "radio" || el.type === "button" || el.type === "submit") return false;
+    return el.value.trim() !== "";
+  });
+}
+
+function setupClearFormConfirm() {
+  // Gắn ở document, pha capture → luôn chạy TRƯỚC handler xóa form gắn trên chính nút (mọi trình duyệt).
+  document.addEventListener("click", (e) => {
+    const btn = e.target && e.target.closest && e.target.closest(Object.keys(CLEAR_FORM_BUTTONS).map((id) => "#" + id).join(","));
+    if (!btn) return;
+    const sel = CLEAR_FORM_BUTTONS[btn.id];
+    const root = (sel && document.querySelector(sel)) || btn.closest(".panel");
+    if (formHasUserData(root) && !confirm("Xóa trắng toàn bộ ô đã nhập ở form?\n\nSố liệu CHƯA LƯU sẽ mất.")) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
+  }, true);
 }
 
 /** Phím Esc đóng hộp thoại nhỏ (.mini-modal-overlay: đổi mật khẩu, mật khẩu tạm) — bằng chính nút "×" của hộp,

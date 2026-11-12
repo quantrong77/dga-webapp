@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#00189e" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0a0c3d" media="(prefers-color-scheme: dark)" />
   <!-- Content Security Policy — lớp phòng thủ thứ 2 chống XSS (lớp 1 là escapeHtml() khi hiển
        thị dữ liệu): KHÔNG cho chạy script inline/thuộc tính onxxx=, chỉ nạp script từ chính
        site + 3 CDN/Google đã khai báo. Thêm thư viện/CDN/backend mới thì PHẢI bổ sung vào đây,
@@ -21,6 +23,7 @@
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
   <title>Đánh giá Dầu cách điện — QĐ1901/EVNNPT</title>
+  <meta name="description" content="Công cụ nhập, đánh giá và theo dõi xu hướng khí hòa tan (DGA) và chỉ tiêu lý-hóa dầu cách điện máy biến áp, TI/TU theo QĐ1901/EVNNPT." />
   <!-- Icon ứng dụng (DGAOil): bình tam giác dầu cam + máy biến áp + biểu đồ xu hướng -->
   <link rel="icon" type="image/png" sizes="32x32" href="assets/image/favicon-32.png" />
   <link rel="icon" type="image/png" sizes="16x16" href="assets/image/favicon-16.png" />
@@ -30,6 +33,9 @@
        NGUYÊN thứ tự các đoạn như file gốc (chỉ cắt, không đảo) nên thứ tự cascade CSS
        không đổi. tokens.css chứa các biến :root (--blue-900, --radius...) dùng
        chung nên phải nạp ĐẦU TIÊN. -->
+  <link rel="preload" href="assets/fonts/be-vietnam-pro-vietnamese-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/be-vietnam-pro-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="src/presentation/styles/fonts.css" />
   <link rel="stylesheet" href="src/presentation/styles/tokens.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-base.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-auth.css" />
@@ -37,10 +43,12 @@
   <link rel="stylesheet" href="src/presentation/styles/style-components.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tab-feedback.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tab-tables.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-tab-alerts.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tabs-secondary.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-tab-regulation-config.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-dieu54-charts.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-dga-workflow.css" />
+  <link rel="stylesheet" href="src/presentation/styles/style-utilities.css" />
   <!-- Chống "trang trắng" khi mở trong Zalo/trình duyệt nhúng: nhắc mở bằng trình duyệt + báo lỗi
        khởi động thay cho trang trắng. Nạp ĐẦU TIÊN (trước mọi thư viện) để bắt cả lỗi của chúng. -->
   <script src="src/presentation/boot-guard.js"></script>
@@ -63,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v71-gop-main-zalo-tai-trang") {
+          if (k !== "dga-offline-v91-lichsu-filters") {
             caches.delete(k);
           }
         });
@@ -72,10 +80,12 @@
   </script>
 </head>
 <body>
+  <!-- Bước 5: người dùng bàn phím/trình đọc màn hình bỏ qua header + 10 tab, nhảy thẳng vào nội dung tab đang mở. -->
+  <a class="skip-link" href="#mainContent">Bỏ qua tới nội dung chính</a>
   <script src="src/presentation/early-layout.js"></script>
   <!-- Bộ icon SVG dùng chung toàn ứng dụng (tab, trạng thái, cẩm nang...) — 1 sprite
        ẩn, tham chiếu bằng <use href="#icon-..."> để không lặp lại mã SVG nhiều nơi. -->
-  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute; width:0; height:0; overflow:hidden;" aria-hidden="true">
+  <svg class="u-pos-absolute u-w-0 u-h-0 u-ov-hidden" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     <defs>
       <symbol id="icon-flask" viewBox="0 0 24 24"><path d="M9 2h6M10 2v6.2L4.6 17a2 2 0 0 0 1.7 3h11.4a2 2 0 0 0 1.7-3L14 8.2V2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.3 14h9.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-droplet" viewBox="0 0 24 24"><path d="M12 2.5S5 10.3 5 15a7 7 0 0 0 14 0c0-4.7-7-12.5-7-12.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -96,6 +106,7 @@
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4.5c2.5-1.2 5.5-1.2 8 0v15c-2.5-1.2-5.5-1.2-8 0v-15zM20 4.5c-2.5-1.2-5.5-1.2-8 0v15c2.5-1.2 5.5-1.2 8 0v-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.3 15.3L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 8v5M8 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-chevron-right" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sitemap" viewBox="0 0 24 24"><circle cx="4.5" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="12" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="16" cy="19" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6.8 12H10M10 12V5h3.7M10 12h3.7M10 12v7h3.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 11v6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="7.5" r="1.1" fill="currentColor" stroke="none"/></symbol>
@@ -127,6 +138,7 @@
       <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3 7 7M17 17l1.7 1.7M5.3 18.7 7 17M17 7l1.7-1.7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-external-link" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="icon-more" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="19" cy="12" r="1.8" fill="currentColor"/></symbol>
       <symbol id="icon-gear-loader" viewBox="6 10 100 92">
         <g class="gear-loader-big"><path fill="var(--gear-gray)" d="M 80.16 61.85 L 86.57 60.80 L 86.57 71.20 L 80.16 70.15 L 79.62 72.65 L 78.83 75.09 L 77.79 77.43 L 83.60 80.35 L 77.48 88.77 L 72.92 84.14 L 71.01 85.85 L 68.93 87.36 L 66.72 88.65 L 69.71 94.42 L 59.81 97.64 L 58.83 91.21 L 56.28 91.47 L 53.72 91.47 L 51.17 91.21 L 50.19 97.64 L 40.29 94.42 L 43.28 88.65 L 41.07 87.36 L 38.99 85.85 L 37.08 84.14 L 32.52 88.77 L 26.40 80.35 L 32.21 77.43 L 31.17 75.09 L 30.38 72.65 L 29.84 70.15 L 23.43 71.20 L 23.43 60.80 L 29.84 61.85 L 30.38 59.35 L 31.17 56.91 L 32.21 54.57 L 26.40 51.65 L 32.52 43.23 L 37.08 47.86 L 38.99 46.15 L 41.07 44.64 L 43.28 43.35 L 40.29 37.58 L 50.19 34.36 L 51.17 40.79 L 53.72 40.53 L 56.28 40.53 L 58.83 40.79 L 59.81 34.36 L 69.71 37.58 L 66.72 43.35 L 68.93 44.64 L 71.01 46.15 L 72.92 47.86 L 77.48 43.23 L 83.60 51.65 L 77.79 54.57 L 78.83 56.91 L 79.62 59.35 Z"/></g>
         <g class="gear-loader-blue"><path fill="var(--blue-700)" d="M 43.69 29.96 L 47.61 29.15 L 47.61 36.85 L 43.69 36.04 L 42.86 38.74 L 41.54 41.24 L 44.88 43.43 L 39.43 48.88 L 37.24 45.54 L 34.74 46.86 L 32.04 47.69 L 32.85 51.61 L 25.15 51.61 L 25.96 47.69 L 23.26 46.86 L 20.76 45.54 L 18.57 48.88 L 13.12 43.43 L 16.46 41.24 L 15.14 38.74 L 14.31 36.04 L 10.39 36.85 L 10.39 29.15 L 14.31 29.96 L 15.14 27.26 L 16.46 24.76 L 13.12 22.57 L 18.57 17.12 L 20.76 20.46 L 23.26 19.14 L 25.96 18.31 L 25.15 14.39 L 32.85 14.39 L 32.04 18.31 L 34.74 19.14 L 37.24 20.46 L 39.43 17.12 L 44.88 22.57 L 41.54 24.76 L 42.86 27.26 Z"/></g>
@@ -156,12 +168,12 @@
       </div>
 
       <div id="authLoginForm">
-        <div id="authServerStatusBadge" class="hidden" style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#1e40af; text-align:left; line-height:1.4;">
-          <div style="font-weight:600; display:flex; align-items:center; gap:6px;">
-            <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#10b981;"></span>
+        <div id="authServerStatusBadge" class="hidden server-status-box">
+          <div class="server-status-title">
+            <span class="server-status-dot" aria-hidden="true"></span>
             Máy chủ CSDL Nội bộ (On-Premise Localhost)
           </div>
-          <div style="margin-top:4px; color:#475569; font-size:11px;">
+          <div class="server-status-sub">
             Tài khoản Admin mặc định: <b>admin@ptc3.evnnpt.vn</b> | Mật khẩu: <b>admin123456</b>
           </div>
         </div>
@@ -171,7 +183,7 @@
         <label class="field">Mật khẩu
           <input id="auth_login_password" type="password" placeholder="••••••••" autocomplete="current-password" />
         </label>
-        <button id="btnAuthLogin" class="btn primary" style="width:100%; margin-top:6px;">Đăng nhập</button>
+        <button id="btnAuthLogin" class="btn primary u-w-100pct u-mt-6px">Đăng nhập</button>
         <p class="auth-error hidden" id="authLoginError"></p>
         <!-- Link "Đăng ký" tự ẩn nếu server báo REGISTRATION_MODE="closed" (xem
              applyRegistrationInfo() ở ui-auth.js, gọi Storage.registrationInfo() lúc mở màn
@@ -189,7 +201,7 @@
         <label class="field">Mật khẩu (tối thiểu 6 ký tự)
           <input id="auth_register_password" type="password" placeholder="••••••••" autocomplete="new-password" />
         </label>
-        <button id="btnAuthRegister" class="btn primary" style="width:100%; margin-top:6px;">Đăng ký</button>
+        <button id="btnAuthRegister" class="btn primary u-w-100pct u-mt-6px">Đăng ký</button>
         <p class="auth-error hidden" id="authRegisterError"></p>
         <p class="auth-switch">Đã có tài khoản? <a href="#" id="linkShowLogin">Đăng nhập</a></p>
       </div>
@@ -198,10 +210,20 @@
 
   <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <!-- Chỉ báo xoay khi đang lưu/xóa/tải dữ liệu — xem src/presentation/components/ui-busy.js. -->
-  <div id="busyIndicator" class="busy-indicator hidden" role="status" aria-live="polite">
-    <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg>
-    <span id="busyIndicatorText">Đang lưu...</span>
+  <!-- Chỉ báo tải: vòng xoay hiện % ở GIỮA header theo chiều đứng (điện thoại: cạnh nút ⋯) — xem
+       src/presentation/components/ui-busy.js. Nhãn chữ ("Đang lưu..."/"Đang cập nhật dữ liệu...") chỉ dành cho trình
+       đọc màn hình + tooltip; % không nằm trong vùng aria-live để không bị đọc liên tục. -->
+  <!-- Nút "Về đầu trang" — hiện khi đã cuộn xuống (setupBackToTop(), ui-layout.js). -->
+  <button type="button" id="btnBackToTop" class="back-to-top hidden" aria-label="Về đầu trang" title="Về đầu trang"><svg class="icon-svg" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></button>
+  <div id="busyIndicator" class="busy-indicator hidden" title="Đang lưu...">
+    <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang lưu...</span>
+    <div class="busy-ring" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
+      <svg class="busy-ring-svg" viewBox="0 0 36 36" aria-hidden="true">
+        <circle class="busy-ring-track" cx="18" cy="18" r="15.5" />
+        <circle class="busy-ring-bar" id="busyRingBar" cx="18" cy="18" r="15.5" pathLength="100" stroke-dasharray="0 100" />
+      </svg>
+      <span class="busy-ring-pct" id="busyRingPct" aria-hidden="true">0%</span>
+    </div>
   </div>
 
   <!-- Banner đỏ CHẾ ĐỘ THỬ NGHIỆM (localStorage) — hiện ở initApp() (app-core.js) khi config.js
@@ -212,50 +234,57 @@
   </div>
 
   <header class="app-header">
+    <!-- Nhóm công cụ: máy tính hiện thẳng trên header (display: contents); điện thoại (≤ 800px) gom vào menu "⋯"
+         (#btnHeaderMenu, setupHeaderMenu() ở ui-layout.js). -->
+    <div class="header-tools" id="headerMenu">
     <div class="header-left">
       <button type="button" id="btnToggleTabLayout" class="header-icon-btn" data-tooltip="Đổi bố cục tab" aria-pressed="false" title="Chuyển thanh tab sang cột dọc (bên trái)">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-sidebar"></use></svg><span class="hdr-label">Đổi bố cục tab</span>
       </button>
       <!-- <button> (không phải <span> như trước) — khi đã cấu hình link quản lý (xem
            databaseManagementUrl() ở storage.js), bấm vào mở Google Sheet/Supabase
            Dashboard ở tab mới, xem setupStorageBadgeLink() ở app-core.js. Nếu chưa cấu
            hình link thì vẫn hiển thị bình thường, bấm vào không có gì xảy ra. -->
       <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
-      <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
-        <span class="sync-dot"></span>
-        <span id="syncStatusText">Đã đồng bộ</span>
-      </button>
-    </div>
-    <div class="header-center">
-      <div class="app-title-row">
-        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
-        <h1>Đánh giá Dầu cách điện</h1>
-      </div>
     </div>
     <div class="header-right">
       <!-- Nhóm công cụ & quản trị đưa lên Menu bar: Giới thiệu, Phản hồi, Quản trị -->
       <button type="button" class="header-icon-btn tab-btn" data-tab="about" id="navAbout" title="Giới thiệu" aria-label="Giới thiệu" data-tooltip="Giới thiệu">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg><span class="hdr-label">Giới thiệu</span>
       </button>
       <button type="button" class="header-icon-btn tab-btn" data-tab="phanhoi" id="navPhanHoi" title="Phản hồi" aria-label="Phản hồi" data-tooltip="Phản hồi">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-feedback"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-feedback"></use></svg><span class="hdr-label">Phản hồi</span>
       </button>
       <!-- Quản trị — chỉ hiện với Admin (hoặc khi không bật Auth, xem initApp() ở app-core.js) -->
       <button type="button" class="header-icon-btn tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị" aria-label="Quản trị" data-tooltip="Quản trị">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="hdr-label">Quản trị</span>
       </button>
 
       <div class="header-divider" aria-hidden="true"></div>
 
       <!-- Tùy chọn giao diện & tài khoản -->
       <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối" data-tooltip="Giao diện tối">
-        <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg><span class="hdr-label" id="themeLabel">Giao diện tối</span>
       </button>
       <button type="button" id="btnOpenChangePassword" class="header-icon-btn hidden" title="Đổi mật khẩu" aria-label="Đổi mật khẩu" data-tooltip="Đổi mật khẩu">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg><span class="hdr-label">Đổi mật khẩu</span>
       </button>
       <button type="button" id="userBadge" class="badge user-badge hidden" title="Bấm để đăng xuất"></button>
     </div>
+    </div>
+    <div class="header-center">
+      <div class="app-title-row">
+        <img src="assets/image/app-icon-96.webp" alt="" class="app-logo-icon" width="30" height="30" />
+        <h1>Đánh giá Dầu cách điện</h1>
+        <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
+          <span class="sync-dot"></span>
+          <span id="syncStatusText">Đã đồng bộ</span>
+        </button>
+      </div>
+    </div>
+    <button type="button" id="btnHeaderMenu" class="header-icon-btn header-menu-btn" aria-expanded="false" aria-controls="headerMenu" aria-label="Mở menu" title="Menu">
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg>
+    </button>
   </header>
 
   <!-- ===================== MODAL: ĐỔI MẬT KHẨU =====================
@@ -265,7 +294,7 @@
   <div id="changePasswordOverlay" class="mini-modal-overlay hidden">
     <div class="mini-modal-card" role="dialog" aria-modal="true" aria-labelledby="changePasswordTitle">
       <button type="button" class="mini-modal-close" id="btnCloseChangePassword" aria-label="Đóng">&times;</button>
-      <h3 id="changePasswordTitle"><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h3>
+      <h2 id="changePasswordTitle"><svg class="icon-svg" aria-hidden="true"><use href="#icon-key"></use></svg>Đổi mật khẩu</h2>
       <!-- Chế độ BẮT BUỘC (mật khẩu tạm do Admin cấp) — xem enterApp()/openChangePasswordModal() ở ui-auth.js. -->
       <p class="note hidden" id="changePasswordForcedHint">Bạn đang đăng nhập bằng <strong>mật khẩu tạm</strong> do Admin cấp.
         Vui lòng đặt mật khẩu riêng để tiếp tục sử dụng (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại").
@@ -281,7 +310,7 @@
       <label class="field">Nhập lại mật khẩu mới
         <input id="cp_new2" type="password" autocomplete="new-password" />
       </label>
-      <button id="btnSubmitChangePassword" class="btn primary" style="width:100%; margin-top:6px;">Đổi mật khẩu</button>
+      <button id="btnSubmitChangePassword" class="btn primary u-w-100pct u-mt-6px">Đổi mật khẩu</button>
       <p class="auth-error hidden" id="changePasswordError"></p>
       <p class="note">Đổi xong, các thiết bị/trình duyệt khác đang đăng nhập bằng tài khoản này sẽ bị đăng xuất, cần đăng nhập lại bằng mật khẩu mới.</p>
     </div>
@@ -321,7 +350,7 @@
     </div>
   </nav>
 
-  <main>
+  <main id="mainContent" tabindex="-1">
     <!-- ===================== TAB: NHẬP & PHÂN TÍCH ===================== -->
     <section id="tab-nhap" class="tab-panel" data-input-mode="import">
 
@@ -344,32 +373,33 @@
            #dau_equipmenttype chỉ để ẩn/hiện khối nhập liệu, không lưu qua Storage) —
            chuyển VỊ TRÍ hiển thị thôi, không đổi hành vi/JS liên quan (xem
            refreshManufacturerOptions()/toggleMbaSubtypeField() ở app-core.js). -->
-      <div class="panel">
-        <div class="toolbar toolbar-start" style="margin-bottom:0;">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị</h2>
-          <select id="f_loai" title="Chọn loại thiết bị" style="min-width:220px;" autocomplete="off">
-            <option selected>MBA/Kháng dầu</option>
-            <option>TI (biến dòng điện)</option>
-            <option>TU (biến điện áp)</option>
-            <option>Sứ xuyên (Bushing)</option>
-            <option>Khác</option>
-          </select>
-        </div>
-      </div>
 
       <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (src/presentation/components/ui-input-subtabs.js): form nhập liệu là MỘT form
            dùng chung; tab con chỉ ẩn/hiện các khối .mode-import (đọc BBTN, nhập hàng loạt, Số liệu đã lưu) và .mode-lap
            (xuất BBTN docx) — CSS theo data-input-mode trên <section>, xem style-nav-layout.css. -->
-      <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu khí hòa tan">
-        <button type="button" class="input-subtab-btn active" data-input-mode="import" role="tab" aria-selected="true">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN cũ</button>
-        <button type="button" class="input-subtab-btn" data-input-mode="lap" role="tab" aria-selected="false">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-edit"></use></svg>Lập BBTN</button>
+      <!-- Bước 4a: 1 thanh công cụ gộp (trước: thẻ "Loại thiết bị" riêng chỉ chứa 1 ô chọn + hàng tab con bên dưới). -->
+      <div class="input-toolbar">
+        <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu khí hòa tan">
+          <button type="button" class="input-subtab-btn active" data-input-mode="import" role="tab" aria-selected="true">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN cũ</button>
+          <button type="button" class="input-subtab-btn" data-input-mode="lap" role="tab" aria-selected="false">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-edit"></use></svg>Lập BBTN</button>
+        </div>
+        <label class="input-toolbar-type"><svg class="icon-svg input-toolbar-icon" aria-hidden="true"><use href="#icon-tag"></use></svg><span>Loại thiết bị</span>
+          <select class="input-toolbar-select" id="f_loai" title="Chọn loại thiết bị" autocomplete="off">
+              <option selected>MBA/Kháng dầu</option>
+              <option>TI (biến dòng điện)</option>
+              <option>TU (biến điện áp)</option>
+              <option>Sứ xuyên (Bushing)</option>
+              <option>Khác</option>
+            </select>
+        </label>
+        <button type="button" class="field-icon-toggle-btn guide-toggle-btn input-toolbar-guide" data-guide-toggle="nhap-intro" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn nhập liệu"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       </div>
-      <p class="note input-subtab-hint mode-import">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
+      <p class="note input-subtab-hint mode-import" data-guide="nhap-intro">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
         với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
         đo đã lưu của thiết bị đang chọn ở form.</p>
-      <p class="note input-subtab-hint mode-lap">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+      <p class="note input-subtab-hint mode-lap" data-guide="nhap-intro">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
       <!-- ===================== NHẬP HÀNG LOẠT NHIỀU BBTN (PDF) =====================
@@ -408,7 +438,7 @@
               <button type="button" class="btn xs ghost" id="btnViewBbtn">Xem BBTN đã lưu</button>
               <button type="button" class="btn xs ghost" id="btnRemoveBbtn" title="Bỏ file đính kèm khỏi lần đo này">Bỏ file</button>
             </div>
-            <div style="display:flex; justify-content:flex-end;">
+            <div class="u-d-flex u-justify-flex-end">
               <button type="button" class="btn xs ghost hidden" id="btnToggleBbtnPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
                 <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
                 <span id="btnToggleBbtnPreviewText">Hiện BBTN đối chiếu</span>
@@ -417,15 +447,15 @@
             <p class="note hidden" id="bbtnImportNote"></p>
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
-            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+            <div class="batch-options">
               <button type="button" class="btn sm ghost" id="btnBatchChooseFolder">Chọn cả thư mục...</button>
-              <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
+              <label class="batch-option-label">
                 <input type="checkbox" id="batchAttachPdf" checked /> Đính kèm PDF gốc vào từng lần đo
               </label>
             </div>
           </div>
         </div>
-        <p class="note" style="margin-top:12px;">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
+        <p class="note u-mt-12px" data-guide="nhap-intro">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
           đang chọn ở form "Thí nghiệm khí hòa tan trong dầu cách điện" bên dưới cho TẤT CẢ file — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
           được đọc riêng từng file PDF. Phù hợp khi nhập bổ sung nhiều lần đo lịch sử để phân tích xu hướng (tab "Xu hướng").</p>
 
@@ -436,27 +466,27 @@
         <input id="batchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
         <p class="note hidden" id="batchSkippedNote"></p>
 
-        <div id="batchPreviewWrap" class="hidden" style="margin-top:16px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="batchSummaryText">—</div>
-            <div style="display:flex; gap:8px;">
+        <div id="batchPreviewWrap" class="hidden u-mt-16px">
+          <div class="bar-between">
+            <div class="batch-summary" id="batchSummaryText">—</div>
+            <div class="u-d-flex u-gap-8px">
               <button type="button" class="btn sm ghost" id="btnBatchSelectAll">Chọn tất cả hợp lệ</button>
               <button type="button" class="btn sm ghost" id="btnBatchSelectNone">Bỏ chọn tất cả</button>
             </div>
           </div>
-          <div class="table-scroll" style="margin-top:8px;"><table>
-            <thead><tr><th></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
+          <div class="table-scroll u-mt-8px"><table>
+            <thead><tr><th><span class="sr-only">Chọn</span></th><th>File</th><th>Pha</th><th>Ngày lấy mẫu</th><th>TCG</th><th>Trạng thái</th></tr></thead>
             <tbody id="batchTable"></tbody>
           </table></div>
-          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div class="batch-actions">
             <button type="button" class="btn primary" id="btnBatchSave">Lưu các lần đo đã chọn</button>
             <!-- Sắp xếp lại "Lần đo" của ĐÚNG thiết bị đang chọn ở form phía trên (Trạm+
                  Thiết bị, cả 3 Pha) theo đúng thứ tự thời gian — dùng khi BBTN vừa nhập có
                  ngày CŨ HƠN các lần đo đã lưu từ trước (xem onBatchRenumber(),
                  bbtn-batch-import.js). Không phụ thuộc bảng preview — bấm được bất kể đã
                  "Lưu hàng loạt" hay chưa. -->
-            <button type="button" class="btn ghost" id="btnBatchRenumber" style="padding:7px 14px;" title="Quét lại toàn bộ Lịch sử đo của thiết bị đang chọn và sắp xếp lại &quot;Lần đo&quot; cho đúng thứ tự thời gian (Ngày lấy mẫu)">Sắp xếp lại Lần đo...</button>
-            <span class="note" id="batchProgressText" style="margin:0;"></span>
+            <button type="button" class="btn ghost u-p-7px-14px" id="btnBatchRenumber" title="Quét lại toàn bộ Lịch sử đo của thiết bị đang chọn và sắp xếp lại &quot;Lần đo&quot; cho đúng thứ tự thời gian (Ngày lấy mẫu)">Sắp xếp lại Lần đo...</button>
+            <span class="note u-m-0" id="batchProgressText"></span>
           </div>
         </div>
       </div>
@@ -513,8 +543,8 @@
               </select>
             </label>
           </div>
-          <label class="field" id="f_mbasubtype_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
-            <input id="f_mbasubtype" type="checkbox" style="width:auto; margin-top:4px;" />
+          <label class="field check-label" id="f_mbasubtype_wrap">
+            <input class="u-w-auto u-mt-4px" id="f_mbasubtype" type="checkbox" />
             <span>Ngăn OLTC (thông dầu/khí với thùng chính)</span>
           </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-factory"></use></svg>Nhà sản xuất (tùy chọn)
@@ -573,8 +603,8 @@
             </select>
           </label>
         </div>
-        <label class="field" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
-          <input id="f_bang63_applicable" type="checkbox" style="width:auto; margin-top:4px;" />
+        <label class="field check-label">
+          <input class="u-w-auto u-mt-4px" id="f_bang63_applicable" type="checkbox" />
           <span>Dầu mới đưa vào vận hành lần đầu / sau sửa chữa có thay dầu hoặc lọc dầu (điều kiện áp dụng Bảng 63)</span>
         </label>
 
@@ -615,7 +645,7 @@
              xuất "Báo cáo phân tích kỹ thuật", dữ liệu vẫn còn nguyên khi bấm lại để hiện.
              aria-pressed="true" = đang ẨN (icon-eye-off) — đổi icon/title bằng JS, xem
              setupNameplateFieldsToggle() ở app-core.js (kiểu giống ẩn/hiện mật khẩu). -->
-        <div class="section-title" style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+        <div class="section-title bar-between">
           <span>Thông số kỹ thuật thiết bị (tùy chọn — dùng khi xuất Báo cáo phân tích kỹ thuật)</span>
           <button type="button" id="btnToggleNameplateFields" class="field-icon-toggle-btn" aria-pressed="false" title="Ẩn phần này">
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
@@ -629,7 +659,7 @@
              THẤP HƠN đọc BBTN — luôn cần xem lại toàn bộ, xem onNameplateFileSelected()
              ở src/presentation/tabs/ui-dga.js. Cùng cơ chế kéo-thả với ô BBTN ở trên, xem
              setupNameplateDropzone() ở app-core.js. -->
-        <label class="field field-wide" style="margin-bottom:14px;">
+        <label class="field field-wide u-mb-14px">
           <svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
           Ảnh chụp tấm nhãn thiết bị (nameplate — JPG/PNG, tùy chọn)
           <div class="file-dropzone" id="nameplateDropzone">
@@ -638,7 +668,7 @@
             <input id="f_nameplate" type="file" aria-labelledby="nameplateDropzoneText" accept="image/*,application/pdf,.pdf" />
           </div>
           <p class="note hidden" id="nameplateImportNote"></p>
-          <p class="note hidden" id="nameplateRawTextNote" style="max-height:120px; overflow-y:auto; white-space:pre-wrap; font-family:monospace; font-size:11px;"></p>
+          <p class="note hidden u-maxh-120px u-ovy-auto u-ws-pre-wrap u-ff-monospace u-fs-11px" id="nameplateRawTextNote"></p>
         </label>
         <div class="grid">
           <label class="field">Kiểu máy
@@ -668,8 +698,8 @@
         </div>
         </div>
 
-        <p class="note hidden" id="editingMeasurementNote" style="color:var(--warn); font-weight:600;">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <p class="note hidden text-warn-strong" id="editingMeasurementNote">Đang SỬA lần đo đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions u-wrap-wrap u-items-center">
           <button class="btn primary" id="btnAnalyze">Phân tích &amp; Lưu</button>
           <button class="btn ghost" id="btnClearForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditMeasurement">Hủy sửa</button>
@@ -684,7 +714,7 @@
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             Biên bản đối chiếu
           </span>
-          <span class="badge" id="bbtnPreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
+          <span class="badge file-loaded-badge" id="bbtnPreviewBadge">Đã tải file</span>
           <span class="bbtn-preview-filename" id="bbtnPreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
             <button type="button" class="btn xs ghost" id="btnBbtnNewTab" title="Mở file ở tab mới">
@@ -706,9 +736,9 @@
   </div><!-- /#dgaInputSplitLayout -->
 
       <div class="panel hidden" id="resultsPanel">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>2. Kết quả đánh giá</h2>
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+        <div class="bar-between">
+          <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>2. Kết quả đánh giá</h2>
+          <div class="u-d-flex u-gap-10px u-wrap-wrap">
             <button type="button" class="btn ghost mode-lap" id="btnExportBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
             <!-- Chỉ hiện khi thiết bị có bất thường (overallStatus.level !== "normal") — xem
                  renderResults() ở ui-dga.js. Báo cáo dành riêng cho trường hợp cần phân tích/báo
@@ -716,7 +746,7 @@
             <button type="button" class="btn ghost hidden" id="btnExportTechReport"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất báo cáo phân tích kỹ thuật (docx)</button>
           </div>
         </div>
-        <p class="note mode-lap" style="margin-top:2px;">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
+        <p class="note mode-lap u-mt-2px">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
           thí nghiệm (PTC3/BM.15) — tải về, MỞ TRONG WORD để bổ sung các mục mẫu chưa có sẵn dữ liệu (hãng SX, số chế tạo,
           điều kiện môi trường, chữ ký...) trước khi ban hành. Số liệu điền sẵn chỉ mang tính hỗ trợ, người dùng cần kiểm
           tra lại trước khi ký.</p>
@@ -733,13 +763,13 @@
         <div id="dgaOilTreatPrompt" class="hidden"></div>
 
         <div class="stat-row">
-          <div class="stat-card"><div class="label">Tổng khí cháy (TCG)</div><div class="value" id="r_tcg">—</div><div class="note hidden" id="r_tcgRateNote" style="margin-top:4px;"></div></div>
+          <div class="stat-card"><div class="label">Tổng khí cháy (TCG)</div><div class="value" id="r_tcg">—</div><div class="note hidden u-mt-4px" id="r_tcgRateNote"></div></div>
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="r_overall">—</div></div>
-          <div class="stat-card"><div class="label">Mã chẩn đoán (tỷ số khí)</div><div class="value" id="r_diag" style="font-size:15px;">—</div></div>
-          <div class="stat-card"><div class="label">Mã chẩn đoán (Tam giác Duval)</div><div class="value" id="r_duval" style="font-size:15px;">—</div></div>
+          <div class="stat-card"><div class="label">Mã chẩn đoán (tỷ số khí)</div><div class="value u-fs-15px" id="r_diag">—</div></div>
+          <div class="stat-card"><div class="label">Mã chẩn đoán (Tam giác Duval)</div><div class="value u-fs-15px" id="r_duval">—</div></div>
         </div>
-        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
-          <div class="stat-card"><div class="label">Tiêu chuẩn áp dụng</div><div class="value" id="r_standard" style="font-size:13px; font-weight:600;">—</div></div>
+        <div class="stat-row u-cols-minmax0-1fr">
+          <div class="stat-card"><div class="label">Tiêu chuẩn áp dụng</div><div class="value u-fs-13px u-fw-600" id="r_standard">—</div></div>
         </div>
 
         <div class="section-title">Đánh giá giá trị tuyệt đối từng khí</div>
@@ -778,8 +808,8 @@
 
         <div class="section-title">Tam giác Duval 1 (Annex B, Figure B.3, IEC 60599:2022)</div>
         <div class="duval-wrap">
-          <svg id="duvalSvg" viewBox="-8 -8 116 102" style="width:280px; max-width:100%; height:auto; flex:0 0 auto;"></svg>
-          <div style="flex:1; min-width:220px;">
+          <svg class="u-w-280px u-maxw-100pct u-h-auto u-flex-0-0-auto" id="duvalSvg" viewBox="-8 -8 116 102"></svg>
+          <div class="u-flex-1 u-minw-220px">
             <div class="table-scroll"><table>
               <thead><tr><th>%CH4</th><th>%C2H4</th><th>%C2H2</th><th>Vùng</th></tr></thead>
               <tbody><tr>
@@ -810,8 +840,8 @@
               <thead><tr><th>Khí</th><th>Giá trị (ppm)</th><th>Trung bình nhóm (ppm)</th><th>Z-score (thang log)</th><th>Nhận định</th></tr></thead>
               <tbody id="r_peerZTable"></tbody>
             </table></div>
-            <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
-              <div class="stat-card"><div class="label">Điểm bất thường tổng hợp (Isolation Forest, xét đồng thời cả 7 khí)</div><div class="value" id="r_peerIsolation" style="font-size:15px;">—</div></div>
+            <div class="stat-row u-cols-minmax0-1fr">
+              <div class="stat-card"><div class="label">Điểm bất thường tổng hợp (Isolation Forest, xét đồng thời cả 7 khí)</div><div class="value u-fs-15px" id="r_peerIsolation">—</div></div>
             </div>
           </div>
         </div>
@@ -835,8 +865,8 @@
         <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Khí hòa tan (cuộn ngang)"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
-            <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
-            <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th class="num">H2</th><th class="num">CH4</th><th class="num">C2H6</th><th class="num">C2H4</th><th class="num">C2H2</th><th class="num">CO</th><th class="num">CO2</th><th class="num">N2</th><th class="num">O2</th>
+            <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="nhapSavedTable"></tbody>
         </table></div>
@@ -847,91 +877,92 @@
     <!-- ===================== TAB: LỊCH SỬ ĐO ===================== -->
     <section id="tab-lichsu" class="tab-panel hidden">
       <div class="panel">
-        <div class="toolbar">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</h2>
-          <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <!-- Áp dụng cho CẢ 2 view "Khí hòa tan (DGA)"/"Dầu" — nhưng ý nghĩa các lựa
-                 chọn KHÁC NHAU theo từng view nên nội dung <option> được nạp lại bằng JS
-                 mỗi lần đổi view (xem populateHistoryEquipmentFilterOptions(), app-core.js):
-                 ở view DGA lọc theo LOẠI THIẾT BỊ (TI/TU/MBA/Sứ xuyên/Khác, vì bảng đó gộp
-                 chung mọi loại); ở view "Dầu" lọc theo NGUỒN dầu (Dầu MBA chính/Dầu OLTC,
-                 vì 2 bảng đó cột dữ liệu khác hẳn nhau nên vẫn hiện tách riêng, chỉ gộp
-                 chung 1 nút bấm + 1 ô lọc cho gọn). Nội dung <option> bên dưới là mặc định
-                 lúc tải trang (view "gas") — sẽ bị JS ghi đè ngay khi setupLichSuViewToggle()
-                 chạy. -->
-            <select id="historyEquipmentFilter" title="Lọc theo loại thiết bị">
-              <option value="">Tất cả loại thiết bị</option>
-              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
-              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
-              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
-              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
-              <option value="Khác">Khác</option>
-            </select>
-            <!-- Thay ô tìm kiếm tự do #historyFilter cũ (chỉ lọc gần đúng theo substring)
-                 bằng 2 ô combo tự gõ-tìm giống #tr_station/#tr_device ở tab "Xu hướng" (xem
-                 setupCombo()/lichsuStationOptions()/lichsuDeviceOptions(), ui-history.js/
-                 app-core.js): #lichsu_station gợi ý CHỈ các trạm thực sự có dữ liệu trong
-                 đúng nhóm đang xem (view DGA/Dầu + lựa chọn ở #historyEquipmentFilter trên
-                 kia); #lichsu_device gợi ý thiết bị THUỘC đúng trạm đang chọn (để trống Trạm
-                 = gợi ý thiết bị mọi trạm, kèm tên trạm để phân biệt), và TỰ ĐỘNG lọc theo
-                 đúng "gom nhóm" ở #historyEquipmentFilter (đổi lựa chọn đó thì danh sách gợi
-                 ý thiết bị đổi theo ngay lần mở kế tiếp, không cần nạp lại gì thêm). Vẫn cho
-                 gõ tự do tên chưa có trong gợi ý như mọi combo khác trong app. -->
-            <div class="combo-wrap" style="width:190px;">
-              <input id="lichsu_station" type="text" placeholder="Trạm biến áp — để trống = TẤT CẢ" autocomplete="off" />
+        <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-history"></use></svg>Lịch sử đo</h2>
+        <!-- BỘ LỌC CHUNG (lọc 1 lần cho cả "Khí hòa tan" và "Dầu"): Trạm, Thiết bị, Loại thiết bị, khoảng ngày lấy mẫu.
+             Chuyển qua lại 2 bảng vẫn giữ nguyên bộ lọc; 2 nút chọn bảng bên dưới hiện số bản ghi khớp lọc của từng bảng.
+             "Loại thiết bị" dùng CHUNG 1 danh sách (trước đây ở view "Dầu" ô này đổi thành "nguồn dầu" và bị đặt lại
+             "Tất cả" mỗi lần chuyển bảng); ở bảng Dầu tự quy đổi: MBA/Kháng dầu → bảng dầu MBA chính + OLTC; TI/TU/Sứ
+             xuyên → bảng dầu TI/TU/Sứ xuyên đúng loại đó — xem lichsuOilSourceVisibility(), ui-history.js. Ô Trạm/Thiết
+             bị gợi ý từ dữ liệu của CẢ 2 bảng (đúng Loại thiết bị đang chọn), không phụ thuộc bảng đang xem. -->
+        <fieldset class="lichsu-filters" aria-describedby="lichsuFilterSummary">
+          <legend class="lichsu-filters-legend">Bộ lọc chung — áp dụng cho cả Khí hòa tan và Dầu</legend>
+          <div class="lichsu-filter">
+            <label for="lichsu_station">Trạm biến áp</label>
+            <div class="combo-wrap">
+              <input id="lichsu_station" type="text" placeholder="Tất cả trạm" autocomplete="off" />
               <button type="button" id="lichsu_station_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="lichsu_station_list" class="combo-list hidden"></div>
             </div>
-            <div class="combo-wrap" style="width:200px;">
-              <input id="lichsu_device" type="text" placeholder="Thiết bị — gõ để tìm" autocomplete="off" />
+          </div>
+          <div class="lichsu-filter">
+            <label for="lichsu_device">Thiết bị</label>
+            <div class="combo-wrap">
+              <input id="lichsu_device" type="text" placeholder="Tất cả thiết bị — gõ để tìm" autocomplete="off" />
               <button type="button" id="lichsu_device_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
               <div id="lichsu_device_list" class="combo-list hidden"></div>
             </div>
           </div>
-        </div>
-        <!-- Chọn xem lịch sử của NGUỒN dữ liệu nào — Khí hòa tan (DGA)/Dầu (gộp chung
-             Dầu MBA chính + Dầu OLTC vào 1 nút, phân biệt tiếp bằng #historyEquipmentFilter
-             bên trên — xem ghi chú ở đó). Lựa chọn được nhớ lại giữa các lần vào app
-             (localStorage, xem setupLichSuViewToggle() ở app-core.js) — cùng quy ước với
-             các tùy chọn hiển thị khác (bố cục tab dọc/ngang, bật/tắt dự báo xu hướng).
-             Cả 2 bảng dầu ở đây CHỈ ĐỂ XEM NHANH — nút "Sửa" nhảy sang đúng tab "Dầu cách
-             điện" để sửa (xem onEditOilTest()/onEditOltcOilTest(), ui-oil.js/ui-oltc.js),
-             không lặp lại form nhập liệu ở đây. -->
-        <div class="btn-row" id="lichsuTypeToggle" style="margin-top:12px;">
+          <label class="lichsu-filter">
+            <span>Loại thiết bị</span>
+            <select id="historyEquipmentFilter">
+              <option value="">Tất cả loại thiết bị</option>
+              <option value="MBA/Kháng dầu">MBA/Kháng dầu</option>
+              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
+              <option value="Khác">Khác</option>
+              <option value="__none__">(Chưa ghi loại thiết bị)</option>
+            </select>
+          </label>
+          <label class="lichsu-filter lichsu-filter-date">
+            <span>Từ ngày</span>
+            <input id="lichsu_from" type="date" />
+          </label>
+          <label class="lichsu-filter lichsu-filter-date">
+            <span>Đến ngày</span>
+            <input id="lichsu_to" type="date" />
+          </label>
+          <button type="button" class="btn ghost sm lichsu-filter-clear" id="btnLichsuClearFilters" disabled>Xóa lọc</button>
+        </fieldset>
+        <!-- Chọn bảng xem: Khí hòa tan (DGA) / Dầu (gồm Dầu MBA chính, OLTC, TI/TU/Sứ xuyên). Số trong ngoặc = số bản ghi
+             khớp bộ lọc chung ở trên (updateLichSuCounts(), ui-history.js). Lựa chọn bảng nhớ giữa các lần vào app. -->
+        <div class="btn-row u-mt-12px" id="lichsuTypeToggle" role="group" aria-label="Chọn bảng lịch sử">
           <button type="button" class="btn primary" data-lichsu-type="gas">
-            <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:5px; vertical-align:-3px;"><use href="#icon-flask"></use></svg>
-            Khí hòa tan (DGA)
+            <svg class="icon-svg u-w-16px u-h-16px u-mr-5px u-va-3px" aria-hidden="true"><use href="#icon-flask"></use></svg>
+            Khí hòa tan (DGA) <span class="lichsu-count" id="lichsuCountGas"></span>
           </button>
           <button type="button" class="btn ghost" data-lichsu-type="oil">
-            <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:5px; vertical-align:-3px;"><use href="#icon-droplet"></use></svg>
-            Dầu
+            <svg class="icon-svg u-w-16px u-h-16px u-mr-5px u-va-3px" aria-hidden="true"><use href="#icon-droplet"></use></svg>
+            Dầu <span class="lichsu-count" id="lichsuCountOil"></span>
           </button>
+          <span class="note lichsu-filter-summary" id="lichsuFilterSummary" aria-live="polite"></span>
         </div>
         <!-- Đang nạp lịch sử đo từ database (ẩn khi setHistoryLoading(false), xem
              ui-history.js) — hiện lúc mới vào app, tránh chớp "Chưa có lần đo nào" bên
              dưới trong khi dữ liệu thật vẫn đang tải. -->
-        <div class="loading-hint hidden" id="historyLoadingHint" style="margin-top:14px;">
+        <div class="loading-hint has-skeleton hidden u-mt-14px" id="historyLoadingHint" role="status">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu...
+          <span class="skeleton-rows" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
         </div>
       </div>
 
       <div id="lichsuGasWrap">
         <div class="panel">
-          <h2 style="justify-content:space-between; flex-wrap:wrap; gap:10px;">
-            <span style="display:inline-flex; align-items:center;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Lịch sử đo khí hòa tan (DGA)</span>
+          <h2 class="u-justify-space-between u-wrap-wrap u-gap-10px">
+            <span class="u-d-inline-flex u-items-center"><svg class="icon-svg" aria-hidden="true"><use href="#icon-flask"></use></svg>Lịch sử đo khí hòa tan (DGA)</span>
             <!-- Dùng LẠI đúng ô combo #lichsu_station/#lichsu_device ở trên (không thêm ô
                  chọn thiết bị riêng) — cần chọn/gõ đúng Thiết bị ở đó trước mới xử lý được,
                  xem onHistoryRenumber()/renumberLanDoForDevice() ở ui-history.js. -->
-            <button type="button" class="btn sm ghost" id="btnHistoryRenumber" style="font-weight:400; text-transform:none;" title="Chọn/gõ đúng Thiết bị ở ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
+            <button type="button" class="btn sm ghost u-fw-400 u-tt-none" id="btnHistoryRenumber" title="Chọn/gõ đúng Thiết bị ở ô lọc bên trên trước, rồi bấm để sắp xếp lại &quot;Lần đo&quot; của đúng thiết bị đó theo thứ tự thời gian">Sắp xếp lại Lần đo...</button>
           </h2>
-          <p class="note">Các ô số liệu khí tô <strong style="color:var(--bad);">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
+          <p class="note">Các ô số liệu khí tô <strong class="u-c-bad">nền đỏ</strong> là giá trị đã bị SỬA so với lần lưu
             gốc — di chuột vào ô để xem giá trị trước khi sửa và thời điểm sửa; cột "Người nhập" có thêm huy hiệu
             "✎ N lần sửa" hiện đầy đủ log các lần chỉnh sửa số liệu của bản ghi đó (nếu có).</p>
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Lần</th>
-              <th>H2</th><th>CH4</th><th>C2H6</th><th>C2H4</th><th>C2H2</th><th>CO</th><th>CO2</th><th>N2</th><th>O2</th>
-              <th>TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th class="num">H2</th><th class="num">CH4</th><th class="num">C2H6</th><th class="num">C2H4</th><th class="num">C2H2</th><th class="num">CO</th><th class="num">CO2</th><th class="num">N2</th><th class="num">O2</th>
+              <th class="num">TCG</th><th>Kết luận</th><th>Bảng 66</th><th>Duval</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="historyTable"></tbody>
           </table></div>
@@ -954,11 +985,11 @@
               <select id="cmp_after"></select>
             </label>
           </div>
-          <div style="margin-top:14px;">
+          <div class="u-mt-14px">
             <button class="btn primary" id="btnCompareRate">Tính tốc độ gia tăng</button>
           </div>
           <p class="note hidden" id="cmpEmpty">Chưa có thiết bị nào đủ 2 lần đo trở lên để so sánh.</p>
-          <div id="cmpResultWrap" class="hidden" style="margin-top:18px;">
+          <div id="cmpResultWrap" class="hidden u-mt-18px">
             <p class="note" id="cmpNote"></p>
             <div class="table-scroll"><table>
               <thead><tr><th>Khí</th><th>Trước</th><th>Sau</th><th>Δ</th><th>Tốc độ (ppm/năm)</th><th>Khoảng điển hình</th><th>Đánh giá</th></tr></thead>
@@ -982,7 +1013,7 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="lichsuOilHistoryTable"></tbody>
           </table></div>
@@ -994,7 +1025,7 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="lichsuOltcHistoryTable"></tbody>
           </table></div>
@@ -1015,7 +1046,7 @@
           <div class="table-scroll"><table class="sticky-first-col">
             <thead><tr>
               <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
-              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+              <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
             </tr></thead>
             <tbody id="lichsuInstrumentOilHistoryTable"></tbody>
           </table></div>
@@ -1033,14 +1064,14 @@
     <section id="tab-canhbao" class="tab-panel hidden">
       <div class="panel">
         <div class="toolbar">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Cảnh báo thiết bị</h2>
-          <div class="btn-row" style="margin-left:auto;">
+          <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Cảnh báo thiết bị</h2>
+          <div class="btn-row u-ml-auto">
             <button type="button" class="btn ghost" id="btnRefreshAlerts" title="Làm mới danh sách cảnh báo theo số liệu mới nhất">
-              <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-history"></use></svg>
+              <svg class="icon-svg u-w-16px u-h-16px u-mr-4px u-va-3px" aria-hidden="true"><use href="#icon-history"></use></svg>
               Làm mới
             </button>
             <button type="button" class="btn ghost" id="btnExportAlertsExcel" title="Xuất Excel theo Trạm, Thiết bị, Pha, Loại cảnh báo — gồm cả thiết bị không có cảnh báo nếu chọn">
-            <svg class="icon-svg" aria-hidden="true" style="width:16px; height:16px; margin-right:4px; vertical-align:-3px;"><use href="#icon-download"></use></svg>
+            <svg class="icon-svg u-w-16px u-h-16px u-mr-4px u-va-3px" aria-hidden="true"><use href="#icon-download"></use></svg>
             Xuất Excel
             </button>
           </div>
@@ -1053,16 +1084,17 @@
         <!-- Đang nạp dữ liệu khí/dầu MBA/dầu OLTC để tổng hợp cảnh báo (ẩn khi
              setAlertsLoading(false), xem ui-alerts.js) — tránh hiện "chưa có cảnh báo"
              nhầm lẫn trong lúc dữ liệu thật vẫn đang tải lúc mới vào app. -->
-        <div class="loading-hint hidden" id="alertsLoadingHint">
+        <div class="loading-hint has-skeleton hidden" id="alertsLoadingHint" role="status">
           <svg class="gear-loader gear-loader-sm" width="20" height="20" viewBox="6 10 100 92" aria-hidden="true"><use href="#icon-gear-loader"></use></svg> Vui lòng chờ! Đang nạp dữ liệu...
+          <span class="skeleton-rows" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
         </div>
 
         <!-- Lọc theo Trạm biến áp — combo tự gõ-tìm giống #tr_station ở tab "Xu hướng"
              (xem setupCombo()/alertStationOptions(), ui-alerts.js): CHỈ gợi ý các trạm
              THỰC SỰ đang có ít nhất 1 thiết bị ở mức Cảnh báo/Báo động; để trống = xem
              TẤT CẢ trạm đang có cảnh báo (mặc định). -->
-        <div class="toolbar" style="margin-bottom:14px; justify-content:flex-start; gap:16px; flex-wrap:wrap;">
-          <label class="field" style="max-width:320px; flex:1 1 200px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
+        <div class="toolbar u-mb-14px u-justify-flex-start u-gap-16px u-wrap-wrap">
+          <label class="field u-maxw-320px u-flex-1-1-200px u-m-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="al_stationFilter" type="text" placeholder="Gõ để tìm trạm, để trống = TẤT CẢ trạm có cảnh báo" autocomplete="off" />
               <button type="button" id="al_stationFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm đang có cảnh báo">▼</button>
@@ -1071,7 +1103,7 @@
           </label>
           <!-- Lọc theo Thiết bị THUỘC trạm đang chọn (xem alertDeviceOptions(), ui-alerts.js): chỉ gợi ý
                thiết bị đang có cảnh báo; để trống = tất cả thiết bị (của trạm đã chọn, hoặc mọi trạm). -->
-          <label class="field" style="max-width:320px; flex:1 1 200px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
+          <label class="field u-maxw-320px u-flex-1-1-200px u-m-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
             <div class="combo-wrap">
               <input id="al_deviceFilter" type="text" placeholder="Gõ để tìm thiết bị, để trống = TẤT CẢ thiết bị" autocomplete="off" />
               <button type="button" id="al_deviceFilter_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị đang có cảnh báo thuộc trạm đã chọn">▼</button>
@@ -1080,7 +1112,7 @@
           </label>
           <!-- Lọc theo Loại cảnh báo (mức / loại đo / hạng mục) và theo Số liệu (mới nhất hay cảnh báo cũ) —
                xem alertFilters()/alertMatchesType()/alertSeriesContext(), ui-alerts.js. -->
-          <label class="field" style="max-width:280px; flex:1 1 180px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Loại cảnh báo
+          <label class="field u-maxw-280px u-flex-1-1-180px u-m-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Loại cảnh báo
             <select id="al_typeFilter" title="Lọc theo mức cảnh báo, loại đo hoặc hạng mục cảnh báo">
               <option value="">Tất cả</option>
               <optgroup label="Mức cảnh báo">
@@ -1108,7 +1140,7 @@
               </optgroup>
             </select>
           </label>
-          <label class="field" style="max-width:280px; flex:1 1 180px; margin:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu
+          <label class="field u-maxw-280px u-flex-1-1-180px u-m-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-history"></use></svg>Số liệu
             <select id="al_dataFilter" title="Cảnh báo của số liệu mới nhất hay của lần đo cũ (đã có số liệu mới hơn)">
               <option value="">Tất cả</option>
               <option value="latest">Chỉ số liệu mới nhất</option>
@@ -1121,17 +1153,17 @@
         <div class="stat-row" id="alertsStatRow">
           <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg>Thiết bị đang theo dõi</div><div class="value" id="al_totalDevices">—</div></div>
           <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Thiết bị đang có cảnh báo</div><div class="value" id="al_warnDevices">—</div></div>
-          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true" style="color:var(--warn);"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value" id="al_alertCount" style="color:var(--warn);">—</div></div>
-          <div class="stat-card"><div class="label"><svg class="icon-svg" aria-hidden="true" style="color:var(--bad);"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value" id="al_alarmCount" style="color:var(--bad);">—</div></div>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alert" aria-pressed="false" title="Bấm để chỉ xem mức Cảnh báo (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-warn" aria-hidden="true"><use href="#icon-alert-triangle"></use></svg>Mức Cảnh báo (ALERT)</div><div class="value u-c-warn" id="al_alertCount">—</div></button>
+          <button type="button" class="stat-card stat-card-filter" data-alert-filter="level:alarm" aria-pressed="false" title="Bấm để chỉ xem mức Báo động (bấm lại để bỏ lọc)"><div class="label"><svg class="icon-svg u-c-bad" aria-hidden="true"><use href="#icon-alert-octagon"></use></svg>Mức Báo động (ALARM)</div><div class="value u-c-bad" id="al_alarmCount">—</div></button>
         </div>
 
         <div class="table-scroll"><table>
+          <!-- Bước 4b: 5 cột gọn; "Hạng mục cảnh báo" + "Khuyến cáo" mở ở dòng chi tiết (nút Chi tiết) — refreshAlertsUI(), ui-alerts.js -->
           <thead><tr>
-            <th>Trạm</th><th>Thiết bị</th><th>Loại đo</th><th>Cảnh báo</th><th>Tình trạng</th>
-            <th>Chỉ tiêu vượt ngưỡng</th><th>Hạng mục cảnh báo</th><th>Khuyến cáo</th><th>Lần đo</th>
-            <th>Ngày thí nghiệm</th><th class="actions-col-header"></th>
+            <th>Thiết bị</th><th>Mức cảnh báo</th><th>Chỉ tiêu vượt ngưỡng</th><th>Lần đo</th>
+            <th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
-          <tbody id="alertsTable"></tbody>
+          <tbody id="alertsTable" class="alerts-tbody"></tbody>
         </table></div>
         <p class="note hidden" id="alertsEmpty">Chưa phát hiện thiết bị nào đang ở mức Cảnh báo/Báo động — tất cả
           thiết bị đã có dữ liệu đều đang ở mức Bình thường (theo lần đo gần nhất của từng thiết bị).</p>
@@ -1146,15 +1178,15 @@
           OLTC) và vẽ đồ thị xu hướng cho các thông số bạn chọn — biểu đồ luôn thể hiện toàn bộ lịch sử của thiết bị
           đó. Gõ/chọn trước 1 Trạm biến áp để ô Thiết bị chỉ gợi ý các thiết bị thuộc trạm đó (đỡ phải dò tên trong
           danh sách dài); để trống Trạm để xem thiết bị của TẤT CẢ các trạm như trước.</p>
-        <div style="display:flex; flex-wrap:wrap; gap:18px;">
-          <label class="field" style="max-width:300px; flex:1 1 260px;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
+        <div class="u-d-flex u-wrap-wrap u-gap-18px">
+          <label class="field u-maxw-300px u-flex-1-1-260px"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-pin"></use></svg>Trạm biến áp
             <div class="combo-wrap">
               <input id="tr_station" type="text" placeholder="Gõ để tìm trạm, để trống để xem TẤT CẢ" autocomplete="off" />
               <button type="button" id="tr_station_toggle" class="combo-toggle" aria-label="Hiện danh sách trạm">▼</button>
               <div id="tr_station_list" class="combo-list hidden"></div>
             </div>
           </label>
-          <label class="field" style="max-width:300px; flex:1 1 260px;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
+          <label class="field u-maxw-300px u-flex-1-1-260px"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-cpu"></use></svg>Thiết bị
             <div class="combo-wrap">
               <input id="tr_device" type="text" placeholder="Gõ để tìm thiết bị" autocomplete="off" />
               <button type="button" id="tr_device_toggle" class="combo-toggle" aria-label="Hiện danh sách thiết bị">▼</button>
@@ -1163,30 +1195,44 @@
           </label>
         </div>
         <p class="note hidden" id="trEmpty">Chưa có dữ liệu nào được lưu (khí hòa tan / dầu MBA / dầu OLTC) để vẽ xu hướng.</p>
-        <p class="note hidden" id="trDeviceAmbiguousNote" style="color:var(--bad); font-weight:600;"></p>
+        <!-- Trạng thái rỗng khi chưa chọn thiết bị: gợi ý bấm nhanh thiết bị đang cảnh báo / vừa đo — renderTrendQuickPick(), ui-trend.js -->
+        <div class="empty-state hidden" id="trQuickPick">
+          <svg class="icon-svg empty-state-icon" aria-hidden="true"><use href="#icon-trend"></use></svg>
+          <p class="empty-state-title">Chọn 1 thiết bị để xem xu hướng</p>
+          <p class="empty-state-text">Gõ tên ở ô Thiết bị phía trên, hoặc bấm nhanh 1 thiết bị dưới đây.</p>
+          <div class="quick-group hidden" id="trQuickAlerts">
+            <p class="quick-group-title">Đang có cảnh báo</p>
+            <div class="quick-chips" id="trQuickAlertsList"></div>
+          </div>
+          <div class="quick-group hidden" id="trQuickRecent">
+            <p class="quick-group-title">Vừa đo gần đây</p>
+            <div class="quick-chips" id="trQuickRecentList"></div>
+          </div>
+        </div>
+        <p class="note hidden u-c-bad u-fw-600" id="trDeviceAmbiguousNote"></p>
       </div>
 
       <div class="panel hidden" id="trContentWrap">
-        <div id="trPhaseWrap" class="hidden" style="margin-bottom:18px;">
-          <p class="section-title" style="margin-top:0;"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Lọc theo pha</p>
-          <p class="note" data-guide="trend-chart" style="margin:0 0 8px;">Thiết bị này có dữ liệu từ nhiều pha — tick các pha muốn so sánh, mỗi
+        <div id="trPhaseWrap" class="hidden u-mb-18px">
+          <p class="section-title u-mt-0"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-waveform"></use></svg>Lọc theo pha</p>
+          <p class="note u-m-0-0-8px" data-guide="trend-chart">Thiết bị này có dữ liệu từ nhiều pha — tick các pha muốn so sánh, mỗi
             pha sẽ vẽ thành 1 đường riêng trên đồ thị để đối chiếu với nhau.</p>
           <div class="trend-checks" id="trPhaseChecks"></div>
         </div>
 
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-ruler"></use></svg>Chọn thông số cần vẽ<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-chart" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
-        <div class="note" data-guide="trend-chart" style="margin:0 0 10px;">
-          <p style="margin:0 0 4px;"><strong>TCG — Tổng lượng khí cháy</strong> (ppm) = H2 + CH4 + C2H6 + C2H4 + C2H2 + CO.
+        <div class="note u-m-0-0-10px" data-guide="trend-chart">
+          <p class="u-m-0-0-4px"><strong>TCG — Tổng lượng khí cháy</strong> (ppm) = H2 + CH4 + C2H6 + C2H4 + C2H2 + CO.
             Không cộng CO2 (không cháy), N2, O2.</p>
-          <p style="margin:0 0 4px;"><strong>Tổng hàm lượng khí hòa tan</strong> (%, Bảng 63 Điều 54 QĐ1901) = (H2 + CH4 +
+          <p class="u-m-0-0-4px"><strong>Tổng hàm lượng khí hòa tan</strong> (%, Bảng 63 Điều 54 QĐ1901) = (H2 + CH4 +
             C2H6 + C2H4 + C2H2 + CO + CO2 + N2 + O2) ÷ 10.000 (1% = 10.000 ppm). Chỉ tính được ở lần đo có nhập <strong>cả N2
             lẫn O2</strong>; lần đo thiếu thì đồ thị bỏ trống điểm đó.</p>
-          <p style="margin:0;"><strong>Khi nào đánh giá Bảng 63:</strong> chỉ kết luận đạt/không đạt với <strong>dầu mới đưa vào
+          <p class="u-m-0"><strong>Khi nào đánh giá Bảng 63:</strong> chỉ kết luận đạt/không đạt với <strong>dầu mới đưa vào
             vận hành lần đầu hoặc sau sửa chữa có thay dầu/lọc dầu</strong> (ô tick ở form Khí hòa tan). Ngưỡng: 110–220 kV
             &lt; 1%, 500 kV &lt; 0,5%. Dầu đang vận hành định kỳ: giá trị chỉ để tham khảo, theo dõi xu hướng.</p>
         </div>
         <div id="trParamsGasWrap" class="hidden">
-          <p class="section-title" style="margin-top:0;">Khí hòa tan (ppm)</p>
+          <p class="section-title u-mt-0">Khí hòa tan (ppm)</p>
           <div class="trend-checks" id="trParamsGas"></div>
         </div>
         <div id="trParamsOilWrap" class="hidden">
@@ -1205,7 +1251,7 @@
           <canvas id="trendChart"></canvas>
         </div>
         <!-- Nhãn ký hiệu cạnh đường + chạm để chọn đường — trendLineLabelsPlugin/onTrendChartClick, ui-trend.js -->
-        <p class="note hidden" id="trChartHint" data-guide="trend-chart" style="margin-top:6px;">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
+        <p class="note hidden u-mt-6px" id="trChartHint" data-guide="trend-chart">Ký hiệu thông số (H2, CH4, C2H2…) hiện ở cuối
           mỗi đường khi còn chỗ. Đường sát hoặc chồng nhau: chạm/click vào đường để hiện ký hiệu (chạm lại cùng chỗ để
           chuyển sang đường chồng bên dưới); chạm vùng trống để bỏ chọn.</p>
         <!-- Tiêu chuẩn so sánh của các thông số khí đang vẽ — renderTrendStandardsNote(), ui-trend.js -->
@@ -1213,17 +1259,17 @@
           <p class="section-title trend-std-title">Tiêu chuẩn so sánh của thông số khí đang vẽ<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-standards" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện ghi chú tiêu chuẩn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></p>
           <div id="trStdBody" data-guide="trend-standards"></div>
         </div>
-        <p class="note hidden" id="trChartEmpty" style="margin-top:10px;">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
+        <p class="note hidden u-mt-10px" id="trChartEmpty">Chọn ít nhất 1 thông số ở trên để vẽ đồ thị — nếu
           thiết bị có nhiều pha, cũng cần tick ít nhất 1 pha ở mục "Lọc theo pha".</p>
-        <p class="note hidden" id="trChartNoLib" style="margin-top:10px;">Không tải được thư viện vẽ đồ thị (Chart.js) — có
+        <p class="note hidden u-mt-10px" id="trChartNoLib">Không tải được thư viện vẽ đồ thị (Chart.js) — có
           thể do mất mạng khi tải trang. Kiểm tra kết nối rồi tải lại trang; các bảng lịch sử bên dưới vẫn xem được bình thường.</p>
 
-        <label class="field" style="margin-top:18px; align-items:center; flex-direction:row; gap:8px; display:flex; font-weight:600;">
-          <input id="tr_forecastEnabled" type="checkbox" style="width:auto;" checked />
+        <label class="field u-mt-18px u-items-center u-dir-row u-gap-8px u-d-flex u-fw-600">
+          <input class="u-w-auto" id="tr_forecastEnabled" type="checkbox" checked />
           Hiện dự báo xu hướng tương lai (ngoại suy tuyến tính, chỉ tham khảo)
         </label>
 
-        <div id="trForecastWrap" class="hidden" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--gray-300);">
+        <div id="trForecastWrap" class="hidden u-mt-22px u-pt-18px u-bt-1px-solid-gray-300">
           <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-trend"></use></svg>Dự báo xu hướng<button type="button" class="field-icon-toggle-btn guide-toggle-btn" data-guide-toggle="trend-forecast" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn mục này"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button></h2>
           <p class="note" data-guide="trend-forecast">Bốn phương pháp, dự báo từ đường đã khớp (không neo vào 1 lần đo đơn lẻ):
             <strong>hồi quy tuyến tính OLS</strong> kèm khoảng dự báo 95% và kiểm định t cho độ dốc;
@@ -1235,10 +1281,10 @@
             tối thiểu 4 lần đo. Nồng độ dự báo không âm. <strong>Chỉ mang tính tham khảo thống kê</strong>, giả định tốc độ
             sinh khí không đổi — KHÔNG thay thế nguyên tắc đánh giá tổng hợp tại Điều 3 QĐ1901. Cảnh báo "có thể vượt giá trị điển hình" (ngưỡng tuyệt đối đang áp dụng cho thiết bị, 7 khí chính) chỉ hiện khi
             xu hướng tăng có ý nghĩa thống kê và mốc nằm trong số năm dự báo đã chọn.</p>
-          <label class="field" style="max-width:220px;">Số năm dự báo
+          <label class="field u-maxw-220px">Số năm dự báo
             <input id="tr_forecastYears" type="number" min="1" max="30" step="1" value="3" />
           </label>
-          <div class="table-scroll" style="margin-top:12px;">
+          <div class="table-scroll u-mt-12px">
             <table>
               <thead><tr>
                 <th>Khí</th><th>Phương pháp</th><th>Tốc độ thay đổi</th>
@@ -1266,37 +1312,37 @@
           gian là mã của từng lần đo: <strong>9 dòng</strong> = Bảng 66 phần trên, <strong>IEC</strong> = Bảng 66 phần
           PD/D1/D2/T1/T2/T3, <strong>Duval</strong> = tam giác Duval 1. Bấm vào điểm, dải mã hoặc dòng trong bảng để mở
           <strong>phiếu đối chiếu</strong> lần đo đó với Điều 54.</p>
-        <div class="toolbar toolbar-start" style="gap:16px; flex-wrap:wrap;">
-          <label class="field" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Tính trên
+        <div class="toolbar toolbar-start u-gap-16px u-wrap-wrap">
+          <label class="field field-inline">Tính trên
             <select id="tr_faultBasis" autocomplete="off">
               <option value="abs" selected>Giá trị đo</option>
               <option value="delta">Phần tăng giữa 2 lần đo (Δ)</option>
             </select>
           </label>
-          <label class="field" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Thang trục tung
+          <label class="field field-inline">Thang trục tung
             <select id="tr_faultScale" autocomplete="off">
               <option value="log" selected>Logarit 0,01–10 (như Biểu đồ 1, 2 Điều 54)</option>
               <option value="linear">Tuyến tính 0–10</option>
             </select>
           </label>
-          <label class="field" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Vạch mốc
+          <label class="field field-inline">Vạch mốc
             <select id="tr_faultMarks" autocomplete="off">
               <option value="code9" selected>Phần 9 dòng Bảng 66 (0,1 – 1 – 3)</option>
               <option value="iec">Phần PD/D1/D2/T1/T2/T3 + bảng sơ bộ (mốc chi tiết, theo màu từng tỷ số)</option>
             </select>
           </label>
-          <label class="field hidden" id="trFaultPhaseWrap" style="flex-direction:row; align-items:center; gap:8px; margin:0;">Pha
+          <label class="field hidden field-inline" id="trFaultPhaseWrap">Pha
             <select id="tr_faultPhase" autocomplete="off"></select>
           </label>
         </div>
-        <p class="note hidden" id="trFaultDeltaNote" data-guide="trend-fault" style="margin-top:8px;">Phần tăng (Δ) = lần đo
+        <p class="note hidden u-mt-8px" id="trFaultDeltaNote" data-guide="trend-fault">Phần tăng (Δ) = lần đo
           trừ lần đo ngay trước, tính riêng từng khí. IEC 60599 khuyến nghị tính tỷ số trên phần tăng khi khí tăng đáng kể,
           để tách khí do khiếm khuyết <strong>đang hoạt động</strong> khỏi khí cũ còn tích lũy trong dầu. Không có điểm Δ cho
           lần đo đầu tiên, lần đo ngay sau lọc/thay dầu, và cặp không có khí cháy nào tăng. Tỷ số có tử số giảm hoặc mẫu số
           không tăng thì không tính. Phiếu đối chiếu vẫn kiểm tra nồng độ (Bảng 64, 65…) trên giá trị đo của lần đo sau.
           Khí chỉ nhích vài ppm thì tỷ số Δ dao động mạnh — không nên dựa vào để kết luận.</p>
-        <p class="note hidden" id="trFaultEmpty" style="margin-top:8px;">Chưa có lần đo nào tính được tỷ số.</p>
-        <p class="note hidden" id="trFaultNoneTicked" style="margin-top:8px;">Chưa tick lần đo nào ở bảng bên dưới — tick
+        <p class="note hidden u-mt-8px" id="trFaultEmpty">Chưa có lần đo nào tính được tỷ số.</p>
+        <p class="note hidden u-mt-8px" id="trFaultNoneTicked">Chưa tick lần đo nào ở bảng bên dưới — tick
           các lần đo muốn xem (hoặc ô ở tiêu đề cột để chọn hết).</p>
         <div class="trend-fault-grid" id="trFaultCharts">
           <div class="trend-ratio-wrap"><canvas id="trRatioChart"></canvas></div>
@@ -1304,14 +1350,14 @@
             <svg id="trDuvalSvg" role="img" aria-label="Quỹ đạo các lần đo trên tam giác Duval 1"></svg>
             <figcaption class="note" data-guide="trend-fault">Tam giác Duval 1 (Bảng 67): các lần đo đang tick nối theo thứ tự thời gian, số = thứ
               tự trong bảng dưới, điểm viền đậm = lần đo gần nhất trong số đang tick.</figcaption>
-            <p class="section-title" data-guide="trend-fault" style="margin:10px 0 4px;">Ý nghĩa mã khiếm khuyết</p>
+            <p class="section-title u-m-10px-0-4px" data-guide="trend-fault">Ý nghĩa mã khiếm khuyết</p>
             <!-- renderTrendFaultCodeLegend(), ui-trend.js -->
             <ul class="fault-code-legend" id="trFaultCodeLegend" data-guide="trend-fault"></ul>
           </figure>
         </div>
-        <p class="note" data-guide="trend-fault" style="margin-top:12px;">Tick/bỏ tick ở cột đầu để chọn lần đo hiện trên biểu đồ tỷ số và tam giác
+        <p class="note u-mt-12px" data-guide="trend-fault">Tick/bỏ tick ở cột đầu để chọn lần đo hiện trên biểu đồ tỷ số và tam giác
           Duval; ô ở tiêu đề cột để chọn hoặc bỏ tất cả. Bấm vào một dòng để mở phiếu đối chiếu lần đo đó.</p>
-        <div class="table-scroll" style="margin-top:6px;">
+        <div class="table-scroll u-mt-6px">
           <table>
             <thead><tr>
               <th><input type="checkbox" id="trFaultTickAll" checked aria-label="Chọn/bỏ chọn tất cả lần đo" /></th>
@@ -1395,7 +1441,7 @@
           <li>Lượng dầu của một mẫu ít nhất là <strong>1 lít</strong>.</li>
           <li>Lượng dầu cần lấy theo yêu cầu của công tác phân tích.</li>
         </ul>
-        <p class="note" style="margin-top:10px;">Khi dầu chứa trong phuy, lấy mẫu đại diện theo số lượng phuy cần mở
+        <p class="note u-mt-10px">Khi dầu chứa trong phuy, lấy mẫu đại diện theo số lượng phuy cần mở
           như sau:</p>
         <div class="table-scroll"><table>
           <thead><tr><th>Lô dầu gồm (phuy)</th><th>Số phuy cần mở để lấy mẫu (phuy)</th></tr></thead>
@@ -1678,7 +1724,7 @@
           <li>Nhiệt độ, độ ẩm khi lấy mẫu</li>
           <li>Điểm cụ thể khi lấy mẫu (bể máy chính, bể công tắc K v.v.)</li>
         </ul>
-        <p class="note" style="margin-top:10px;">Ngoài ra có thể bổ sung thêm các thông tin sau:</p>
+        <p class="note u-mt-10px">Ngoài ra có thể bổ sung thêm các thông tin sau:</p>
         <ul class="rec-list">
           <li>Nhiệt độ cuộn dây</li>
           <li>Công suất tải của MBA</li>
@@ -1851,7 +1897,7 @@
           </div>
         </div>
 
-        <div class="process-flow" style="margin-top:4px;">
+        <div class="process-flow u-mt-4px">
           <div class="process-step">
             <div class="step-num">9</div>
             <h3>Lưu dữ liệu, theo dõi xu hướng &amp; chu kỳ thí nghiệm</h3>
@@ -2207,7 +2253,7 @@
             <button type="button" class="handbook-thumb" data-full="assets/image/cam-nang-dga.webp"
               data-caption="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599">
               <img src="assets/image/cam-nang-dga-thumb.webp" alt="Cẩm nang chẩn đoán phân tích khí hòa tan (DGA) theo IEC 60599" loading="lazy" />
-              <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+              <span class="handbook-zoom-hint"><svg class="icon-svg u-mr-5px" aria-hidden="true"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
             </button>
             <p class="handbook-caption">Cẩm nang chẩn đoán DGA theo IEC 60599</p>
           </div>
@@ -2215,7 +2261,7 @@
             <button type="button" class="handbook-thumb" data-full="assets/image/co-che-hinh-thanh-khi-dga.webp"
               data-caption="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599 — năng lượng bẻ gãy liên kết hóa học ứng với từng mức sự cố (PD, T1/T2, T3, D1, D2)">
               <img src="assets/image/co-che-hinh-thanh-khi-dga-thumb.webp" alt="Cơ chế hình thành các loại khí hòa tan (DGA) trong máy biến áp theo IEC 60599" loading="lazy" />
-              <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+              <span class="handbook-zoom-hint"><svg class="icon-svg u-mr-5px" aria-hidden="true"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
             </button>
             <p class="handbook-caption">Cơ chế hình thành khí DGA theo mức năng lượng sự cố</p>
           </div>
@@ -2223,7 +2269,7 @@
             <button type="button" class="handbook-thumb" data-full="assets/image/phan-tich-khi-hoa-tan.webp"
               data-caption="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện — khí chỉ thị (H2, C2H2, C2H4, C2H6) và quy trình lấy mẫu khí bằng xilanh chuyên dụng theo IEC 60599/60567, ASTM D3612">
               <img src="assets/image/phan-tich-khi-hoa-tan-thumb.webp" alt="Phân tích khí hòa tan (DGA): các chỉ số hóa học trong dầu cách điện" loading="lazy" />
-              <span class="handbook-zoom-hint"><svg class="icon-svg" aria-hidden="true" style="margin-right:5px;"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
+              <span class="handbook-zoom-hint"><svg class="icon-svg u-mr-5px" aria-hidden="true"><use href="#icon-zoom"></use></svg>Bấm để phóng to</span>
             </button>
             <p class="handbook-caption">Khí chỉ thị DGA &amp; quy trình lấy mẫu khí bằng xilanh</p>
           </div>
@@ -2269,32 +2315,33 @@
            — cùng khuôn mẫu đã dùng ở tab "Lịch sử đo"/"Cảnh báo") để tách hẳn khỏi vùng
            nhập liệu bên dưới — tab "DGA" (#f_loai) dùng LẠI ĐÚNG khuôn mẫu này cho đồng
            nhất giao diện giữa 2 tab. -->
-      <div class="panel">
-        <div class="toolbar toolbar-start" style="margin-bottom:0;">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-tag"></use></svg>Loại thiết bị</h2>
-          <select id="dau_equipmenttype" title="Chọn loại thiết bị" style="min-width:220px;" autocomplete="off">
-            <option value="MBA/Kháng dầu" selected>MBA/Kháng dầu</option>
-            <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
-            <option value="TU (biến điện áp)">TU (biến điện áp)</option>
-            <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
-            <option value="Khác">Khác</option>
-          </select>
-        </div>
-      </div>
 
       <!-- 2 tab con dùng chung cho "Khí hòa tan" và "Lý-Hóa dầu" (src/presentation/components/ui-input-subtabs.js): form nhập liệu là MỘT form
            dùng chung; tab con chỉ ẩn/hiện các khối .mode-import (đọc BBTN, nhập hàng loạt, Số liệu đã lưu) và .mode-lap
            (xuất BBTN docx) — CSS theo data-input-mode trên <section>, xem style-nav-layout.css. -->
-      <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu lý-hóa dầu">
-        <button type="button" class="input-subtab-btn active" data-input-mode="import" role="tab" aria-selected="true">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN cũ</button>
-        <button type="button" class="input-subtab-btn" data-input-mode="lap" role="tab" aria-selected="false">
-          <svg class="icon-svg" aria-hidden="true"><use href="#icon-edit"></use></svg>Lập BBTN</button>
+      <!-- Bước 4a: 1 thanh công cụ gộp (trước: thẻ "Loại thiết bị" riêng chỉ chứa 1 ô chọn + hàng tab con bên dưới). -->
+      <div class="input-toolbar">
+        <div class="input-subtabs" role="tablist" aria-label="Chọn cách nhập số liệu lý-hóa dầu">
+          <button type="button" class="input-subtab-btn active" data-input-mode="import" role="tab" aria-selected="true">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-upload-cloud"></use></svg>Nhập BBTN cũ</button>
+          <button type="button" class="input-subtab-btn" data-input-mode="lap" role="tab" aria-selected="false">
+            <svg class="icon-svg" aria-hidden="true"><use href="#icon-edit"></use></svg>Lập BBTN</button>
+        </div>
+        <label class="input-toolbar-type"><svg class="icon-svg input-toolbar-icon" aria-hidden="true"><use href="#icon-tag"></use></svg><span>Loại thiết bị</span>
+          <select class="input-toolbar-select" id="dau_equipmenttype" title="Chọn loại thiết bị" autocomplete="off">
+              <option value="MBA/Kháng dầu" selected>MBA/Kháng dầu</option>
+              <option value="TI (biến dòng điện)">TI (biến dòng điện)</option>
+              <option value="TU (biến điện áp)">TU (biến điện áp)</option>
+              <option value="Sứ xuyên (Bushing)">Sứ xuyên (Bushing)</option>
+              <option value="Khác">Khác</option>
+            </select>
+        </label>
+        <button type="button" class="field-icon-toggle-btn guide-toggle-btn input-toolbar-guide" data-guide-toggle="dau-intro" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn nhập liệu"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       </div>
-      <p class="note input-subtab-hint mode-import">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
+      <p class="note input-subtab-hint mode-import" data-guide="dau-intro">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
         với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
         thí nghiệm dầu đã lưu của thiết bị đang chọn ở form.</p>
-      <p class="note input-subtab-hint mode-lap">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+      <p class="note input-subtab-hint mode-lap" data-guide="dau-intro">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
       <p class="note hidden" id="dauNoOilSupportNote">Tab "Lý-Hóa dầu" hiện chưa hỗ trợ
@@ -2323,7 +2370,7 @@
           <div class="bbtn-import-extra bbtn-import-x1">
             <p class="note hidden" id="oImportNote" role="status"></p>
             <!-- Biên bản có cả phần OLTC: lưu 1 lần cả thùng chính + OLTC (onSaveOilBbtnAll(), ui-oil.js) -->
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <div class="u-d-flex u-gap-10px u-wrap-wrap">
               <button type="button" class="btn primary hidden" id="btnSaveOilBbtnAll">Đánh giá &amp; Lưu cả biên bản (thùng chính + OLTC)</button>
               <button type="button" class="btn ghost hidden mode-import" id="btnToggleOilPreview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
                 <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
@@ -2332,36 +2379,36 @@
             </div>
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
-            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+            <div class="batch-options">
               <button type="button" class="btn sm ghost" id="oBatchChooseFolder">Chọn cả thư mục...</button>
-              <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
+              <label class="batch-option-label">
                 <input type="checkbox" id="oBatchAttach" checked /> Đính kèm file gốc vào từng biên bản
               </label>
             </div>
           </div>
         </div>
-        <p class="note" style="margin-top:12px;">Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
+        <p class="note u-mt-12px" data-guide="dau-intro">Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
           chọn từng file rồi bấm "Đánh giá &amp; Lưu cả biên bản". <strong>Trạm / Thiết bị</strong> lấy theo form bên dưới nếu đã
           nhập (dùng chung cho cả đợt), để trống thì lấy theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ
           tiêu đọc riêng từng file. Phù hợp khi nhập bổ sung nhiều BBTN lịch sử để theo dõi xu hướng.</p>
         <!-- webkitdirectory: chọn cả thư mục (Chrome/Edge/Safari) — xem createOilBatch(), src/presentation/tabs/ui-oil-batch-import.js -->
         <input id="oBatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
         <p class="note hidden" id="oBatchSkippedNote"></p>
-        <div id="oBatchPreviewWrap" class="hidden" style="margin-top:16px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="oBatchSummaryText">—</div>
-            <div style="display:flex; gap:8px;">
+        <div id="oBatchPreviewWrap" class="hidden u-mt-16px">
+          <div class="bar-between">
+            <div class="batch-summary" id="oBatchSummaryText">—</div>
+            <div class="u-d-flex u-gap-8px">
               <button type="button" class="btn sm ghost" id="oBatchSelectAll">Chọn tất cả hợp lệ</button>
               <button type="button" class="btn sm ghost" id="oBatchSelectNone">Bỏ chọn tất cả</button>
             </div>
           </div>
-          <div class="table-scroll" style="margin-top:8px;"><table>
-            <thead><tr><th></th><th>File</th><th>Trạm</th><th>Thiết bị</th><th>Ngày lấy mẫu</th><th>Thùng dầu chính</th><th>OLTC</th><th>Trạng thái</th></tr></thead>
+          <div class="table-scroll u-mt-8px"><table>
+            <thead><tr><th><span class="sr-only">Chọn</span></th><th>File</th><th>Trạm</th><th>Thiết bị</th><th>Ngày lấy mẫu</th><th>Thùng dầu chính</th><th>OLTC</th><th>Trạng thái</th></tr></thead>
             <tbody id="oBatchTable"></tbody>
           </table></div>
-          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div class="batch-actions">
             <button type="button" class="btn primary" id="oBatchSave">Lưu các biên bản đã chọn</button>
-            <span class="note" id="oBatchProgressText" style="margin:0;"></span>
+            <span class="note u-m-0" id="oBatchProgressText"></span>
           </div>
         </div>
       </div>
@@ -2382,7 +2429,7 @@
     <div class="dga-input-main-col">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
-        <p class="note">Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
+        <p class="note" data-guide="dau-intro">Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
           theo dõi xu hướng. Dầu <strong>thùng chung 3 pha</strong> nhập 1 cột "Kết quả"; dầu <strong>thùng riêng từng
           pha</strong> nhập 3 cột Pha A/B/C (cột để trống = pha đó không thí nghiệm). Đánh giá theo QĐ1901: chỉ tiêu cơ
           bản (Bảng 54, 55, 58) và chỉ tiêu lý-hóa bổ sung (Điều 48–56: trị số axit, chớp cháy, tạp chất cơ học, đếm hạt,
@@ -2448,8 +2495,8 @@
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
           </label>
-          <label class="field hidden" id="o_membrane_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
-            <input id="o_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
+          <label class="field hidden check-label" id="o_membrane_wrap">
+            <input class="u-w-auto u-mt-4px" id="o_membrane" type="checkbox" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV)</span>
           </label>
           <label class="field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
@@ -2488,8 +2535,8 @@
              1 cột "Kết quả" (thùng dầu chung) hoặc 3 cột Pha A/B/C (thùng dầu riêng từng pha). -->
         <div id="o_paramTableWrap"></div>
 
-        <p class="note hidden" id="editingOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div style="margin-top:18px; display:flex; gap:10px;">
+        <p class="note hidden text-warn-strong" id="editingOilTestNote">Đang SỬA thí nghiệm dầu đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions">
           <button class="btn primary" id="btnAnalyzeOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearOilForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditOilTest">Hủy sửa</button>
@@ -2497,11 +2544,11 @@
       </div>
 
       <div class="panel hidden" id="oilResultsPanel">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
+        <div class="bar-between">
+          <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu cách điện</h2>
           <button type="button" class="btn ghost mode-lap" id="btnExportMbaOilBbtnMain" title="Tới khối Xuất Biên bản thí nghiệm"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
-        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+        <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="o_overall">—</div></div>
         </div>
         <div class="table-scroll"><table>
@@ -2514,7 +2561,7 @@
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 5, theo Category A/B/C)</h2>
         <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với QĐ1901 ở trên — không thay thế "Kết luận chung". Category suy ra từ
           Cấp điện áp MBA/Kháng đã chọn (&gt;170kV=A, &gt;72,5–170kV=B, ≤72,5kV=C).</p>
-        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+        <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận (IEC 60422:2024)</div><div class="value" id="o_iec_overall">—</div></div>
         </div>
         <div class="table-scroll"><table>
@@ -2527,11 +2574,11 @@
            src/data/io/mba-oil-bbtn-export.js, assets/template/template-bbtn-ly-hoa-dau.docx. Các ô dưới đây chỉ dùng khi xuất,
            không lưu vào cơ sở dữ liệu. -->
       <div class="panel hidden mode-lap" id="oilBbtnExportPanel">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất Biên bản thí nghiệm dầu cách điện (docx)</h2>
+        <div class="bar-between">
+          <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất Biên bản thí nghiệm dầu cách điện (docx)</h2>
           <button type="button" class="btn primary" id="btnExportMbaOilBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
-        <p class="note" id="ob_scope" style="margin-top:6px;"></p>
+        <p class="note u-mt-6px" id="ob_scope"></p>
         <p class="note">Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
           dầu thùng chính và dầu OLTC cùng thiết bị, cùng ngày lấy mẫu chung 1 biên bản. Chỉ các chỉ tiêu đã nhập được đưa vào.
           Thông số kỹ thuật thiết bị lấy ở form phía trên; các ô dưới đây chỉ dùng cho biên bản (không lưu), để trống thì biên bản để trống. Mở file trong Word để bổ sung
@@ -2543,7 +2590,7 @@
           <label class="field">Độ ẩm môi trường (%)<input id="ob_doam" type="number" step="0.1" min="0" max="100" placeholder="VD: 68" /></label>
           <label class="field field-wide">
             <span class="field-label-row">Kết luận
-              <button type="button" class="btn xs ghost" id="btnOilBbtnAutoConclusion" style="margin-left:8px;">Viết lại tự động</button>
+              <button type="button" class="btn xs ghost u-ml-8px" id="btnOilBbtnAutoConclusion">Viết lại tự động</button>
             </span>
             <textarea id="ob_ketluan" rows="2" placeholder="App tự viết theo kết quả đánh giá — sửa được"></textarea>
           </label>
@@ -2556,7 +2603,7 @@
         <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Dầu MBA chính (cuộn ngang)"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th><th>Trạng thái dầu</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="oilHistoryTable"></tbody>
         </table></div>
@@ -2642,8 +2689,8 @@
               <option value="">— Không có / dùng QĐ1901 —</option>
             </select>
           </label>
-          <label class="field ot-inherit-field hidden" id="ot_membrane_wrap" style="align-items:flex-start; flex-direction:row; gap:8px; display:flex;">
-            <input id="ot_membrane" type="checkbox" style="width:auto; margin-top:4px;" />
+          <label class="field ot-inherit-field hidden check-label" id="ot_membrane_wrap">
+            <input class="u-w-auto u-mt-4px" id="ot_membrane" type="checkbox" />
             <span>Có bảo vệ bằng màng chất dẻo/nitơ (chỉ áp dụng ≤110kV, khi Dầu mới)</span>
           </label>
           <label class="field ot-inherit-field"><svg class="icon-svg field-label-icon" aria-hidden="true"><use href="#icon-calendar"></use></svg>Ngày lấy mẫu
@@ -2659,8 +2706,8 @@
              hoặc 3 cột Pha A/B/C (một pha / điểm không trung tính). -->
         <div id="ot_paramTableWrap"></div>
 
-        <p class="note hidden" id="editingOltcOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div style="margin-top:18px; display:flex; gap:10px;">
+        <p class="note hidden text-warn-strong" id="editingOltcOilTestNote">Đang SỬA thí nghiệm dầu OLTC đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions">
           <button class="btn primary" id="btnAnalyzeOltcOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearOltcOilForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditOltcOilTest">Hủy sửa</button>
@@ -2668,11 +2715,11 @@
       </div>
 
       <div class="panel hidden" id="oltcOilResultsPanel">
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-          <h2 style="margin:0;"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
+        <div class="bar-between">
+          <h2 class="u-m-0"><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu OLTC</h2>
           <button type="button" class="btn ghost mode-lap" id="btnExportMbaOilBbtnOltc"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
-        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+        <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="ot_overall">—</div></div>
         </div>
         <div class="table-scroll"><table>
@@ -2687,7 +2734,7 @@
         <div class="table-scroll" tabindex="0" role="region" aria-label="Số liệu đã lưu — Dầu OLTC (cuộn ngang)"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Điểm lấy mẫu</th><th>Pha</th><th>Cấp ĐA</th>
-            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Trạng thái dầu</th><th>Độ ẩm (ppm)</th><th>BDV (kV)</th><th>Chỉ tiêu bổ sung</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="oltcOilHistoryTable"></tbody>
         </table></div>
@@ -2704,7 +2751,7 @@
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             Biên bản đối chiếu
           </span>
-          <span class="badge" id="oPreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
+          <span class="badge file-loaded-badge" id="oPreviewBadge">Đã tải file</span>
           <span class="bbtn-preview-filename" id="oPreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
             <button type="button" class="btn xs ghost" id="btnOilPreviewNewTab" title="Mở file ở tab mới">
@@ -2746,7 +2793,7 @@
             <input id="t3BatchFiles" type="file" aria-labelledby="t3BatchDropzoneText" accept="application/pdf,.pdf" multiple />
           </div>
           <div class="bbtn-import-extra bbtn-import-x1">
-            <div style="display:flex; justify-content:flex-end;">
+            <div class="u-d-flex u-justify-flex-end">
               <button type="button" class="btn xs ghost hidden" id="btnToggleT3Preview" title="Ẩn/Hiện khung xem biên bản bên cạnh">
                 <svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg>
                 <span id="btnToggleT3PreviewText">Hiện BBTN đối chiếu</span>
@@ -2755,35 +2802,35 @@
             <p class="note hidden" id="t3ImportNote" role="status"></p>
           </div>
           <div class="bbtn-import-extra bbtn-import-x2">
-            <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+            <div class="batch-options">
               <button type="button" class="btn sm ghost" id="t3BatchChooseFolder">Chọn cả thư mục...</button>
-              <label style="display:flex; align-items:center; gap:6px; font-size:12.5px; font-weight:600; color:var(--gray-600);">
+              <label class="batch-option-label">
                 <input type="checkbox" id="t3BatchAttach" checked /> Đính kèm PDF gốc vào từng biên bản
               </label>
             </div>
           </div>
         </div>
-        <p class="note" style="margin-top:12px;">Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
+        <p class="note u-mt-12px">Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
           "Đánh giá &amp; Lưu 3 pha" (tách 1 bản ghi mỗi pha). <strong>Trạm / Vị trí lắp đặt</strong> lấy theo form bên dưới nếu đã nhập
           (dùng chung cho cả đợt), để trống thì theo từng biên bản; Nhà sản xuất tự khớp theo hãng ghi trên biên bản, không khớp thì
           dùng Nhà sản xuất đang chọn ở form.</p>
         <input id="t3BatchFolderFiles" type="file" webkitdirectory multiple class="hidden" />
         <p class="note hidden" id="t3BatchSkippedNote"></p>
-        <div id="t3BatchPreviewWrap" class="hidden" style="margin-top:16px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
-            <div style="font-size:13px; font-weight:700; color:var(--blue-900);" id="t3BatchSummaryText">—</div>
-            <div style="display:flex; gap:8px;">
+        <div id="t3BatchPreviewWrap" class="hidden u-mt-16px">
+          <div class="bar-between">
+            <div class="batch-summary" id="t3BatchSummaryText">—</div>
+            <div class="u-d-flex u-gap-8px">
               <button type="button" class="btn sm ghost" id="t3BatchSelectAll">Chọn tất cả hợp lệ</button>
               <button type="button" class="btn sm ghost" id="t3BatchSelectNone">Bỏ chọn tất cả</button>
             </div>
           </div>
-          <div class="table-scroll" style="margin-top:8px;"><table>
-            <thead><tr><th></th><th>File</th><th>Trạm</th><th>Vị trí lắp đặt</th><th>Ngày lấy mẫu</th><th>Loại</th><th>Nhà sản xuất</th><th>Số liệu</th><th>Trạng thái</th></tr></thead>
+          <div class="table-scroll u-mt-8px"><table>
+            <thead><tr><th><span class="sr-only">Chọn</span></th><th>File</th><th>Trạm</th><th>Vị trí lắp đặt</th><th>Ngày lấy mẫu</th><th>Loại</th><th>Nhà sản xuất</th><th>Số liệu</th><th>Trạng thái</th></tr></thead>
             <tbody id="t3BatchTable"></tbody>
           </table></div>
-          <div style="margin-top:14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div class="batch-actions">
             <button type="button" class="btn primary" id="t3BatchSave">Lưu các biên bản đã chọn</button>
-            <span class="note" id="t3BatchProgressText" style="margin:0;"></span>
+            <span class="note u-m-0" id="t3BatchProgressText"></span>
           </div>
         </div>
       </div>
@@ -2843,23 +2890,23 @@
             <tr><td>Hàm lượng nước (ppm)</td><td><input id="t3_moisture_A" type="number" min="0" step="0.1" aria-label="Hàm lượng nước (ppm) pha A" /></td><td><input id="t3_moisture_B" type="number" min="0" step="0.1" aria-label="Hàm lượng nước (ppm) pha B" /></td><td><input id="t3_moisture_C" type="number" min="0" step="0.1" aria-label="Hàm lượng nước (ppm) pha C" /></td></tr>
           </tbody>
         </table></div>
-        <label class="field" style="margin-top:12px;">Ghi chú<input id="t3_ghichu" type="text" /></label>
+        <label class="field u-mt-12px">Ghi chú<input id="t3_ghichu" type="text" /></label>
         <label class="field">Kết luận (để trống thì app tự viết sau khi đánh giá; sửa được trước khi xuất)
           <textarea id="t3_ketluan" rows="3"></textarea>
         </label>
-        <p class="note hidden" id="t3EditingNote" style="color:var(--warn); font-weight:600;">Đang mở biên bản đã lưu — bấm "Đánh giá &amp; Lưu 3 pha" để cập nhật đúng các bản ghi này.</p>
-        <div style="margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;">
+        <p class="note hidden text-warn-strong" id="t3EditingNote">Đang mở biên bản đã lưu — bấm "Đánh giá &amp; Lưu 3 pha" để cập nhật đúng các bản ghi này.</p>
+        <div class="form-actions u-wrap-wrap">
           <button type="button" class="btn primary" id="btnT3Analyze">Đánh giá &amp; Lưu 3 pha</button>
           <button type="button" class="btn ghost mode-lap" id="btnT3Export"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
           <button type="button" class="btn ghost" id="btnT3Clear">Xóa form</button>
         </div>
-        <div class="hidden" id="t3ResultWrap" style="margin-top:18px;">
+        <div class="hidden u-mt-18px" id="t3ResultWrap">
           <div class="section-title">Đánh giá: <span id="t3Overall"></span></div>
           <div class="table-scroll"><table>
             <thead><tr><th>Hạng mục</th><th><span class="phase-dot a"></span>Pha A</th><th><span class="phase-dot b"></span>Pha B</th><th><span class="phase-dot c"></span>Pha C</th><th>Giới hạn</th><th>Đánh giá</th><th>Trên BBTN</th></tr></thead>
             <tbody id="t3ResultTable"></tbody>
           </table></div>
-          <p class="note hidden" id="t3MismatchNote" style="color:var(--warn); font-weight:600;"></p>
+          <p class="note hidden text-warn-strong" id="t3MismatchNote"></p>
         </div>
       </div>
     </div><!-- /.dga-input-main-col -->
@@ -2871,7 +2918,7 @@
             <svg class="icon-svg" aria-hidden="true"><use href="#icon-paperclip"></use></svg>
             Biên bản đối chiếu (3 pha)
           </span>
-          <span class="badge" id="t3PreviewBadge" style="background:#e0f2fe; color:#0369a1; font-size:11px; padding:2px 8px; border-radius:9999px;">Đã tải file</span>
+          <span class="badge file-loaded-badge" id="t3PreviewBadge">Đã tải file</span>
           <span class="bbtn-preview-filename" id="t3PreviewFileName" title=""></span>
           <div class="bbtn-preview-actions">
             <button type="button" class="btn xs ghost" id="btnT3NewTab" title="Mở file ở tab mới">
@@ -2970,8 +3017,8 @@
           <label class="field">Điện áp chọc thủng (kV) <input id="tio_bdv" type="number" min="0" step="0.1" /></label>
         </div>
 
-        <p class="note hidden" id="editingTioOilTestNote" style="color:var(--warn); font-weight:600;">Đang SỬA thí nghiệm dầu TI/TU đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
-        <div style="margin-top:18px; display:flex; gap:10px;">
+        <p class="note hidden text-warn-strong" id="editingTioOilTestNote">Đang SỬA thí nghiệm dầu TI/TU đã lưu trước đây — bấm "Cập nhật &amp; Lưu" để ghi đè, hoặc "Hủy sửa" để bỏ qua.</p>
+        <div class="form-actions">
           <button class="btn primary" id="btnAnalyzeTioOil">Đánh giá &amp; Lưu</button>
           <button class="btn ghost" id="btnClearTioOilForm">Xóa form</button>
           <button class="btn ghost hidden" id="btnCancelEditTioOilTest">Hủy sửa</button>
@@ -2980,7 +3027,7 @@
 
       <div class="panel hidden" id="tioOilResultsPanel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-check-circle"></use></svg>Kết quả đánh giá dầu TI/TU</h2>
-        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+        <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận chung</div><div class="value" id="tio_overall">—</div></div>
         </div>
         <div class="table-scroll"><table>
@@ -2994,7 +3041,7 @@
         <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với tiêu chuẩn nhà sản xuất ở trên — không thay thế "Kết luận chung". Cần nhập
           Cấp điện áp Um để xác định Category. Điện áp chọc thủng dùng số liệu SUY DIỄN (Category D≈A, E≈B của Bảng 5) do
           Bảng 7 gốc không có số liệu riêng cho hạng mục này — xem cột "Căn cứ".</p>
-        <div class="stat-row" style="grid-template-columns: minmax(0, 1fr);">
+        <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận (IEC 60422:2024)</div><div class="value" id="tio_iec_overall">—</div></div>
         </div>
         <div class="table-scroll"><table>
@@ -3009,7 +3056,7 @@
         <div class="table-scroll"><table class="sticky-first-col">
           <thead><tr>
             <th>Ngày</th><th>Trạm</th><th>Thiết bị</th><th>Loại</th><th>Pha</th><th>Nhà sản xuất</th><th>Um (kV)</th>
-            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"></th>
+            <th>Độ ẩm (ppm)</th><th>tgδ 90°C (%)</th><th>tgδ 20°C (%)</th><th>BDV (kV)</th><th>Kết luận</th><th>Người nhập</th><th class="actions-col-header"><span class="sr-only">Thao tác</span></th>
           </tr></thead>
           <tbody id="tioOilHistoryTable"></tbody>
         </table></div>
@@ -3073,9 +3120,12 @@
           từng công việc cụ thể: nhập số liệu, đọc kết quả, xem cảnh báo, xuất biên bản... Bấm vào từng mục dưới
           đây để xem chi tiết.</p>
         <div class="mindmap-controls">
+          <!-- Tìm trong hướng dẫn (Bước 4e) — setupUserGuideSearch(), ui-guides.js -->
+          <input type="search" id="guideSearch" class="guide-search" placeholder="Tìm trong hướng dẫn — VD: xuất Excel, Bảng 63, Viewer" aria-label="Tìm trong hướng dẫn" aria-describedby="guideSearchCount" autocomplete="off" />
           <button type="button" class="btn ghost" id="btnGuideExpandAll">Mở tất cả</button>
           <button type="button" class="btn ghost" id="btnGuideCollapseAll">Thu gọn tất cả</button>
         </div>
+        <p class="note guide-search-count hidden" id="guideSearchCount" aria-live="polite"></p>
         <div class="mm-branches" id="userGuideRoot">
         <!-- USER-GUIDE:BEGIN — sinh tự động bởi scripts/build-user-guide.js từ user_manual.md, KHÔNG sửa tay -->
         <details class="mm-node">
@@ -3086,35 +3136,35 @@
           <thead>
           <tr>
           <th>Loại thiết bị</th>
-          <th style="text-align: center;">Có nhập DGA</th>
-          <th style="text-align: center;">Có nhập thí nghiệm dầu</th>
+          <th class="u-ta-center">Có nhập DGA</th>
+          <th class="u-ta-center">Có nhập thí nghiệm dầu</th>
           </tr>
           </thead>
           <tbody>
           <tr>
           <td>MBA / Kháng dầu</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔ (dầu thùng chính + dầu OLTC, đủ chỉ tiêu lý-hóa)</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔ (dầu thùng chính + dầu OLTC, đủ chỉ tiêu lý-hóa)</td>
           </tr>
           <tr>
           <td>TI (biến dòng điện)</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔ (cần chọn nhà sản xuất — xem mục 9.3)</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔ (cần chọn nhà sản xuất — xem mục 9.3)</td>
           </tr>
           <tr>
           <td>TU (biến điện áp)</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔ (cần chọn nhà sản xuất — xem mục 9.3)</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔ (cần chọn nhà sản xuất — xem mục 9.3)</td>
           </tr>
           <tr>
           <td>Sứ xuyên (Bushing)</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔ (theo tiêu chuẩn nhà sản xuất — xem mục 9.4)</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔ (theo tiêu chuẩn nhà sản xuất — xem mục 9.4)</td>
           </tr>
           <tr>
           <td>Khác</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✘</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✘</td>
           </tr>
           </tbody>
           </table></div>
@@ -3237,9 +3287,15 @@
           </tr>
           </tbody>
           </table></div>
+          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm máy chủ đang dùng, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Đổi mật khẩu và <strong>tài khoản · Đăng xuất</strong>. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
           <h3>3.2. Giao diện sáng hoặc tối</h3>
-          <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải để đổi giao diện. Giao diện tối dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành.</p>
+          <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải (trên điện thoại: trong menu <strong>⋯</strong>) để đổi giao diện. Giao diện tối nền xanh navy đậm, dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành. Màu sắc theo nhận diện EVNNPT (xanh EVN, đỏ, vàng), dải 3 màu pha A vàng · B xanh lá · C đỏ dưới thanh trên cùng.</p>
+          <p><strong>Chọn Trạm/Thiết bị một lần cho 3 tab xem:</strong> chọn Trạm/Thiết bị ở <strong>Lịch sử đo</strong>, <strong>Xu hướng</strong> hoặc <strong>Cảnh báo</strong> thì sang 2 tab kia đã lọc sẵn đúng thiết bị đó; xóa ô ở 1 tab cũng bỏ lọc ở cả 3. Form nhập ở Khí hòa tan / Lý-Hóa dầu <strong>không</strong> bị điền theo, để tránh nhập nhầm số liệu vào thiết bị đang xem. Lựa chọn chỉ nhớ trong lần mở app này.</p>
+          <p><strong>Ngày trong các bảng</strong> hiển thị dạng ngày/tháng/năm (VD 20/10/2026); ô nhập ngày và file xuất vẫn giữ định dạng chuẩn.</p>
+          <p><strong>Bảng rộng hơn màn hình</strong> (VD Lịch sử đo khí hòa tan, 21 cột): có thêm <strong>thanh cuộn ngang màu xanh ở ngay trên bảng</strong>, dính dưới thanh tab khi cuộn trang xuống, nên không phải kéo xuống cuối bảng mới cuộn ngang được. Cột Ngày và cột nút thao tác luôn hiện khi cuộn. Muốn thấy hết cột cùng lúc: dùng màn hình rộng (từ khoảng 1600px là đủ), hoặc chuyển thanh tab sang dạng dọc rồi <strong>thu gọn sidebar</strong> (nút mũi tên ở đầu sidebar) để bảng dùng hết bề ngang, hoặc thu nhỏ trang trình duyệt (Ctrl + phím −).</p>
+          <p><strong>Thu gọn hướng dẫn:</strong> nhiều mục có nút <strong>con mắt</strong> (ở tiêu đề mục hoặc thanh công cụ đầu tab) để ẩn/hiện các đoạn hướng dẫn, giải thích; app nhớ lựa chọn của từng mục.</p>
+          <p><strong>Tìm trong hướng dẫn:</strong> ở tab <strong>Hướng dẫn</strong>, gõ từ khóa vào ô tìm kiếm (không cần gõ dấu, VD "xuat excel"). Chỉ các mục có từ khóa được giữ lại và mở sẵn, chỗ khớp được tô vàng; nhấn Esc hoặc xóa ô để trở lại như cũ.</p>
           <h3>3.3. Thanh tab ngang hoặc dọc</h3>
           <p>Bấm nút biểu tượng thanh bên ở góc trên bên trái để chuyển giữa <strong>thanh tab ngang</strong> (mặc định) và <strong>thanh tab dọc bên trái</strong>. Ở chế độ dọc, bấm mũi tên để <strong>thu gọn</strong> (chỉ còn biểu tượng; rê chuột để xem tên tab). App nhớ lựa chọn của bạn.</p>
           <h3>3.4. Thanh tiêu đề cố định (Sticky Header)</h3>
@@ -3612,7 +3668,15 @@
           <summary>10. Xem lại, sửa, xóa và so sánh (tab Lịch sử đo)<svg class="mm-chevron" aria-hidden="true"><use href="#icon-chevron-right"></use></svg></summary>
           <div class="sm-body">
           <h3>10.1. Chọn nội dung xem</h3>
-          <p>Ở đầu tab, chọn xem <strong>Khí hòa tan (DGA)</strong> hoặc <strong>Dầu</strong> (gồm 3 bảng: dầu MBA chính / dầu OLTC / dầu TI-TU-Sứ xuyên). Dùng ô lọc <strong>Trạm/Thiết bị</strong> (gõ tự do) và bộ lọc <strong>Loại thiết bị</strong> để thu hẹp danh sách.</p>
+          <p><strong>Bộ lọc chung</strong> ở đầu tab lọc <strong>một lần cho cả 2 bảng</strong> Khí hòa tan và Dầu:</p>
+          <ul class="rec-list">
+          <li><strong>Trạm biến áp</strong>, <strong>Thiết bị</strong>: chọn từ danh sách gợi ý hoặc gõ tự do. Gợi ý lấy từ cả dữ liệu khí lẫn dầu.</li>
+          <li><strong>Loại thiết bị</strong>: MBA/Kháng dầu, TI, TU, Sứ xuyên, Khác, hoặc <strong>(Chưa ghi loại thiết bị)</strong> cho các bản ghi cũ chưa ghi loại. Ở bảng Dầu: chọn MBA/Kháng dầu thì hiện bảng dầu MBA chính + dầu OLTC; chọn TI/TU/Sứ xuyên thì hiện bảng dầu TI/TU/Sứ xuyên đúng loại đó.</li>
+          <li><strong>Từ ngày / Đến ngày</strong>: khoảng ngày lấy mẫu (để trống 1 đầu = không giới hạn đầu đó).</li>
+          <li><strong>Xóa lọc</strong>: bỏ toàn bộ điều kiện lọc.</li>
+          </ul>
+          <p>Bên dưới bộ lọc, bấm <strong>Khí hòa tan (DGA)</strong> hoặc <strong>Dầu</strong> để chuyển bảng — bộ lọc <strong>giữ nguyên</strong> khi chuyển. Số trong ngoặc trên mỗi nút là số bản ghi khớp bộ lọc của bảng đó, nên biết trước bảng kia có dữ liệu hay không. Dòng "Đang lọc: ..." cạnh 2 nút tóm tắt các điều kiện đang áp dụng.</p>
+          <p>Bảng dài: nút tròn <strong>mũi tên lên</strong> ở góc phải dưới màn hình (hiện khi đã cuộn xuống) đưa về đầu trang ngay.</p>
           <h3>10.2. Đọc bảng lịch sử DGA</h3>
           <p>Mỗi dòng gồm: ngày, trạm, thiết bị, loại, pha, lần đo, 7 khí + N2/O2, TCG, <strong>Kết luận</strong> (kèm "⚠ Vượt ngưỡng loại bỏ" nếu có), mã <strong>Bảng 66</strong>, vùng <strong>Duval</strong>, <strong>Người nhập</strong> và các nút thao tác.</p>
           <ul class="rec-list">
@@ -3643,9 +3707,10 @@
           <div class="sm-body">
           <p>Tab này <strong>tự rà soát lần đo/thí nghiệm gần nhất của từng thiết bị</strong> (khí hòa tan, dầu MBA chính, dầu OLTC, dầu TI/TU/Sứ xuyên) và liệt kê các thiết bị đang ở mức <strong>Cảnh báo</strong> hoặc <strong>Báo động</strong>. App dùng đúng các hàm đánh giá đã dùng ở tab Khí hòa tan/Lý-Hóa dầu, không tự đặt ngưỡng riêng.</p>
           <ul class="rec-list">
-          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động.</li>
+          <li><strong>Thống kê nhanh:</strong> tổng thiết bị đang theo dõi, số thiết bị đang có cảnh báo, số mức Cảnh báo, số mức Báo động. Bấm thẻ <strong>Mức Cảnh báo</strong> hoặc <strong>Mức Báo động</strong> để chỉ xem mức đó (thẻ sáng lên); bấm lại để bỏ lọc.</li>
           <li><strong>Lọc theo Trạm biến áp:</strong> gõ hoặc chọn trạm (chỉ gợi ý các trạm đang có cảnh báo); để trống = tất cả.</li>
-          <li>Mỗi dòng cho biết: thiết bị, loại đo, mức cảnh báo, tình trạng, khí/chỉ tiêu vượt ngưỡng, lý do và khuyến cáo hành động.</li>
+          <li>Mỗi dòng cho biết: <strong>thiết bị</strong> (kèm trạm và loại đo), <strong>mức cảnh báo</strong> (kèm kết luận, dấu "Đã hiệu chỉnh" nếu số liệu từng bị sửa), <strong>chỉ tiêu vượt ngưỡng</strong>, <strong>lần đo</strong> (kèm ngày). Thiếu tên trạm/thiết bị thì ghi <em>(chưa ghi trạm)</em> / <em>(chưa ghi tên thiết bị)</em>.</li>
+          <li>Bấm <strong>Chi tiết</strong> ở cuối dòng để xem <strong>Hạng mục cảnh báo</strong> (lý do) và <strong>Khuyến cáo</strong> hành động; bấm <strong>Thu gọn</strong> để đóng. Trên điện thoại, mỗi cảnh báo hiện thành 1 thẻ.</li>
           <li><strong>Xem xu hướng:</strong> nhảy thẳng sang tab <strong>Xu hướng</strong>, tự chọn đúng thiết bị/pha và tick sẵn (các) thông số gây cảnh báo.</li>
           <li><strong>Xuất Excel:</strong> bấm nút mở hộp thoại chọn phạm vi rồi tải file <code>.xlsx</code>:</li>
           <li><strong>Trạm ▸ Thiết bị ▸ Pha</strong>: chọn theo bậc (ô sau chỉ liệt kê theo ô trước), hoặc để "Tất cả".</li>
@@ -3663,6 +3728,7 @@
           <div class="sm-body">
           <p class="sm-note"><strong>Thu gọn hướng dẫn:</strong> cuối tiêu đề mỗi mục (Xu hướng theo thời gian, Chọn thông số cần vẽ, Dự báo xu hướng, Diễn biến loại khiếm khuyết) và cạnh tiêu đề bảng <strong>Tiêu chuẩn so sánh</strong> dưới đồ thị có nút <strong>con mắt</strong>. Bấm để ẩn các đoạn hướng dẫn, giải thích của mục đó (kể cả bảng Ý nghĩa mã khiếm khuyết) cho gọn màn hình; khi đó icon đổi thành con mắt gạch chéo, bấm lại để hiện. App nhớ lựa chọn của từng mục trên trình duyệt đang dùng.</p>
           <h3>12.1. Vẽ đồ thị</h3>
+          <p>Khi chưa chọn thiết bị, tab gợi ý bấm nhanh: <strong>Đang có cảnh báo</strong> (chấm đỏ = Báo động, vàng = Cảnh báo) và <strong>Vừa đo gần đây</strong>. Bấm 1 thiết bị là đồ thị hiện ngay.</p>
           <ol type="1">
           <li>(Tùy chọn) Chọn <strong>Trạm biến áp</strong> để danh sách thiết bị chỉ gồm thiết bị của trạm đó. Nếu không chọn trạm mà tên thiết bị trùng ở nhiều trạm, app sẽ báo — hãy chọn trạm để phân biệt.</li>
           <li>Chọn <strong>Thiết bị</strong>.</li>
@@ -3835,7 +3901,7 @@
           <div class="table-scroll"><table>
           <thead>
           <tr>
-          <th></th>
+          <th>Lần đo</th>
           <th>H2</th>
           <th>CH4</th>
           <th>C2H6</th>
@@ -3978,71 +4044,71 @@
           <thead>
           <tr>
           <th>Quyền hạn</th>
-          <th style="text-align: center;">Viewer</th>
-          <th style="text-align: center;">User</th>
-          <th style="text-align: center;">Admin</th>
+          <th class="u-ta-center">Viewer</th>
+          <th class="u-ta-center">User</th>
+          <th class="u-ta-center">Admin</th>
           </tr>
           </thead>
           <tbody>
           <tr>
           <td>Xem toàn bộ dữ liệu (Khí DGA, Dầu, Lịch sử, Cảnh báo, Xu hướng)</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔</td>
           </tr>
           <tr>
           <td>Nhập mới lần đo DGA, thí nghiệm dầu MBA, OLTC, TI/TU/Sứ xuyên</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔</td>
           </tr>
           <tr>
           <td>Sửa bản ghi đo khí / thí nghiệm dầu đã lưu</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">Chỉ bản ghi <strong>do mình nhập</strong></td>
-          <td style="text-align: center;">Mọi bản ghi</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">Chỉ bản ghi <strong>do mình nhập</strong></td>
+          <td class="u-ta-center">Mọi bản ghi</td>
           </tr>
           <tr>
           <td>Xóa bản ghi dữ liệu</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✔</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✔</td>
           </tr>
           <tr>
           <td>Xuất Excel (tab Cảnh báo)</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">Chỉ các <strong>trạm phụ trách</strong> do Admin gán</td>
-          <td style="text-align: center;">✔ (mọi trạm)</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">Chỉ các <strong>trạm phụ trách</strong> do Admin gán</td>
+          <td class="u-ta-center">✔ (mọi trạm)</td>
           </tr>
           <tr>
           <td>Gửi ý kiến phản hồi kèm ảnh minh họa</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔</td>
-          <td style="text-align: center;">✔</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔</td>
+          <td class="u-ta-center">✔</td>
           </tr>
           <tr>
           <td>Cấu hình Tiêu chuẩn theo nhà sản xuất</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✘ (chỉ xem khi tra cứu)</td>
-          <td style="text-align: center;">✔ (Thêm, Sửa, Xóa)</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✘ (chỉ xem khi tra cứu)</td>
+          <td class="u-ta-center">✔ (Thêm, Sửa, Xóa)</td>
           </tr>
           <tr>
           <td>Chỉnh sửa các bảng Quy định số học QĐ1901/IEC</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✘ (chỉ xem bảng)</td>
-          <td style="text-align: center;">✔ (Lưu bảng, Khôi phục)</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✘ (chỉ xem bảng)</td>
+          <td class="u-ta-center">✔ (Lưu bảng, Khôi phục)</td>
           </tr>
           <tr>
           <td>Quản lý người dùng (tạo tài khoản, đổi vai trò, đặt lại mật khẩu, xóa)</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✔</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✔</td>
           </tr>
           <tr>
           <td>Đồng bộ dữ liệu sang Bản sao Supabase</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✘</td>
-          <td style="text-align: center;">✔</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✘</td>
+          <td class="u-ta-center">✔</td>
           </tr>
           </tbody>
           </table></div>
@@ -4174,7 +4240,7 @@
             </div>
           </label>
         </div>
-        <button type="button" class="btn primary" id="btnSubmitFeedback" style="margin-top:6px;">Gửi góp ý</button>
+        <button type="button" class="btn primary u-mt-6px" id="btnSubmitFeedback">Gửi góp ý</button>
       </div>
 
       <div class="panel">
@@ -4214,11 +4280,11 @@
              chế độ vì Admin có thể muốn chủ động cấp tài khoản trước. Xem onAdminCreateUser()
              ở ui-admin.js — mật khẩu TẠM sinh ngẫu nhiên, hiện 1 lần qua #tempPasswordOverlay
              để Admin copy gửi người dùng qua kênh khác (app không tự gửi email được). -->
-        <div class="toolbar" style="align-items:flex-end; flex-wrap:wrap;">
-          <label class="field" style="flex:1 1 240px; margin:0;">Email tài khoản mới
+        <div class="toolbar u-items-flex-end u-wrap-wrap">
+          <label class="field u-flex-1-1-240px u-m-0">Email tài khoản mới
             <input id="qt_newuser_email" type="email" placeholder="ten@vidu.com" autocomplete="off" />
           </label>
-          <label class="field" style="max-width:160px; margin:0;">Vai trò
+          <label class="field u-maxw-160px u-m-0">Vai trò
             <select id="qt_newuser_role">
               <option value="user">User</option>
               <option value="viewer">Viewer</option>
@@ -4230,7 +4296,7 @@
         <p class="auth-error hidden" id="qtNewUserError"></p>
 
         <div class="table-scroll"><table>
-          <thead><tr><th>Email</th><th>Vai trò</th><th>Trạm phụ trách</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th></th></tr></thead>
+          <thead><tr><th>Email</th><th>Vai trò</th><th>Trạm phụ trách</th><th>Ngày đăng ký</th><th>Đăng nhập gần nhất</th><th><span class="sr-only">Thao tác</span></th></tr></thead>
           <tbody id="usersTable"></tbody>
         </table></div>
         <p class="note" id="usersEmpty">Chưa có người dùng nào đăng ký.</p>
@@ -4250,7 +4316,7 @@
       <div class="std-layout">
       <div class="panel std-list-col">
         <div class="std-list-head">
-          <h2 style="margin:0;">Tiêu chuẩn đã cấu hình <span class="std-count" id="stdListCount"></span></h2>
+          <h2 class="u-m-0">Tiêu chuẩn đã cấu hình <span class="std-count" id="stdListCount"></span></h2>
           <button type="button" class="btn sm primary" id="btnNewStandard">+ Thêm tiêu chuẩn</button>
         </div>
         <div class="std-list-filters">
@@ -4281,9 +4347,9 @@
             chọn nhà sản xuất, hoặc nhà sản xuất chưa có cấu hình khớp, sẽ tự động dùng tiêu chuẩn mặc định (riêng
             TI/TU sẽ báo "Chưa có tiêu chuẩn nhà sản xuất").</p>
         </div>
-        <p class="note hidden" id="editingStandardNote" style="color:var(--warn); font-weight:600;">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
+        <p class="note hidden text-warn-strong" id="editingStandardNote">Đang SỬA tiêu chuẩn đã có — bấm "Cập nhật tiêu chuẩn" để lưu thay đổi, hoặc "Hủy" để bỏ qua.</p>
 
-        <div class="grid" style="margin-top:10px;">
+        <div class="grid u-mt-10px">
           <label class="field">Loại tiêu chuẩn
             <select id="s_standard_type">
               <option value="khi">Khí hòa tan (DGA)</option>
@@ -4396,7 +4462,7 @@
           </div>
         </div>
 
-        <div style="margin-top:14px; display:flex; gap:10px;">
+        <div class="u-mt-14px u-d-flex u-gap-10px">
           <button class="btn primary" id="btnSaveStandard">Lưu tiêu chuẩn</button>
           <button class="btn ghost hidden" id="btnCancelEditStandard">Hủy</button>
         </div>
@@ -4469,7 +4535,7 @@
           <button type="button" class="btn xs ghost" id="btnCopyTempPassword">Copy</button>
         </div>
       </div>
-      <button type="button" class="btn primary" id="btnCloseTempPassword2" style="width:100%; margin-top:10px;">Đã lưu lại, đóng</button>
+      <button type="button" class="btn primary u-w-100pct u-mt-10px" id="btnCloseTempPassword2">Đã lưu lại, đóng</button>
     </div>
   </div>
 
@@ -4482,14 +4548,14 @@
       <p class="note">User chỉ <strong>xuất Excel</strong> được dữ liệu của các trạm được tick (vẫn xem được mọi trạm).
         Admin không cần gán — luôn xuất được tất cả.</p>
       <input type="search" id="stationAssignSearch" placeholder="Tìm trạm..." autocomplete="off" />
-      <div class="btn-row" style="margin:8px 0;">
+      <div class="btn-row u-m-8px-0">
         <button type="button" class="btn xs ghost" id="btnStationAssignAll">Chọn các trạm đang hiện</button>
         <button type="button" class="btn xs ghost" id="btnStationAssignNone">Bỏ chọn tất cả</button>
-        <span class="note" id="stationAssignCount" style="margin:0 0 0 auto;"></span>
+        <span class="note u-m-0-0-0-auto" id="stationAssignCount"></span>
       </div>
       <div class="check-list" id="stationAssignList"></div>
       <p class="auth-error hidden" id="stationAssignError"></p>
-      <button type="button" class="btn primary" id="btnSaveStationAssign" style="width:100%; margin-top:10px;">Lưu</button>
+      <button type="button" class="btn primary u-w-100pct u-mt-10px" id="btnSaveStationAssign">Lưu</button>
     </div>
   </div>
 
@@ -4508,16 +4574,16 @@
         <span class="location-sep" aria-hidden="true">▸</span>
         <label class="field">Pha<select id="xl_phase"></select></label>
       </div>
-      <label class="field" style="margin-top:10px;">Loại cảnh báo
+      <label class="field u-mt-10px">Loại cảnh báo
         <select id="xl_type"></select>
       </label>
-      <label class="field" style="margin-top:10px; flex-direction:row; align-items:center; gap:8px; display:flex;">
-        <input type="checkbox" id="xl_latestOnly" style="width:auto;" checked />
+      <label class="field u-mt-10px u-dir-row u-items-center u-gap-8px u-d-flex">
+        <input class="u-w-auto" type="checkbox" id="xl_latestOnly" checked />
         Chỉ số liệu mới nhất của từng thiết bị (bỏ các cảnh báo cũ đã có lần đo mới hơn)
       </label>
-      <p class="note" id="alertsExportPreview" style="margin-top:8px;"></p>
+      <p class="note u-mt-8px" id="alertsExportPreview"></p>
       <p class="auth-error hidden" id="alertsExportError"></p>
-      <button type="button" class="btn primary" id="btnDoAlertsExport" style="width:100%; margin-top:10px;">Xuất file Excel</button>
+      <button type="button" class="btn primary u-w-100pct u-mt-10px" id="btnDoAlertsExport">Xuất file Excel</button>
     </div>
   </div>
 
@@ -4610,6 +4676,7 @@
   <script src="src/presentation/components/ui-location-picker.js" defer></script>
   <script src="src/presentation/components/ui-dropzone.js" defer></script>
   <script src="src/presentation/components/ui-layout.js" defer></script>
+  <script src="src/presentation/components/ui-view-context.js" defer></script>
   <script src="src/presentation/components/ui-busy.js" defer></script>
   <script src="src/presentation/components/ui-theme.js" defer></script>
   <script src="src/presentation/tabs/ui-guides.js" defer></script>

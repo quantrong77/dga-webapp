@@ -1,0 +1,86 @@
+/* style-utilities.css — class tiện ích u-* thay cho thuộc tính style="" viết thẳng trong index.html (Bước 1b,
+   docs/refactor/UI_UX_PLAN.md). SINH TỰ ĐỘNG từ đúng các giá trị style cũ, mỗi class = đúng 1 khai báo, kèm !important để thắng
+   mọi selector như style trực tiếp trước đây — TRỪ display (giữ thường, nạp sau cùng) để .hidden/.guide-collapsed vẫn ẩn
+   được phần tử y như cũ. Bước 3 (thành phần dùng chung) sẽ thay dần các class này bằng
+   class có ý nghĩa và giá trị theo token. Tên: u-<viết tắt thuộc tính>-<giá trị>, VD u-mt-8px = margin-top: 8px. */
+.u-bt-1px-solid-gray-300 { border-top: 1px solid var(--gray-300) !important; }
+.u-c-bad { color: var(--bad) !important; }
+.u-c-warn { color: var(--warn) !important; }
+.u-cols-minmax0-1fr { grid-template-columns: minmax(0, 1fr) !important; }
+.u-d-flex { display: flex; }
+.u-d-inline-flex { display: inline-flex; }
+.u-dir-row { flex-direction: row !important; }
+.u-ff-monospace { font-family: monospace !important; }
+.u-flex-0-0-auto { flex: 0 0 auto !important; }
+.u-flex-1 { flex: 1 !important; }
+.u-flex-1-1-180px { flex: 1 1 180px !important; }
+.u-flex-1-1-200px { flex: 1 1 200px !important; }
+.u-flex-1-1-240px { flex: 1 1 240px !important; }
+.u-flex-1-1-260px { flex: 1 1 260px !important; }
+.u-fs-11px { font-size: 11px !important; }
+.u-fs-13px { font-size: 13px !important; }
+.u-fs-15px { font-size: 15px !important; }
+.u-fw-400 { font-weight: 400 !important; }
+.u-fw-600 { font-weight: 600 !important; }
+.u-gap-10px { gap: 10px !important; }
+.u-gap-16px { gap: 16px !important; }
+.u-gap-18px { gap: 18px !important; }
+.u-gap-8px { gap: 8px !important; }
+.u-h-0 { height: 0 !important; }
+.u-h-16px { height: 16px !important; }
+.u-h-auto { height: auto !important; }
+.u-items-center { align-items: center !important; }
+.u-items-flex-end { align-items: flex-end !important; }
+.u-justify-flex-end { justify-content: flex-end !important; }
+.u-justify-flex-start { justify-content: flex-start !important; }
+.u-justify-space-between { justify-content: space-between !important; }
+.u-m-0 { margin: 0 !important; }
+.u-m-0-0-0-auto { margin: 0 0 0 auto !important; }
+.u-m-0-0-10px { margin: 0 0 10px !important; }
+.u-m-0-0-4px { margin: 0 0 4px !important; }
+.u-m-0-0-8px { margin: 0 0 8px !important; }
+.u-m-10px-0-4px { margin: 10px 0 4px !important; }
+.u-m-8px-0 { margin: 8px 0 !important; }
+.u-maxh-120px { max-height: 120px !important; }
+.u-maxw-100pct { max-width: 100% !important; }
+.u-maxw-160px { max-width: 160px !important; }
+.u-maxw-220px { max-width: 220px !important; }
+.u-maxw-280px { max-width: 280px !important; }
+.u-maxw-300px { max-width: 300px !important; }
+.u-maxw-320px { max-width: 320px !important; }
+.u-mb-0 { margin-bottom: 0 !important; }
+.u-mb-14px { margin-bottom: 14px !important; }
+.u-mb-18px { margin-bottom: 18px !important; }
+.u-minw-220px { min-width: 220px !important; }
+.u-ml-8px { margin-left: 8px !important; }
+.u-ml-auto { margin-left: auto !important; }
+.u-mr-4px { margin-right: 4px !important; }
+.u-mr-5px { margin-right: 5px !important; }
+.u-mt-0 { margin-top: 0 !important; }
+.u-mt-10px { margin-top: 10px !important; }
+.u-mt-12px { margin-top: 12px !important; }
+.u-mt-14px { margin-top: 14px !important; }
+.u-mt-16px { margin-top: 16px !important; }
+.u-mt-18px { margin-top: 18px !important; }
+.u-mt-22px { margin-top: 22px !important; }
+.u-mt-2px { margin-top: 2px !important; }
+.u-mt-4px { margin-top: 4px !important; }
+.u-mt-6px { margin-top: 6px !important; }
+.u-mt-8px { margin-top: 8px !important; }
+.u-ov-hidden { overflow: hidden !important; }
+.u-ovy-auto { overflow-y: auto !important; }
+.u-p-7px-14px { padding: 7px 14px !important; }
+.u-pos-absolute { position: absolute !important; }
+.u-pt-18px { padding-top: 18px !important; }
+.u-ta-center { text-align: center !important; }
+.u-tt-none { text-transform: none !important; }
+.u-va-3px { vertical-align: -3px !important; }
+.u-w-0 { width: 0 !important; }
+.u-w-100pct { width: 100% !important; }
+.u-w-16px { width: 16px !important; }
+.u-w-190px { width: 190px !important; }
+.u-w-200px { width: 200px !important; }
+.u-w-280px { width: 280px !important; }
+.u-w-auto { width: auto !important; }
+.u-wrap-wrap { flex-wrap: wrap !important; }
+.u-ws-pre-wrap { white-space: pre-wrap !important; }

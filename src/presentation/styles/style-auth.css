@@ -6,7 +6,9 @@
 .auth-overlay {
   position: fixed;
   inset: 0;
-  background: linear-gradient(135deg, var(--blue-900), var(--blue-700));
+  /* Màu thương hiệu cố định (navy sao EVNNPT → màu header): --blue-900/--blue-700 bị đảo thành màu SÁNG ở giao diện tối
+     nên trước đây nền đăng nhập tối thành tím nhạt chói (Bước 3d). */
+  background: linear-gradient(135deg, var(--evn-navy), var(--header-bg));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -148,6 +150,26 @@
   font-weight: 600;
 }
 .loading-hint.hidden { display: none; }
+/* Bước 3d — khung chờ (skeleton) ở bảng Lịch sử đo / Cảnh báo: vài thanh mờ nhấp nháy theo dạng dòng bảng, cho biết
+   bảng SẮP hiện ở đây (thay vì chỉ 1 dòng chữ). Chữ "Đang nạp dữ liệu" vẫn giữ (role=status) cho trình đọc màn hình;
+   người dùng bật giảm chuyển động thì hiệu ứng tự tắt (style-base.css). */
+.loading-hint.has-skeleton { flex-wrap: wrap; }
+.skeleton-rows { display: grid; gap: var(--space-2); flex-basis: 100%; margin-top: var(--space-1); }
+.skeleton-rows > span {
+  display: block;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--blue-900) 8%, transparent) 25%, color-mix(in srgb, var(--blue-900) 16%, transparent) 50%, color-mix(in srgb, var(--blue-900) 8%, transparent) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+.skeleton-rows > span:nth-child(2) { width: 92%; }
+.skeleton-rows > span:nth-child(3) { width: 96%; }
+.skeleton-rows > span:nth-child(4) { width: 70%; }
+@keyframes skeleton-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: -100% 0; }
+}
 /* Thông báo "toast" góc trên bên phải (vd: "Đăng nhập thành công!") */
 .toast-container {
   position: fixed;
@@ -199,6 +221,7 @@
   max-width: 360px;
   box-shadow: var(--shadow-5); /* hộp thoại: cao nhất */
 }
+.mini-modal-card h2,
 .mini-modal-card h3 {
   margin: 0 0 10px;
   font-size: 16px;
@@ -250,3 +273,13 @@
    hiểu lầm là đang hoạt động bình thường. Rê chuột vào badge (title=) xem chi tiết lỗi. */
 .badge.error { background: var(--status-error-bg); color: var(--status-error); }
 
+/* Bước 6 — đang khởi động / chưa đăng nhập (html.app-booting, boot-guard.js): chỉ nền xanh như màn hình đăng nhập,
+   không dựng header/tab/nội dung phía sau → không giật hình, đỡ việc cho trình duyệt trên điện thoại. */
+html.app-booting body {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--evn-navy), var(--header-bg));
+}
+html.app-booting body > header.app-header,
+html.app-booting body > nav.tabs,
+html.app-booting body > main,
+html.app-booting body > footer.app-footer { display: none; }

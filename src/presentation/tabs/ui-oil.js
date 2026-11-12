@@ -278,10 +278,7 @@ async function onAnalyzeOil() {
     // Thông số kỹ thuật thiết bị (khối "Thông số kỹ thuật thiết bị" ở form) — chuỗi JSON, "" khi không nhập gì
     device_info: oilDeviceInfoRead(),
   };
-  if (!header.thiet_bi || !header.sample_date) {
-    notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
-    return;
-  }
+  if (!requireFields([[header.thiet_bi, "o_thietbi", "Thiết bị"], [header.sample_date, "o_ngay", "Ngày lấy mẫu"]])) return;
   const vals = readOilParamValues();
   const cols = oilFormCols().filter((c) => vals[c] && Object.keys(vals[c]).length > 0);
   if (cols.length === 0) {
@@ -448,7 +445,7 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
     const evalResult = DGA.evaluateOilRecord(rec, oilStandardsForLogic, _allOilTests);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(oilSamplePointLabel(rec.oil_sample_point || "chung"))}</td>
@@ -484,7 +481,7 @@ function renderOilTestRows(tbodyId, emptyId, sortedRecords) {
     const delBtn = tr.querySelector('[data-action="del"]');
     if (delBtn) {
       delBtn.addEventListener("click", async () => {
-        if (confirm("Xóa thí nghiệm dầu này khỏi lịch sử?")) {
+        if (confirm(confirmDeleteText("thí nghiệm dầu MBA", rec))) {
           try {
             await Storage.deleteOilTest(rec.id);
             await refreshOilTestsUI();

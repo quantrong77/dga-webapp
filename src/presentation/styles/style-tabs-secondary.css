@@ -4,6 +4,11 @@
    tab "Quy trình đánh giá" — 2 tab này xen kẽ nhau trong file gốc nên gộp chung 1 file
    để KHÔNG thay đổi thứ tự cascade), và tab "Giới thiệu" (About). */
 
+/* Bảng Lịch sử đo (nhiều cột): đệm ngang ô gọn hơn (12px → 8px mỗi bên) — bảng khí hòa tan 21 cột hẹp lại ~170px,
+   màn hình 1440px gần như không còn phải cuộn ngang. */
+#tab-lichsu .table-scroll :is(th, td) { padding-left: var(--space-2); padding-right: var(--space-2); }
+
+
 /* ===================== Tab "Quy trình đánh giá" ===================== */
 .process-flow {
   position: relative;
@@ -223,13 +228,6 @@ footer.app-footer {
   max-width: 440px;
   margin: 0 auto;
 }
-#trFaultBody tr.muted-row td {
-  color: var(--text-secondary);
-}
-/* Lần đo bỏ tick: không vẽ lên biểu đồ — làm nhạt cả dòng (trừ ô tick) */
-#trFaultBody tr.unticked-row td:not(:first-child) {
-  opacity: 0.45;
-}
 #trFaultBody input[type="checkbox"],
 #trFaultTickAll {
   width: auto;
@@ -237,10 +235,6 @@ footer.app-footer {
 }
 #trFaultBody tr[data-seq] {
   cursor: pointer;
-}
-#trFaultBody tr.selected-row td {
-  background: var(--surface-sunken);
-  box-shadow: inset 0 1px 0 var(--border-strong), inset 0 -1px 0 var(--border-strong);
 }
 
 /* Phiếu đối chiếu 1 lần đo với Điều 54 */
@@ -335,13 +329,13 @@ footer.app-footer {
   color: var(--text-secondary);
   font-style: italic;
 }
-.fault-check-table tr.match-row td {
-  border-top: 2px solid var(--ok);
-  border-bottom: 2px solid var(--ok);
-}
 /* Cột tên khiếm khuyết không bị bóp hẹp trên điện thoại — bảng cuộn ngang (.table-scroll) thay vì xuống dòng từng chữ */
 .fault-check-table td:nth-child(2) {
   min-width: 170px;
+}
+.fault-check-table tr.match-row td {
+  border-top: 2px solid var(--ok);
+  border-bottom: 2px solid var(--ok);
 }
 .fault-check-table .example-cell {
   min-width: 220px;
@@ -513,6 +507,8 @@ footer.app-footer {
 
 .mindmap-controls {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
   margin-bottom: 14px;
 }
@@ -858,3 +854,25 @@ a.about-value:hover { color: var(--blue-700); text-decoration: underline; }
 .pdt-inactive {
   opacity: 0.6;
 }
+
+/* Trạng thái dòng của bảng diễn biến khiếm khuyết (#trFaultBody): tham khảo / đang chọn / bỏ tick — đặt cuối file, sau
+   .fault-check-table và theo độ ưu tiên selector tăng dần (stylelint no-descending-specificity); 2 bảng không lồng nhau
+   nên đổi chỗ không ảnh hưởng hiển thị. */
+#trFaultBody tr.muted-row td {
+  color: var(--text-secondary);
+}
+#trFaultBody tr.selected-row td {
+  background: var(--surface-sunken);
+  box-shadow: inset 0 1px 0 var(--border-strong), inset 0 -1px 0 var(--border-strong);
+}
+/* Lần đo bỏ tick: không vẽ lên biểu đồ — làm nhạt cả dòng (trừ ô tick) */
+#trFaultBody tr.unticked-row td:not(:first-child) {
+  opacity: 0.45;
+}
+
+/* Ô tìm trong hướng dẫn (Bước 4e). */
+.guide-search { flex: 1 1 280px; max-width: 480px; }
+.guide-search-count { margin: -6px 0 10px; }
+.guide-search-count.hidden,
+.mm-node.hidden { display: none; }
+::highlight(guide-search) { background-color: var(--evn-yellow); color: #000; }

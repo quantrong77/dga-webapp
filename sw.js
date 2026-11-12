@@ -4,7 +4,7 @@
  * hàng đợi và tự động đồng bộ (Outbox Sync Pattern).
  */
 
-const CACHE_NAME = "dga-offline-v71-gop-main-zalo-tai-trang";
+const CACHE_NAME = "dga-offline-v91-lichsu-filters";
 
 const PRECACHE_ASSETS = [
   "./",
@@ -24,17 +24,35 @@ const PRECACHE_ASSETS = [
   "./src/presentation/app-status.js",
   "./src/presentation/app-views.js",
   "./src/presentation/app-core.js",
+  "./src/presentation/styles/fonts.css",
   "./src/presentation/styles/tokens.css",
+  "./assets/fonts/be-vietnam-pro-vietnamese-400-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-ext-400-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-400-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-vietnamese-500-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-ext-500-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-500-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-vietnamese-600-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-ext-600-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-600-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-vietnamese-700-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-ext-700-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-700-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-vietnamese-800-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-ext-800-normal.woff2",
+  "./assets/fonts/be-vietnam-pro-latin-800-normal.woff2",
   "./src/presentation/styles/style-base.css",
   "./src/presentation/styles/style-auth.css",
   "./src/presentation/styles/style-nav-layout.css",
   "./src/presentation/styles/style-components.css",
   "./src/presentation/styles/style-tab-feedback.css",
   "./src/presentation/styles/style-tab-tables.css",
+  "./src/presentation/styles/style-tab-alerts.css",
   "./src/presentation/styles/style-tabs-secondary.css",
   "./src/presentation/styles/style-tab-regulation-config.css",
   "./src/presentation/styles/style-dieu54-charts.css",
   "./src/presentation/styles/style-dga-workflow.css",
+  "./src/presentation/styles/style-utilities.css",
   "./assets/image/app-icon-96.webp",
   "./assets/image/favicon-32.png",
   "./assets/image/favicon-16.png",
@@ -57,6 +75,7 @@ const PRECACHE_ASSETS = [
   "./src/presentation/components/ui-location-picker.js",
   "./src/presentation/components/ui-dropzone.js",
   "./src/presentation/components/ui-layout.js",
+  "./src/presentation/components/ui-view-context.js",
   "./src/presentation/components/ui-busy.js",
   "./src/presentation/components/ui-theme.js",
   "./src/presentation/tabs/ui-guides.js",

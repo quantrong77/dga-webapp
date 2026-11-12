@@ -12,7 +12,7 @@ const path = require("path");
 /** File ở gốc dự án mà trình duyệt tải. */
 const ROOT_FILES = ["index.html", "manifest.webmanifest", "sw.js", "config.js"];
 /** Thư mục phục vụ/chép nguyên (trừ file bị loại bởi isExcluded). */
-const ROOT_DIRS = ["src", "vendor", "assets/image", "mobile"];
+const ROOT_DIRS = ["src", "vendor", "assets/image", "assets/fonts", "mobile"];
 /** Mẫu BBTN app tải bằng fetch(): chỉ các file template-*.docx (không phải BBTN thật / file khóa ~$ của Word). */
 const TEMPLATE_DIR = "assets/template";
 const TEMPLATE_PATTERN = /^template-[\w.-]+\.docx$/;

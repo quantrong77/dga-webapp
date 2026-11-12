@@ -1,0 +1,75 @@
+/* style-tab-alerts.css — Bảng tab Cảnh báo (Bước 4b, docs/refactor/UI_UX_PLAN.md): 5 cột gọn + dòng chi tiết mở rộng,
+   thẻ KPI bấm để lọc theo mức. Nạp sau style-tab-tables.css (dùng lại .pill/.actions-cell/.stat-card ở đó). */
+
+.alert-device-name { font-weight: var(--font-semibold); color: var(--text-primary); }
+.alert-device-meta { margin-top: 2px; font-size: var(--text-xs); color: var(--text-secondary); }
+.alert-device-meta .icon-svg { width: 13px !important; height: 13px !important; margin-right: 3px !important; }
+.alert-missing { font-style: italic; color: var(--text-tertiary); font-weight: var(--font-normal); }
+.alert-level-cell { white-space: nowrap; }
+.alert-status-line { margin-top: var(--space-1); display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+.alert-edited-pill { font-size: 10px; }
+.alert-exceed-cell { min-width: 140px; }
+.alert-exceed-pill { margin: 0 3px 3px 0; }
+.alert-date { margin-top: 2px; font-size: var(--text-xs); color: var(--text-secondary); white-space: nowrap; }
+.alert-editbadge { margin-top: 3px; }
+.alerts-tbody .actions-cell { white-space: nowrap; }
+.alerts-tbody .actions-cell > .alert-detail-toggle { margin-right: var(--space-1); vertical-align: middle; }
+.alerts-tbody .actions-cell > .btn-row { display: inline-flex; vertical-align: middle; }
+.alert-row-open > td { border-bottom-color: transparent; }
+.alert-detail-row.hidden { display: none; }
+.alert-detail-row > td { background: var(--surface-sunken); padding-top: var(--space-2); }
+.alert-detail { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.alert-detail-title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+.alert-detail-text { font-size: var(--text-sm); line-height: var(--leading-relaxed); color: var(--text-primary); }
+.alert-detail-action { white-space: pre-line; }
+@media (max-width: 700px) {
+  .alert-detail { grid-template-columns: minmax(0, 1fr); }
+}
+/* Thẻ KPI lọc theo mức (button.stat-card-filter): giữ nguyên dáng thẻ, thêm trạng thái đang lọc. */
+button.stat-card-filter { font: inherit; text-align: left; cursor: pointer; width: 100%; }
+button.stat-card-filter:hover { border-color: var(--blue-700); }
+button.stat-card-filter[aria-pressed="true"] { border-color: var(--blue-700); box-shadow: var(--focus-ring); background: var(--blue-50); }
+
+/* Điện thoại (≤ 700px): mỗi cảnh báo là 1 thẻ (bỏ tiêu đề cột, bỏ cột thao tác ghim) — bảng 5 cột không đủ chỗ. */
+@media (max-width: 700px) {
+  table:has(> .alerts-tbody) { display: block; }
+  table:has(> .alerts-tbody) > thead { display: none; }
+  .alerts-tbody,
+  .alerts-tbody > tr,
+  .alerts-tbody > tr > td { display: block; }
+  .alerts-tbody > tr.alert-detail-row > td {
+    margin-bottom: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-top: 0;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  }
+  .alerts-tbody > tr.alert-row {
+    margin-bottom: var(--space-2);
+    padding: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+  }
+  .alerts-tbody > tr.alert-row > td { padding: 0; border: 0; background: none; }
+  .alerts-tbody > tr.alert-row > td + td { margin-top: var(--space-2); }
+  .alerts-tbody > tr.alert-row > td.actions-cell {
+    position: static;
+    width: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    background: none;
+    box-shadow: none;
+  }
+  .alerts-tbody .actions-cell > .btn-row.actions-stack { flex-direction: row; }
+  .alerts-tbody > tr.alert-row-open { margin-bottom: 0; border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+}

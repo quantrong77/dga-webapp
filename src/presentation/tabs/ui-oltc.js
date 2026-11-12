@@ -179,10 +179,7 @@ async function onAnalyzeOltcOil() {
     sample_date: $("ot_ngay").value,
     ghi_chu: $("ot_ghichu").value.trim(),
   };
-  if (!header.thiet_bi || !header.sample_date) {
-    notifyError("Dầu OLTC: vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
-    return;
-  }
+  if (!requireFields([[header.thiet_bi, "ot_thietbi", "Thiết bị"], [header.sample_date, "ot_ngay", "Ngày lấy mẫu"]], "Dầu OLTC: ")) return;
   const vals = readOilParamValues("ot");
   const cols = oilFormCols("ot").filter((c) => vals[c] && Object.keys(vals[c]).length > 0);
   if (cols.length === 0) {
@@ -302,7 +299,7 @@ function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
     const evalResult = DGA.evaluateOltcRecord(rec, oilStandardsForLogic, _allOltcOilTests);
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${escapeHtml(oltcSamplePointLabel(rec.oltc_sample_point))}</td>
@@ -337,7 +334,7 @@ function renderOltcOilTestRows(tbodyId, emptyId, sortedRecords) {
     const delBtn = tr.querySelector('[data-action="del"]');
     if (delBtn) {
       delBtn.addEventListener("click", async () => {
-        if (confirm("Xóa thí nghiệm dầu OLTC này khỏi lịch sử?")) {
+        if (confirm(confirmDeleteText("thí nghiệm dầu OLTC", rec))) {
           try {
             await Storage.deleteOltcOilTest(rec.id);
             await refreshOltcOilTestsUI();

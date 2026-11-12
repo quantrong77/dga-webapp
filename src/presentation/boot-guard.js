@@ -33,6 +33,13 @@
   var booted = false;
   var panelEl = null;
 
+  // Bước 6: trong lúc khởi động CHƯA biết đã đăng nhập hay chưa → chỉ hiện nền xanh (cùng nền màn hình đăng nhập),
+  // ẩn header/tab/nội dung (style-auth.css). Trước đây giao diện nhập liệu hiện ~4 giây (mạng 4G) rồi màn hình đăng
+  // nhập mới đè lên — giật hình, và trình duyệt phải dựng bố cục cả trang lớn phía sau. Bỏ class: appShellReady()
+  // (ui-auth.js) khi vào app; màn hình lỗi khởi động bên dưới cũng bỏ. Gắn bằng JS (không viết sẵn trong HTML) để
+  // trình duyệt tắt JS không bị kẹt ở nền trống.
+  if (document.documentElement) document.documentElement.className += " app-booting";
+
   function pushError(msg) {
     if (booted || !msg || errors.length >= MAX_ERRORS) return;
     msg = String(msg);
@@ -198,6 +205,7 @@
 
   function showBootFailure() {
     if (booted || panelEl || !document.body) return;
+    document.documentElement.className = document.documentElement.className.replace(/\s*app-booting/g, "");
     panelEl = el("div", "position:fixed;inset:0;top:0;left:0;right:0;bottom:0;z-index:2147483647;background:#f8fafc;color:#0f172a;overflow:auto;padding:24px 16px;font:15px/1.5 system-ui,sans-serif;");
     panelEl.id = "dgaBootFailure";
     panelEl.setAttribute("role", "alert");

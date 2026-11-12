@@ -134,6 +134,24 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
+/* Thanh cuộn ngang phụ PHÍA TRÊN bảng rộng (setupTopScrollbars(), ui-layout.js) — dính dưới header + thanh tab khi
+   cuộn trang, nên bảng dài vẫn cuộn ngang được mà không phải kéo xuống đáy bảng. Dày hơn thanh mặc định cho dễ kéo. */
+.table-scroll-top {
+  position: sticky;
+  top: calc(var(--header-height, 60px) + var(--tabs-height, 0px));
+  z-index: 4;
+  overflow: auto hidden;
+  height: 14px;
+  margin-bottom: 2px;
+  background: var(--surface);
+  scrollbar-width: auto;
+  scrollbar-color: var(--blue-700) var(--surface-sunken);
+}
+.table-scroll-top > div { height: 1px; }
+.table-scroll-top.hidden { display: none; }
+.table-scroll-top::-webkit-scrollbar { height: 12px; }
+.table-scroll-top::-webkit-scrollbar-track { background: var(--surface-sunken); }
+.table-scroll-top::-webkit-scrollbar-thumb { background: var(--blue-700); border: 2px solid var(--surface-sunken); }
 
 table {
   width: 100%;
@@ -145,6 +163,19 @@ th, td {
   padding: 10px var(--space-3);
   border-bottom: 1px solid var(--border);
   text-align: left;
+}
+/* Cột chẩn đoán (Bảng 66, Duval) ở bảng Lịch sử: đủ rộng để chẩn đoán nằm 2–3 dòng thay vì 6–7 dòng làm cả dòng
+   bảng cao vọt (Bước 3a). */
+.diag-cell {
+  font-size: var(--text-xs);
+  min-width: 200px;
+}
+.diag-cell.diag-cell-short { min-width: 80px; }
+/* Cột số (class num ở th/td, Bước 3a): canh phải để so hàng trên/dưới dễ (table đã có tabular-nums). */
+th.num,
+td.num {
+  text-align: right;
+  white-space: nowrap;
 }
 .nowrap-cell {
   white-space: nowrap;
@@ -201,6 +232,7 @@ tbody tr:nth-child(even) { background: var(--table-stripe); }
 tbody tr:hover { background: var(--blue-100); }
 
 .pill {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -245,7 +277,11 @@ tbody tr:hover { background: var(--blue-100); }
   margin-bottom: var(--space-4);
 }
 @media (max-width: 800px) { .stat-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 420px) { .stat-row { grid-template-columns: minmax(0, 1fr); } }
+/* Bước 4b: điện thoại rất hẹp vẫn 2 cột (trước 1 cột → 4 thẻ chiếm cả màn hình), thẻ gọn lại. */
+@media (max-width: 420px) {
+  .stat-row { gap: var(--space-2); }
+  .stat-row .stat-card { padding: var(--space-3); }
+}
 
 .stat-card {
   background: var(--surface);
@@ -313,12 +349,12 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   margin-bottom: var(--space-2);
   box-shadow: var(--shadow-1);
 }
-.status-normal .status-badge { background: var(--ok); }
-.status-alert .status-badge { background: var(--warn); }
-.status-alarm .status-badge { background: var(--bad); }
-.status-legend-card.normal .status-badge { background: var(--ok); }
-.status-legend-card.alert .status-badge { background: var(--warn); }
-.status-legend-card.alarm .status-badge { background: var(--bad); }
+.status-normal .status-badge { background: var(--ok-solid); }
+.status-alert .status-badge { background: var(--warn-solid); }
+.status-alarm .status-badge { background: var(--bad-solid); }
+.status-legend-card.normal .status-badge { background: var(--ok-solid); }
+.status-legend-card.alert .status-badge { background: var(--warn-solid); }
+.status-legend-card.alarm .status-badge { background: var(--bad-solid); }
 
 .status-reasons { margin: 6px 0 var(--space-2) 18px; padding: 0; font-size: var(--text-sm); }
 .status-reasons li { margin-bottom: 3px; }
@@ -342,8 +378,8 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   color: var(--on-accent);
   white-space: nowrap;
 }
-.status-pill.status-alert { background: var(--warn); }
-.status-pill.status-alarm { background: var(--bad); }
+.status-pill.status-alert { background: var(--warn-solid); }
+.status-pill.status-alarm { background: var(--bad-solid); }
 
 
 
@@ -361,6 +397,11 @@ label.field > .gas-icon { display: none; } /* trong label cột dọc, icon chi�
   flex-flow: column nowrap;
   align-items: center;
   gap: var(--space-1);
+}
+/* Bước 3a: màn hình rộng (≥ 1024px) dư bề ngang → xếp NGANG cho dòng thấp còn ~1/3 (3 nút dọc làm mỗi dòng cao
+   ~115px); màn hình hẹp vẫn xếp 1 cột dọc để cột hẹp, bảng ít phải cuộn ngang. */
+@media (min-width: 1024px) {
+  .actions-cell .btn-row.actions-stack { flex-direction: row; }
 }
 
 .btn-action-alert,
@@ -469,3 +510,42 @@ tr.oil-result-phase-head > td { background: var(--surface-sunken); }
 #oSplitLayout.has-preview .oil-param-table td:first-child { min-width: 150px; }
 #oSplitLayout.has-preview .oil-param-table input, #oSplitLayout.has-preview .oil-param-table select { min-width: 72px; }
 
+/* Bộ lọc chung tab Lịch sử đo (Trạm · Thiết bị · Loại thiết bị · Từ ngày · Đến ngày · Xóa lọc) — 1 hàng trên màn
+   hình rộng, tự xuống dòng khi hẹp; điện thoại: mỗi ô 1 hàng (2 ô ngày chung 1 hàng). */
+.lichsu-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-2) var(--space-3);
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+.lichsu-filters-legend {
+  padding: 0 var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+.lichsu-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 180px;
+  min-width: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+.lichsu-filter .combo-wrap { width: 100%; }
+.lichsu-filter-date { flex: 0 1 150px; }
+.lichsu-filter-clear { align-self: flex-end; }
+.lichsu-count { font-weight: var(--font-semibold); opacity: 0.85; }
+.lichsu-filter-summary { margin: 0 0 0 var(--space-2); align-self: center; }
+@media (max-width: 600px) {
+  .lichsu-filter { flex-basis: 100%; }
+  .lichsu-filter-date { flex: 1 1 40%; }
+  .lichsu-filter-summary { flex-basis: 100%; margin: var(--space-1) 0 0; }
+}

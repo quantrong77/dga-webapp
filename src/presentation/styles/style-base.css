@@ -50,7 +50,7 @@ header.app-header {
   box-shadow: var(--shadow-header);
   background: var(--header-bg);
   color: var(--on-dark);
-  padding: var(--space-3) var(--space-5) var(--space-4);
+  padding: 10px var(--space-5) 14px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -117,6 +117,95 @@ header.app-header p {
 @media (max-width: 800px) {
   header.app-header .header-center { flex-basis: 100%; }
   .header-right { margin-left: 0; }
+}
+
+/* Nhóm công cụ (#headerMenu): máy tính — display: contents để các nút nằm thẳng trên header như cũ; nhãn chữ
+   (.hdr-label) và nút "⋯" chỉ dùng trên điện thoại. */
+.header-tools { display: contents; }
+.hdr-label { display: none; }
+header.app-header .header-menu-btn { display: none; }
+.app-title-row .sync-badge { margin-left: var(--space-1); }
+
+/* Điện thoại / màn hình hẹp: header 1 dòng (logo + tên + trạng thái đồng bộ + nút "⋯"); các nút còn lại gom vào menu
+   thả xuống ngay dưới header, mỗi nút 1 dòng có nhãn chữ, vùng bấm cao 44px (setupHeaderMenu() ở ui-layout.js). */
+@media (max-width: 800px) {
+  header.app-header {
+    flex-wrap: nowrap;
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    gap: var(--space-2);
+  }
+  header.app-header .header-center { flex: 1 1 auto; min-width: 0; }
+  .app-title-row { min-width: 0; }
+  header.app-header h1 {
+    font-size: 16px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  header.app-header .header-menu-btn {
+    display: inline-flex;
+    width: 40px;
+    height: 40px;
+    z-index: 10;
+  }
+  .header-menu-btn .icon-svg { width: 20px; height: 20px; }
+  .header-tools {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: var(--space-2);
+    right: var(--space-2);
+    z-index: 60;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    background: var(--header-bg);
+    border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+    box-shadow: var(--shadow-4);
+  }
+  .header-tools.open { display: flex; }
+  header.app-header .header-tools .header-left,
+  header.app-header .header-tools .header-right {
+    flex-flow: column nowrap;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    margin-left: 0;
+  }
+  .header-tools .header-divider { width: 100%; height: 1px; }
+  .header-tools .header-icon-btn {
+    width: 100%;
+    height: 44px;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 0 var(--space-3);
+  }
+  .header-tools .header-icon-btn:hover,
+  .header-tools .header-icon-btn:focus-visible { transform: none; }
+  .header-tools .hdr-label { display: inline; font-size: var(--text-sm); font-weight: 600; }
+  .header-tools .header-icon-btn[data-tooltip]::before,
+  .header-tools .header-icon-btn[data-tooltip]::after { display: none; }
+  .header-tools .badge {
+    max-width: 100%;
+    padding: 10px var(--space-3);
+    text-align: left;
+  }
+  /* Bấm dòng tài khoản = đăng xuất (có hỏi xác nhận, ui-auth.js) — ghi rõ trong menu. */
+  .header-tools #userBadge::after { content: " · Đăng xuất"; font-weight: 500; opacity: 0.85; }
+  /* Bố cục tab dọc không áp dụng trên màn hình hẹp (style-nav-layout.css) → ẩn nút đổi bố cục. */
+  #btnToggleTabLayout { display: none; }
+}
+/* Màn hình rất hẹp: trạng thái đồng bộ chỉ còn chấm màu (chữ vẫn đọc được bằng trình đọc màn hình, và ở title). */
+@media (max-width: 420px) {
+  #syncStatusText {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 .badge {
@@ -375,3 +464,32 @@ header.app-header p {
   0% { opacity: 0.4; transform: scale(0.85); }
   100% { opacity: 1; transform: scale(1.2); }
 }
+
+/* Bước 5 — chữ chỉ dành cho trình đọc màn hình (VD tiêu đề cột "Thao tác" chỉ chứa nút icon). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+/* Link "Bỏ qua tới nội dung chính": ẩn tới khi focus bằng phím Tab. */
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10000;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--blue-700);
+  font-weight: var(--font-semibold);
+  box-shadow: var(--shadow-5);
+  transform: translateY(-200%);
+}
+.skip-link:focus { transform: none; }
+main:focus { outline: none; }

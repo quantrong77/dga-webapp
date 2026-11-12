@@ -227,16 +227,14 @@ async function tio3AnalyzeAndSave(opts) {
   opts = opts || {};
   const form = tio3ReadForm();
   const hasData = OilBbtn.PHASES.some((ph) => OilBbtn.ITEMS.some((k) => form.phases[ph][k] !== null));
-  if (!form.thietBi || !form.ngayLayMau) {
-    notifyError("Vui lòng nhập ít nhất Vị trí lắp đặt (thiết bị) và Ngày lấy mẫu.");
-    return;
-  }
+  if (!requireFields([[form.thietBi, "t3_thietbi", "Vị trí lắp đặt (thiết bị)"], [form.ngayLayMau, "t3_ngay", "Ngày lấy mẫu"]])) return;
   if (!hasData) {
     notifyError("Vui lòng nhập số liệu thí nghiệm của ít nhất 1 pha.");
     return;
   }
   if (!form.manufacturer) {
     notifyError("QĐ1901 không có bảng số mặc định cho dầu TI/TU/Sứ xuyên (theo quy định nhà sản xuất) — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\".");
+    flagInvalidField("t3_nsx");
     return;
   }
   const negativeCheck = [];

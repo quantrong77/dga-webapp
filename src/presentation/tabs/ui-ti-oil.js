@@ -106,17 +106,16 @@ async function onAnalyzeTioOil() {
     ghi_chu: $("tio_ghichu").value.trim(),
   };
 
-  if (!tioOilTest.thiet_bi || !tioOilTest.sample_date) {
-    notifyError("Vui lòng nhập ít nhất Thiết bị và Ngày lấy mẫu.");
-    return;
-  }
+  if (!requireFields([[tioOilTest.thiet_bi, "tio_thietbi", "Thiết bị"], [tioOilTest.sample_date, "tio_ngay", "Ngày lấy mẫu"]])) return;
   if (tioOilTest.moisture_ppm === null && tioOilTest.tgd_90c_percent === null
     && tioOilTest.tgd_20c_percent === null && tioOilTest.bdv_kv === null) {
     notifyError("Vui lòng nhập ít nhất 1 trong các giá trị: Độ ẩm dầu, tgδ ở 90°C, tgδ ở 20°C, hoặc Điện áp chọc thủng dầu.");
+    flagInvalidField("tio_moisture");
     return;
   }
   if (!manufacturer) {
     notifyError("QĐ1901 không có bảng số mặc định cho dầu TI/TU/Sứ xuyên (theo quy định nhà sản xuất) — vui lòng chọn Nhà sản xuất đã cấu hình tiêu chuẩn ở tab \"Cấu hình\" — mục \"Tiêu chuẩn\" trước.");
+    flagInvalidField("tio_nsx");
     return;
   }
   if (alertIfNegative([
@@ -216,7 +215,7 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${escapeHtml(DGA.formatSampleDate(rec.sample_date))}</td>
+      <td class="nowrap-cell">${escapeHtml(fmtDateVN(rec.sample_date))}</td>
       <td>${escapeHtml(rec.tram || "—")}</td>
       <td>${escapeHtml(rec.thiet_bi)}</td>
       <td>${tioEquipmentTypeShort(equipmentType)}</td>
@@ -256,7 +255,7 @@ function renderTioOilTestRows(tbodyId, emptyId, sortedRecords) {
     const delBtn = tr.querySelector('[data-action="del"]');
     if (delBtn) {
       delBtn.addEventListener("click", async () => {
-        if (confirm("Xóa thí nghiệm dầu TI/TU này khỏi lịch sử?")) {
+        if (confirm(confirmDeleteText("thí nghiệm dầu TI/TU/Sứ xuyên", rec))) {
           try {
             await Storage.deleteInstrumentOilTest(rec.id);
             await refreshTioOilTestsUI();
