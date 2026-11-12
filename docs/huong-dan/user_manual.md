@@ -78,9 +78,7 @@ Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
 4. Nếu app có bật **Đăng nhập bằng Google**, nút này hiện ở đầu hộp thoại — bấm và chọn tài khoản Google.
 5. Lần sau mở lại app, phiên đăng nhập được **tự khôi phục**.
 
-**Đổi mật khẩu:** người dùng đã đăng nhập có thể đổi mật khẩu qua nút đổi mật khẩu ở góc trên.
-
-**Đăng xuất:** bấm vào **tên/email của bạn** ở góc trên bên phải → xác nhận.
+**Đổi mật khẩu / Đăng xuất:** bấm vào **khối tài khoản** (vòng tròn chữ cái + email + vai trò) ở góc trên bên phải → menu có **Đổi mật khẩu** và **Đăng xuất** (đăng xuất có hỏi xác nhận). Trên điện thoại 2 mục này nằm đầu menu **⋯**.
 
 > Nếu Admin cấp tài khoản hoặc đặt lại mật khẩu cho bạn, bạn nhận được một **mật khẩu tạm**. Ở lần đăng nhập đầu, app **bắt buộc đổi sang mật khẩu riêng** (nhập mật khẩu tạm vào ô "Mật khẩu hiện tại") rồi mới dùng được.
 >
@@ -114,7 +112,13 @@ Giao diện được phân bố khoa học thành hai khu vực điều hướng
 | **Phản hồi** | Gửi góp ý cho ứng dụng |
 | **Quản trị** | Quản lý người dùng, Cấu hình (Tiêu chuẩn & Quy định), Bản sao Supabase — **chỉ Admin** mới thấy |
 
-**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ và nút **⋯**. Bấm **⋯** để mở menu gồm máy chủ đang dùng, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Đổi mật khẩu và **tài khoản · Đăng xuất**. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
+**Thanh trên cùng (máy tính):**
+
+- **Bên trái:** nút **☰** (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.
+- **Giữa — Tìm nhanh thiết bị:** gõ tên thiết bị hoặc tên trạm, **không cần gõ dấu** (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức **Báo động/Cảnh báo** nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi **Enter**) để mở **Lịch sử đo** của thiết bị đó; nút **Xu hướng** (hoặc **Shift+Enter**) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: **Ctrl+K** hoặc **/** để nhảy vào ô tìm, **Esc** để đóng.
+- **Bên phải:** máy chủ đang dùng, **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị đang Cảnh báo/Báo động theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
+
+**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút **kính lúp** (mở ô tìm nhanh thiết bị) và nút **⋯**. Bấm **⋯** để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
 
 > **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
 

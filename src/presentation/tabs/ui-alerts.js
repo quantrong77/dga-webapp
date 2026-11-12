@@ -778,6 +778,7 @@ function refreshAlertsUI() {
   // + lọc theo Thiết bị thuộc trạm (#al_deviceFilter, xem alertDeviceOptions()).
   const { station, device, type, data } = alertFilters();
   const allAlerts = collectAllAlerts();
+  if (typeof updateHeaderAlerts === "function") updateHeaderAlerts(allAlerts); // chuông ở header: không theo bộ lọc tab này
   const alerts = filterAlertsBy(allAlerts, { station, device, type, data });
   // Báo động (ALARM) lên trước Cảnh báo (ALERT); trong cùng mức, mới nhất lên trước.
   alerts.sort((a, b) => {
