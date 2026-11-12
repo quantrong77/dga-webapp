@@ -3,6 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#00189e" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0a0c3d" media="(prefers-color-scheme: dark)" />
   <!-- Content Security Policy — lớp phòng thủ thứ 2 chống XSS (lớp 1 là escapeHtml() khi hiển
        thị dữ liệu): KHÔNG cho chạy script inline/thuộc tính onxxx=, chỉ nạp script từ chính
        site + 3 CDN/Google đã khai báo. Thêm thư viện/CDN/backend mới thì PHẢI bổ sung vào đây,
@@ -30,6 +32,9 @@
        NGUYÊN thứ tự các đoạn như file gốc (chỉ cắt, không đảo) nên thứ tự cascade CSS
        không đổi. tokens.css chứa các biến :root (--blue-900, --radius...) dùng
        chung nên phải nạp ĐẦU TIÊN. -->
+  <link rel="preload" href="assets/fonts/be-vietnam-pro-vietnamese-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="assets/fonts/be-vietnam-pro-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="stylesheet" href="src/presentation/styles/fonts.css" />
   <link rel="stylesheet" href="src/presentation/styles/tokens.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-base.css" />
   <link rel="stylesheet" href="src/presentation/styles/style-auth.css" />
@@ -63,7 +68,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v71-gop-main-zalo-tai-trang") {
+          if (k !== "dga-offline-v72-ui-theme-evnnpt") {
             caches.delete(k);
           }
         });
