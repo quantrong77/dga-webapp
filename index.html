@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v110-busy-pct-database") {
+          if (k !== "dga-offline-v111-quan-tri-canh-user") {
             caches.delete(k);
           }
         });
@@ -290,10 +290,6 @@
       <button type="button" class="header-icon-btn tab-btn" data-tab="phanhoi" id="navPhanHoi" title="Phản hồi" aria-label="Phản hồi" data-tooltip="Phản hồi">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-feedback"></use></svg><span class="hdr-label">Phản hồi</span>
       </button>
-      <!-- Quản trị — chỉ hiện với Admin (hoặc khi không bật Auth, xem initApp() ở app-core.js) -->
-      <button type="button" class="header-icon-btn tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị" aria-label="Quản trị" data-tooltip="Quản trị">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="hdr-label">Quản trị</span>
-      </button>
       <button type="button" id="btnToggleTheme" class="header-icon-btn" title="Chuyển sang giao diện tối" aria-label="Chuyển sang giao diện tối" data-tooltip="Giao diện tối">
         <svg class="icon-svg" aria-hidden="true"><use id="themeIconUse" href="#icon-moon"></use></svg><span class="hdr-label" id="themeLabel">Giao diện tối</span>
       </button>
@@ -303,6 +299,10 @@
 
       <div class="header-divider" aria-hidden="true"></div>
 
+      <!-- Quản trị — sát bên trái khối tài khoản; chỉ hiện với Admin (hoặc khi không bật Auth, xem initApp() ở app-core.js) -->
+      <button type="button" class="header-icon-btn tab-btn hidden" data-tab="quantri" id="navQuanTri" title="Quản trị" aria-label="Quản trị" data-tooltip="Quản trị">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-shield"></use></svg><span class="hdr-label">Quản trị</span>
+      </button>
       <!-- Tài khoản: avatar chữ cái + email + vai trò; bấm mở menu Đổi mật khẩu / Đăng xuất (setupUserMenu(), ui-header.js). -->
       <div class="user-menu-wrap">
         <button type="button" id="userBadge" class="user-chip hidden" aria-haspopup="true" aria-expanded="false" aria-controls="userMenu">
@@ -3342,7 +3342,7 @@
           <ul class="rec-list">
           <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app.</li>
           <li><strong>Giữa — Tìm nhanh thiết bị:</strong> gõ tên thiết bị hoặc tên trạm, <strong>không cần gõ dấu</strong> (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức <strong>Báo động/Cảnh báo</strong> nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi <strong>Enter</strong>) để mở <strong>Lịch sử đo</strong> của thiết bị đó; nút <strong>Xu hướng</strong> (hoặc <strong>Shift+Enter</strong>) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: <strong>Ctrl+K</strong> hoặc <strong>/</strong> để nhảy vào ô tìm, <strong>Esc</strong> để đóng.</li>
-          <li><strong>Bên phải:</strong> nút <strong>Database</strong> (chấm trạng thái lưu trữ/đồng bộ), <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
+          <li><strong>Bên phải:</strong> nút <strong>Database</strong> (chấm trạng thái lưu trữ/đồng bộ), <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), rồi <strong>Quản trị</strong> (chỉ Admin) ngay bên trái khối tài khoản.</li>
           </ul>
           <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong> (có chấm màu khi dữ liệu chưa đồng bộ xong / offline / mất kết nối). Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), Database (trạng thái), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
