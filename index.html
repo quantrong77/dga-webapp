@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v104-duval-chu-thich") {
+          if (k !== "dga-offline-v105-database-icon") {
             caches.delete(k);
           }
         });
@@ -106,6 +106,7 @@
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4.5c2.5-1.2 5.5-1.2 8 0v15c-2.5-1.2-5.5-1.2-8 0v-15zM20 4.5c-2.5-1.2-5.5-1.2-8 0v15c2.5-1.2 5.5-1.2 8 0v-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.3 15.3L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 8v5M8 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 5.5v13c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-13M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
       <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-maximize" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -254,10 +255,6 @@
           <h1>Đánh giá Dầu cách điện</h1>
           <span class="app-subtitle">QĐ1901/EVNNPT</span>
         </div>
-        <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
-          <span class="sync-dot"></span>
-          <span id="syncStatusText">Đã đồng bộ</span>
-        </button>
       </div>
     </div>
 
@@ -278,8 +275,12 @@
          (#btnHeaderMenu, setupHeaderMenu() ở ui-layout.js). -->
     <div class="header-tools" id="headerMenu">
     <div class="header-right">
-      <!-- <button>: khi đã cấu hình link quản lý database, bấm mở Google Sheet/Supabase Dashboard (setupStorageBadgeLink()). -->
-      <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
+      <!-- Database + trạng thái đồng bộ gộp 1 nút icon (renderDbStatus(), app-status.js): chấm màu = trạng thái (xanh lá đã
+           đồng bộ · xanh dương đang đồng bộ · cam offline · đỏ mất kết nối / chế độ thử nghiệm), số = mục chờ đồng bộ.
+           Bấm: Admin có link → mở Google Sheet/Supabase Dashboard/trang máy chủ; có mục chờ → đồng bộ ngay. -->
+      <button type="button" id="storageBadge" class="header-icon-btn db-status-btn hidden" data-db-state="loading" aria-label="Database: đang tải" title="Database: đang tải" data-tooltip="Database">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-database"></use></svg><span class="db-dot" aria-hidden="true"></span><span class="hdr-count db-count hidden" id="dbPendingCount" aria-hidden="true"></span><span class="hdr-label" id="dbStatusLabel">Database</span>
+      </button>
       <button type="button" class="header-icon-btn tab-btn header-alert-btn" data-tab="canhbao" id="btnHeaderAlerts" title="Cảnh báo" data-tooltip="Cảnh báo">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-bell"></use></svg><span class="hdr-count hidden" id="headerAlertCount" aria-hidden="true"></span><span class="hdr-label">Cảnh báo</span><span class="sr-only" id="headerAlertSr"></span>
       </button>
@@ -322,7 +323,7 @@
     </div>
     </div>
     <button type="button" id="btnHeaderMenu" class="header-icon-btn header-menu-btn" aria-expanded="false" aria-controls="headerMenu" aria-label="Mở menu" title="Menu">
-      <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg>
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg><span class="db-dot menu-db-dot hidden" id="menuDbDot" aria-hidden="true"></span>
     </button>
   </header>
 
@@ -3229,25 +3230,34 @@
           <div class="sm-body">
           <h3>2.1. Mở app</h3>
           <p>Mở đường link do quản trị viên cung cấp bằng <strong>Chrome, Edge hoặc Safari</strong> (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file <code>index.html</code> bằng trình duyệt (hoặc qua máy chủ cục bộ <code>npm start</code> — mặc định <code>http://localhost:8080</code>, đổi cổng bằng biến môi trường <code>PORT</code>).</p>
-          <p>Góc trên bên trái có <strong>huy hiệu trạng thái lưu trữ</strong>:</p>
+          <p>Bên phải thanh trên cùng có <strong>nút icon Database</strong> (hình trụ) — gộp trạng thái lưu trữ và đồng bộ. <strong>Chấm màu</strong> ở góc icon cho biết trạng thái (rê chuột để xem chi tiết):</p>
           <div class="table-scroll"><table>
           <thead>
           <tr>
-          <th>Huy hiệu</th>
+          <th>Chấm</th>
           <th>Ý nghĩa</th>
           </tr>
           </thead>
           <tbody>
           <tr>
-          <td>"Database" / "Supabase"</td>
-          <td>Dữ liệu lưu dùng chung trên database của đơn vị (bấm vào để mở nhanh Google Sheet hoặc Supabase Dashboard)</td>
+          <td>Xanh lá</td>
+          <td>Đã kết nối database dùng chung (hoặc Máy chủ nội bộ) và đã đồng bộ toàn bộ dữ liệu</td>
           </tr>
           <tr>
-          <td>"Chế độ thử nghiệm" (kèm <strong>banner đỏ</strong> đầu trang)</td>
-          <td>Dữ liệu chỉ lưu trong trình duyệt của máy này</td>
+          <td>Xanh dương nhấp nháy (kèm <strong>số</strong>)</td>
+          <td>Đang đồng bộ — số = mục đang chờ gửi lên máy chủ</td>
+          </tr>
+          <tr>
+          <td>Cam</td>
+          <td>Đang offline — dữ liệu nhập vẫn được giữ và tự đồng bộ khi có mạng</td>
+          </tr>
+          <tr>
+          <td>Đỏ</td>
+          <td>Mất kết nối database, hoặc <strong>Chế độ thử nghiệm</strong> (kèm <strong>banner đỏ</strong> đầu trang: dữ liệu chỉ lưu trong trình duyệt của máy này)</td>
           </tr>
           </tbody>
           </table></div>
+          <p>Bấm nút: <strong>Admin</strong> mở nhanh Google Sheet / Supabase Dashboard / trang trạng thái Máy chủ nội bộ; khi còn mục chờ đồng bộ, bấm để đồng bộ ngay.</p>
           <p class="sm-note">⚠ Ở <strong>chế độ thử nghiệm</strong>, dữ liệu chỉ nằm trên trình duyệt hiện tại — <strong>mất nếu xóa lịch sử duyệt web</strong> và người khác không thấy được. Chỉ dùng để thử.</p>
           <h3>2.2. Đăng ký và đăng nhập (chế độ Google Sheets / Supabase)</h3>
           <ol type="1">
@@ -3331,11 +3341,11 @@
           </table></div>
           <p><strong>Thanh trên cùng (máy tính):</strong></p>
           <ul class="rec-list">
-          <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.</li>
+          <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app.</li>
           <li><strong>Giữa — Tìm nhanh thiết bị:</strong> gõ tên thiết bị hoặc tên trạm, <strong>không cần gõ dấu</strong> (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức <strong>Báo động/Cảnh báo</strong> nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi <strong>Enter</strong>) để mở <strong>Lịch sử đo</strong> của thiết bị đó; nút <strong>Xu hướng</strong> (hoặc <strong>Shift+Enter</strong>) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: <strong>Ctrl+K</strong> hoặc <strong>/</strong> để nhảy vào ô tìm, <strong>Esc</strong> để đóng.</li>
-          <li><strong>Bên phải:</strong> máy chủ đang dùng, <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
+          <li><strong>Bên phải:</strong> nút <strong>Database</strong> (chấm trạng thái lưu trữ/đồng bộ), <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
           </ul>
-          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
+          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong> (có chấm màu khi dữ liệu chưa đồng bộ xong / offline / mất kết nối). Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), Database (trạng thái), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
           <h3>3.2. Giao diện sáng hoặc tối</h3>
           <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải (trên điện thoại: trong menu <strong>⋯</strong>) để đổi giao diện. Giao diện tối nền xanh navy đậm, dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành. Màu sắc theo nhận diện EVNNPT (xanh EVN, đỏ, vàng), dải 3 màu pha A vàng · B xanh lá · C đỏ dưới thanh trên cùng.</p>
@@ -4221,7 +4231,7 @@
           <div class="sm-body">
           <p><strong>Bấm "Phân tích &amp; Lưu" báo lỗi (thông báo màu đỏ góc trên bên phải).</strong> Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nếu là lỗi kết nối database, thông báo đã kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho Admin. Admin xem hướng dẫn xử lý ở <code>README.md</code>.</p>
           <p><strong>Thấy thông báo "Đã xảy ra lỗi không lường trước" hoặc "Thao tác không hoàn tất".</strong> Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở mục <strong>Phản hồi</strong> (icon trên Menu bar) hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").</p>
-          <p><strong>Mở app thấy trắng/không có dữ liệu cũ.</strong> Kiểm tra huy hiệu trạng thái góc trên bên trái. Nếu đang ở <em>"Chế độ thử nghiệm"</em>, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.</p>
+          <p><strong>Mở app thấy trắng/không có dữ liệu cũ.</strong> Rê chuột vào nút <strong>Database</strong> (hình trụ, bên phải thanh trên cùng). Nếu chấm đỏ và báo <em>"Chế độ thử nghiệm"</em>, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.</p>
           <p><strong>Không thấy Trạm/Thiết bị trong danh sách gợi ý.</strong> Chờ dòng <em>"Vui lòng chờ! Đang nạp dữ liệu…"</em> biến mất. Nếu thiết bị mới hoàn toàn, cứ <strong>gõ tên mới</strong>.</p>
           <p><strong>Tốc độ sinh khí không hiện.</strong> Cần có <strong>lần đo trước</strong> của cùng <strong>Trạm + Thiết bị + Pha</strong>. Kiểm tra tên Trạm/Thiết bị và Pha đã trùng khớp với lần đo trước chưa.</p>
           <p><strong>Không lưu được thí nghiệm dầu TI/TU/Sứ xuyên.</strong> Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu cho đúng loại thiết bị (TI, TU hoặc Sứ xuyên). Nhờ Admin cấu hình ở <strong>Quản trị → Cấu hình → Tiêu chuẩn</strong>.</p>
