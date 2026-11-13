@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v108-busy-mui-ten") {
+          if (k !== "dga-offline-v109-busy-mui-ten-nho") {
             caches.delete(k);
           }
         });
@@ -270,8 +270,8 @@
         <div class="busy-arrow" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
           <svg class="busy-arrow-svg" viewBox="0 0 24 24" aria-hidden="true">
             <g class="busy-arrow-clip">
-              <path class="busy-arrow-dn" d="M12 3v10.5M7.5 9.5 12 14l4.5-4.5" />
-              <path class="busy-arrow-up" d="M12 15V4.5M7.5 8.5 12 4l4.5 4.5" />
+              <path class="busy-arrow-dn" d="M12 5v9M9.5 11.5 12 14l2.5-2.5" />
+              <path class="busy-arrow-up" d="M12 15V6M9.5 8.5 12 6l2.5 2.5" />
             </g>
             <path class="busy-arrow-base" d="M5 20h14" />
           </svg>
