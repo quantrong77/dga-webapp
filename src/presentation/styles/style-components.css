@@ -584,6 +584,48 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
   }
 }
 
+/* Khung Nhập BBTN THU GỌN mặc định (setupBbtnImportPickers(), ui-layout.js): tiêu đề + 2 nút "Một BBTN" / "Nhiều BBTN";
+   bấm nút → class show-one / show-many trên panel → hiện phần tương ứng. Mở cả 2 → bố cục 2 cột như trên. */
+.bbtn-import-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.bbtn-import-panel .bbtn-import-head > h2 { flex: 1 1 auto; margin: 0; padding: 0; border: 0; }
+.bbtn-pick-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.bbtn-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 1px solid var(--blue-700);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--blue-700);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.bbtn-pick > svg { width: 16px; height: 16px; margin: 0; }
+.bbtn-pick:hover { background: var(--blue-50); }
+.bbtn-pick[aria-pressed="true"] { background: var(--blue-700); color: var(--on-dark); }
+.bbtn-import-panel:not(.show-one, .show-many) .bbtn-import-head { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.bbtn-import-panel:not(.show-one) :is(.bbtn-import-t1, .bbtn-import-z1),
+.bbtn-import-panel:not(.show-many) :is(.bbtn-import-t2, .bbtn-import-z2, .bbtn-import-x2),
+.bbtn-import-panel:not(.show-many) > :is(p.note, div[id$="PreviewWrap"]) { display: none; }
+.bbtn-import-panel:not(.show-many) .bbtn-import-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "t1" "z1" "x1"; }
+.bbtn-import-panel:not(.show-one) .bbtn-import-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "x1" "t2" "z2" "x2"; }
+.bbtn-import-panel:not(.show-one, .show-many) .bbtn-import-grid { grid-template-areas: "x1"; }
+/* Lúc thu gọn: phần phụ ô 1 BBTN chỉ chiếm chỗ khi có nội dung (file đang đính kèm, nút đối chiếu...) */
+.bbtn-import-panel:not(.show-one, .show-many) .bbtn-import-x1:has(> :not(.hidden, .u-d-flex), > .u-d-flex > :not(.hidden)) { margin-top: var(--space-3); }
+
 /* Bộ chọn "Vị trí thiết bị" Trạm ▸ Thiết bị ▸ Pha (ui-location-picker.js) — 1 hàng riêng ở đầu mọi form nhập liệu */
 .location-path {
   display: flex;
@@ -825,3 +867,43 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 .back-to-top:hover { background: var(--btn-primary-hover); }
 .back-to-top > svg { width: 22px; height: 22px; margin: 0; }
 .back-to-top.hidden { display: none; }
+
+/* Ghi chú → tip (setupNoteTips(), ui-layout.js): nút "i" cuối tiêu đề + ô tip nổi (position: fixed, gắn vào <body>). */
+[data-note-tip] { display: none; }
+.note-tip-btn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: var(--space-2);
+  padding: 0;
+  border: 1px solid var(--blue-700);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--blue-700);
+  font: italic 700 12px/1 Georgia, "Times New Roman", serif;
+  vertical-align: middle;
+  cursor: help;
+}
+.note-tip-btn:hover,
+.note-tip-btn[aria-expanded="true"] { background: var(--blue-700); color: var(--on-dark); }
+.has-note-tip { cursor: help; }
+.note-tip-pop {
+  position: fixed;
+  z-index: 1200;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 16px));
+  padding: 10px 12px;
+  border: 1px solid var(--tooltip-border);
+  border-radius: var(--radius-md);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  box-shadow: var(--shadow-4);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+.note-tip-pop.hidden { display: none; }
+.note-tip-pop strong { color: inherit; }

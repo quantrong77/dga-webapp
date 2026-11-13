@@ -151,7 +151,8 @@ Khi bạn cuộn màn hình xuống phía dưới để đọc kết quả phân
 ### 3.5. Các thao tác dùng chung
 
 - **Ô Trạm / Thiết bị:** vừa **gõ để tìm**, vừa **bấm ▼ để chọn** trong danh sách đã có. Bạn cũng có thể **gõ tên mới** (không bắt buộc phải chọn từ danh sách).
-- **Khung "Nhập BBTN" (tab con Nhập BBTN cũ):** nằm trên form nhập liệu, gồm **2 ô kéo thả ngang hàng, cùng kích thước** — ô trái nhận **1 biên bản** (đọc vào form để đối chiếu rồi lưu), ô phải nhận **nhiều biên bản hoặc cả thư mục** (nút **Chọn cả thư mục…**). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.
+- **Khung "Nhập BBTN" (tab con Nhập BBTN cũ):** nằm trên form nhập liệu, **mặc định thu gọn** chỉ còn tiêu đề và 2 nút **Một BBTN** / **Nhiều BBTN / thư mục** để đỡ chiếm màn hình — bấm nút nào thì hiện phần đó, bấm lại để ẩn (mở được cả 2 cùng lúc). Mở cả 2 thì thấy **2 ô kéo thả ngang hàng, cùng kích thước** — ô trái nhận **1 biên bản** (đọc vào form để đối chiếu rồi lưu), ô phải nhận **nhiều biên bản hoặc cả thư mục** (nút **Chọn cả thư mục…**). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.
+- **Ghi chú dạng tip:** các đoạn giải thích dài ở tab nhập liệu (Khí hòa tan, Lý-Hóa dầu, OLTC, dầu 3 pha, TI/TU) không còn hiện sẵn trên trang. **Trỏ chuột** vào tiêu đề có nút **i** nhỏ (VD tiêu đề **Nhập BBTN**, **Tam giác Duval 1**), hoặc vào nút **Nhập BBTN cũ** / **Lập BBTN** / **Xuất BBTN**, để xem ghi chú; trên điện thoại **chạm** nút **i** (chạm ra ngoài hoặc nhấn Esc để ẩn).
 - **Tab con "Nhập BBTN cũ" / "Lập BBTN":** có ở tab **Khí hòa tan** và **Lý-Hóa dầu**, dùng **chung một form** (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.
 - **Biểu tượng "i":** bấm để xem giải thích chi tiết; đóng bằng **×** hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.
 - **Thông báo nhanh (toast)** hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), **màu đỏ khi có lỗi hoặc thiếu thông tin** (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.
@@ -276,7 +277,7 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
 
 ### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song
 
-1. Ở tab **Khí hòa tan**, tab con **Nhập BBTN cũ**, khung **"Nhập BBTN"** trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái **"Một BBTN (PDF)"** — **kéo thả** file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải **"Nhiều BBTN hoặc cả thư mục"** — xem mục 7.
+1. Ở tab **Khí hòa tan**, tab con **Nhập BBTN cũ**, khung **"Nhập BBTN"** trên cùng — bấm nút **Một BBTN** để mở ô kéo thả (nút **Nhiều BBTN / thư mục** mở ô nhập hàng loạt): ô **"Một BBTN (PDF)"** — **kéo thả** file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải **"Nhiều BBTN hoặc cả thư mục"** — xem mục 7.
 2. **Khung hiển thị Biên bản đối chiếu song song (Split View):** Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới):
    - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc.
    - Nút **"Mở tab mới"** giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần.
@@ -304,7 +305,7 @@ Trong khối **"Thông số kỹ thuật thiết bị"**, kéo thả **ảnh ch�
 Dùng khi cần **nhập bổ sung dữ liệu lịch sử** (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích & Lưu" từng lần.
 
 1. **Điền trước** ở form "Thí nghiệm khí hòa tan trong dầu cách điện" (bên dưới khung Nhập BBTN): **Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất** (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho **tất cả** file trong đợt; riêng **Pha, Ngày lấy mẫu và 7 khí** được đọc riêng từ mỗi file.
-2. Ở ô phải **"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"** của khung **Nhập BBTN** (ngang hàng với ô 1 BBTN): kéo thả nhiều file PDF vào, hoặc bấm **Chọn cả thư mục…**.
+2. Bấm nút **Nhiều BBTN / thư mục** trên khung **Nhập BBTN** để mở ô **"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"**: kéo thả nhiều file PDF vào, hoặc bấm **Chọn cả thư mục…**.
 3. Tick/bỏ tick **"Đính kèm PDF gốc vào từng lần đo"** (mặc định đang tick).
 4. Xem **bảng xem trước**: mỗi file có một trạng thái:
    - **Sẵn sàng** — có thể nhập.
