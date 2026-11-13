@@ -49,4 +49,14 @@ describe("Chỉ báo tải dạng mũi tên trên header", () => {
     expect(CSS).toContain("body.is-saving .busy-arrow-dn { display: none; }");
     expect(CSS).toContain("body.is-saving .busy-arrow-up { display: inline; }");
   });
+  test("mũi tên tích hợp vào góc icon Database; số % bên trái; xong giữ 100% rồi ẩn", () => {
+    const JS = fs.readFileSync(path.join(__dirname, "..", "src/presentation/components/ui-busy.js"), "utf8");
+    const start = HTML.indexOf('<button type="button" id="storageBadge"');
+    const btn = HTML.slice(start, HTML.indexOf("</button>", start));
+    expect(btn).toContain('class="db-busy"');
+    expect(HTML).toContain('id="busyPct"');
+    expect(CSS).toContain("body.is-busy .db-busy { display: grid; }");
+    expect(JS).toMatch(/BUSY_DONE_HOLD_MS = \d+/);
+    expect(JS).toContain('el.classList.toggle("is-done", !active)');
+  });
 });
