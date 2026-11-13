@@ -1,4 +1,5 @@
-/* ui-busy.js — Chỉ báo xoay "Đang lưu.../Đang cập nhật..." dùng chung cả app. Bọc các hàm của
+/* ui-busy.js — Chỉ báo tải dùng chung cả app: mũi tên động trên header, sát bên trái nút Database (xuống = đang tải
+   dữ liệu, lên = đang lưu/xóa/tải file lên). Bọc các hàm của
    Storage/Auth một lần duy nhất ở đây, nên mọi form đều có chỉ báo mà không phải sửa từng nơi, và
    hàm mới thêm theo đúng quy tắc đặt tên (add/save/delete/upload/list) tự có luôn. Đăng nhập không
    nằm trong danh sách vì đã có lớp chờ riêng (setAuthLoading(), ui-auth.js). */
@@ -35,15 +36,15 @@ function busyEstimatePct(total, done, pendingElapsedMs) {
   return Math.min(100, ((done + partial) / total) * 100);
 }
 
+let _busyLabel = "Đang cập nhật dữ liệu...";
+
 function busyPaintPct(pct) {
   _busyShownPct = Math.max(_busyShownPct, pct);
   const v = Math.round(_busyShownPct);
-  const bar = $("busyRingBar");
-  if (bar) bar.setAttribute("stroke-dasharray", `${v} 100`);
-  const txt = $("busyRingPct");
-  if (txt) txt.textContent = v + "%";
   const ring = $("busyRing");
   if (ring) ring.setAttribute("aria-valuenow", String(v));
+  const el = $("busyIndicator");
+  if (el) el.title = `${_busyLabel} (${v}%)`;
 }
 
 function busyUpdatePct() {
@@ -54,14 +55,14 @@ function busyUpdatePct() {
   busyPaintPct(active ? Math.min(pct, 99) : pct);
 }
 
-/** Đặt vòng tải giữa header theo chiều đứng (trừ thanh 3 pha 4px ở mép dưới header). */
+/** Chỗ đặt chỉ báo: máy tính — ngay bên trái nút Database (#storageBadge, trong cụm nút bên phải header); điện thoại —
+ *  cụm nút đó nằm trong menu "⋯" (thường đóng) nên dời ra ngay bên trái nút ⋯ (#btnHeaderMenu). */
 function busyPlaceOnHeader() {
-  const h = document.querySelector("header.app-header");
   const el = $("busyIndicator");
-  if (!h || !el) return;
-  const r = h.getBoundingClientRect();
-  if (r.height > 0 && r.bottom > 0) el.style.setProperty("--busy-top", Math.round(r.top + (r.height - 4) / 2) + "px");
-  else el.style.removeProperty("--busy-top");
+  if (!el || typeof window === "undefined") return;
+  const narrow = window.matchMedia && window.matchMedia("(max-width: 800px)").matches;
+  const anchor = narrow ? $("btnHeaderMenu") : $("storageBadge");
+  if (anchor && anchor.previousElementSibling !== el) anchor.before(el);
 }
 
 /** Nhãn cho 1 hàm của Storage; null = hàm tiện ích, không phải lượt gọi cần chờ. */
@@ -99,7 +100,8 @@ function busyRender() {
   // Đang ghi thì luôn báo việc ghi, dù có lượt đọc chạy song song.
   const label = busyIsWriting() ? _busyWriteLabels[_busyWriteLabels.length - 1] : "Đang cập nhật dữ liệu...";
   if ($("busyIndicatorText").textContent !== label) $("busyIndicatorText").textContent = label;
-  el.title = label;
+  _busyLabel = label;
+  el.title = `${label} (${Math.round(_busyShownPct)}%)`;
   if (el.classList.contains("hidden")) {
     _busyTimer = setTimeout(() => {
       busyPlaceOnHeader();
@@ -137,10 +139,9 @@ function setupBusyIndicator() {
     if (label || /^list/.test(name)) busyWrap(Storage, name, label);
   });
   Object.keys(BUSY_AUTH_LABELS).forEach((name) => busyWrap(Auth, name, BUSY_AUTH_LABELS[name]));
-  // Header đổi chiều cao (xoay màn hình, đổi cỡ cửa sổ) → đặt lại vị trí nếu vòng đang hiện.
-  window.addEventListener("resize", () => {
-    if (!$("busyIndicator").classList.contains("hidden")) busyPlaceOnHeader();
-  });
+  // Đổi cỡ cửa sổ / xoay màn hình qua mốc 800px → dời chỉ báo về đúng chỗ (cạnh nút Database hoặc nút ⋯).
+  busyPlaceOnHeader();
+  window.addEventListener("resize", busyPlaceOnHeader);
 
   // Bấm lại nút chính trong lúc đang ghi sẽ gửi trùng (lưu 2 lần), nên bỏ qua cú bấm đó.
   document.addEventListener("click", (e) => {
