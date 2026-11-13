@@ -1,11 +1,12 @@
-/* ui-busy.js — Chỉ báo tải dùng chung cả app: mũi tên động trên header, sát bên trái nút Database (xuống = đang tải
-   dữ liệu, lên = đang lưu/xóa/tải file lên). Bọc các hàm của
+/* ui-busy.js — Chỉ báo tải dùng chung cả app: % ngay bên trái nút Database + mũi tên động ở góc icon Database (xuống =
+   đang tải dữ liệu, lên = đang lưu/xóa/tải file lên); xong thì giữ 100% 1 chút rồi ẩn. Bọc các hàm của
    Storage/Auth một lần duy nhất ở đây, nên mọi form đều có chỉ báo mà không phải sửa từng nơi, và
    hàm mới thêm theo đúng quy tắc đặt tên (add/save/delete/upload/list) tự có luôn. Đăng nhập không
    nằm trong danh sách vì đã có lớp chờ riêng (setAuthLoading(), ui-auth.js). */
 
 const BUSY_SHOW_DELAY_MS = 150; // thao tác nhanh hơn mức này (chế độ thử nghiệm) thì không nháy lên
 const BUSY_HIDE_DELAY_MS = 200; // nối liền các lượt gọi kế tiếp (lưu xong rồi tải lại) thành 1 lần hiện
+const BUSY_DONE_HOLD_MS = 900; // xong hết → giữ "100%" 1 chút cho người dùng kịp thấy rồi mới ẩn
 const BUSY_AUTH_LABELS = {
   changePassword: "Đang đổi mật khẩu...",
   adminResetPassword: "Đang đặt lại mật khẩu...",
@@ -45,6 +46,8 @@ function busyPaintPct(pct) {
   if (ring) ring.setAttribute("aria-valuenow", String(v));
   const el = $("busyIndicator");
   if (el) el.title = `${_busyLabel} (${v}%)`;
+  const txt = $("busyPct");
+  if (txt) txt.textContent = v + "%";
 }
 
 function busyUpdatePct() {
@@ -81,19 +84,25 @@ function busyRender() {
   const el = $("busyIndicator");
   const active = busyIsWriting() || _busyReadCount > 0;
   document.body.classList.toggle("is-saving", busyIsWriting());
+  // Mũi tên trên icon Database chỉ chạy khi đang có lượt gọi VÀ chỉ báo đang hiện (thao tác nhanh thì không nháy).
+  document.body.classList.toggle("is-busy", active && !el.classList.contains("hidden"));
+  el.classList.toggle("is-done", !active);
   clearTimeout(_busyTimer);
   busyUpdatePct();
   if (!active) {
     clearInterval(_busyTick);
     _busyTick = null;
+    // Đang hiện → dừng ở 100% thêm BUSY_DONE_HOLD_MS rồi ẩn; chưa kịp hiện (thao tác nhanh) → ẩn/đặt lại luôn.
+    const hold = el.classList.contains("hidden") ? BUSY_HIDE_DELAY_MS : BUSY_DONE_HOLD_MS;
     _busyTimer = setTimeout(() => {
       el.classList.add("hidden");
+      el.classList.remove("is-done");
       // Kết thúc đợt chờ → đợt sau đếm lại từ 0%.
       _busyTotal = 0;
       _busyDone = 0;
       _busyShownPct = 0;
       busyPaintPct(0);
-    }, BUSY_HIDE_DELAY_MS);
+    }, hold);
     return;
   }
   if (!_busyTick) _busyTick = setInterval(busyUpdatePct, 120);
@@ -106,6 +115,7 @@ function busyRender() {
     _busyTimer = setTimeout(() => {
       busyPlaceOnHeader();
       el.classList.remove("hidden");
+      document.body.classList.add("is-busy");
     }, BUSY_SHOW_DELAY_MS);
   }
 }
@@ -116,6 +126,12 @@ function busyWrap(owner, name, label) {
     if (label) _busyWriteLabels.push(label);
     else _busyReadCount++;
     const startedAt = Date.now();
+    // Lượt mới đến khi đợt trước đã xong hết (đang giữ 100%) → bắt đầu đợt mới từ 0%.
+    if (!_busyPending.length && _busyTotal && _busyDone >= _busyTotal) {
+      _busyTotal = 0;
+      _busyDone = 0;
+      _busyShownPct = 0;
+    }
     _busyTotal++;
     _busyPending.push(startedAt);
     busyRender();

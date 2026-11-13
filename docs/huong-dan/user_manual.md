@@ -72,7 +72,7 @@ Bên phải thanh trên cùng có **nút icon Database** (hình trụ) — gộp
 
 Bấm nút: **Admin** mở nhanh Google Sheet / Supabase Dashboard / trang trạng thái Máy chủ nội bộ; khi còn mục chờ đồng bộ, bấm để đồng bộ ngay.
 
-Ngay **bên trái** nút Database, khi app đang làm việc với máy chủ sẽ hiện **mũi tên động**: mũi tên trắng chạy **xuống** = đang tải dữ liệu, mũi tên vàng chạy **lên** = đang lưu / xóa / tải file lên (trong lúc này các nút Lưu, Xóa tạm mờ để tránh bấm trùng). Rê chuột vào mũi tên để xem % ước lượng. Trên điện thoại, mũi tên hiện ngay bên trái nút **⋯**.
+Khi app đang làm việc với máy chủ: ngay **bên trái** nút Database hiện **số %** (ước lượng), và ở **góc icon Database** có **mũi tên động** — mũi tên chạy **xuống** (huy hiệu trắng) = đang tải dữ liệu, chạy **lên** (huy hiệu và số % màu vàng) = đang lưu / xóa / tải file lên; trong lúc lưu các nút Lưu, Xóa tạm mờ để tránh bấm trùng. Xong việc, số chuyển **100%** màu xanh, dừng một chút rồi ẩn. Trên điện thoại, số % và mũi tên hiện ngay bên trái nút **⋯**.
 
 > ⚠ Ở **chế độ thử nghiệm**, dữ liệu chỉ nằm trên trình duyệt hiện tại — **mất nếu xóa lịch sử duyệt web** và người khác không thấy được. Chỉ dùng để thử.
 

@@ -354,36 +354,67 @@ label.chk[data-std-key] { cursor: context-menu; }
   background: var(--blue-100);
 }
 
-/* Chỉ báo tải (src/presentation/components/ui-busy.js): mũi tên động trên header, sát bên trái nút Database (điện
-   thoại: bên trái nút ⋯). Đang TẢI dữ liệu: mũi tên trắng chạy XUỐNG; đang GHI (lưu/xóa/tải file lên — body.is-saving):
-   mũi tên vàng EVN chạy LÊN. Mũi tên trượt ngắn phía trên vạch đáy (khay) rồi lặp lại. */
+/* Chỉ báo tải (src/presentation/components/ui-busy.js): số % ngay bên trái nút Database + mũi tên động ở góc trên-trái
+   icon Database (.db-busy, hiện khi body.is-busy). Đang TẢI dữ liệu: mũi tên chạy XUỐNG (huy hiệu trắng); đang GHI
+   (lưu/xóa/tải file lên — body.is-saving): mũi tên chạy LÊN (huy hiệu + số % vàng EVN). Xong: "100%" xanh lá, giữ 1 chút
+   rồi ẩn (.is-done). Điện thoại: khối % nằm bên trái nút ⋯ và kèm mũi tên riêng (.busy-arrow-mobile). */
 .busy-indicator {
-  display: inline-grid;
+  display: inline-flex;
   flex: none;
-  place-items: center;
-  width: 32px;
+  align-items: center;
+  gap: 2px;
   height: 36px;
   color: var(--on-dark);
-  pointer-events: auto;
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
   cursor: progress;
 }
 .busy-indicator.hidden { display: none; }
-.busy-arrow { display: grid; place-items: center; width: 24px; height: 24px; }
-.busy-arrow-svg { width: 24px; height: 24px; overflow: hidden; }
-.busy-arrow-svg path {
+.busy-pct { min-width: 3.2em; text-align: right; }
+.busy-indicator.is-done { color: var(--status-online-dot); }
+body.is-saving .busy-indicator:not(.is-done) { color: var(--evn-yellow); }
+.busy-arrow-svg { width: 22px; height: 22px; overflow: hidden; }
+.busy-arrow-svg path,
+.db-busy path {
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.busy-arrow-svg path { stroke-width: 2.2; }
+.busy-arrow-base { opacity: 0.85; }
+.busy-indicator.is-done .busy-arrow-mobile { visibility: hidden; }
+@media (min-width: 801px) {
+  .busy-arrow-mobile { display: none; }
+}
+
+/* Huy hiệu mũi tên ở góc icon Database */
+.db-busy {
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  display: none;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  overflow: hidden;
+  border: 1.5px solid var(--header-bg);
+  border-radius: 50%;
+  background: var(--on-dark);
+  color: var(--header-bg);
+  pointer-events: none;
+}
+.db-busy svg { width: 12px; height: 12px; overflow: hidden; }
+.db-busy path { stroke-width: 3; }
+body.is-busy .db-busy { display: grid; }
+body.is-saving .db-busy { background: var(--evn-yellow); color: #000; }
+
 .busy-arrow-dn { animation: busy-arrow-down 1.8s ease-in-out infinite; }
 .busy-arrow-up { display: none; animation: busy-arrow-up 1.8s ease-in-out infinite; }
-.busy-arrow-base { opacity: 0.85; }
-body.is-saving .busy-indicator { color: var(--evn-yellow); }
 body.is-saving .busy-arrow-dn { display: none; }
 body.is-saving .busy-arrow-up { display: inline; }
-/* Hành trình ngắn (±4px) + mờ dần ở 2 đầu: mũi tên luôn nằm trong khung, đủ lâu để nhìn rõ. */
+/* Hành trình ngắn (±4 đơn vị) + mờ dần ở 2 đầu: mũi tên luôn nằm trong khung, đủ lâu để nhìn rõ. */
 @keyframes busy-arrow-down {
   0% { transform: translateY(-4px); opacity: 0; }
   20% { opacity: 1; }
