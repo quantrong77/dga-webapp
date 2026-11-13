@@ -188,6 +188,150 @@ function setupBackToTop() {
   update();
 }
 
+/** Khung "Nhập BBTN" (.bbtn-import-panel — tab Khí hòa tan, Lý-Hóa dầu, dầu 3 pha): mặc định THU GỌN chỉ còn tiêu đề +
+ *  2 nút chọn "Một BBTN" / "Nhiều BBTN"; bấm nút nào thì hiện phần tương ứng (class show-one / show-many trên panel,
+ *  CSS ở style-components.css), bấm lại để ẩn — mở được cả 2 cùng lúc. Phần phụ của ô 1 BBTN (.bbtn-import-x1: file
+ *  đang đính kèm, nút Hiện BBTN đối chiếu, Lưu cả biên bản...) luôn hiện khi có nội dung, kể cả lúc thu gọn. */
+function setupBbtnImportPickers() {
+  document.querySelectorAll(".bbtn-import-panel").forEach((panel, idx) => {
+    const h2 = panel.querySelector(":scope > h2");
+    const grid = panel.querySelector(":scope > .bbtn-import-grid");
+    if (!h2 || !grid || panel.querySelector(".bbtn-pick-group")) return;
+    if (!grid.id) grid.id = "bbtnImportGrid" + idx;
+    const head = document.createElement("div");
+    head.className = "bbtn-import-head";
+    h2.before(head);
+    head.appendChild(h2);
+    const group = document.createElement("div");
+    group.className = "bbtn-pick-group";
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-label", "Chọn cách nhập BBTN");
+    const picks = [
+      ["one", "#icon-paperclip", "Một BBTN", "Đọc 1 biên bản vào form để đối chiếu rồi lưu"],
+      ["many", "#icon-layers", "Nhiều BBTN / thư mục", "Nhập hàng loạt nhiều biên bản hoặc cả thư mục"],
+    ];
+    picks.forEach(([key, icon, label, tip]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "bbtn-pick";
+      b.dataset.bbtnPick = key;
+      b.title = tip;
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-controls", grid.id);
+      b.innerHTML = `<svg class="icon-svg" aria-hidden="true"><use href="${icon}"></use></svg>${label}`;
+      b.addEventListener("click", () => {
+        const on = !panel.classList.contains("show-" + key);
+        panel.classList.toggle("show-" + key, on);
+        b.setAttribute("aria-pressed", String(on));
+        if (on) {
+          const input = panel.querySelector(`.bbtn-import-z${key === "one" ? 1 : 2} input[type="file"]`);
+          if (input) input.focus({ preventScroll: true });
+        }
+      });
+      group.appendChild(b);
+    });
+    head.appendChild(group);
+  });
+}
+
+/** Nhãn mà 1 đoạn ghi chú [data-note-tip] gắn vào: selector ghi trong thuộc tính, hoặc (để trống) tiêu đề gần nhất phía
+ *  trên — anh/em liền trước là h2/h3/.section-title (hoặc chứa h2), không có thì lần lên khối cha (tối đa tới .panel). */
+function noteTipTarget(note) {
+  if (note.dataset.noteTip) return document.querySelector(note.dataset.noteTip);
+  const isHead = (el) => el.matches("h2, h3, .section-title");
+  let node = note;
+  while (node && node !== document.body) {
+    for (let el = node.previousElementSibling; el; el = el.previousElementSibling) {
+      if (isHead(el)) return el;
+      const inner = el.querySelector(":scope > h2, :scope h2");
+      if (inner) return inner;
+    }
+    if (node.parentElement && node.parentElement.classList.contains("panel")) {
+      return node.parentElement.querySelector("h2");
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
+/** Ghi chú → tip khi trỏ chuột: mọi đoạn [data-note-tip] (tab nhập liệu Khí hòa tan / Lý-Hóa dầu / OLTC / dầu 3 pha /
+ *  TI-TU) được gỡ khỏi trang và chuyển thành ô tip (role="tooltip") của nhãn tương ứng — đỡ chiếm màn hình, đỡ rối mắt.
+ *  Nhãn là nút (tab con, nút Xuất BBTN): trỏ chuột / focus vào nút là hiện. Nhãn là tiêu đề: thêm nút "i" nhỏ cuối tiêu
+ *  đề; trỏ vào tiêu đề hoặc nút là hiện, bấm/chạm nút để ghim (điện thoại), Esc / bấm ra ngoài để ẩn. */
+function setupNoteTips() {
+  let openTip = null;
+  let pinned = false;
+  const place = (tip, anchor) => {
+    const r = anchor.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    const h = tip.offsetHeight;
+    const vw = document.documentElement.clientWidth;
+    let left = Math.min(Math.max(8, r.left), vw - w - 8);
+    let top = r.bottom + 8;
+    if (top + h > window.innerHeight - 8 && r.top - h - 8 > 8) top = r.top - h - 8;
+    tip.style.left = Math.max(8, left) + "px";
+    tip.style.top = top + "px";
+  };
+  const hide = () => {
+    if (!openTip) return;
+    openTip.classList.add("hidden");
+    const btn = document.querySelector(`.note-tip-btn[aria-describedby="${openTip.id}"]`);
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    openTip = null;
+    pinned = false;
+  };
+  const show = (tip, anchor) => {
+    if (openTip && openTip !== tip) hide();
+    tip.classList.remove("hidden");
+    openTip = tip;
+    place(tip, anchor);
+  };
+  document.querySelectorAll("[data-note-tip]").forEach((note, i) => {
+    const target = noteTipTarget(note);
+    if (!target) return;
+    const tip = document.createElement("div");
+    tip.className = "note-tip-pop hidden";
+    tip.id = "noteTip" + i;
+    tip.setAttribute("role", "tooltip");
+    tip.innerHTML = note.innerHTML;
+    document.body.appendChild(tip);
+    note.remove();
+    if (target.matches("button, input, select, a")) {
+      target.setAttribute("aria-describedby", tip.id);
+      target.addEventListener("mouseenter", () => show(tip, target));
+      target.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+      target.addEventListener("focus", () => show(tip, target));
+      target.addEventListener("blur", () => { if (!pinned) hide(); });
+      return;
+    }
+    const label = (target.textContent || "").trim().replace(/\s+/g, " ");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "note-tip-btn";
+    btn.textContent = "i";
+    btn.setAttribute("aria-label", "Ghi chú: " + label);
+    btn.setAttribute("aria-describedby", tip.id);
+    btn.setAttribute("aria-expanded", "false");
+    target.appendChild(btn);
+    target.classList.add("has-note-tip");
+    target.addEventListener("mouseenter", () => show(tip, btn));
+    target.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+    btn.addEventListener("focus", () => show(tip, btn));
+    btn.addEventListener("blur", () => { if (!pinned) hide(); });
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (pinned && openTip === tip) { hide(); return; }
+      show(tip, btn);
+      pinned = true;
+      btn.setAttribute("aria-expanded", "true");
+    });
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
+  document.addEventListener("click", (e) => { if (openTip && !openTip.contains(e.target)) hide(); });
+  window.addEventListener("scroll", () => { if (!pinned) hide(); }, { passive: true });
+  window.addEventListener("resize", hide);
+}
+
 function setupTabs() {
   // Nút chuyển nhanh sang tab khác (vd thông báo "Tài khoản chỉ xem": data-goto-tab="lichsu").
   document.querySelectorAll("[data-goto-tab]").forEach((el) => {
@@ -219,8 +363,10 @@ function setupTabs() {
         }
       }
       if (targetTab === "dga" || targetTab === "nhap") {
-        const bbtnInput = $("f_bbtn"); // ô chọn file trong #bbtnDropzone (control nhận bàn phím)
-        if (bbtnInput) bbtnInput.focus();
+        // ô chọn file trong #bbtnDropzone (control nhận bàn phím); khung Nhập BBTN đang thu gọn → nút "Một BBTN"
+        const bbtnInput = $("f_bbtn");
+        const focusEl = bbtnInput && bbtnInput.offsetParent ? bbtnInput : document.querySelector(`#tab-${targetTab} [data-bbtn-pick="one"]`);
+        if (focusEl) focusEl.focus({ preventScroll: true });
       }
       // Tránh cuộn trang khi bấm các nút icon trên Header (chỉ cuộn cho các nút trong sidebar/nav.tabs)
       if (!btn.classList.contains("header-icon-btn")) {

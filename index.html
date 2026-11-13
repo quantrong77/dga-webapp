@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v104-duval-chu-thich") {
+          if (k !== "dga-offline-v108-busy-mui-ten") {
             caches.delete(k);
           }
         });
@@ -106,6 +106,7 @@
       <symbol id="icon-alert-octagon" viewBox="0 0 24 24"><path d="M8 2.5h8l5.5 5.5v8L16 21.5H8L2.5 16v-8L8 2.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 8v5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="16.2" r="1" fill="currentColor" stroke="none"/></symbol>
       <symbol id="icon-book" viewBox="0 0 24 24"><path d="M4 4.5c2.5-1.2 5.5-1.2 8 0v15c-2.5-1.2-5.5-1.2-8 0v-15zM20 4.5c-2.5-1.2-5.5-1.2-8 0v15c2.5-1.2 5.5-1.2 8 0v-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
       <symbol id="icon-zoom" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15.3 15.3L20.5 20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10.5 8v5M8 10.5h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></symbol>
+      <symbol id="icon-database" viewBox="0 0 24 24"><ellipse cx="12" cy="5.5" rx="7.5" ry="3" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 5.5v13c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-13M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
       <symbol id="icon-bell" viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
       <symbol id="icon-maximize" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -216,21 +217,8 @@
 
   <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <!-- Chỉ báo tải: vòng xoay hiện % ở GIỮA header theo chiều đứng (điện thoại: cạnh nút ⋯) — xem
-       src/presentation/components/ui-busy.js. Nhãn chữ ("Đang lưu..."/"Đang cập nhật dữ liệu...") chỉ dành cho trình
-       đọc màn hình + tooltip; % không nằm trong vùng aria-live để không bị đọc liên tục. -->
   <!-- Nút "Về đầu trang" — hiện khi đã cuộn xuống (setupBackToTop(), ui-layout.js). -->
   <button type="button" id="btnBackToTop" class="back-to-top hidden" aria-label="Về đầu trang" title="Về đầu trang"><svg class="icon-svg" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></button>
-  <div id="busyIndicator" class="busy-indicator hidden" title="Đang lưu...">
-    <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang lưu...</span>
-    <div class="busy-ring" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
-      <svg class="busy-ring-svg" viewBox="0 0 36 36" aria-hidden="true">
-        <circle class="busy-ring-track" cx="18" cy="18" r="15.5" />
-        <circle class="busy-ring-bar" id="busyRingBar" cx="18" cy="18" r="15.5" pathLength="100" stroke-dasharray="0 100" />
-      </svg>
-      <span class="busy-ring-pct" id="busyRingPct" aria-hidden="true">0%</span>
-    </div>
-  </div>
 
   <!-- Banner đỏ CHẾ ĐỘ THỬ NGHIỆM (localStorage) — hiện ở initApp() (app-core.js) khi config.js
        chưa cấu hình database, để không ai lỡ nhập dữ liệu thật vào trình duyệt. -->
@@ -254,10 +242,6 @@
           <h1>Đánh giá Dầu cách điện</h1>
           <span class="app-subtitle">QĐ1901/EVNNPT</span>
         </div>
-        <button type="button" id="syncStatusBadge" class="badge sync-badge hidden" title="Trạng thái kết nối và đồng bộ ngoại tuyến">
-          <span class="sync-dot"></span>
-          <span id="syncStatusText">Đã đồng bộ</span>
-        </button>
       </div>
     </div>
 
@@ -278,8 +262,27 @@
          (#btnHeaderMenu, setupHeaderMenu() ở ui-layout.js). -->
     <div class="header-tools" id="headerMenu">
     <div class="header-right">
-      <!-- <button>: khi đã cấu hình link quản lý database, bấm mở Google Sheet/Supabase Dashboard (setupStorageBadgeLink()). -->
-      <button type="button" id="storageBadge" class="badge local">Đang tải...</button>
+      <!-- Chỉ báo tải (ui-busy.js): mũi tên động sát bên trái nút Database — xuống = đang tải dữ liệu, lên = đang lưu/xóa/tải
+           file lên. Điện thoại: JS dời ra ngay bên trái nút ⋯ (busyPlaceOnHeader()). Nhãn chữ chỉ cho trình đọc màn hình + tooltip;
+           % (ước lượng) nằm ở aria-valuenow và tooltip, không trong vùng aria-live để không bị đọc liên tục. -->
+      <div id="busyIndicator" class="busy-indicator hidden" title="Đang cập nhật dữ liệu...">
+        <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang cập nhật dữ liệu...</span>
+        <div class="busy-arrow" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
+          <svg class="busy-arrow-svg" viewBox="0 0 24 24" aria-hidden="true">
+            <g class="busy-arrow-clip">
+              <path class="busy-arrow-dn" d="M12 3v10.5M7.5 9.5 12 14l4.5-4.5" />
+              <path class="busy-arrow-up" d="M12 15V4.5M7.5 8.5 12 4l4.5 4.5" />
+            </g>
+            <path class="busy-arrow-base" d="M5 20h14" />
+          </svg>
+        </div>
+      </div>
+      <!-- Database + trạng thái đồng bộ gộp 1 nút icon (renderDbStatus(), app-status.js): chấm màu = trạng thái (xanh lá đã
+           đồng bộ · xanh dương đang đồng bộ · cam offline · đỏ mất kết nối / chế độ thử nghiệm), số = mục chờ đồng bộ.
+           Bấm: Admin có link → mở Google Sheet/Supabase Dashboard/trang máy chủ; có mục chờ → đồng bộ ngay. -->
+      <button type="button" id="storageBadge" class="header-icon-btn db-status-btn hidden" data-db-state="loading" aria-label="Database: đang tải" title="Database: đang tải" data-tooltip="Database">
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-database"></use></svg><span class="db-dot" aria-hidden="true"></span><span class="hdr-count db-count hidden" id="dbPendingCount" aria-hidden="true"></span><span class="hdr-label" id="dbStatusLabel">Database</span>
+      </button>
       <button type="button" class="header-icon-btn tab-btn header-alert-btn" data-tab="canhbao" id="btnHeaderAlerts" title="Cảnh báo" data-tooltip="Cảnh báo">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-bell"></use></svg><span class="hdr-count hidden" id="headerAlertCount" aria-hidden="true"></span><span class="hdr-label">Cảnh báo</span><span class="sr-only" id="headerAlertSr"></span>
       </button>
@@ -322,7 +325,7 @@
     </div>
     </div>
     <button type="button" id="btnHeaderMenu" class="header-icon-btn header-menu-btn" aria-expanded="false" aria-controls="headerMenu" aria-label="Mở menu" title="Menu">
-      <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg>
+      <svg class="icon-svg" aria-hidden="true"><use href="#icon-more"></use></svg><span class="db-dot menu-db-dot hidden" id="menuDbDot" aria-hidden="true"></span>
     </button>
   </header>
 
@@ -433,12 +436,11 @@
               <option>Khác</option>
             </select>
         </label>
-        <button type="button" class="field-icon-toggle-btn guide-toggle-btn input-toolbar-guide" data-guide-toggle="nhap-intro" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn nhập liệu"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       </div>
-      <p class="note input-subtab-hint mode-import" data-guide="nhap-intro">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
+      <p class="note" data-note-tip="#tab-nhap .input-subtab-btn[data-input-mode=import]">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
         với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
         đo đã lưu của thiết bị đang chọn ở form.</p>
-      <p class="note input-subtab-hint mode-lap" data-guide="nhap-intro">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+      <p class="note" data-note-tip="#tab-nhap .input-subtab-btn[data-input-mode=lap]">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
       <!-- ===================== NHẬP HÀNG LOẠT NHIỀU BBTN (PDF) =====================
@@ -494,7 +496,7 @@
             </div>
           </div>
         </div>
-        <p class="note u-mt-12px" data-guide="nhap-intro">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
+        <p class="note" data-note-tip>Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
           đang chọn ở form "Thí nghiệm khí hòa tan trong dầu cách điện" bên dưới cho TẤT CẢ file — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
           được đọc riêng từng file PDF. Phù hợp khi nhập bổ sung nhiều lần đo lịch sử để phân tích xu hướng (tab "Xu hướng").</p>
 
@@ -785,7 +787,7 @@
             <button type="button" class="btn ghost hidden" id="btnExportTechReport"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất báo cáo phân tích kỹ thuật (docx)</button>
           </div>
         </div>
-        <p class="note mode-lap u-mt-2px">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
+        <p class="note" data-note-tip="#btnExportBbtn">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
           thí nghiệm (PTC3/BM.15) — tải về, MỞ TRONG WORD để bổ sung các mục mẫu chưa có sẵn dữ liệu (hãng SX, số chế tạo,
           điều kiện môi trường, chữ ký...) trước khi ban hành. Số liệu điền sẵn chỉ mang tính hỗ trợ, người dùng cần kiểm
           tra lại trước khi ký.</p>
@@ -835,7 +837,7 @@
         </table></div>
 
         <div class="section-title">Tổng hàm lượng khí hòa tan (Bảng 63, Điều 54 QĐ1901)</div>
-        <p class="note">Bảng 63 CHỈ áp dụng chính thức cho dầu mới đưa vào vận hành lần đầu, sau sửa chữa có thay dầu, hoặc
+        <p class="note" data-note-tip>Bảng 63 CHỈ áp dụng chính thức cho dầu mới đưa vào vận hành lần đầu, sau sửa chữa có thay dầu, hoặc
           sau sửa chữa không thay dầu có lọc dầu (tick ô tương ứng ở mục nhập liệu) — không áp dụng cho dầu đang vận hành
           định kỳ thông thường. Cần nhập đủ N2, O2 ở trên để tính (cộng cả 9 khí, quy đổi ppm → %).</p>
         <div class="table-scroll"><table>
@@ -855,7 +857,7 @@
                 <td id="r_pctch4">—</td><td id="r_pctc2h4">—</td><td id="r_pctc2h2">—</td><td id="r_duvalzone">—</td>
               </tr></tbody>
             </table></div>
-            <p class="note">Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
+            <p class="note" data-note-tip>Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
               điện/tăng nhiệt mà chính hình vẽ gốc IEC 60599:2022 Annex B cũng không phân định rạch ròi — nên đối
               chiếu thêm Bảng 66 và dữ liệu vận hành trước khi kết luận.</p>
           </div>
@@ -2379,12 +2381,11 @@
               <option value="Khác">Khác</option>
             </select>
         </label>
-        <button type="button" class="field-icon-toggle-btn guide-toggle-btn input-toolbar-guide" data-guide-toggle="dau-intro" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn nhập liệu"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       </div>
-      <p class="note input-subtab-hint mode-import" data-guide="dau-intro">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
+      <p class="note" data-note-tip="#tab-dau .input-subtab-btn[data-input-mode=import]">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
         với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
         thí nghiệm dầu đã lưu của thiết bị đang chọn ở form.</p>
-      <p class="note input-subtab-hint mode-lap" data-guide="dau-intro">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+      <p class="note" data-note-tip="#tab-dau .input-subtab-btn[data-input-mode=lap]">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
       <p class="note hidden" id="dauNoOilSupportNote">Tab "Lý-Hóa dầu" hiện chưa hỗ trợ
@@ -2430,7 +2431,7 @@
             </div>
           </div>
         </div>
-        <p class="note u-mt-12px" data-guide="dau-intro">Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
+        <p class="note" data-note-tip>Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
           chọn từng file rồi bấm "Đánh giá &amp; Lưu cả biên bản". <strong>Trạm / Thiết bị</strong> lấy theo form bên dưới nếu đã
           nhập (dùng chung cho cả đợt), để trống thì lấy theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ
           tiêu đọc riêng từng file. Phù hợp khi nhập bổ sung nhiều BBTN lịch sử để theo dõi xu hướng.</p>
@@ -2472,7 +2473,7 @@
     <div class="dga-input-main-col">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
-        <p class="note" data-guide="dau-intro">Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
+        <p class="note" data-note-tip>Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
           theo dõi xu hướng. Dầu <strong>thùng chung 3 pha</strong> nhập 1 cột "Kết quả"; dầu <strong>thùng riêng từng
           pha</strong> nhập 3 cột Pha A/B/C (cột để trống = pha đó không thí nghiệm). Đánh giá theo QĐ1901: chỉ tiêu cơ
           bản (Bảng 54, 55, 58) và chỉ tiêu lý-hóa bổ sung (Điều 48–56: trị số axit, chớp cháy, tạp chất cơ học, đếm hạt,
@@ -2602,7 +2603,7 @@
 
       <div class="panel hidden" id="oilIec60422Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 5, theo Category A/B/C)</h2>
-        <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với QĐ1901 ở trên — không thay thế "Kết luận chung". Category suy ra từ
+        <p class="note" data-note-tip>Đánh giá SONG SONG, ĐỘC LẬP với QĐ1901 ở trên — không thay thế "Kết luận chung". Category suy ra từ
           Cấp điện áp MBA/Kháng đã chọn (&gt;170kV=A, &gt;72,5–170kV=B, ≤72,5kV=C).</p>
         <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận (IEC 60422:2024)</div><div class="value" id="o_iec_overall">—</div></div>
@@ -2622,7 +2623,7 @@
           <button type="button" class="btn primary" id="btnExportMbaOilBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
         <p class="note u-mt-6px" id="ob_scope"></p>
-        <p class="note">Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
+        <p class="note" data-note-tip>Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
           dầu thùng chính và dầu OLTC cùng thiết bị, cùng ngày lấy mẫu chung 1 biên bản. Chỉ các chỉ tiêu đã nhập được đưa vào.
           Thông số kỹ thuật thiết bị lấy ở form phía trên; các ô dưới đây chỉ dùng cho biên bản (không lưu), để trống thì biên bản để trống. Mở file trong Word để bổ sung
           số biên bản, thiết bị thí nghiệm và ký trước khi ban hành.</p>
@@ -2658,7 +2659,7 @@
            dầu phụ CỦA chính MBA/Kháng dầu đó, không phải loại thiết bị độc lập. -->
       <div class="panel" id="oltcFormPanel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
-        <p class="note">Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
+        <p class="note" data-note-tip>Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
           (đánh giá Độ ẩm + Điện áp chọc thủng; QĐ1901 không quy định ngưỡng tgδ cho dầu OLTC lúc vận hành, chỉ
           ghi nhận để theo dõi xu hướng). Khi dầu OLTC <strong>mới lắp</strong>, Điều 37 quy định áp dụng CHUNG
           tiêu chuẩn với dầu chính MBA (Bảng 54/55/58, có cả tgδ) — công cụ tự chuyển sang tiêu chuẩn đó khi bạn
@@ -2853,7 +2854,7 @@
             </div>
           </div>
         </div>
-        <p class="note u-mt-12px">Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
+        <p class="note" data-note-tip>Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
           "Đánh giá &amp; Lưu 3 pha" (tách 1 bản ghi mỗi pha). <strong>Trạm / Vị trí lắp đặt</strong> lấy theo form bên dưới nếu đã nhập
           (dùng chung cho cả đợt), để trống thì theo từng biên bản; Nhà sản xuất tự khớp theo hãng ghi trên biên bản, không khớp thì
           dùng Nhà sản xuất đang chọn ở form.</p>
@@ -2896,7 +2897,7 @@
         <div class="dga-input-main-col">
           <div class="panel" id="tio3Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>BBTN dầu 3 pha (A, B, C chung một biên bản)</h2>
-        <p class="note">Đọc từ BBTN (khung Nhập BBTN dầu 3 pha ở trên) hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành
+        <p class="note" data-note-tip>Đọc từ BBTN (khung Nhập BBTN dầu 3 pha ở trên) hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành
           1 bản ghi cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
         <div class="grid">
           <label class="field">Trạm
@@ -2983,7 +2984,7 @@
   </div><!-- /#t3SplitLayout -->
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU/Sứ xuyên</h2>
-        <p class="note">Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
+        <p class="note" data-note-tip>Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
           chọc thủng dầu (kV) — kèm 1 hạng mục tùy chọn tgδ ở 20°C (%) nếu nhà sản xuất có quy định riêng (VD
           Arteche) — áp dụng cho TI/TU kiểu kín, cách điện dầu. QĐ1901 Điều 10 (Bảng 9, mục 12) và Điều 11
           (Bảng 14, mục 11) đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục này — KHÔNG có bảng
@@ -3081,7 +3082,7 @@
 
       <div class="panel hidden" id="tioIec60422Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 7, theo Category D/E)</h2>
-        <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với tiêu chuẩn nhà sản xuất ở trên — không thay thế "Kết luận chung". Cần nhập
+        <p class="note" data-note-tip>Đánh giá SONG SONG, ĐỘC LẬP với tiêu chuẩn nhà sản xuất ở trên — không thay thế "Kết luận chung". Cần nhập
           Cấp điện áp Um để xác định Category. Điện áp chọc thủng dùng số liệu SUY DIỄN (Category D≈A, E≈B của Bảng 5) do
           Bảng 7 gốc không có số liệu riêng cho hạng mục này — xem cột "Căn cứ".</p>
         <div class="stat-row u-cols-minmax0-1fr">
@@ -3229,25 +3230,35 @@
           <div class="sm-body">
           <h3>2.1. Mở app</h3>
           <p>Mở đường link do quản trị viên cung cấp bằng <strong>Chrome, Edge hoặc Safari</strong> (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file <code>index.html</code> bằng trình duyệt (hoặc qua máy chủ cục bộ <code>npm start</code> — mặc định <code>http://localhost:8080</code>, đổi cổng bằng biến môi trường <code>PORT</code>).</p>
-          <p>Góc trên bên trái có <strong>huy hiệu trạng thái lưu trữ</strong>:</p>
+          <p>Bên phải thanh trên cùng có <strong>nút icon Database</strong> (hình trụ) — gộp trạng thái lưu trữ và đồng bộ. <strong>Chấm màu</strong> ở góc icon cho biết trạng thái (rê chuột để xem chi tiết):</p>
           <div class="table-scroll"><table>
           <thead>
           <tr>
-          <th>Huy hiệu</th>
+          <th>Chấm</th>
           <th>Ý nghĩa</th>
           </tr>
           </thead>
           <tbody>
           <tr>
-          <td>"Database" / "Supabase"</td>
-          <td>Dữ liệu lưu dùng chung trên database của đơn vị (bấm vào để mở nhanh Google Sheet hoặc Supabase Dashboard)</td>
+          <td>Xanh lá</td>
+          <td>Đã kết nối database dùng chung (hoặc Máy chủ nội bộ) và đã đồng bộ toàn bộ dữ liệu</td>
           </tr>
           <tr>
-          <td>"Chế độ thử nghiệm" (kèm <strong>banner đỏ</strong> đầu trang)</td>
-          <td>Dữ liệu chỉ lưu trong trình duyệt của máy này</td>
+          <td>Xanh dương nhấp nháy (kèm <strong>số</strong>)</td>
+          <td>Đang đồng bộ — số = mục đang chờ gửi lên máy chủ</td>
+          </tr>
+          <tr>
+          <td>Cam</td>
+          <td>Đang offline — dữ liệu nhập vẫn được giữ và tự đồng bộ khi có mạng</td>
+          </tr>
+          <tr>
+          <td>Đỏ</td>
+          <td>Mất kết nối database, hoặc <strong>Chế độ thử nghiệm</strong> (kèm <strong>banner đỏ</strong> đầu trang: dữ liệu chỉ lưu trong trình duyệt của máy này)</td>
           </tr>
           </tbody>
           </table></div>
+          <p>Bấm nút: <strong>Admin</strong> mở nhanh Google Sheet / Supabase Dashboard / trang trạng thái Máy chủ nội bộ; khi còn mục chờ đồng bộ, bấm để đồng bộ ngay.</p>
+          <p>Ngay <strong>bên trái</strong> nút Database, khi app đang làm việc với máy chủ sẽ hiện <strong>mũi tên động</strong>: mũi tên trắng chạy <strong>xuống</strong> = đang tải dữ liệu, mũi tên vàng chạy <strong>lên</strong> = đang lưu / xóa / tải file lên (trong lúc này các nút Lưu, Xóa tạm mờ để tránh bấm trùng). Rê chuột vào mũi tên để xem % ước lượng. Trên điện thoại, mũi tên hiện ngay bên trái nút <strong>⋯</strong>.</p>
           <p class="sm-note">⚠ Ở <strong>chế độ thử nghiệm</strong>, dữ liệu chỉ nằm trên trình duyệt hiện tại — <strong>mất nếu xóa lịch sử duyệt web</strong> và người khác không thấy được. Chỉ dùng để thử.</p>
           <h3>2.2. Đăng ký và đăng nhập (chế độ Google Sheets / Supabase)</h3>
           <ol type="1">
@@ -3331,11 +3342,11 @@
           </table></div>
           <p><strong>Thanh trên cùng (máy tính):</strong></p>
           <ul class="rec-list">
-          <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.</li>
+          <li><strong>Bên trái:</strong> nút <strong>☰</strong> (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app.</li>
           <li><strong>Giữa — Tìm nhanh thiết bị:</strong> gõ tên thiết bị hoặc tên trạm, <strong>không cần gõ dấu</strong> (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức <strong>Báo động/Cảnh báo</strong> nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi <strong>Enter</strong>) để mở <strong>Lịch sử đo</strong> của thiết bị đó; nút <strong>Xu hướng</strong> (hoặc <strong>Shift+Enter</strong>) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: <strong>Ctrl+K</strong> hoặc <strong>/</strong> để nhảy vào ô tìm, <strong>Esc</strong> để đóng.</li>
-          <li><strong>Bên phải:</strong> máy chủ đang dùng, <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
+          <li><strong>Bên phải:</strong> nút <strong>Database</strong> (chấm trạng thái lưu trữ/đồng bộ), <strong>chuông</strong> (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, <strong>Toàn màn hình</strong> (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.</li>
           </ul>
-          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong>. Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
+          <p><strong>Trên điện thoại</strong> (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, nút <strong>kính lúp</strong> (mở ô tìm nhanh thiết bị) và nút <strong>⋯</strong> (có chấm màu khi dữ liệu chưa đồng bộ xong / offline / mất kết nối). Bấm <strong>⋯</strong> để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), Database (trạng thái), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.</p>
           <p class="sm-note"><strong>Lưu ý cấu trúc mới:</strong> Chức năng <strong>Cấu hình</strong> (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục <strong>Quản trị</strong> trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.</p>
           <h3>3.2. Giao diện sáng hoặc tối</h3>
           <p>Bấm <strong>biểu tượng mặt trăng/mặt trời</strong> ở góc trên bên phải (trên điện thoại: trong menu <strong>⋯</strong>) để đổi giao diện. Giao diện tối nền xanh navy đậm, dễ nhìn hơn khi làm việc ban đêm. Lựa chọn được nhớ trên trình duyệt này; nếu chưa chọn, app theo cài đặt của hệ điều hành. Màu sắc theo nhận diện EVNNPT (xanh EVN, đỏ, vàng), dải 3 màu pha A vàng · B xanh lá · C đỏ dưới thanh trên cùng.</p>
@@ -3351,7 +3362,8 @@
           <h3>3.5. Các thao tác dùng chung</h3>
           <ul class="rec-list">
           <li><strong>Ô Trạm / Thiết bị:</strong> vừa <strong>gõ để tìm</strong>, vừa <strong>bấm ▼ để chọn</strong> trong danh sách đã có. Bạn cũng có thể <strong>gõ tên mới</strong> (không bắt buộc phải chọn từ danh sách).</li>
-          <li><strong>Khung "Nhập BBTN" (tab con Nhập BBTN cũ):</strong> nằm trên form nhập liệu, gồm <strong>2 ô kéo thả ngang hàng, cùng kích thước</strong> — ô trái nhận <strong>1 biên bản</strong> (đọc vào form để đối chiếu rồi lưu), ô phải nhận <strong>nhiều biên bản hoặc cả thư mục</strong> (nút <strong>Chọn cả thư mục…</strong>). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.</li>
+          <li><strong>Khung "Nhập BBTN" (tab con Nhập BBTN cũ):</strong> nằm trên form nhập liệu, <strong>mặc định thu gọn</strong> chỉ còn tiêu đề và 2 nút <strong>Một BBTN</strong> / <strong>Nhiều BBTN / thư mục</strong> để đỡ chiếm màn hình — bấm nút nào thì hiện phần đó, bấm lại để ẩn (mở được cả 2 cùng lúc). Mở cả 2 thì thấy <strong>2 ô kéo thả ngang hàng, cùng kích thước</strong> — ô trái nhận <strong>1 biên bản</strong> (đọc vào form để đối chiếu rồi lưu), ô phải nhận <strong>nhiều biên bản hoặc cả thư mục</strong> (nút <strong>Chọn cả thư mục…</strong>). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.</li>
+          <li><strong>Ghi chú dạng tip:</strong> các đoạn giải thích dài ở tab nhập liệu (Khí hòa tan, Lý-Hóa dầu, OLTC, dầu 3 pha, TI/TU) không còn hiện sẵn trên trang. <strong>Trỏ chuột</strong> vào tiêu đề có nút <strong>i</strong> nhỏ (VD tiêu đề <strong>Nhập BBTN</strong>, <strong>Tam giác Duval 1</strong>), hoặc vào nút <strong>Nhập BBTN cũ</strong> / <strong>Lập BBTN</strong> / <strong>Xuất BBTN</strong>, để xem ghi chú; trên điện thoại <strong>chạm</strong> nút <strong>i</strong> (chạm ra ngoài hoặc nhấn Esc để ẩn).</li>
           <li><strong>Tab con "Nhập BBTN cũ" / "Lập BBTN":</strong> có ở tab <strong>Khí hòa tan</strong> và <strong>Lý-Hóa dầu</strong>, dùng <strong>chung một form</strong> (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.</li>
           <li><strong>Biểu tượng "i":</strong> bấm để xem giải thích chi tiết; đóng bằng <strong>×</strong> hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.</li>
           <li><strong>Thông báo nhanh (toast)</strong> hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), <strong>màu đỏ khi có lỗi hoặc thiếu thông tin</strong> (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.</li>
@@ -3556,7 +3568,7 @@
           <div class="sm-body">
           <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song</h3>
           <ol type="1">
-          <li>Ở tab <strong>Khí hòa tan</strong>, tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN"</strong> trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái <strong>"Một BBTN (PDF)"</strong> — <strong>kéo thả</strong> file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải <strong>"Nhiều BBTN hoặc cả thư mục"</strong> — xem mục 7.</li>
+          <li>Ở tab <strong>Khí hòa tan</strong>, tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN"</strong> trên cùng — bấm nút <strong>Một BBTN</strong> để mở ô kéo thả (nút <strong>Nhiều BBTN / thư mục</strong> mở ô nhập hàng loạt): ô <strong>"Một BBTN (PDF)"</strong> — <strong>kéo thả</strong> file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải <strong>"Nhiều BBTN hoặc cả thư mục"</strong> — xem mục 7.</li>
           <li><strong>Khung hiển thị Biên bản đối chiếu song song (Split View):</strong> Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới): - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc. - Nút <strong>"Mở tab mới"</strong> giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần. - Nút <strong>"✕ Ẩn"</strong> hoặc <strong>"Hiện BBTN đối chiếu"</strong> để đóng hoặc mở lại khung xem bất kỳ lúc nào.</li>
           <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và <strong>7 khí hòa tan</strong>.</li>
           <li><strong>7 khí chính:</strong> ô Kết quả trên biên bản để <strong>trống</strong>, ghi <strong>0</strong> hoặc ghi <strong>KPH</strong> đều được điền là <strong>KPH</strong> — app không lấy số ở cột Tiêu chuẩn thay cho ô trống. Khí nào app <strong>không đọc được chắc chắn</strong> (không thấy dòng khí đó, hoặc không phân biệt được số đọc ra là kết quả hay tiêu chuẩn) thì ô đó <strong>để trống, tô vàng</strong> và app báo tên khí: đối chiếu biên bản ở khung bên cạnh rồi nhập tay (ghi KPH nếu biên bản để trống). Còn ô tô vàng thì app chưa cho <strong>Phân tích &amp; Lưu</strong>. Khi nhập hàng loạt, BBTN có khí đọc không chắc chắn được <strong>bỏ chọn</strong> kèm cảnh báo — kéo riêng BBTN đó vào ô <strong>"Một BBTN (PDF)"</strong> để nhập tay.</li>
@@ -3578,7 +3590,7 @@
           <p>Dùng khi cần <strong>nhập bổ sung dữ liệu lịch sử</strong> (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích &amp; Lưu" từng lần.</p>
           <ol type="1">
           <li><strong>Điền trước</strong> ở form "Thí nghiệm khí hòa tan trong dầu cách điện" (bên dưới khung Nhập BBTN): <strong>Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất</strong> (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho <strong>tất cả</strong> file trong đợt; riêng <strong>Pha, Ngày lấy mẫu và 7 khí</strong> được đọc riêng từ mỗi file.</li>
-          <li>Ở ô phải <strong>"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"</strong> của khung <strong>Nhập BBTN</strong> (ngang hàng với ô 1 BBTN): kéo thả nhiều file PDF vào, hoặc bấm <strong>Chọn cả thư mục…</strong>.</li>
+          <li>Bấm nút <strong>Nhiều BBTN / thư mục</strong> trên khung <strong>Nhập BBTN</strong> để mở ô <strong>"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"</strong>: kéo thả nhiều file PDF vào, hoặc bấm <strong>Chọn cả thư mục…</strong>.</li>
           <li>Tick/bỏ tick <strong>"Đính kèm PDF gốc vào từng lần đo"</strong> (mặc định đang tick).</li>
           <li>Xem <strong>bảng xem trước</strong>: mỗi file có một trạng thái: - <strong>Sẵn sàng</strong> — có thể nhập. - <strong>Cảnh báo</strong> — không đọc được Pha, hoặc <strong>trùng Pha + Ngày</strong> với bản ghi đã có/dòng khác trong đợt. - <strong>Lỗi</strong> — không đọc được file hoặc thiếu dữ liệu bắt buộc.</li>
           <li>Sửa tay <strong>Pha / Ngày</strong> ở từng dòng nếu cần; tick chọn từng dòng, hoặc dùng <strong>Chọn tất cả hợp lệ / Bỏ chọn tất cả</strong>.</li>
@@ -4221,7 +4233,7 @@
           <div class="sm-body">
           <p><strong>Bấm "Phân tích &amp; Lưu" báo lỗi (thông báo màu đỏ góc trên bên phải).</strong> Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nếu là lỗi kết nối database, thông báo đã kèm gợi ý kiểm tra. Toast lỗi hiện khoảng 6 giây; chụp màn hình gửi cho Admin. Admin xem hướng dẫn xử lý ở <code>README.md</code>.</p>
           <p><strong>Thấy thông báo "Đã xảy ra lỗi không lường trước" hoặc "Thao tác không hoàn tất".</strong> Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở mục <strong>Phản hồi</strong> (icon trên Menu bar) hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").</p>
-          <p><strong>Mở app thấy trắng/không có dữ liệu cũ.</strong> Kiểm tra huy hiệu trạng thái góc trên bên trái. Nếu đang ở <em>"Chế độ thử nghiệm"</em>, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.</p>
+          <p><strong>Mở app thấy trắng/không có dữ liệu cũ.</strong> Rê chuột vào nút <strong>Database</strong> (hình trụ, bên phải thanh trên cùng). Nếu chấm đỏ và báo <em>"Chế độ thử nghiệm"</em>, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.</p>
           <p><strong>Không thấy Trạm/Thiết bị trong danh sách gợi ý.</strong> Chờ dòng <em>"Vui lòng chờ! Đang nạp dữ liệu…"</em> biến mất. Nếu thiết bị mới hoàn toàn, cứ <strong>gõ tên mới</strong>.</p>
           <p><strong>Tốc độ sinh khí không hiện.</strong> Cần có <strong>lần đo trước</strong> của cùng <strong>Trạm + Thiết bị + Pha</strong>. Kiểm tra tên Trạm/Thiết bị và Pha đã trùng khớp với lần đo trước chưa.</p>
           <p><strong>Không lưu được thí nghiệm dầu TI/TU/Sứ xuyên.</strong> Chưa chọn nhà sản xuất, hoặc hãng chưa có tiêu chuẩn dầu cho đúng loại thiết bị (TI, TU hoặc Sứ xuyên). Nhờ Admin cấu hình ở <strong>Quản trị → Cấu hình → Tiêu chuẩn</strong>.</p>

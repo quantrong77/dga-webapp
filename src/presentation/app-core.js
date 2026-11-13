@@ -53,7 +53,7 @@ function deviceComboOptions(sources, accept) {
 async function initApp() {
   renderUserHeader();
 
-  // Badge "Database" chỉ hiện với Admin (hoặc khi tắt Auth) — xem renderStorageBadge() (app-status.js)
+  // Nút icon Database: trạng thái cho mọi người, link mở database chỉ cho Admin (hoặc khi tắt Auth) — renderStorageBadge() (app-status.js)
   const isAdminOrNoAuth = !Auth.enabled || (Auth.current && Auth.current.role === "admin");
   renderStorageBadge(isAdminOrNoAuth);
   setupStorageBadgeLink();
@@ -107,6 +107,8 @@ function setupStaticUI() {
   if (typeof setupDialogFocus === "function") setupDialogFocus();
   if (typeof setupTopScrollbars === "function") setupTopScrollbars();
   if (typeof setupBackToTop === "function") setupBackToTop();
+  if (typeof setupBbtnImportPickers === "function") setupBbtnImportPickers();
+  if (typeof setupNoteTips === "function") setupNoteTips(); // SAU setupBbtnImportPickers (tiêu đề Nhập BBTN đã dời vào .bbtn-import-head)
   if (typeof setupHeader === "function") setupHeader();
   if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();

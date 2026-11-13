@@ -61,12 +61,18 @@ App làm được những việc chính:
 
 Mở đường link do quản trị viên cung cấp bằng **Chrome, Edge hoặc Safari** (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file `index.html` bằng trình duyệt (hoặc qua máy chủ cục bộ `npm start` — mặc định `http://localhost:8080`, đổi cổng bằng biến môi trường `PORT`).
 
-Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
+Bên phải thanh trên cùng có **nút icon Database** (hình trụ) — gộp trạng thái lưu trữ và đồng bộ. **Chấm màu** ở góc icon cho biết trạng thái (rê chuột để xem chi tiết):
 
-| Huy hiệu | Ý nghĩa |
+| Chấm | Ý nghĩa |
 |---|---|
-| "Database" / "Supabase" | Dữ liệu lưu dùng chung trên database của đơn vị (bấm vào để mở nhanh Google Sheet hoặc Supabase Dashboard) |
-| "Chế độ thử nghiệm" (kèm **banner đỏ** đầu trang) | Dữ liệu chỉ lưu trong trình duyệt của máy này |
+| Xanh lá | Đã kết nối database dùng chung (hoặc Máy chủ nội bộ) và đã đồng bộ toàn bộ dữ liệu |
+| Xanh dương nhấp nháy (kèm **số**) | Đang đồng bộ — số = mục đang chờ gửi lên máy chủ |
+| Cam | Đang offline — dữ liệu nhập vẫn được giữ và tự đồng bộ khi có mạng |
+| Đỏ | Mất kết nối database, hoặc **Chế độ thử nghiệm** (kèm **banner đỏ** đầu trang: dữ liệu chỉ lưu trong trình duyệt của máy này) |
+
+Bấm nút: **Admin** mở nhanh Google Sheet / Supabase Dashboard / trang trạng thái Máy chủ nội bộ; khi còn mục chờ đồng bộ, bấm để đồng bộ ngay.
+
+Ngay **bên trái** nút Database, khi app đang làm việc với máy chủ sẽ hiện **mũi tên động**: mũi tên trắng chạy **xuống** = đang tải dữ liệu, mũi tên vàng chạy **lên** = đang lưu / xóa / tải file lên (trong lúc này các nút Lưu, Xóa tạm mờ để tránh bấm trùng). Rê chuột vào mũi tên để xem % ước lượng. Trên điện thoại, mũi tên hiện ngay bên trái nút **⋯**.
 
 > ⚠ Ở **chế độ thử nghiệm**, dữ liệu chỉ nằm trên trình duyệt hiện tại — **mất nếu xóa lịch sử duyệt web** và người khác không thấy được. Chỉ dùng để thử.
 
@@ -114,11 +120,11 @@ Giao diện được phân bố khoa học thành hai khu vực điều hướng
 
 **Thanh trên cùng (máy tính):**
 
-- **Bên trái:** nút **☰** (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.
+- **Bên trái:** nút **☰** (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app.
 - **Giữa — Tìm nhanh thiết bị:** gõ tên thiết bị hoặc tên trạm, **không cần gõ dấu** (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức **Báo động/Cảnh báo** nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi **Enter**) để mở **Lịch sử đo** của thiết bị đó; nút **Xu hướng** (hoặc **Shift+Enter**) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: **Ctrl+K** hoặc **/** để nhảy vào ô tìm, **Esc** để đóng.
-- **Bên phải:** máy chủ đang dùng, **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
+- **Bên phải:** nút **Database** (chấm trạng thái lưu trữ/đồng bộ), **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
 
-**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút **kính lúp** (mở ô tìm nhanh thiết bị) và nút **⋯**. Bấm **⋯** để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
+**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, nút **kính lúp** (mở ô tìm nhanh thiết bị) và nút **⋯** (có chấm màu khi dữ liệu chưa đồng bộ xong / offline / mất kết nối). Bấm **⋯** để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), Database (trạng thái), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
 
 > **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
 
@@ -147,7 +153,8 @@ Khi bạn cuộn màn hình xuống phía dưới để đọc kết quả phân
 ### 3.5. Các thao tác dùng chung
 
 - **Ô Trạm / Thiết bị:** vừa **gõ để tìm**, vừa **bấm ▼ để chọn** trong danh sách đã có. Bạn cũng có thể **gõ tên mới** (không bắt buộc phải chọn từ danh sách).
-- **Khung "Nhập BBTN" (tab con Nhập BBTN cũ):** nằm trên form nhập liệu, gồm **2 ô kéo thả ngang hàng, cùng kích thước** — ô trái nhận **1 biên bản** (đọc vào form để đối chiếu rồi lưu), ô phải nhận **nhiều biên bản hoặc cả thư mục** (nút **Chọn cả thư mục…**). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.
+- **Khung "Nhập BBTN" (tab con Nhập BBTN cũ):** nằm trên form nhập liệu, **mặc định thu gọn** chỉ còn tiêu đề và 2 nút **Một BBTN** / **Nhiều BBTN / thư mục** để đỡ chiếm màn hình — bấm nút nào thì hiện phần đó, bấm lại để ẩn (mở được cả 2 cùng lúc). Mở cả 2 thì thấy **2 ô kéo thả ngang hàng, cùng kích thước** — ô trái nhận **1 biên bản** (đọc vào form để đối chiếu rồi lưu), ô phải nhận **nhiều biên bản hoặc cả thư mục** (nút **Chọn cả thư mục…**). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.
+- **Ghi chú dạng tip:** các đoạn giải thích dài ở tab nhập liệu (Khí hòa tan, Lý-Hóa dầu, OLTC, dầu 3 pha, TI/TU) không còn hiện sẵn trên trang. **Trỏ chuột** vào tiêu đề có nút **i** nhỏ (VD tiêu đề **Nhập BBTN**, **Tam giác Duval 1**), hoặc vào nút **Nhập BBTN cũ** / **Lập BBTN** / **Xuất BBTN**, để xem ghi chú; trên điện thoại **chạm** nút **i** (chạm ra ngoài hoặc nhấn Esc để ẩn).
 - **Tab con "Nhập BBTN cũ" / "Lập BBTN":** có ở tab **Khí hòa tan** và **Lý-Hóa dầu**, dùng **chung một form** (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.
 - **Biểu tượng "i":** bấm để xem giải thích chi tiết; đóng bằng **×** hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.
 - **Thông báo nhanh (toast)** hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), **màu đỏ khi có lỗi hoặc thiếu thông tin** (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.
@@ -272,7 +279,7 @@ Hai khối này **không phải ngưỡng của QĐ1901/IEC** và **không làm 
 
 ### 6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song
 
-1. Ở tab **Khí hòa tan**, tab con **Nhập BBTN cũ**, khung **"Nhập BBTN"** trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái **"Một BBTN (PDF)"** — **kéo thả** file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải **"Nhiều BBTN hoặc cả thư mục"** — xem mục 7.
+1. Ở tab **Khí hòa tan**, tab con **Nhập BBTN cũ**, khung **"Nhập BBTN"** trên cùng — bấm nút **Một BBTN** để mở ô kéo thả (nút **Nhiều BBTN / thư mục** mở ô nhập hàng loạt): ô **"Một BBTN (PDF)"** — **kéo thả** file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải **"Nhiều BBTN hoặc cả thư mục"** — xem mục 7.
 2. **Khung hiển thị Biên bản đối chiếu song song (Split View):** Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới):
    - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc.
    - Nút **"Mở tab mới"** giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần.
@@ -300,7 +307,7 @@ Trong khối **"Thông số kỹ thuật thiết bị"**, kéo thả **ảnh ch�
 Dùng khi cần **nhập bổ sung dữ liệu lịch sử** (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích & Lưu" từng lần.
 
 1. **Điền trước** ở form "Thí nghiệm khí hòa tan trong dầu cách điện" (bên dưới khung Nhập BBTN): **Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất** (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho **tất cả** file trong đợt; riêng **Pha, Ngày lấy mẫu và 7 khí** được đọc riêng từ mỗi file.
-2. Ở ô phải **"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"** của khung **Nhập BBTN** (ngang hàng với ô 1 BBTN): kéo thả nhiều file PDF vào, hoặc bấm **Chọn cả thư mục…**.
+2. Bấm nút **Nhiều BBTN / thư mục** trên khung **Nhập BBTN** để mở ô **"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"**: kéo thả nhiều file PDF vào, hoặc bấm **Chọn cả thư mục…**.
 3. Tick/bỏ tick **"Đính kèm PDF gốc vào từng lần đo"** (mặc định đang tick).
 4. Xem **bảng xem trước**: mỗi file có một trạng thái:
    - **Sẵn sàng** — có thể nhập.
@@ -778,7 +785,7 @@ Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nế
 Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở mục **Phản hồi** (icon trên Menu bar) hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").
 
 **Mở app thấy trắng/không có dữ liệu cũ.**
-Kiểm tra huy hiệu trạng thái góc trên bên trái. Nếu đang ở *"Chế độ thử nghiệm"*, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.
+Rê chuột vào nút **Database** (hình trụ, bên phải thanh trên cùng). Nếu chấm đỏ và báo *"Chế độ thử nghiệm"*, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.
 
 **Không thấy Trạm/Thiết bị trong danh sách gợi ý.**
 Chờ dòng *"Vui lòng chờ! Đang nạp dữ liệu…"* biến mất. Nếu thiết bị mới hoàn toàn, cứ **gõ tên mới**.

@@ -354,61 +354,50 @@ label.chk[data-std-key] { cursor: context-menu; }
   background: var(--blue-100);
 }
 
-/* Chỉ báo tải (src/presentation/components/ui-busy.js): vòng xoay + % ở giữa header THEO CHIỀU ĐỨNG — --busy-top do JS
-   đo từ header (header dính đỉnh trang nên luôn đúng chỗ khi cuộn); chưa đo được (màn hình đăng nhập) thì 28px.
-   Màn hình rộng: giữa theo chiều ngang (khoảng trống giữa 2 cụm nút). Điện thoại: ngay bên trái nút ⋯ để không che
-   tên app. Nổi trên cả modal và toast. */
+/* Chỉ báo tải (src/presentation/components/ui-busy.js): mũi tên động trên header, sát bên trái nút Database (điện
+   thoại: bên trái nút ⋯). Đang TẢI dữ liệu: mũi tên trắng chạy XUỐNG; đang GHI (lưu/xóa/tải file lên — body.is-saving):
+   mũi tên vàng EVN chạy LÊN. Mũi tên trượt trong vùng cắt phía trên vạch đáy (khay) rồi lặp lại. */
 .busy-indicator {
-  position: fixed;
-  top: var(--busy-top, 28px);
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 1100;
-  display: flex;
-  pointer-events: none;
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 32px;
+  height: 36px;
+  color: var(--on-dark);
+  pointer-events: auto;
+  cursor: progress;
 }
 .busy-indicator.hidden { display: none; }
-.busy-ring {
-  position: relative;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
-}
-.busy-ring-svg {
-  position: absolute;
-  inset: 3px;
-  width: 34px;
-  height: 34px;
-  animation: busy-ring-spin 1.1s linear infinite;
-}
-.busy-ring-track { fill: none; stroke: var(--blue-100); stroke-width: 3.5; }
-.busy-ring-bar {
+.busy-arrow { display: grid; place-items: center; width: 24px; height: 24px; }
+.busy-arrow-svg { width: 24px; height: 24px; overflow: hidden; }
+.busy-arrow-svg path {
   fill: none;
-  stroke: var(--blue-700);
-  stroke-width: 3.5;
+  stroke: currentColor;
+  stroke-width: 2.2;
   stroke-linecap: round;
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
-  transition: stroke-dasharray 0.25s ease-out;
+  stroke-linejoin: round;
 }
-.busy-ring-pct {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: 10.5px;
-  font-weight: var(--font-bold);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
-  color: var(--blue-900);
+.busy-arrow-clip { clip-path: inset(0 0 4px 0); }
+.busy-arrow-dn { animation: busy-arrow-down 0.9s ease-in infinite; }
+.busy-arrow-up { display: none; animation: busy-arrow-up 0.9s ease-out infinite; }
+.busy-arrow-base { opacity: 0.85; }
+body.is-saving .busy-indicator { color: var(--evn-yellow); }
+body.is-saving .busy-arrow-dn { display: none; }
+body.is-saving .busy-arrow-up { display: inline; }
+@keyframes busy-arrow-down {
+  0% { transform: translateY(-14px); opacity: 0; }
+  25% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(6px); opacity: 0; }
 }
-/* Đang GHI (lưu/xóa/tải file lên): vòng màu đỏ EVN để phân biệt với tải dữ liệu thường. */
-body.is-saving .busy-ring-bar { stroke: var(--evn-red); }
-@keyframes busy-ring-spin { to { transform: rotate(360deg); } }
-@media (max-width: 760px) {
-  .busy-indicator { left: auto; right: 64px; transform: translateY(-50%); }
+@keyframes busy-arrow-up {
+  0% { transform: translateY(6px); opacity: 0; }
+  25% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateY(-14px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .busy-arrow-dn, .busy-arrow-up { animation-duration: 2.4s; }
 }
 body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: progress; }
 
@@ -583,6 +572,48 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
     grid-template-areas: "t1" "z1" "x1" "t2" "z2" "x2";
   }
 }
+
+/* Khung Nhập BBTN THU GỌN mặc định (setupBbtnImportPickers(), ui-layout.js): tiêu đề + 2 nút "Một BBTN" / "Nhiều BBTN";
+   bấm nút → class show-one / show-many trên panel → hiện phần tương ứng. Mở cả 2 → bố cục 2 cột như trên. */
+.bbtn-import-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.bbtn-import-panel .bbtn-import-head > h2 { flex: 1 1 auto; margin: 0; padding: 0; border: 0; }
+.bbtn-pick-group { display: flex; flex-wrap: wrap; gap: 6px; }
+.bbtn-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 1px solid var(--blue-700);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--blue-700);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: var(--font-bold);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.bbtn-pick > svg { width: 16px; height: 16px; margin: 0; }
+.bbtn-pick:hover { background: var(--blue-50); }
+.bbtn-pick[aria-pressed="true"] { background: var(--blue-700); color: var(--on-dark); }
+.bbtn-import-panel:not(.show-one, .show-many) .bbtn-import-head { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
+.bbtn-import-panel:not(.show-one) :is(.bbtn-import-t1, .bbtn-import-z1),
+.bbtn-import-panel:not(.show-many) :is(.bbtn-import-t2, .bbtn-import-z2, .bbtn-import-x2),
+.bbtn-import-panel:not(.show-many) > :is(p.note, div[id$="PreviewWrap"]) { display: none; }
+.bbtn-import-panel:not(.show-many) .bbtn-import-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "t1" "z1" "x1"; }
+.bbtn-import-panel:not(.show-one) .bbtn-import-grid { grid-template-columns: minmax(0, 1fr); grid-template-areas: "x1" "t2" "z2" "x2"; }
+.bbtn-import-panel:not(.show-one, .show-many) .bbtn-import-grid { grid-template-areas: "x1"; }
+/* Lúc thu gọn: phần phụ ô 1 BBTN chỉ chiếm chỗ khi có nội dung (file đang đính kèm, nút đối chiếu...) */
+.bbtn-import-panel:not(.show-one, .show-many) .bbtn-import-x1:has(> :not(.hidden, .u-d-flex), > .u-d-flex > :not(.hidden)) { margin-top: var(--space-3); }
 
 /* Bộ chọn "Vị trí thiết bị" Trạm ▸ Thiết bị ▸ Pha (ui-location-picker.js) — 1 hàng riêng ở đầu mọi form nhập liệu */
 .location-path {
@@ -825,3 +856,43 @@ body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: 
 .back-to-top:hover { background: var(--btn-primary-hover); }
 .back-to-top > svg { width: 22px; height: 22px; margin: 0; }
 .back-to-top.hidden { display: none; }
+
+/* Ghi chú → tip (setupNoteTips(), ui-layout.js): nút "i" cuối tiêu đề + ô tip nổi (position: fixed, gắn vào <body>). */
+[data-note-tip] { display: none; }
+.note-tip-btn {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  margin-left: var(--space-2);
+  padding: 0;
+  border: 1px solid var(--blue-700);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--blue-700);
+  font: italic 700 12px/1 Georgia, "Times New Roman", serif;
+  vertical-align: middle;
+  cursor: help;
+}
+.note-tip-btn:hover,
+.note-tip-btn[aria-expanded="true"] { background: var(--blue-700); color: var(--on-dark); }
+.has-note-tip { cursor: help; }
+.note-tip-pop {
+  position: fixed;
+  z-index: 1200;
+  width: max-content;
+  max-width: min(440px, calc(100vw - 16px));
+  padding: 10px 12px;
+  border: 1px solid var(--tooltip-border);
+  border-radius: var(--radius-md);
+  background: var(--tooltip-bg);
+  color: var(--tooltip-text);
+  box-shadow: var(--shadow-4);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  line-height: 1.5;
+  text-align: left;
+}
+.note-tip-pop.hidden { display: none; }
+.note-tip-pop strong { color: inherit; }

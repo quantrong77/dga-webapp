@@ -53,7 +53,7 @@ function hasGsheetConfig() {
   );
 }
 
-/** URL "quản lý database" để Admin bấm vào badge #storageBadge ở header mở nhanh
+/** URL "quản lý database" để Admin bấm vào nút icon Database (#storageBadge) ở header mở nhanh
  *  Google Sheet/Supabase Dashboard tương ứng (xem setupStorageBadgeLink() ở
  *  app-core.js), tiện thao tác trực tiếp (sửa tay bản ghi lỗi, lọc, export...) mà
  *  không cần tự đi tìm lại đúng Sheet/dự án. Trả về null nếu không có link (chế độ

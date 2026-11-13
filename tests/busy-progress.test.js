@@ -31,3 +31,22 @@ describe("busyEstimatePct", () => {
     expect(pct(2, 1, [600000])).toBeLessThan(100);
   });
 });
+
+describe("Chỉ báo tải dạng mũi tên trên header", () => {
+  const HTML = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+  const CSS = fs.readFileSync(path.join(__dirname, "..", "src/presentation/styles/style-components.css"), "utf8");
+  test("nằm ngay trước nút Database, có mũi tên xuống (tải) + lên (lưu), giữ progressbar", () => {
+    const i = HTML.indexOf('<div id="busyIndicator"');
+    const j = HTML.indexOf('<button type="button" id="storageBadge"');
+    expect(i).toBeGreaterThan(0);
+    expect(j).toBeGreaterThan(i);
+    expect(HTML.slice(i, j)).toContain('class="busy-arrow-dn"');
+    expect(HTML.slice(i, j)).toContain('class="busy-arrow-up"');
+    expect(HTML.slice(i, j)).toContain('role="progressbar"');
+    expect(HTML).not.toContain("busyRingPct");
+  });
+  test("đang ghi (body.is-saving) → đổi sang mũi tên lên", () => {
+    expect(CSS).toContain("body.is-saving .busy-arrow-dn { display: none; }");
+    expect(CSS).toContain("body.is-saving .busy-arrow-up { display: inline; }");
+  });
+});

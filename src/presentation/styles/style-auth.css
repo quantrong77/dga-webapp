@@ -266,12 +266,6 @@
 }
 
 .role-select { font-size: var(--text-xs); padding: var(--space-1) 6px; }
-.badge.supabase { background: var(--status-online-bg); color: var(--status-online-text); }
-/* Badge "Database" (#storageBadge) khi MẤT kết nối — dùng khi tải Tiêu chuẩn/Lịch sử
-   đo lúc khởi động bị lỗi (xem initApp() ở app-core.js), thay cho màu xanh
-   .badge.supabase ở trên để báo ngay tình trạng mất kết nối thay vì vẫn hiện xanh gây
-   hiểu lầm là đang hoạt động bình thường. Rê chuột vào badge (title=) xem chi tiết lỗi. */
-.badge.error { background: var(--status-error-bg); color: var(--status-error); }
 
 /* Bước 6 — đang khởi động / chưa đăng nhập (html.app-booting, boot-guard.js): chỉ nền xanh như màn hình đăng nhập,
    không dựng header/tab/nội dung phía sau → không giật hình, đỡ việc cho trình duyệt trên điện thoại. */
