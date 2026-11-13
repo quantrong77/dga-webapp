@@ -61,12 +61,16 @@ App làm được những việc chính:
 
 Mở đường link do quản trị viên cung cấp bằng **Chrome, Edge hoặc Safari** (khuyến nghị Chrome/Edge). Nếu tự chạy trên máy, mở file `index.html` bằng trình duyệt (hoặc qua máy chủ cục bộ `npm start` — mặc định `http://localhost:8080`, đổi cổng bằng biến môi trường `PORT`).
 
-Góc trên bên trái có **huy hiệu trạng thái lưu trữ**:
+Bên phải thanh trên cùng có **nút icon Database** (hình trụ) — gộp trạng thái lưu trữ và đồng bộ. **Chấm màu** ở góc icon cho biết trạng thái (rê chuột để xem chi tiết):
 
-| Huy hiệu | Ý nghĩa |
+| Chấm | Ý nghĩa |
 |---|---|
-| "Database" / "Supabase" | Dữ liệu lưu dùng chung trên database của đơn vị (bấm vào để mở nhanh Google Sheet hoặc Supabase Dashboard) |
-| "Chế độ thử nghiệm" (kèm **banner đỏ** đầu trang) | Dữ liệu chỉ lưu trong trình duyệt của máy này |
+| Xanh lá | Đã kết nối database dùng chung (hoặc Máy chủ nội bộ) và đã đồng bộ toàn bộ dữ liệu |
+| Xanh dương nhấp nháy (kèm **số**) | Đang đồng bộ — số = mục đang chờ gửi lên máy chủ |
+| Cam | Đang offline — dữ liệu nhập vẫn được giữ và tự đồng bộ khi có mạng |
+| Đỏ | Mất kết nối database, hoặc **Chế độ thử nghiệm** (kèm **banner đỏ** đầu trang: dữ liệu chỉ lưu trong trình duyệt của máy này) |
+
+Bấm nút: **Admin** mở nhanh Google Sheet / Supabase Dashboard / trang trạng thái Máy chủ nội bộ; khi còn mục chờ đồng bộ, bấm để đồng bộ ngay.
 
 > ⚠ Ở **chế độ thử nghiệm**, dữ liệu chỉ nằm trên trình duyệt hiện tại — **mất nếu xóa lịch sử duyệt web** và người khác không thấy được. Chỉ dùng để thử.
 
@@ -114,11 +118,11 @@ Giao diện được phân bố khoa học thành hai khu vực điều hướng
 
 **Thanh trên cùng (máy tính):**
 
-- **Bên trái:** nút **☰** (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app, trạng thái đồng bộ.
+- **Bên trái:** nút **☰** (chuyển thanh tab sang cột dọc bên trái / về ngang), logo, tên app.
 - **Giữa — Tìm nhanh thiết bị:** gõ tên thiết bị hoặc tên trạm, **không cần gõ dấu** (VD "at1", "di linh"). Mỗi kết quả cho biết trạm, loại dữ liệu đã có (khí hòa tan / dầu), ngày đo gần nhất và mức **Báo động/Cảnh báo** nếu có. Bấm 1 kết quả (hoặc ↑/↓ rồi **Enter**) để mở **Lịch sử đo** của thiết bị đó; nút **Xu hướng** (hoặc **Shift+Enter**) mở thẳng tab Xu hướng. Tab Cảnh báo cũng lọc sẵn thiết bị đó. Phím tắt: **Ctrl+K** hoặc **/** để nhảy vào ô tìm, **Esc** để đóng.
-- **Bên phải:** máy chủ đang dùng, **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
+- **Bên phải:** nút **Database** (chấm trạng thái lưu trữ/đồng bộ), **chuông** (mở tab Cảnh báo; số trên chuông = số thiết bị cần lưu ý/theo dõi (mức Cảnh báo hoặc Báo động) theo lần đo mới nhất, đỏ khi có Báo động), Giới thiệu, Phản hồi, Quản trị (chỉ Admin), giao diện sáng/tối, **Toàn màn hình** (thêm chỗ cho bảng rộng; bấm lại hoặc Esc để thoát), và khối tài khoản.
 
-**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, chấm trạng thái đồng bộ, nút **kính lúp** (mở ô tìm nhanh thiết bị) và nút **⋯**. Bấm **⋯** để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
+**Trên điện thoại** (màn hình hẹp), thanh trên cùng chỉ còn 1 dòng: logo, tên app, nút **kính lúp** (mở ô tìm nhanh thiết bị) và nút **⋯** (có chấm màu khi dữ liệu chưa đồng bộ xong / offline / mất kết nối). Bấm **⋯** để mở menu gồm tài khoản (Đổi mật khẩu, Đăng xuất), Database (trạng thái), máy chủ đang dùng, Cảnh báo, Giới thiệu, Phản hồi, Quản trị, Giao diện sáng/tối, Toàn màn hình. Menu tự đóng khi bấm ra ngoài, bấm 1 mục hoặc nhấn Esc.
 
 > **Lưu ý cấu trúc mới:** Chức năng **Cấu hình** (Tiêu chuẩn nhà sản xuất và Quy định — các bảng ngưỡng) trước đây nằm ở thanh bên, nay đã được tích hợp tập trung vào trong mục **Quản trị** trên thanh Menu bar để thuận tiện quản lý phân quyền Admin.
 
@@ -778,7 +782,7 @@ Nếu thông báo là "Vui lòng nhập…" thì bổ sung ô còn thiếu. Nế
 Đây là lỗi ngoài dự kiến của app (không phải lỗi nhập liệu). Tải lại trang và thử lại; nếu lặp lại, chụp màn hình thông báo, ghi lại bạn đang thao tác gì và gửi ở mục **Phản hồi** (icon trên Menu bar) hoặc cho Admin (chi tiết kỹ thuật nằm trong Console của trình duyệt, dòng bắt đầu bằng "[DGA]").
 
 **Mở app thấy trắng/không có dữ liệu cũ.**
-Kiểm tra huy hiệu trạng thái góc trên bên trái. Nếu đang ở *"Chế độ thử nghiệm"*, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.
+Rê chuột vào nút **Database** (hình trụ, bên phải thanh trên cùng). Nếu chấm đỏ và báo *"Chế độ thử nghiệm"*, dữ liệu chỉ nằm trên trình duyệt máy đó — bạn có thể đang mở bằng trình duyệt/máy khác hoặc đã xóa lịch sử duyệt web.
 
 **Không thấy Trạm/Thiết bị trong danh sách gợi ý.**
 Chờ dòng *"Vui lòng chờ! Đang nạp dữ liệu…"* biến mất. Nếu thiết bị mới hoàn toàn, cứ **gõ tên mới**.
