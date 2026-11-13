@@ -108,6 +108,7 @@ function setupStaticUI() {
   if (typeof setupTopScrollbars === "function") setupTopScrollbars();
   if (typeof setupBackToTop === "function") setupBackToTop();
   if (typeof setupBbtnImportPickers === "function") setupBbtnImportPickers();
+  if (typeof setupNoteTips === "function") setupNoteTips(); // SAU setupBbtnImportPickers (tiêu đề Nhập BBTN đã dời vào .bbtn-import-head)
   if (typeof setupHeader === "function") setupHeader();
   if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();

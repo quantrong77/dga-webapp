@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v106-bbtn-thu-gon") {
+          if (k !== "dga-offline-v107-ghi-chu-tip") {
             caches.delete(k);
           }
         });
@@ -434,12 +434,11 @@
               <option>Khác</option>
             </select>
         </label>
-        <button type="button" class="field-icon-toggle-btn guide-toggle-btn input-toolbar-guide" data-guide-toggle="nhap-intro" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn nhập liệu"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       </div>
-      <p class="note input-subtab-hint mode-import" data-guide="nhap-intro">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
+      <p class="note" data-note-tip="#tab-nhap .input-subtab-btn[data-input-mode=import]">Đọc số liệu từ BBTN đã có (PDF) để lưu trữ và đánh giá — đối chiếu
         với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
         đo đã lưu của thiết bị đang chọn ở form.</p>
-      <p class="note input-subtab-hint mode-lap" data-guide="nhap-intro">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+      <p class="note" data-note-tip="#tab-nhap .input-subtab-btn[data-input-mode=lap]">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
       <!-- ===================== NHẬP HÀNG LOẠT NHIỀU BBTN (PDF) =====================
@@ -495,7 +494,7 @@
             </div>
           </div>
         </div>
-        <p class="note u-mt-12px" data-guide="nhap-intro">Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
+        <p class="note" data-note-tip>Dùng đúng <strong>Trạm / Thiết bị / Loại thiết bị / Ngăn OLTC / Nhà sản xuất</strong>
           đang chọn ở form "Thí nghiệm khí hòa tan trong dầu cách điện" bên dưới cho TẤT CẢ file — chỉ Pha, Ngày lấy mẫu và hàm lượng khí
           được đọc riêng từng file PDF. Phù hợp khi nhập bổ sung nhiều lần đo lịch sử để phân tích xu hướng (tab "Xu hướng").</p>
 
@@ -786,7 +785,7 @@
             <button type="button" class="btn ghost hidden" id="btnExportTechReport"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất báo cáo phân tích kỹ thuật (docx)</button>
           </div>
         </div>
-        <p class="note mode-lap u-mt-2px">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
+        <p class="note" data-note-tip="#btnExportBbtn">Điền sẵn số liệu khí hòa tan và kết quả đánh giá của lần đo này vào mẫu Biên bản
           thí nghiệm (PTC3/BM.15) — tải về, MỞ TRONG WORD để bổ sung các mục mẫu chưa có sẵn dữ liệu (hãng SX, số chế tạo,
           điều kiện môi trường, chữ ký...) trước khi ban hành. Số liệu điền sẵn chỉ mang tính hỗ trợ, người dùng cần kiểm
           tra lại trước khi ký.</p>
@@ -836,7 +835,7 @@
         </table></div>
 
         <div class="section-title">Tổng hàm lượng khí hòa tan (Bảng 63, Điều 54 QĐ1901)</div>
-        <p class="note">Bảng 63 CHỈ áp dụng chính thức cho dầu mới đưa vào vận hành lần đầu, sau sửa chữa có thay dầu, hoặc
+        <p class="note" data-note-tip>Bảng 63 CHỈ áp dụng chính thức cho dầu mới đưa vào vận hành lần đầu, sau sửa chữa có thay dầu, hoặc
           sau sửa chữa không thay dầu có lọc dầu (tick ô tương ứng ở mục nhập liệu) — không áp dụng cho dầu đang vận hành
           định kỳ thông thường. Cần nhập đủ N2, O2 ở trên để tính (cộng cả 9 khí, quy đổi ppm → %).</p>
         <div class="table-scroll"><table>
@@ -856,7 +855,7 @@
                 <td id="r_pctch4">—</td><td id="r_pctc2h4">—</td><td id="r_pctc2h2">—</td><td id="r_duvalzone">—</td>
               </tr></tbody>
             </table></div>
-            <p class="note">Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
+            <p class="note" data-note-tip>Cần ít nhất 1 trong 3 khí CH4, C2H4, C2H2 &gt; 0 để tính. Vùng "D+T" là vùng chồng lấn phóng
               điện/tăng nhiệt mà chính hình vẽ gốc IEC 60599:2022 Annex B cũng không phân định rạch ròi — nên đối
               chiếu thêm Bảng 66 và dữ liệu vận hành trước khi kết luận.</p>
           </div>
@@ -2380,12 +2379,11 @@
               <option value="Khác">Khác</option>
             </select>
         </label>
-        <button type="button" class="field-icon-toggle-btn guide-toggle-btn input-toolbar-guide" data-guide-toggle="dau-intro" aria-pressed="false" title="Ẩn hướng dẫn" aria-label="Ẩn/hiện hướng dẫn nhập liệu"><svg class="icon-svg" aria-hidden="true"><use href="#icon-eye"></use></svg></button>
       </div>
-      <p class="note input-subtab-hint mode-import" data-guide="dau-intro">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
+      <p class="note" data-note-tip="#tab-dau .input-subtab-btn[data-input-mode=import]">Đọc số liệu từ BBTN đã có (PDF/Word) để lưu trữ và đánh giá — đối chiếu
         với biên bản gốc ở khung bên cạnh trước khi lưu. Bảng <strong>Số liệu đã lưu</strong> ở cuối trang hiện các lần
         thí nghiệm dầu đã lưu của thiết bị đang chọn ở form.</p>
-      <p class="note input-subtab-hint mode-lap" data-guide="dau-intro">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
+      <p class="note" data-note-tip="#tab-dau .input-subtab-btn[data-input-mode=lap]">Nhập tay kết quả thí nghiệm mới, đánh giá rồi xuất Biên bản thí nghiệm (docx)
         theo mẫu.</p>
 
       <p class="note hidden" id="dauNoOilSupportNote">Tab "Lý-Hóa dầu" hiện chưa hỗ trợ
@@ -2431,7 +2429,7 @@
             </div>
           </div>
         </div>
-        <p class="note u-mt-12px" data-guide="dau-intro">Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
+        <p class="note" data-note-tip>Mỗi file là 1 biên bản (thùng dầu chính + OLTC nếu có), đọc và lưu đúng như khi
           chọn từng file rồi bấm "Đánh giá &amp; Lưu cả biên bản". <strong>Trạm / Thiết bị</strong> lấy theo form bên dưới nếu đã
           nhập (dùng chung cho cả đợt), để trống thì lấy theo từng biên bản; Cấp điện áp, Trạng thái dầu, Ngày lấy mẫu và các chỉ
           tiêu đọc riêng từng file. Phù hợp khi nhập bổ sung nhiều BBTN lịch sử để theo dõi xu hướng.</p>
@@ -2473,7 +2471,7 @@
     <div class="dga-input-main-col">
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện MBA/Kháng dầu</h2>
-        <p class="note" data-guide="dau-intro">Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
+        <p class="note" data-note-tip>Nhập kết quả thí nghiệm MỚI hoặc nhập lại BBTN LỊCH SỬ (chọn đúng Ngày lấy mẫu của biên bản) để
           theo dõi xu hướng. Dầu <strong>thùng chung 3 pha</strong> nhập 1 cột "Kết quả"; dầu <strong>thùng riêng từng
           pha</strong> nhập 3 cột Pha A/B/C (cột để trống = pha đó không thí nghiệm). Đánh giá theo QĐ1901: chỉ tiêu cơ
           bản (Bảng 54, 55, 58) và chỉ tiêu lý-hóa bổ sung (Điều 48–56: trị số axit, chớp cháy, tạp chất cơ học, đếm hạt,
@@ -2603,7 +2601,7 @@
 
       <div class="panel hidden" id="oilIec60422Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 5, theo Category A/B/C)</h2>
-        <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với QĐ1901 ở trên — không thay thế "Kết luận chung". Category suy ra từ
+        <p class="note" data-note-tip>Đánh giá SONG SONG, ĐỘC LẬP với QĐ1901 ở trên — không thay thế "Kết luận chung". Category suy ra từ
           Cấp điện áp MBA/Kháng đã chọn (&gt;170kV=A, &gt;72,5–170kV=B, ≤72,5kV=C).</p>
         <div class="stat-row u-cols-minmax0-1fr">
           <div class="stat-card"><div class="label">Kết luận (IEC 60422:2024)</div><div class="value" id="o_iec_overall">—</div></div>
@@ -2623,7 +2621,7 @@
           <button type="button" class="btn primary" id="btnExportMbaOilBbtn"><svg class="icon-svg" aria-hidden="true"><use href="#icon-download"></use></svg>Xuất BBTN (docx)</button>
         </div>
         <p class="note u-mt-6px" id="ob_scope"></p>
-        <p class="note">Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
+        <p class="note" data-note-tip>Điền sẵn số liệu, tiêu chuẩn, đánh giá và kết luận vào mẫu Biên bản thí nghiệm dầu cách điện (PTC3) —
           dầu thùng chính và dầu OLTC cùng thiết bị, cùng ngày lấy mẫu chung 1 biên bản. Chỉ các chỉ tiêu đã nhập được đưa vào.
           Thông số kỹ thuật thiết bị lấy ở form phía trên; các ô dưới đây chỉ dùng cho biên bản (không lưu), để trống thì biên bản để trống. Mở file trong Word để bổ sung
           số biên bản, thiết bị thí nghiệm và ký trước khi ban hành.</p>
@@ -2659,7 +2657,7 @@
            dầu phụ CỦA chính MBA/Kháng dầu đó, không phải loại thiết bị độc lập. -->
       <div class="panel" id="oltcFormPanel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu khoang điều áp dưới tải (OLTC)</h2>
-        <p class="note">Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
+        <p class="note" data-note-tip>Theo Điều 37, Bảng 49 QĐ1901 — chỉ áp dụng khi dầu OLTC đang <strong>vận hành</strong>
           (đánh giá Độ ẩm + Điện áp chọc thủng; QĐ1901 không quy định ngưỡng tgδ cho dầu OLTC lúc vận hành, chỉ
           ghi nhận để theo dõi xu hướng). Khi dầu OLTC <strong>mới lắp</strong>, Điều 37 quy định áp dụng CHUNG
           tiêu chuẩn với dầu chính MBA (Bảng 54/55/58, có cả tgδ) — công cụ tự chuyển sang tiêu chuẩn đó khi bạn
@@ -2854,7 +2852,7 @@
             </div>
           </div>
         </div>
-        <p class="note u-mt-12px">Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
+        <p class="note" data-note-tip>Mỗi file là 1 BBTN dầu 3 pha (mẫu PTC3/BM.14), lưu đúng như khi chọn từng file rồi bấm
           "Đánh giá &amp; Lưu 3 pha" (tách 1 bản ghi mỗi pha). <strong>Trạm / Vị trí lắp đặt</strong> lấy theo form bên dưới nếu đã nhập
           (dùng chung cho cả đợt), để trống thì theo từng biên bản; Nhà sản xuất tự khớp theo hãng ghi trên biên bản, không khớp thì
           dùng Nhà sản xuất đang chọn ở form.</p>
@@ -2897,7 +2895,7 @@
         <div class="dga-input-main-col">
           <div class="panel" id="tio3Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>BBTN dầu 3 pha (A, B, C chung một biên bản)</h2>
-        <p class="note">Đọc từ BBTN (khung Nhập BBTN dầu 3 pha ở trên) hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành
+        <p class="note" data-note-tip>Đọc từ BBTN (khung Nhập BBTN dầu 3 pha ở trên) hoặc nhập tay theo từng pha. Khi lưu, số liệu được tách thành
           1 bản ghi cho mỗi pha và đánh giá theo tiêu chuẩn nhà sản xuất đã cấu hình.</p>
         <div class="grid">
           <label class="field">Trạm
@@ -2984,7 +2982,7 @@
   </div><!-- /#t3SplitLayout -->
       <div class="panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-droplet"></use></svg>Thí nghiệm dầu cách điện TI/TU/Sứ xuyên</h2>
-        <p class="note">Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
+        <p class="note" data-note-tip>Đánh giá 3 hạng mục chính: Độ ẩm dầu (ppm), Tổn hao điện môi dầu tgδ ở 90°C (%), Điện áp
           chọc thủng dầu (kV) — kèm 1 hạng mục tùy chọn tgδ ở 20°C (%) nếu nhà sản xuất có quy định riêng (VD
           Arteche) — áp dụng cho TI/TU kiểu kín, cách điện dầu. QĐ1901 Điều 10 (Bảng 9, mục 12) và Điều 11
           (Bảng 14, mục 11) đều ghi chú "Thực hiện theo quy định của nhà sản xuất" cho hạng mục này — KHÔNG có bảng
@@ -3082,7 +3080,7 @@
 
       <div class="panel hidden" id="tioIec60422Panel">
         <h2><svg class="icon-svg" aria-hidden="true"><use href="#icon-info"></use></svg>Tham khảo — IEC 60422:2024 (Bảng 7, theo Category D/E)</h2>
-        <p class="note">Đánh giá SONG SONG, ĐỘC LẬP với tiêu chuẩn nhà sản xuất ở trên — không thay thế "Kết luận chung". Cần nhập
+        <p class="note" data-note-tip>Đánh giá SONG SONG, ĐỘC LẬP với tiêu chuẩn nhà sản xuất ở trên — không thay thế "Kết luận chung". Cần nhập
           Cấp điện áp Um để xác định Category. Điện áp chọc thủng dùng số liệu SUY DIỄN (Category D≈A, E≈B của Bảng 5) do
           Bảng 7 gốc không có số liệu riêng cho hạng mục này — xem cột "Căn cứ".</p>
         <div class="stat-row u-cols-minmax0-1fr">
@@ -3362,6 +3360,7 @@
           <ul class="rec-list">
           <li><strong>Ô Trạm / Thiết bị:</strong> vừa <strong>gõ để tìm</strong>, vừa <strong>bấm ▼ để chọn</strong> trong danh sách đã có. Bạn cũng có thể <strong>gõ tên mới</strong> (không bắt buộc phải chọn từ danh sách).</li>
           <li><strong>Khung "Nhập BBTN" (tab con Nhập BBTN cũ):</strong> nằm trên form nhập liệu, <strong>mặc định thu gọn</strong> chỉ còn tiêu đề và 2 nút <strong>Một BBTN</strong> / <strong>Nhiều BBTN / thư mục</strong> để đỡ chiếm màn hình — bấm nút nào thì hiện phần đó, bấm lại để ẩn (mở được cả 2 cùng lúc). Mở cả 2 thì thấy <strong>2 ô kéo thả ngang hàng, cùng kích thước</strong> — ô trái nhận <strong>1 biên bản</strong> (đọc vào form để đối chiếu rồi lưu), ô phải nhận <strong>nhiều biên bản hoặc cả thư mục</strong> (nút <strong>Chọn cả thư mục…</strong>). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.</li>
+          <li><strong>Ghi chú dạng tip:</strong> các đoạn giải thích dài ở tab nhập liệu (Khí hòa tan, Lý-Hóa dầu, OLTC, dầu 3 pha, TI/TU) không còn hiện sẵn trên trang. <strong>Trỏ chuột</strong> vào tiêu đề có nút <strong>i</strong> nhỏ (VD tiêu đề <strong>Nhập BBTN</strong>, <strong>Tam giác Duval 1</strong>), hoặc vào nút <strong>Nhập BBTN cũ</strong> / <strong>Lập BBTN</strong> / <strong>Xuất BBTN</strong>, để xem ghi chú; trên điện thoại <strong>chạm</strong> nút <strong>i</strong> (chạm ra ngoài hoặc nhấn Esc để ẩn).</li>
           <li><strong>Tab con "Nhập BBTN cũ" / "Lập BBTN":</strong> có ở tab <strong>Khí hòa tan</strong> và <strong>Lý-Hóa dầu</strong>, dùng <strong>chung một form</strong> (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.</li>
           <li><strong>Biểu tượng "i":</strong> bấm để xem giải thích chi tiết; đóng bằng <strong>×</strong> hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.</li>
           <li><strong>Thông báo nhanh (toast)</strong> hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), <strong>màu đỏ khi có lỗi hoặc thiếu thông tin</strong> (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.</li>

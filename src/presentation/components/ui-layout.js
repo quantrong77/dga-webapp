@@ -234,6 +234,104 @@ function setupBbtnImportPickers() {
   });
 }
 
+/** Nhãn mà 1 đoạn ghi chú [data-note-tip] gắn vào: selector ghi trong thuộc tính, hoặc (để trống) tiêu đề gần nhất phía
+ *  trên — anh/em liền trước là h2/h3/.section-title (hoặc chứa h2), không có thì lần lên khối cha (tối đa tới .panel). */
+function noteTipTarget(note) {
+  if (note.dataset.noteTip) return document.querySelector(note.dataset.noteTip);
+  const isHead = (el) => el.matches("h2, h3, .section-title");
+  let node = note;
+  while (node && node !== document.body) {
+    for (let el = node.previousElementSibling; el; el = el.previousElementSibling) {
+      if (isHead(el)) return el;
+      const inner = el.querySelector(":scope > h2, :scope h2");
+      if (inner) return inner;
+    }
+    if (node.parentElement && node.parentElement.classList.contains("panel")) {
+      return node.parentElement.querySelector("h2");
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
+/** Ghi chú → tip khi trỏ chuột: mọi đoạn [data-note-tip] (tab nhập liệu Khí hòa tan / Lý-Hóa dầu / OLTC / dầu 3 pha /
+ *  TI-TU) được gỡ khỏi trang và chuyển thành ô tip (role="tooltip") của nhãn tương ứng — đỡ chiếm màn hình, đỡ rối mắt.
+ *  Nhãn là nút (tab con, nút Xuất BBTN): trỏ chuột / focus vào nút là hiện. Nhãn là tiêu đề: thêm nút "i" nhỏ cuối tiêu
+ *  đề; trỏ vào tiêu đề hoặc nút là hiện, bấm/chạm nút để ghim (điện thoại), Esc / bấm ra ngoài để ẩn. */
+function setupNoteTips() {
+  let openTip = null;
+  let pinned = false;
+  const place = (tip, anchor) => {
+    const r = anchor.getBoundingClientRect();
+    const w = tip.offsetWidth;
+    const h = tip.offsetHeight;
+    const vw = document.documentElement.clientWidth;
+    let left = Math.min(Math.max(8, r.left), vw - w - 8);
+    let top = r.bottom + 8;
+    if (top + h > window.innerHeight - 8 && r.top - h - 8 > 8) top = r.top - h - 8;
+    tip.style.left = Math.max(8, left) + "px";
+    tip.style.top = top + "px";
+  };
+  const hide = () => {
+    if (!openTip) return;
+    openTip.classList.add("hidden");
+    const btn = document.querySelector(`.note-tip-btn[aria-describedby="${openTip.id}"]`);
+    if (btn) btn.setAttribute("aria-expanded", "false");
+    openTip = null;
+    pinned = false;
+  };
+  const show = (tip, anchor) => {
+    if (openTip && openTip !== tip) hide();
+    tip.classList.remove("hidden");
+    openTip = tip;
+    place(tip, anchor);
+  };
+  document.querySelectorAll("[data-note-tip]").forEach((note, i) => {
+    const target = noteTipTarget(note);
+    if (!target) return;
+    const tip = document.createElement("div");
+    tip.className = "note-tip-pop hidden";
+    tip.id = "noteTip" + i;
+    tip.setAttribute("role", "tooltip");
+    tip.innerHTML = note.innerHTML;
+    document.body.appendChild(tip);
+    note.remove();
+    if (target.matches("button, input, select, a")) {
+      target.setAttribute("aria-describedby", tip.id);
+      target.addEventListener("mouseenter", () => show(tip, target));
+      target.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+      target.addEventListener("focus", () => show(tip, target));
+      target.addEventListener("blur", () => { if (!pinned) hide(); });
+      return;
+    }
+    const label = (target.textContent || "").trim().replace(/\s+/g, " ");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "note-tip-btn";
+    btn.textContent = "i";
+    btn.setAttribute("aria-label", "Ghi chú: " + label);
+    btn.setAttribute("aria-describedby", tip.id);
+    btn.setAttribute("aria-expanded", "false");
+    target.appendChild(btn);
+    target.classList.add("has-note-tip");
+    target.addEventListener("mouseenter", () => show(tip, btn));
+    target.addEventListener("mouseleave", () => { if (!pinned) hide(); });
+    btn.addEventListener("focus", () => show(tip, btn));
+    btn.addEventListener("blur", () => { if (!pinned) hide(); });
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (pinned && openTip === tip) { hide(); return; }
+      show(tip, btn);
+      pinned = true;
+      btn.setAttribute("aria-expanded", "true");
+    });
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hide(); });
+  document.addEventListener("click", (e) => { if (openTip && !openTip.contains(e.target)) hide(); });
+  window.addEventListener("scroll", () => { if (!pinned) hide(); }, { passive: true });
+  window.addEventListener("resize", hide);
+}
+
 function setupTabs() {
   // Nút chuyển nhanh sang tab khác (vd thông báo "Tài khoản chỉ xem": data-goto-tab="lichsu").
   document.querySelectorAll("[data-goto-tab]").forEach((el) => {
