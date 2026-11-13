@@ -356,7 +356,7 @@ label.chk[data-std-key] { cursor: context-menu; }
 
 /* Chỉ báo tải (src/presentation/components/ui-busy.js): mũi tên động trên header, sát bên trái nút Database (điện
    thoại: bên trái nút ⋯). Đang TẢI dữ liệu: mũi tên trắng chạy XUỐNG; đang GHI (lưu/xóa/tải file lên — body.is-saving):
-   mũi tên vàng EVN chạy LÊN. Mũi tên trượt trong vùng cắt phía trên vạch đáy (khay) rồi lặp lại. */
+   mũi tên vàng EVN chạy LÊN. Mũi tên trượt ngắn phía trên vạch đáy (khay) rồi lặp lại. */
 .busy-indicator {
   display: inline-grid;
   flex: none;
@@ -377,27 +377,27 @@ label.chk[data-std-key] { cursor: context-menu; }
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.busy-arrow-clip { clip-path: inset(0 0 4px 0); }
-.busy-arrow-dn { animation: busy-arrow-down 0.9s ease-in infinite; }
-.busy-arrow-up { display: none; animation: busy-arrow-up 0.9s ease-out infinite; }
+.busy-arrow-dn { animation: busy-arrow-down 1.8s ease-in-out infinite; }
+.busy-arrow-up { display: none; animation: busy-arrow-up 1.8s ease-in-out infinite; }
 .busy-arrow-base { opacity: 0.85; }
 body.is-saving .busy-indicator { color: var(--evn-yellow); }
 body.is-saving .busy-arrow-dn { display: none; }
 body.is-saving .busy-arrow-up { display: inline; }
+/* Hành trình ngắn (±4px) + mờ dần ở 2 đầu: mũi tên luôn nằm trong khung, đủ lâu để nhìn rõ. */
 @keyframes busy-arrow-down {
-  0% { transform: translateY(-14px); opacity: 0; }
-  25% { opacity: 1; }
+  0% { transform: translateY(-4px); opacity: 0; }
+  20% { opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translateY(6px); opacity: 0; }
+  100% { transform: translateY(3px); opacity: 0; }
 }
 @keyframes busy-arrow-up {
-  0% { transform: translateY(6px); opacity: 0; }
-  25% { opacity: 1; }
+  0% { transform: translateY(3px); opacity: 0; }
+  20% { opacity: 1; }
   80% { opacity: 1; }
-  100% { transform: translateY(-14px); opacity: 0; }
+  100% { transform: translateY(-4px); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .busy-arrow-dn, .busy-arrow-up { animation-duration: 2.4s; }
+  .busy-arrow-dn, .busy-arrow-up { animation-duration: 3s; }
 }
 body.is-saving .btn.primary, body.is-saving .btn.danger { opacity: 0.6; cursor: progress; }
 
