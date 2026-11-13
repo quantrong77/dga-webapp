@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v105-database-icon") {
+          if (k !== "dga-offline-v106-bbtn-thu-gon") {
             caches.delete(k);
           }
         });
@@ -3361,7 +3361,7 @@
           <h3>3.5. Các thao tác dùng chung</h3>
           <ul class="rec-list">
           <li><strong>Ô Trạm / Thiết bị:</strong> vừa <strong>gõ để tìm</strong>, vừa <strong>bấm ▼ để chọn</strong> trong danh sách đã có. Bạn cũng có thể <strong>gõ tên mới</strong> (không bắt buộc phải chọn từ danh sách).</li>
-          <li><strong>Khung "Nhập BBTN" (tab con Nhập BBTN cũ):</strong> nằm trên form nhập liệu, gồm <strong>2 ô kéo thả ngang hàng, cùng kích thước</strong> — ô trái nhận <strong>1 biên bản</strong> (đọc vào form để đối chiếu rồi lưu), ô phải nhận <strong>nhiều biên bản hoặc cả thư mục</strong> (nút <strong>Chọn cả thư mục…</strong>). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.</li>
+          <li><strong>Khung "Nhập BBTN" (tab con Nhập BBTN cũ):</strong> nằm trên form nhập liệu, <strong>mặc định thu gọn</strong> chỉ còn tiêu đề và 2 nút <strong>Một BBTN</strong> / <strong>Nhiều BBTN / thư mục</strong> để đỡ chiếm màn hình — bấm nút nào thì hiện phần đó, bấm lại để ẩn (mở được cả 2 cùng lúc). Mở cả 2 thì thấy <strong>2 ô kéo thả ngang hàng, cùng kích thước</strong> — ô trái nhận <strong>1 biên bản</strong> (đọc vào form để đối chiếu rồi lưu), ô phải nhận <strong>nhiều biên bản hoặc cả thư mục</strong> (nút <strong>Chọn cả thư mục…</strong>). Kéo file vào, hoặc bấm vào ô để chọn file; ô có viền sáng khi rê file qua. Trên màn hình hẹp, 2 ô tự xếp dọc.</li>
           <li><strong>Tab con "Nhập BBTN cũ" / "Lập BBTN":</strong> có ở tab <strong>Khí hòa tan</strong> và <strong>Lý-Hóa dầu</strong>, dùng <strong>chung một form</strong> (đổi tab con không mất số liệu đang nhập); app nhớ tab con dùng lần cuối.</li>
           <li><strong>Biểu tượng "i":</strong> bấm để xem giải thích chi tiết; đóng bằng <strong>×</strong> hoặc bấm ra ngoài. Chỉ một hộp giải thích mở tại một thời điểm.</li>
           <li><strong>Thông báo nhanh (toast)</strong> hiện ở góc trên bên phải: màu xanh khi thao tác thành công (đăng nhập, lưu…), <strong>màu đỏ khi có lỗi hoặc thiếu thông tin</strong> (ví dụ chưa nhập Thiết bị, mất kết nối database). Toast lỗi hiện khoảng 6 giây; nội dung thường kèm gợi ý cách xử lý.</li>
@@ -3566,7 +3566,7 @@
           <div class="sm-body">
           <h3>6.1. Đọc số liệu từ Biên bản thí nghiệm (BBTN) và Khung đối chiếu song song</h3>
           <ol type="1">
-          <li>Ở tab <strong>Khí hòa tan</strong>, tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN"</strong> trên cùng có 2 ô kéo thả ngang hàng, cùng kích thước: ô trái <strong>"Một BBTN (PDF)"</strong> — <strong>kéo thả</strong> file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải <strong>"Nhiều BBTN hoặc cả thư mục"</strong> — xem mục 7.</li>
+          <li>Ở tab <strong>Khí hòa tan</strong>, tab con <strong>Nhập BBTN cũ</strong>, khung <strong>"Nhập BBTN"</strong> trên cùng — bấm nút <strong>Một BBTN</strong> để mở ô kéo thả (nút <strong>Nhiều BBTN / thư mục</strong> mở ô nhập hàng loạt): ô <strong>"Một BBTN (PDF)"</strong> — <strong>kéo thả</strong> file PDF vào hoặc bấm để chọn file, số liệu được đọc vào form bên dưới để đối chiếu rồi lưu; ô phải <strong>"Nhiều BBTN hoặc cả thư mục"</strong> — xem mục 7.</li>
           <li><strong>Khung hiển thị Biên bản đối chiếu song song (Split View):</strong> Ngay khi bạn chọn hoặc kéo-thả file PDF vào, giao diện tự động mở khung hiển thị tài liệu PDF ở cột bên cạnh vùng nhập liệu (ở màn hình máy tính, khung dính cố định khi cuộn; trên màn hình nhỏ/điện thoại, khung hiển thị ngay bên dưới): - Bạn có thể phóng to, thu nhỏ, cuộn và tìm kiếm nội dung trực tiếp trong file PDF gốc. - Nút <strong>"Mở tab mới"</strong> giúp mở toàn màn hình ở tab trình duyệt riêng nếu cần. - Nút <strong>"✕ Ẩn"</strong> hoặc <strong>"Hiện BBTN đối chiếu"</strong> để đóng hoặc mở lại khung xem bất kỳ lúc nào.</li>
           <li>App tự đọc và <strong>điền sẵn</strong> vào form: Trạm, Thiết bị, Loại thiết bị, Pha, Ngày lấy mẫu, Nhà sản xuất, Số chế tạo, Điện áp định mức, Năm sản xuất, Năm vận hành, Loại dầu, Ngày thí nghiệm, Lý do thí nghiệm, nhiệt độ/độ ẩm môi trường và <strong>7 khí hòa tan</strong>.</li>
           <li><strong>7 khí chính:</strong> ô Kết quả trên biên bản để <strong>trống</strong>, ghi <strong>0</strong> hoặc ghi <strong>KPH</strong> đều được điền là <strong>KPH</strong> — app không lấy số ở cột Tiêu chuẩn thay cho ô trống. Khí nào app <strong>không đọc được chắc chắn</strong> (không thấy dòng khí đó, hoặc không phân biệt được số đọc ra là kết quả hay tiêu chuẩn) thì ô đó <strong>để trống, tô vàng</strong> và app báo tên khí: đối chiếu biên bản ở khung bên cạnh rồi nhập tay (ghi KPH nếu biên bản để trống). Còn ô tô vàng thì app chưa cho <strong>Phân tích &amp; Lưu</strong>. Khi nhập hàng loạt, BBTN có khí đọc không chắc chắn được <strong>bỏ chọn</strong> kèm cảnh báo — kéo riêng BBTN đó vào ô <strong>"Một BBTN (PDF)"</strong> để nhập tay.</li>
@@ -3588,7 +3588,7 @@
           <p>Dùng khi cần <strong>nhập bổ sung dữ liệu lịch sử</strong> (nhiều năm đo) để phân tích xu hướng, không muốn lặp lại "chọn file → Phân tích &amp; Lưu" từng lần.</p>
           <ol type="1">
           <li><strong>Điền trước</strong> ở form "Thí nghiệm khí hòa tan trong dầu cách điện" (bên dưới khung Nhập BBTN): <strong>Trạm, Thiết bị, Loại thiết bị, Ngăn OLTC, Nhà sản xuất</strong> (các thông số kỹ thuật nếu muốn). Các thông tin này được dùng chung cho <strong>tất cả</strong> file trong đợt; riêng <strong>Pha, Ngày lấy mẫu và 7 khí</strong> được đọc riêng từ mỗi file.</li>
-          <li>Ở ô phải <strong>"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"</strong> của khung <strong>Nhập BBTN</strong> (ngang hàng với ô 1 BBTN): kéo thả nhiều file PDF vào, hoặc bấm <strong>Chọn cả thư mục…</strong>.</li>
+          <li>Bấm nút <strong>Nhiều BBTN / thư mục</strong> trên khung <strong>Nhập BBTN</strong> để mở ô <strong>"Nhiều BBTN (PDF) hoặc cả thư mục — cùng 1 thiết bị"</strong>: kéo thả nhiều file PDF vào, hoặc bấm <strong>Chọn cả thư mục…</strong>.</li>
           <li>Tick/bỏ tick <strong>"Đính kèm PDF gốc vào từng lần đo"</strong> (mặc định đang tick).</li>
           <li>Xem <strong>bảng xem trước</strong>: mỗi file có một trạng thái: - <strong>Sẵn sàng</strong> — có thể nhập. - <strong>Cảnh báo</strong> — không đọc được Pha, hoặc <strong>trùng Pha + Ngày</strong> với bản ghi đã có/dòng khác trong đợt. - <strong>Lỗi</strong> — không đọc được file hoặc thiếu dữ liệu bắt buộc.</li>
           <li>Sửa tay <strong>Pha / Ngày</strong> ở từng dòng nếu cần; tick chọn từng dòng, hoặc dùng <strong>Chọn tất cả hợp lệ / Bỏ chọn tất cả</strong>.</li>

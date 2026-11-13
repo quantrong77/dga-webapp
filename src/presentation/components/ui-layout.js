@@ -188,6 +188,52 @@ function setupBackToTop() {
   update();
 }
 
+/** Khung "Nhập BBTN" (.bbtn-import-panel — tab Khí hòa tan, Lý-Hóa dầu, dầu 3 pha): mặc định THU GỌN chỉ còn tiêu đề +
+ *  2 nút chọn "Một BBTN" / "Nhiều BBTN"; bấm nút nào thì hiện phần tương ứng (class show-one / show-many trên panel,
+ *  CSS ở style-components.css), bấm lại để ẩn — mở được cả 2 cùng lúc. Phần phụ của ô 1 BBTN (.bbtn-import-x1: file
+ *  đang đính kèm, nút Hiện BBTN đối chiếu, Lưu cả biên bản...) luôn hiện khi có nội dung, kể cả lúc thu gọn. */
+function setupBbtnImportPickers() {
+  document.querySelectorAll(".bbtn-import-panel").forEach((panel, idx) => {
+    const h2 = panel.querySelector(":scope > h2");
+    const grid = panel.querySelector(":scope > .bbtn-import-grid");
+    if (!h2 || !grid || panel.querySelector(".bbtn-pick-group")) return;
+    if (!grid.id) grid.id = "bbtnImportGrid" + idx;
+    const head = document.createElement("div");
+    head.className = "bbtn-import-head";
+    h2.before(head);
+    head.appendChild(h2);
+    const group = document.createElement("div");
+    group.className = "bbtn-pick-group";
+    group.setAttribute("role", "group");
+    group.setAttribute("aria-label", "Chọn cách nhập BBTN");
+    const picks = [
+      ["one", "#icon-paperclip", "Một BBTN", "Đọc 1 biên bản vào form để đối chiếu rồi lưu"],
+      ["many", "#icon-layers", "Nhiều BBTN / thư mục", "Nhập hàng loạt nhiều biên bản hoặc cả thư mục"],
+    ];
+    picks.forEach(([key, icon, label, tip]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "bbtn-pick";
+      b.dataset.bbtnPick = key;
+      b.title = tip;
+      b.setAttribute("aria-pressed", "false");
+      b.setAttribute("aria-controls", grid.id);
+      b.innerHTML = `<svg class="icon-svg" aria-hidden="true"><use href="${icon}"></use></svg>${label}`;
+      b.addEventListener("click", () => {
+        const on = !panel.classList.contains("show-" + key);
+        panel.classList.toggle("show-" + key, on);
+        b.setAttribute("aria-pressed", String(on));
+        if (on) {
+          const input = panel.querySelector(`.bbtn-import-z${key === "one" ? 1 : 2} input[type="file"]`);
+          if (input) input.focus({ preventScroll: true });
+        }
+      });
+      group.appendChild(b);
+    });
+    head.appendChild(group);
+  });
+}
+
 function setupTabs() {
   // Nút chuyển nhanh sang tab khác (vd thông báo "Tài khoản chỉ xem": data-goto-tab="lichsu").
   document.querySelectorAll("[data-goto-tab]").forEach((el) => {
@@ -219,8 +265,10 @@ function setupTabs() {
         }
       }
       if (targetTab === "dga" || targetTab === "nhap") {
-        const bbtnInput = $("f_bbtn"); // ô chọn file trong #bbtnDropzone (control nhận bàn phím)
-        if (bbtnInput) bbtnInput.focus();
+        // ô chọn file trong #bbtnDropzone (control nhận bàn phím); khung Nhập BBTN đang thu gọn → nút "Một BBTN"
+        const bbtnInput = $("f_bbtn");
+        const focusEl = bbtnInput && bbtnInput.offsetParent ? bbtnInput : document.querySelector(`#tab-${targetTab} [data-bbtn-pick="one"]`);
+        if (focusEl) focusEl.focus({ preventScroll: true });
       }
       // Tránh cuộn trang khi bấm các nút icon trên Header (chỉ cuộn cho các nút trong sidebar/nav.tabs)
       if (!btn.classList.contains("header-icon-btn")) {

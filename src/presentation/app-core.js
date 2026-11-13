@@ -107,6 +107,7 @@ function setupStaticUI() {
   if (typeof setupDialogFocus === "function") setupDialogFocus();
   if (typeof setupTopScrollbars === "function") setupTopScrollbars();
   if (typeof setupBackToTop === "function") setupBackToTop();
+  if (typeof setupBbtnImportPickers === "function") setupBbtnImportPickers();
   if (typeof setupHeader === "function") setupHeader();
   if (typeof setupClearFormConfirm === "function") setupClearFormConfirm();
   setupStickyHeaderObserver();
