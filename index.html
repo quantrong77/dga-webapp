@@ -71,7 +71,7 @@
     if (typeof caches !== "undefined") {
       caches.keys().then(function(keys) {
         keys.forEach(function(k) {
-          if (k !== "dga-offline-v107-ghi-chu-tip") {
+          if (k !== "dga-offline-v110-busy-pct-database") {
             caches.delete(k);
           }
         });
@@ -217,21 +217,8 @@
 
   <!-- Thông báo dạng "toast" (vd: "Đăng nhập thành công!") — xem showToast() trong app.js -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
-  <!-- Chỉ báo tải: vòng xoay hiện % ở GIỮA header theo chiều đứng (điện thoại: cạnh nút ⋯) — xem
-       src/presentation/components/ui-busy.js. Nhãn chữ ("Đang lưu..."/"Đang cập nhật dữ liệu...") chỉ dành cho trình
-       đọc màn hình + tooltip; % không nằm trong vùng aria-live để không bị đọc liên tục. -->
   <!-- Nút "Về đầu trang" — hiện khi đã cuộn xuống (setupBackToTop(), ui-layout.js). -->
   <button type="button" id="btnBackToTop" class="back-to-top hidden" aria-label="Về đầu trang" title="Về đầu trang"><svg class="icon-svg" aria-hidden="true"><use href="#icon-arrow-up"></use></svg></button>
-  <div id="busyIndicator" class="busy-indicator hidden" title="Đang lưu...">
-    <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang lưu...</span>
-    <div class="busy-ring" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing">
-      <svg class="busy-ring-svg" viewBox="0 0 36 36" aria-hidden="true">
-        <circle class="busy-ring-track" cx="18" cy="18" r="15.5" />
-        <circle class="busy-ring-bar" id="busyRingBar" cx="18" cy="18" r="15.5" pathLength="100" stroke-dasharray="0 100" />
-      </svg>
-      <span class="busy-ring-pct" id="busyRingPct" aria-hidden="true">0%</span>
-    </div>
-  </div>
 
   <!-- Banner đỏ CHẾ ĐỘ THỬ NGHIỆM (localStorage) — hiện ở initApp() (app-core.js) khi config.js
        chưa cấu hình database, để không ai lỡ nhập dữ liệu thật vào trình duyệt. -->
@@ -275,11 +262,24 @@
          (#btnHeaderMenu, setupHeaderMenu() ở ui-layout.js). -->
     <div class="header-tools" id="headerMenu">
     <div class="header-right">
+      <!-- Chỉ báo tải (ui-busy.js): % ước lượng ngay bên trái nút Database, mũi tên động ở góc icon Database (.db-busy) —
+           xuống = đang tải dữ liệu, lên = đang lưu/xóa/tải file lên; xong thì giữ 100% 1 chút rồi ẩn. Điện thoại: JS dời khối
+           này ra bên trái nút ⋯ (busyPlaceOnHeader()), kèm mũi tên riêng vì nút Database nằm trong menu ⋯. Nhãn chữ chỉ cho
+           trình đọc màn hình + tooltip; % không nằm trong vùng aria-live để không bị đọc liên tục. -->
+      <div id="busyIndicator" class="busy-indicator hidden" title="Đang cập nhật dữ liệu...">
+        <span class="sr-only" role="status" aria-live="polite" id="busyIndicatorText">Đang cập nhật dữ liệu...</span>
+        <span class="busy-pct" role="progressbar" aria-labelledby="busyIndicatorText" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="busyRing"><span id="busyPct" aria-hidden="true">0%</span></span>
+        <svg class="busy-arrow-svg busy-arrow-mobile" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="busy-arrow-dn" d="M12 5v9M9.5 11.5 12 14l2.5-2.5" />
+          <path class="busy-arrow-up" d="M12 15V6M9.5 8.5 12 6l2.5 2.5" />
+          <path class="busy-arrow-base" d="M5 20h14" />
+        </svg>
+      </div>
       <!-- Database + trạng thái đồng bộ gộp 1 nút icon (renderDbStatus(), app-status.js): chấm màu = trạng thái (xanh lá đã
            đồng bộ · xanh dương đang đồng bộ · cam offline · đỏ mất kết nối / chế độ thử nghiệm), số = mục chờ đồng bộ.
            Bấm: Admin có link → mở Google Sheet/Supabase Dashboard/trang máy chủ; có mục chờ → đồng bộ ngay. -->
       <button type="button" id="storageBadge" class="header-icon-btn db-status-btn hidden" data-db-state="loading" aria-label="Database: đang tải" title="Database: đang tải" data-tooltip="Database">
-        <svg class="icon-svg" aria-hidden="true"><use href="#icon-database"></use></svg><span class="db-dot" aria-hidden="true"></span><span class="hdr-count db-count hidden" id="dbPendingCount" aria-hidden="true"></span><span class="hdr-label" id="dbStatusLabel">Database</span>
+        <svg class="icon-svg" aria-hidden="true"><use href="#icon-database"></use></svg><span class="db-busy" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="busy-arrow-dn" d="M12 4v13M7 12.5l5 5 5-5" /><path class="busy-arrow-up" d="M12 20V7M7 11.5l5-5 5 5" /></svg></span><span class="db-dot" aria-hidden="true"></span><span class="hdr-count db-count hidden" id="dbPendingCount" aria-hidden="true"></span><span class="hdr-label" id="dbStatusLabel">Database</span>
       </button>
       <button type="button" class="header-icon-btn tab-btn header-alert-btn" data-tab="canhbao" id="btnHeaderAlerts" title="Cảnh báo" data-tooltip="Cảnh báo">
         <svg class="icon-svg" aria-hidden="true"><use href="#icon-bell"></use></svg><span class="hdr-count hidden" id="headerAlertCount" aria-hidden="true"></span><span class="hdr-label">Cảnh báo</span><span class="sr-only" id="headerAlertSr"></span>
@@ -3256,6 +3256,7 @@
           </tbody>
           </table></div>
           <p>Bấm nút: <strong>Admin</strong> mở nhanh Google Sheet / Supabase Dashboard / trang trạng thái Máy chủ nội bộ; khi còn mục chờ đồng bộ, bấm để đồng bộ ngay.</p>
+          <p>Khi app đang làm việc với máy chủ: ngay <strong>bên trái</strong> nút Database hiện <strong>số %</strong> (ước lượng), và ở <strong>góc icon Database</strong> có <strong>mũi tên động</strong> — mũi tên chạy <strong>xuống</strong> (huy hiệu trắng) = đang tải dữ liệu, chạy <strong>lên</strong> (huy hiệu và số % màu vàng) = đang lưu / xóa / tải file lên; trong lúc lưu các nút Lưu, Xóa tạm mờ để tránh bấm trùng. Xong việc, số chuyển <strong>100%</strong> màu xanh, dừng một chút rồi ẩn. Trên điện thoại, số % và mũi tên hiện ngay bên trái nút <strong>⋯</strong>.</p>
           <p class="sm-note">⚠ Ở <strong>chế độ thử nghiệm</strong>, dữ liệu chỉ nằm trên trình duyệt hiện tại — <strong>mất nếu xóa lịch sử duyệt web</strong> và người khác không thấy được. Chỉ dùng để thử.</p>
           <h3>2.2. Đăng ký và đăng nhập (chế độ Google Sheets / Supabase)</h3>
           <ol type="1">
